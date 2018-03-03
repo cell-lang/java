@@ -145,6 +145,10 @@ abstract class Obj implements Comparable<Obj> {
     Writer writer = new OutputStreamWriter(System.out);
     try {
       Print(writer, 90, true, 0);
+      writer.write('\n');
+    }
+    catch (Exception e) {
+      throw new RuntimeException(e);
     }
     finally {
       try {
@@ -154,7 +158,6 @@ abstract class Obj implements Comparable<Obj> {
 
       }
     }
-    System.out.println("");
   }
 
   public Obj Printed() {

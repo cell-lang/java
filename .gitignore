@@ -1,4 +1,5 @@
+src/java/*.txt
 src/java/*.class
 src/java/net/cell_lang/*.class
-dump-*
 src/java/net/cell_lang/Tests.java
+dump-*
