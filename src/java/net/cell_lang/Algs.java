@@ -446,18 +446,27 @@ class Algs {
   //////////////////////////////////////////////////////////////////////////////
 
   static void sortIdxs(int[] indexes, int first, int last, Obj[] major, Obj[] minor) {
-    int low = first;
-    int high = last;
+    if (first >= last)
+      return;
 
-    int pivot = indexes[low + (high - low) / 2];
+    int pivotIdx = first + (last - first) / 2;
+    int pivot = indexes[pivotIdx];
     Obj pivotMajor = major[pivot];
     Obj pivotMinor = minor[pivot];
 
+    if (pivotIdx > first)
+      indexes[pivotIdx] = indexes[first];
+      // indexes[first] = pivot; // Not necessary
+
+    int low = first + 1;
+    int high = last;
+
     while (low <= high) {
       while (low <= last) {
-        int ord = major[low].compareTo(pivotMajor);
+        int idx = indexes[low];
+        int ord = major[idx].compareTo(pivotMajor);
         if (ord == 0)
-          ord = minor[low].compareTo(pivotMinor);
+          ord = minor[idx].compareTo(pivotMinor);
 
         if (ord > 0) // Including all elements that are lower or equal than the pivot
           break;
@@ -469,9 +478,10 @@ class Algs {
       // lower or equal than the pivot. It may be outside the bounds of the array
 
       while (high >= first) {
-        int ord = major[high].compareTo(pivotMajor);
+        int idx = indexes[high];
+        int ord = major[idx].compareTo(pivotMajor);
         if (ord == 0)
-          ord = minor[high].compareTo(pivotMinor);
+          ord = minor[idx].compareTo(pivotMinor);
 
         if (ord <= 0) // Including only elements that are greater than the pivot
           break;
@@ -489,12 +499,18 @@ class Algs {
         indexes[low] = indexes[high];
         indexes[high] = tmp;
         low++;
-        high++;
+        high--;
       }
     }
 
-    if (low > first)
-      sortIdxs(indexes, first, low-1, major, minor);
+    if (low - 1 > first)
+      indexes[first] = indexes[low - 1];
+    indexes[low - 1] = pivot;
+
+    if (low - 2 > first) {
+      sortIdxs(indexes, first, low-2, major, minor);
+    }
+
     if (high < last)
       sortIdxs(indexes, high+1, last, major, minor);
   }
