@@ -516,21 +516,30 @@ class Algs {
   }
 
   static void sortIdxs(int[] indexes, int first, int last, Obj[] ord1, Obj[] ord2, Obj[] ord3) {
-    int low = first;
-    int high = last;
+    if (first >= last)
+      return;
 
-    int pivot = indexes[low + (high - low) / 2];
+    int pivotIdx = first + (last - first) / 2;
+    int pivot = indexes[pivotIdx];
     Obj pivotOrd1 = ord1[pivot];
     Obj pivotOrd2 = ord2[pivot];
     Obj pivotOrd3 = ord3[pivot];
 
+    if (pivotIdx > first)
+      indexes[pivotIdx] = indexes[first];
+      // indexes[first] = pivot; // Not necessary
+
+    int low = first + 1;
+    int high = last;
+
     while (low <= high) {
       while (low <= last) {
-        int ord = ord1[low].compareTo(pivotOrd1);
+        int idx = indexes[low];
+        int ord = ord1[idx].compareTo(pivotOrd1);
         if (ord == 0)
-          ord = ord2[low].compareTo(pivotOrd2);
+          ord = ord2[idx].compareTo(pivotOrd2);
         if (ord == 0)
-          ord = ord3[low].compareTo(pivotOrd3);
+          ord = ord3[idx].compareTo(pivotOrd3);
 
         if (ord > 0) // Including all elements that are lower or equal than the pivot
           break;
@@ -538,18 +547,25 @@ class Algs {
           low++;
       }
 
+      // <low> is now the lowest index that does not contain a value that is
+      // lower or equal than the pivot. It may be outside the bounds of the array
+
       while (high >= first) {
-        int ord = ord1[high].compareTo(pivotOrd1);
+        int idx = indexes[high];
+        int ord = ord1[idx].compareTo(pivotOrd1);
         if (ord == 0)
-          ord = ord2[high].compareTo(pivotOrd2);
+          ord = ord2[idx].compareTo(pivotOrd2);
         if (ord == 0)
-          ord = ord3[high].compareTo(pivotOrd3);
+          ord = ord3[idx].compareTo(pivotOrd3);
 
         if (ord <= 0) // Including only elements that are greater than the pivot
           break;
         else
           high--;
       }
+
+      // <high> is not the highest index that does not contain an element that
+      // is greater than the pivot. It may be outside the bounds of the array
 
       Miscellanea.Assert(low != high);
 
@@ -558,12 +574,18 @@ class Algs {
         indexes[low] = indexes[high];
         indexes[high] = tmp;
         low++;
-        high++;
+        high--;
       }
     }
 
-    if (low > first)
-      sortIdxs(indexes, first, low-1, ord1, ord2, ord3);
+    if (low - 1 > first)
+      indexes[first] = indexes[low - 1];
+    indexes[low - 1] = pivot;
+
+    if (low - 2 > first) {
+      sortIdxs(indexes, first, low-2, ord1, ord2, ord3);
+    }
+
     if (high < last)
       sortIdxs(indexes, high+1, last, ord1, ord2, ord3);
   }
