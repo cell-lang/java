@@ -23,8 +23,7 @@ class ByteStream {
   }
 
   protected final byte read() {
-    if (nextByte == EOF)
-      throw new RuntimeException();
+    failHereIf(nextByte == EOF);
     offset++;
     byte result = nextByte;
     nextByte = offset < length ? bytes[offset] : EOF;
@@ -32,8 +31,7 @@ class ByteStream {
   }
 
   protected final byte peek() {
-    if (nextByte == EOF)
-      throw new RuntimeException();
+    failHereIf(nextByte == EOF);
     return nextByte;
   }
 
@@ -89,28 +87,34 @@ class ByteStream {
   //////////////////////////////////////////////////////////////////////////////
 
   protected final void checkNextIs(char ch) {
-    if (nextByte != ch)
-      throw new RuntimeException();
+    failHereIf(nextByte != ch);
   }
 
   protected final void checkNextIsDigit() {
-    if (!isDigit(nextByte))
-      throw new RuntimeException();
+    failHereIf(!isDigit(nextByte));
   }
 
   protected final void checkNextIsHex() {
-    if (!isHex(nextByte))
-      throw new RuntimeException();
+    failHereIf(!isHex(nextByte));
   }
 
   protected final void checkNextIsAlphaNum() {
-    if (!isAlphaNum(nextByte))
-      throw new RuntimeException();
+    failHereIf(!isAlphaNum(nextByte));
   }
 
   protected final void checkNextIsPrintable() {
-    if (!isPrintable(nextByte))
-      throw new RuntimeException();
+    failHereIf(!isPrintable(nextByte));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  protected final void failHereIf(boolean cond) {
+    if (cond)
+      failHere();
+  }
+
+  protected final ParsingException failHere() {
+    throw new ParsingException(offset);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -162,10 +166,8 @@ class Lexer extends ByteStream {
     long value = 0;
     while (nextIsDigit()) {
       int digit = read() - '0';
-      if (++count == 19) {
-        if (value > 922337203685477580L | (value == 922337203685477580L & digit > 7))
-          throw new RuntimeException();
-      }
+      if (++count == 19)
+        failHereIf(value > 922337203685477580L | (value == 922337203685477580L & digit > 7));
       value = 10 * value + digit;
     }
     return value;
@@ -196,8 +198,7 @@ class Lexer extends ByteStream {
       floatValue *= Math.pow(10, negExp ? -expValue : expValue);
     }
 
-    if (nextIsLower())
-      throw new RuntimeException();
+    failHereIf(nextIsLower());
 
     return new Token(startOffset, offset() - startOffset, TokenType.Float, negate ? -floatValue : floatValue);
   }
@@ -288,8 +289,11 @@ class Lexer extends ByteStream {
   Token[] lex() {
     ArrayList<Token> tokens = new ArrayList<Token>();
 
-    while (!eof()) {
+    for ( ; ; ) {
       consumeWhiteSpace();
+
+      if (eof())
+        return tokens.toArray(new Token[tokens.size()]);
 
       int startOffset = offset();
 
@@ -301,9 +305,7 @@ class Lexer extends ByteStream {
           continue;
         }
 
-        if (!nextIsDigit())
-          throw new RuntimeException();
-
+        checkNextIsDigit();
         negate = true;
       }
 
@@ -357,12 +359,10 @@ class Lexer extends ByteStream {
           break;
 
         default:
-          throw new RuntimeException();
+          throw failHere();
       }
 
       tokens.add(new Token(offset()-1, 1, type));
     }
-
-    return tokens.toArray(new Token[tokens.size()]);
   }
 }

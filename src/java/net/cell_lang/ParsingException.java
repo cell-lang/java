@@ -7,4 +7,8 @@ class ParsingException extends RuntimeException {
   public ParsingException(int errorOffset) {
     this.errorOffset = errorOffset;
   }
+
+  public String toString() {
+    return String.format("Parsing error at byte %d", errorOffset);
+  }
 }
