@@ -31,6 +31,12 @@ class ByteStream {
     return result;
   }
 
+  protected final byte peek() {
+    if (nextByte == EOF)
+      throw new RuntimeException();
+    return nextByte;
+  }
+
   protected final void setCheckpoint() {
     checkpoint = offset;
   }
@@ -48,12 +54,6 @@ class ByteStream {
     return offset >= length;
   }
 
-  // protected final byte peek() {
-  //   if (offset == length)
-  //     throw new RuntimeException();
-  //   return bytes[offset++];
-  // }nextChar
-
   protected final boolean consumeNextIfItIs(char ch) {
     boolean res = nextIs(ch);
     if (res)
@@ -67,7 +67,7 @@ class ByteStream {
   }
 
   protected final boolean nextIs(char ch) {
-    return nextByte != ch;
+    return nextByte == ch;
   }
 
   protected final boolean nextIsDigit() {

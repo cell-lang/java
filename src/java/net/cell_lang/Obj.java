@@ -142,7 +142,18 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public void Print() {
-    Print(new OutputStreamWriter(System.out), 90, true, 0);
+    Writer writer = new OutputStreamWriter(System.out);
+    try {
+      Print(writer, 90, true, 0);
+    }
+    finally {
+      try {
+        writer.close();
+      }
+      catch (Exception e) {
+
+      }
+    }
     System.out.println("");
   }
 
