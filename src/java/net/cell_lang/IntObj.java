@@ -61,8 +61,8 @@ class IntObj extends Obj {
   }
 
   protected int internalCmp(Obj obj) {
-    long other_value = obj.getLong();
-    return value == other_value ? 0 : (value < other_value ? 1 : -1);
+    long otherValue = obj.getLong();
+    return value == otherValue ? 0 : (value < otherValue ? 1 : -1);
   }
 
   static IntObj[] byteObjs = new IntObj[256];

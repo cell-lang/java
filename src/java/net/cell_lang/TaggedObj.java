@@ -171,10 +171,10 @@ class TaggedObj extends Obj {
     return other.cmpTaggedObj(tag, obj);
   }
 
-  public int cmpTaggedObj(int other_tag, Obj other_obj) {
-    if (other_tag != tag)
-      return SymbTable.compSymbs(other_tag, tag);
+  public int cmpTaggedObj(int otherTag, Obj otherObj) {
+    if (otherTag != tag)
+      return SymbTable.compSymbs(otherTag, tag);
     else
-      return other_obj.cmp(obj);
+      return otherObj.cmp(obj);
   }
 }

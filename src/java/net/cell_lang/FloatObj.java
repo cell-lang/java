@@ -56,7 +56,7 @@ class FloatObj extends Obj {
   }
 
   protected int internalCmp(Obj other) {
-    double other_value = other.getDouble();
-    return value == other_value ? 0 : (value < other_value ? 1 : -1);
+    double otherValue = other.getDouble();
+    return value == otherValue ? 0 : (value < otherValue ? 1 : -1);
   }
 }

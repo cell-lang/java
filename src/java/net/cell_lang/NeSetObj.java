@@ -108,13 +108,13 @@ class NeSetObj extends Obj {
     return other.cmpNeSet(elts);
   }
 
-  public int cmpNeSet(Obj[] other_elts) {
+  public int cmpNeSet(Obj[] otherElts) {
     int len = elts.length;
-    int other_len = other_elts.length;
-    if (other_len != len)
-      return other_len < len ? 1 : -1;
+    int otherLen = otherElts.length;
+    if (otherLen != len)
+      return otherLen < len ? 1 : -1;
     for (int i=0 ; i < len ; i++) {
-      int res = other_elts[i].cmp(elts[i]);
+      int res = otherElts[i].cmp(elts[i]);
       if (res != 0)
         return res;
     }

@@ -51,8 +51,8 @@ class Algs {
 
     int low = offset;
     int high = offset + length - 1;
-    int lower_bound = low;
-    int upper_bound = high;
+    int lowerBound = low;
+    int upperBound = high;
 
 
     while (low <= high) {
@@ -60,14 +60,14 @@ class Algs {
       switch (objs[mid].cmp(obj)) {
         case -1:
           // objs[mid] > obj
-          upper_bound = high = mid - 1;
+          upperBound = high = mid - 1;
           break;
 
         case 0:
           if (mid == offset || !objs[mid-1].isEq(obj)) {
             first = mid;
-            low = lower_bound;
-            high = upper_bound;
+            low = lowerBound;
+            high = upperBound;
 
             while (low <= high) {
               mid = (int) (((long) low + (long) high) / 2);
@@ -78,7 +78,7 @@ class Algs {
                   break;
 
                 case 0:
-                  if (mid == upper_bound || !objs[mid+1].isEq(obj)) {
+                  if (mid == upperBound || !objs[mid+1].isEq(obj)) {
                     return new int[] {first, mid - first + 1};
                   }
                   else
@@ -101,7 +101,7 @@ class Algs {
 
         case 1:
           // objs[mid] < obj
-          lower_bound = low = mid + 1;
+          lowerBound = low = mid + 1;
           break;
       }
     }
@@ -118,8 +118,8 @@ class Algs {
 
     int low = offset;
     int high = offset + length - 1;
-    int lower_bound = low;
-    int upper_bound = high;
+    int lowerBound = low;
+    int upperBound = high;
 
 
     while (low <= high) {
@@ -127,14 +127,14 @@ class Algs {
       switch (objs[idxs[mid]].cmp(obj)) {
         case -1:
           // objs[idxs[mid]] > obj
-          upper_bound = high = mid - 1;
+          upperBound = high = mid - 1;
           break;
 
         case 0:
           if (mid == offset || !objs[idxs[mid-1]].isEq(obj)) {
             int first = mid;
-            low = lower_bound;
-            high = upper_bound;
+            low = lowerBound;
+            high = upperBound;
 
             while (low <= high) {
               mid = (int) (((long) low + (long) high) / 2);
@@ -145,7 +145,7 @@ class Algs {
                   break;
 
                 case 0:
-                  if (mid == upper_bound || !objs[idxs[mid+1]].isEq(obj)) {
+                  if (mid == upperBound || !objs[idxs[mid+1]].isEq(obj)) {
                     return new int[] {first, mid - first + 1};
                   }
                   else
@@ -168,7 +168,7 @@ class Algs {
 
         case 1:
           // objs[idxs[mid]] < obj
-          lower_bound = low = mid + 1;
+          lowerBound = low = mid + 1;
           break;
       }
     }
@@ -183,8 +183,8 @@ class Algs {
 
     int low = offset;
     int high = offset + length - 1;
-    int lower_bound = low;
-    int upper_bound = high;
+    int lowerBound = low;
+    int upperBound = high;
 
 
     while (low <= high) {
@@ -195,14 +195,14 @@ class Algs {
       switch (res) {
         case -1:
           // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
-          upper_bound = high = mid - 1;
+          upperBound = high = mid - 1;
           break;
 
         case 0:
           if (mid == offset || (!major[mid-1].isEq(majorVal) || !minor[mid-1].isEq(minorVal))) {
             int first = mid;
-            low = lower_bound;
-            high = upper_bound;
+            low = lowerBound;
+            high = upperBound;
 
             while (low <= high) {
               mid = (int) (((long) low + (long) high) / 2);
@@ -216,7 +216,7 @@ class Algs {
                   break;
 
                 case 0:
-                  if (mid == upper_bound || (!major[mid+1].isEq(majorVal) || !minor[mid+1].isEq(minorVal))) {
+                  if (mid == upperBound || (!major[mid+1].isEq(majorVal) || !minor[mid+1].isEq(minorVal))) {
                     return new int[] {first, mid - first + 1};
                   }
                   else
@@ -239,7 +239,7 @@ class Algs {
 
         case 1:
           // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
-          lower_bound = low = mid + 1;
+          lowerBound = low = mid + 1;
           break;
       }
     }
@@ -254,8 +254,8 @@ class Algs {
 
     int low = offset;
     int high = offset + length - 1;
-    int lower_bound = low;
-    int upper_bound = high;
+    int lowerBound = low;
+    int upperBound = high;
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
@@ -267,7 +267,7 @@ class Algs {
       switch (res) {
         case -1:
           // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
-          upper_bound = high = mid - 1;
+          upperBound = high = mid - 1;
           break;
 
         case 0:
@@ -278,8 +278,8 @@ class Algs {
           }
           if (isFirst) {
             int first = mid;
-            low = lower_bound;
-            high = upper_bound;
+            low = lowerBound;
+            high = upperBound;
 
             while (low <= high) {
               mid = (int) (((long) low + (long) high) / 2);
@@ -294,7 +294,7 @@ class Algs {
                   break;
 
                 case 0:
-                  boolean isLast = mid == upper_bound;
+                  boolean isLast = mid == upperBound;
                   if (!isLast) {
                     int nextIdx = idxs[mid+1];
                     isLast = !major[nextIdx].isEq(majorVal) || !minor[nextIdx].isEq(minorVal);
@@ -322,7 +322,7 @@ class Algs {
 
         case 1:
           // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
-          lower_bound = low = mid + 1;
+          lowerBound = low = mid + 1;
           break;
       }
     }
@@ -363,16 +363,16 @@ class Algs {
     }
 
     int size = prev + 1;
-    Obj[] norm_col_1 = new Obj[size];
-    Obj[] norm_col_2 = new Obj[size];
+    Obj[] normCol1 = new Obj[size];
+    Obj[] normCol2 = new Obj[size];
 
     for (int i=0 ; i < size ; i++) {
       int j = idxs[i];
-      norm_col_1[i] = col1[j];
-      norm_col_2[i] = col2[j];
+      normCol1[i] = col1[j];
+      normCol2[i] = col2[j];
     }
 
-    return new Obj[][] {norm_col_1, norm_col_2};
+    return new Obj[][] {normCol1, normCol2};
   }
 
   public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, Obj[] col3, int count) {
@@ -394,18 +394,18 @@ class Algs {
     }
 
     int size = prev + 1;
-    Obj[] norm_col_1 = new Obj[size];
-    Obj[] norm_col_2 = new Obj[size];
-    Obj[] norm_col_3 = new Obj[size];
+    Obj[] normCol1 = new Obj[size];
+    Obj[] normCol2 = new Obj[size];
+    Obj[] normCol3 = new Obj[size];
 
     for (int i=0 ; i < size ; i++) {
       int j = idxs[i];
-      norm_col_1[i] = col1[j];
-      norm_col_2[i] = col2[j];
-      norm_col_3[i] = col3[j];
+      normCol1[i] = col1[j];
+      normCol2[i] = col2[j];
+      normCol3[i] = col3[j];
     }
 
-    return new Obj[][] {norm_col_1, norm_col_2, norm_col_3};
+    return new Obj[][] {normCol1, normCol2, normCol3};
   }
 
   public static boolean sortedArrayHasDuplicates(Obj[] objs) {

@@ -54,15 +54,15 @@ class NeTernRelObj extends Obj {
   }
 
   public boolean hasTriple(Obj obj1, Obj obj2, Obj obj3) {
-    int[] first_and_count = Algs.binSearchRange(col1, 0, col1.length, obj1);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(col1, 0, col1.length, obj1);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     if (count == 0)
       return false;
 
-    first_and_count = Algs.binSearchRange(col2, first, count, obj2);
-    first = first_and_count[0];
-    count = first_and_count[1];
+    firstAndCount = Algs.binSearchRange(col2, first, count, obj2);
+    first = firstAndCount[0];
+    count = firstAndCount[1];
     if (count == 0)
       return false;
 
@@ -79,52 +79,52 @@ class NeTernRelObj extends Obj {
   }
 
   public TernRelIter getTernRelIterByCol1(Obj val) {
-    int[] first_and_count = Algs.binSearchRange(col1, 0, col1.length, val);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(col1, 0, col1.length, val);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     return new TernRelIter(col1, col2, col3, null, first, first+count-1);
   }
 
   public TernRelIter getTernRelIterByCol2(Obj val) {
     if (idxs231 == null)
       idxs231 = Algs.sortedIndexes(col2, col3, col1);
-    int[] first_and_count = Algs.binSearchRange(idxs231, col2, val);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(idxs231, col2, val);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     return new TernRelIter(col1, col2, col3, idxs231, first, first+count-1);
   }
 
   public TernRelIter getTernRelIterByCol3(Obj val) {
     if (idxs312 == null)
       idxs312 = Algs.sortedIndexes(col3, col1, col2);
-    int[] first_and_count = Algs.binSearchRange(idxs312, col3, val);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(idxs312, col3, val);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     return new TernRelIter(col1, col2, col3, idxs312, first, first+count-1);
   }
 
   public TernRelIter getTernRelIterByCol12(Obj val1, Obj val2) {
-    int[] first_and_count = Algs.binSearchRange(col1, col2, val1, val2);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(col1, col2, val1, val2);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     return new TernRelIter(col1, col2, col3, null, first, first+count-1);
   }
 
   public TernRelIter getTernRelIterByCol13(Obj val1, Obj val3) {
     if (idxs312 == null)
       idxs312 = Algs.sortedIndexes(col3, col1, col2);
-    int[] first_and_count = Algs.binSearchRange(idxs312, col3, col1, val3, val1);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(idxs312, col3, col1, val3, val1);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     return new TernRelIter(col1, col2, col3, idxs312, first, first+count-1);
   }
 
   public TernRelIter getTernRelIterByCol23(Obj val2, Obj val3) {
     if (idxs231 == null)
       idxs231 = Algs.sortedIndexes(col2, col3, col1);
-    int[] first_and_count = Algs.binSearchRange(idxs231, col2, col3, val2, val3);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(idxs231, col2, col3, val2, val3);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     return new TernRelIter(col1, col2, col3, idxs231, first, first+count-1);
   }
 
@@ -231,23 +231,23 @@ class NeTernRelObj extends Obj {
     return other.cmpNeTernRel(col1, col2, col3);
   }
 
-  public int cmpNeTernRel(Obj[] other_col_1, Obj[] other_col_2, Obj[] other_col_3) {
+  public int cmpNeTernRel(Obj[] otherCol1, Obj[] otherCol2, Obj[] otherCol3) {
     int len = col1.length;
-    int other_len = other_col_1.length;
-    if (other_len != len)
-      return other_len < len ? 1 : -1;
+    int otherLen = otherCol1.length;
+    if (otherLen != len)
+      return otherLen < len ? 1 : -1;
     for (int i=0 ; i < len ; i++) {
-      int res = other_col_1[i].cmp(col1[i]);
+      int res = otherCol1[i].cmp(col1[i]);
       if (res != 0)
         return res;
     }
     for (int i=0 ; i < len ; i++) {
-      int res = other_col_2[i].cmp(col2[i]);
+      int res = otherCol2[i].cmp(col2[i]);
       if (res != 0)
         return res;
     }
     for (int i=0 ; i < len ; i++) {
-      int res = other_col_3[i].cmp(col3[i]);
+      int res = otherCol3[i].cmp(col3[i]);
       if (res != 0)
         return res;
     }

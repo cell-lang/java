@@ -64,9 +64,9 @@ class Builder {
   public static Obj createBinRel(Obj[] col1, Obj[] col2, long count) {
     Miscellanea._assert(count <= col1.length & count <= col2.length);
     if (count != 0) {
-      Obj[][] norm_cols = Algs.sortUnique(col1, col2, (int) count);
-      Obj[] norm_col_1 = norm_cols[0];
-      return new NeBinRelObj(norm_col_1, norm_cols[1], !Algs.sortedArrayHasDuplicates(norm_col_1));
+      Obj[][] normCols = Algs.sortUnique(col1, col2, (int) count);
+      Obj[] normCol1 = normCols[0];
+      return new NeBinRelObj(normCol1, normCols[1], !Algs.sortedArrayHasDuplicates(normCol1));
     }
     else
       return EmptyRelObj.singleton();
@@ -88,8 +88,8 @@ class Builder {
   public static Obj createTernRel(Obj[] col1, Obj[] col2, Obj[] col3, long count) {
     Miscellanea._assert(count <= col1.length && count <= col2.length && count <= col3.length);
     if (col1.length != 0) {
-      Obj[][] norm_cols = Algs.sortUnique(col1, col2, col3, (int) count);
-      return new NeTernRelObj(norm_cols[0], norm_cols[1], norm_cols[2]);
+      Obj[][] normCols = Algs.sortUnique(col1, col2, col3, (int) count);
+      return new NeTernRelObj(normCols[0], normCols[1], normCols[2]);
     }
     else {
       return EmptyRelObj.singleton();

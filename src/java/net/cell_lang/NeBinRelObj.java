@@ -37,10 +37,10 @@ class NeBinRelObj extends Obj {
     return Algs.binSearch(col1, obj) != -1;
   }
 
-  public boolean hasField(int symb_id) {
+  public boolean hasField(int symbId) {
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
-      if (col1[i].isSymb(symb_id))
+      if (col1[i].isSymb(symbId))
         return true;
     return false;
   }
@@ -51,9 +51,9 @@ class NeBinRelObj extends Obj {
       return idx != -1 && col2[idx].isEq(obj2);
     }
     else {
-      int[] first_and_count = Algs.binSearchRange(col1, 0, col1.length, obj1);
-      int first = first_and_count[0];
-      int count = first_and_count[1];
+      int[] firstAndCount = Algs.binSearchRange(col1, 0, col1.length, obj1);
+      int first = firstAndCount[0];
+      int count = firstAndCount[1];
       if (count == 0)
         return false;
       int idx = Algs.binSearch(col2, first, count, obj2);
@@ -70,18 +70,18 @@ class NeBinRelObj extends Obj {
   }
 
   public BinRelIter getBinRelIterByCol1(Obj obj) {
-    int[] first_and_count = Algs.binSearchRange(col1, 0, col1.length, obj);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(col1, 0, col1.length, obj);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     return new BinRelIter(col1, col2, first, first+count-1);
   }
 
   public BinRelIter getBinRelIterByCol2(Obj obj) {
     if (revIdxs == null)
       revIdxs = Algs.sortedIndexes(col2, col1);
-    int[] first_and_count = Algs.binSearchRange(revIdxs, col2, obj);
-    int first = first_and_count[0];
-    int count = first_and_count[1];
+    int[] firstAndCount = Algs.binSearchRange(revIdxs, col2, obj);
+    int first = firstAndCount[0];
+    int count = firstAndCount[1];
     return new BinRelIter(col1, col2, revIdxs, first, first+count-1);
   }
 
@@ -95,10 +95,10 @@ class NeBinRelObj extends Obj {
     return col2[idx];
   }
 
-  public Obj lookupField(int symb_id) {
+  public Obj lookupField(int symbId) {
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
-      if (col1[i].isSymb(symb_id))
+      if (col1[i].isSymb(symbId))
         return col2[i];
     // We should never get here. The typechecker should prevent it.
     throw new UnsupportedOperationException();
@@ -225,18 +225,18 @@ class NeBinRelObj extends Obj {
     return other.cmpNeBinRel(col1, col2);
   }
 
-  public int cmpNeBinRel(Obj[] other_col_1, Obj[] other_col_2) {
+  public int cmpNeBinRel(Obj[] otherCol1, Obj[] otherCol2) {
     int len = col1.length;
-    int other_len = other_col_1.length;
-    if (other_len != len)
-      return other_len < len ? 1 : -1;
+    int otherLen = otherCol1.length;
+    if (otherLen != len)
+      return otherLen < len ? 1 : -1;
     for (int i=0 ; i < len ; i++) {
-      int res = other_col_1[i].cmp(col1[i]);
+      int res = otherCol1[i].cmp(col1[i]);
       if (res != 0)
         return res;
     }
     for (int i=0 ; i < len ; i++) {
-      int res = other_col_2[i].cmp(col2[i]);
+      int res = otherCol2[i].cmp(col2[i]);
       if (res != 0)
         return res;
     }

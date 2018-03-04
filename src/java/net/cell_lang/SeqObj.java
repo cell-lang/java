@@ -177,11 +177,11 @@ abstract class SeqObj extends Obj {
     return other.cmpSeq(items, offset, length);
   }
 
-  public int cmpSeq(Obj[] other_items, int other_offset, int other_length) {
-    if (other_length != length)
-      return other_length < length ? 1 : -1;
+  public int cmpSeq(Obj[] otherItems, int otherOffset, int otherLength) {
+    if (otherLength != length)
+      return otherLength < length ? 1 : -1;
     for (int i=0 ; i < length ; i++) {
-      int res = other_items[other_offset+i].cmp(items[offset+i]);
+      int res = otherItems[otherOffset+i].cmp(items[offset+i]);
       if (res != 0)
         return res;
     }
