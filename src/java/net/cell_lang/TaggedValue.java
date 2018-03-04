@@ -10,39 +10,39 @@ class TaggedValue extends ValueBase {
     this.value = value;
   }
 
-  public boolean IsTagged() {
+  public boolean isTagged() {
     return true;
   }
 
-  public String Tag() {
-    return SymbTable.IdxToStr(tagId);
+  public String tag() {
+    return SymbTable.idxToStr(tagId);
   }
 
-  public Value Untagged() {
+  public Value untagged() {
     return value;
   }
 
-  public boolean IsString() {
+  public boolean isString() {
     if (tagId != SymbTable.StringSymbId)
       return false;
-    if (!value.IsSeq())
+    if (!value.isSeq())
       return false;
-    int len = value.Size();
+    int len = value.size();
     for (int i=0 ; i < len ; i++) {
-      Value item = value.Item(i);
-      if (!item.IsInt() || item.AsLong() > 65535)
+      Value item = value.item(i);
+      if (!item.isInt() || item.asLong() > 65535)
         return false;
     }
     return true;
   }
 
-  public String AsString() {
-    if (!IsString())
+  public String asString() {
+    if (!isString())
       throw new UnsupportedOperationException();
-    int len = value.Size();
+    int len = value.size();
     char[] chars = new char[len];
     for (int i=0 ; i < len ; i++) {
-      long code = value.Item(i).AsLong();
+      long code = value.item(i).asLong();
       // if (code > 65535)
       //  throw new UnsupportedOperationException(); // Char.ConvertFromUtf32
       chars[i] = (char) code;
@@ -50,11 +50,11 @@ class TaggedValue extends ValueBase {
     return new String(chars);
   }
 
-  public Value Lookup(String field) {
-    return value.Lookup(field);
+  public Value lookup(String field) {
+    return value.lookup(field);
   }
 
-  public Obj AsObj() {
-    return new TaggedObj(tagId, value.AsObj());
+  public Obj asObj() {
+    return new TaggedObj(tagId, value.asObj());
   }
 }

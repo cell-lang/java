@@ -8,15 +8,15 @@ class IntValue extends ValueBase {
     this.value = value;
   }
 
-  public boolean IsInt() {
+  public boolean isInt() {
     return true;
   }
 
-  public long AsLong() {
+  public long asLong() {
     return value;
   }
 
-  public Obj AsObj() {
-    return IntObj.Get(value);
+  public Obj asObj() {
+    return IntObj.get(value);
   }
 }

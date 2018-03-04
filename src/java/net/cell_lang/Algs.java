@@ -6,7 +6,7 @@ import java.util.Arrays;
 class Algs {
   static void CheckIsOrdered(Obj[] objs) {
     for (int i=1 ; i < objs.length ; i++) {
-      int cmp = objs[i-1].Cmp(objs[i]);
+      int cmp = objs[i-1].cmp(objs[i]);
       if (cmp != 1) {
         System.out.println("*****************************************");
         System.out.println(objs[i-1].toString());
@@ -17,17 +17,17 @@ class Algs {
     }
   }
 
-  public static int BinSearch(Obj[] objs, Obj obj) {
-    return BinSearch(objs, 0, objs.length, obj);
+  public static int binSearch(Obj[] objs, Obj obj) {
+    return binSearch(objs, 0, objs.length, obj);
   }
 
-  public static int BinSearch(Obj[] objs, int first, int count, Obj obj) {
+  public static int binSearch(Obj[] objs, int first, int count, Obj obj) {
     int low = first;
     int high = first + count - 1;
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      switch (objs[mid].Cmp(obj)) {
+      switch (objs[mid].cmp(obj)) {
         case -1:
           // objs[mid] > obj
           high = mid - 1;
@@ -46,7 +46,7 @@ class Algs {
     return -1;
   }
 
-  public static int[] BinSearchRange(Obj[] objs, int offset, int length, Obj obj) {
+  public static int[] binSearchRange(Obj[] objs, int offset, int length, Obj obj) {
     int first;
 
     int low = offset;
@@ -57,28 +57,28 @@ class Algs {
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      switch (objs[mid].Cmp(obj)) {
+      switch (objs[mid].cmp(obj)) {
         case -1:
           // objs[mid] > obj
           upper_bound = high = mid - 1;
           break;
 
         case 0:
-          if (mid == offset || !objs[mid-1].IsEq(obj)) {
+          if (mid == offset || !objs[mid-1].isEq(obj)) {
             first = mid;
             low = lower_bound;
             high = upper_bound;
 
             while (low <= high) {
               mid = (int) (((long) low + (long) high) / 2);
-              switch (objs[mid].Cmp(obj)) {
+              switch (objs[mid].cmp(obj)) {
                 case -1:
                   // objs[mid] > obj
                   high = mid - 1;
                   break;
 
                 case 0:
-                  if (mid == upper_bound || !objs[mid+1].IsEq(obj)) {
+                  if (mid == upper_bound || !objs[mid+1].isEq(obj)) {
                     return new int[] {first, mid - first + 1};
                   }
                   else
@@ -110,8 +110,8 @@ class Algs {
   }
 
 
-  public static int[] BinSearchRange(int[] idxs, Obj[] objs, Obj obj) {
-    Miscellanea.Assert(idxs.length == objs.length);
+  public static int[] binSearchRange(int[] idxs, Obj[] objs, Obj obj) {
+    Miscellanea._assert(idxs.length == objs.length);
 
     int offset = 0;
     int length = idxs.length;
@@ -124,28 +124,28 @@ class Algs {
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      switch (objs[idxs[mid]].Cmp(obj)) {
+      switch (objs[idxs[mid]].cmp(obj)) {
         case -1:
           // objs[idxs[mid]] > obj
           upper_bound = high = mid - 1;
           break;
 
         case 0:
-          if (mid == offset || !objs[idxs[mid-1]].IsEq(obj)) {
+          if (mid == offset || !objs[idxs[mid-1]].isEq(obj)) {
             int first = mid;
             low = lower_bound;
             high = upper_bound;
 
             while (low <= high) {
               mid = (int) (((long) low + (long) high) / 2);
-              switch (objs[idxs[mid]].Cmp(obj)) {
+              switch (objs[idxs[mid]].cmp(obj)) {
                 case -1:
                   // objs[idxs[mid]] > obj
                   high = mid - 1;
                   break;
 
                 case 0:
-                  if (mid == upper_bound || !objs[idxs[mid+1]].IsEq(obj)) {
+                  if (mid == upper_bound || !objs[idxs[mid+1]].isEq(obj)) {
                     return new int[] {first, mid - first + 1};
                   }
                   else
@@ -177,7 +177,7 @@ class Algs {
   }
 
 
-  public static int[] BinSearchRange(Obj[] major, Obj[] minor, Obj majorVal, Obj minorVal) {
+  public static int[] binSearchRange(Obj[] major, Obj[] minor, Obj majorVal, Obj minorVal) {
     int offset = 0;
     int length = major.length;
 
@@ -189,9 +189,9 @@ class Algs {
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      int res = major[mid].Cmp(majorVal);
+      int res = major[mid].cmp(majorVal);
       if (res == 0)
-        res = minor[mid].Cmp(minorVal);
+        res = minor[mid].cmp(minorVal);
       switch (res) {
         case -1:
           // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
@@ -199,16 +199,16 @@ class Algs {
           break;
 
         case 0:
-          if (mid == offset || (!major[mid-1].IsEq(majorVal) || !minor[mid-1].IsEq(minorVal))) {
+          if (mid == offset || (!major[mid-1].isEq(majorVal) || !minor[mid-1].isEq(minorVal))) {
             int first = mid;
             low = lower_bound;
             high = upper_bound;
 
             while (low <= high) {
               mid = (int) (((long) low + (long) high) / 2);
-              res = major[mid].Cmp(majorVal);
+              res = major[mid].cmp(majorVal);
               if (res == 0)
-                res = minor[mid].Cmp(minorVal);
+                res = minor[mid].cmp(minorVal);
               switch (res) {
                 case -1:
                   // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
@@ -216,7 +216,7 @@ class Algs {
                   break;
 
                 case 0:
-                  if (mid == upper_bound || (!major[mid+1].IsEq(majorVal) || !minor[mid+1].IsEq(minorVal))) {
+                  if (mid == upper_bound || (!major[mid+1].isEq(majorVal) || !minor[mid+1].isEq(minorVal))) {
                     return new int[] {first, mid - first + 1};
                   }
                   else
@@ -248,7 +248,7 @@ class Algs {
   }
 
 
-  public static int[] BinSearchRange(int[] idxs, Obj[] major, Obj[] minor, Obj majorVal, Obj minorVal) {
+  public static int[] binSearchRange(int[] idxs, Obj[] major, Obj[] minor, Obj majorVal, Obj minorVal) {
     int offset = 0;
     int length = major.length;
 
@@ -260,9 +260,9 @@ class Algs {
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
       int midIdx = idxs[mid];
-      int res = major[midIdx].Cmp(majorVal);
+      int res = major[midIdx].cmp(majorVal);
       if (res == 0) {
-        res = minor[midIdx].Cmp(minorVal);
+        res = minor[midIdx].cmp(minorVal);
       }
       switch (res) {
         case -1:
@@ -274,7 +274,7 @@ class Algs {
           boolean isFirst = mid == offset;
           if (!isFirst) {
             int prevIdx = idxs[mid-1];
-            isFirst = !major[prevIdx].IsEq(majorVal) || !minor[prevIdx].IsEq(minorVal);
+            isFirst = !major[prevIdx].isEq(majorVal) || !minor[prevIdx].isEq(minorVal);
           }
           if (isFirst) {
             int first = mid;
@@ -284,9 +284,9 @@ class Algs {
             while (low <= high) {
               mid = (int) (((long) low + (long) high) / 2);
               midIdx = idxs[mid];
-              res = major[midIdx].Cmp(majorVal);
+              res = major[midIdx].cmp(majorVal);
               if (res == 0)
-                res = minor[midIdx].Cmp(minorVal);
+                res = minor[midIdx].cmp(minorVal);
               switch (res) {
                 case -1:
                   // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
@@ -297,7 +297,7 @@ class Algs {
                   boolean isLast = mid == upper_bound;
                   if (!isLast) {
                     int nextIdx = idxs[mid+1];
-                    isLast = !major[nextIdx].IsEq(majorVal) || !minor[nextIdx].IsEq(minorVal);
+                    isLast = !major[nextIdx].isEq(majorVal) || !minor[nextIdx].isEq(minorVal);
                   }
                   if (isLast) {
                     return new int[] {first, mid - first + 1};
@@ -331,12 +331,12 @@ class Algs {
   }
 
 
-  public static Obj[] SortUnique(Obj[] objs, int count) {
-    Miscellanea.Assert(count > 0);
+  public static Obj[] sortUnique(Obj[] objs, int count) {
+    Miscellanea._assert(count > 0);
     Arrays.sort(objs, 0, count);
     int prev = 0;
     for (int i=1 ; i < count ; i++)
-      if (!objs[prev].IsEq(objs[i]))
+      if (!objs[prev].isEq(objs[i]))
         if (i != ++prev)
           objs[prev] = objs[i];
     int len = prev + 1;
@@ -344,8 +344,8 @@ class Algs {
   }
 
 
-  public static Obj[][] SortUnique(Obj[] col1, Obj[] col2, int count) {
-    Miscellanea.Assert(count > 0);
+  public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, int count) {
+    Miscellanea._assert(count > 0);
 
     int[] idxs = new int[count];
     for (int i=0 ; i < count ; i++)
@@ -357,7 +357,7 @@ class Algs {
     for (int i=1 ; i < count ; i++) {
       int j = idxs[i];
       int k = idxs[i-1];
-      if (!col1[j].IsEq(col1[k]) || !col2[j].IsEq(col2[k]))
+      if (!col1[j].isEq(col1[k]) || !col2[j].isEq(col2[k]))
         if (i != ++prev)
           idxs[prev] = idxs[i];
     }
@@ -375,8 +375,8 @@ class Algs {
     return new Obj[][] {norm_col_1, norm_col_2};
   }
 
-  public static Obj[][] SortUnique(Obj[] col1, Obj[] col2, Obj[] col3, int count) {
-    Miscellanea.Assert(count > 0);
+  public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, Obj[] col3, int count) {
+    Miscellanea._assert(count > 0);
 
     int[] idxs = new int[count];
     for (int i=0 ; i < count ; i++)
@@ -388,7 +388,7 @@ class Algs {
     for (int i=1 ; i < count ; i++) {
       int j = idxs[i];
       int k = idxs[i-1];
-      if (!col1[j].IsEq(col1[k]) || !col2[j].IsEq(col2[k]) || !col3[j].IsEq(col3[k]))
+      if (!col1[j].isEq(col1[k]) || !col2[j].isEq(col2[k]) || !col3[j].isEq(col3[k]))
         if (i != ++prev)
           idxs[prev] = idxs[i];
     }
@@ -408,15 +408,15 @@ class Algs {
     return new Obj[][] {norm_col_1, norm_col_2, norm_col_3};
   }
 
-  public static boolean SortedArrayHasDuplicates(Obj[] objs) {
+  public static boolean sortedArrayHasDuplicates(Obj[] objs) {
     for (int i=1 ; i < objs.length ; i++)
-      if (objs[i].IsEq(objs[i-1]))
+      if (objs[i].isEq(objs[i-1]))
         return true;
     return false;
   }
 
-  public static int[] SortedIndexes(Obj[] major, Obj[] minor) {
-    Miscellanea.Assert(major.length == minor.length);
+  public static int[] sortedIndexes(Obj[] major, Obj[] minor) {
+    Miscellanea._assert(major.length == minor.length);
 
     int count = major.length;
 
@@ -429,8 +429,8 @@ class Algs {
     return idxs;
   }
 
-  public static int[] SortedIndexes(Obj[] col1, Obj[] col2, Obj[] col3) {
-    Miscellanea.Assert(col1.length == col2.length && col1.length == col3.length);
+  public static int[] sortedIndexes(Obj[] col1, Obj[] col2, Obj[] col3) {
+    Miscellanea._assert(col1.length == col2.length && col1.length == col3.length);
 
     int count = col1.length;
 
@@ -492,7 +492,7 @@ class Algs {
       // <high> is not the highest index that does not contain an element that
       // is greater than the pivot. It may be outside the bounds of the array
 
-      Miscellanea.Assert(low != high);
+      Miscellanea._assert(low != high);
 
       if (low < high) {
         int tmp = indexes[low];
@@ -567,7 +567,7 @@ class Algs {
       // <high> is not the highest index that does not contain an element that
       // is greater than the pivot. It may be outside the bounds of the array
 
-      Miscellanea.Assert(low != high);
+      Miscellanea._assert(low != high);
 
       if (low < high) {
         int tmp = indexes[low];

@@ -15,45 +15,45 @@ abstract class SeqObj extends Obj {
   }
 
   protected SeqObj(Obj[] items, int length) {
-    Miscellanea.Assert(items != null && length >= 0 && length <= items.length);
+    Miscellanea._assert(items != null && length >= 0 && length <= items.length);
     this.items = items;
     this.offset = 0;
     this.length = length;
   }
 
   protected SeqObj(Obj[] items, int offset, int length) {
-    Miscellanea.Assert(items != null && offset >= 0 && length >= 0 && offset + length <= items.length);
+    Miscellanea._assert(items != null && offset >= 0 && length >= 0 && offset + length <= items.length);
     this.items = items;
     this.offset = offset;
     this.length = length;
   }
 
-  public boolean IsSeq() {
+  public boolean isSeq() {
     return true;
   }
 
-  public boolean IsEmptySeq() {
+  public boolean isEmptySeq() {
     return length == 0;
   }
 
-  public boolean IsNeSeq() {
+  public boolean isNeSeq() {
     return length != 0;
   }
 
-  public int GetSize() {
+  public int getSize() {
     return length;
   }
 
-  public Obj GetItem(long idx) {
+  public Obj getItem(long idx) {
     if (idx < length)
       return items[offset + (int) idx];
     else
       throw new IndexOutOfBoundsException();
   }
 
-  public Obj UpdatedAt(long idx, Obj obj) {
+  public Obj updatedAt(long idx, Obj obj) {
     if (idx < 0 | idx >= length)
-      Miscellanea.SoftFail("Invalid sequence index");
+      Miscellanea.softFail("Invalid sequence index");
 
     Obj[] newItems = new Obj[length];
     for (int i=0 ; i < length ; i++)
@@ -62,7 +62,7 @@ abstract class SeqObj extends Obj {
     return new MasterSeqObj(newItems);
   }
 
-  public Obj Reverse() {
+  public Obj reverse() {
     int last = offset + length - 1;
     Obj[] revItems = new Obj[length];
     for (int i=0 ; i < length ; i++)
@@ -70,17 +70,17 @@ abstract class SeqObj extends Obj {
     return new MasterSeqObj(revItems);
   }
 
-  public long[] GetLongArray() {
+  public long[] getLongArray() {
     long[] longs = new long[length];
     for (int i=0 ; i < length ; i++)
-      longs[i] = items[offset+i].GetLong();
+      longs[i] = items[offset+i].getLong();
     return longs;
   }
 
-  public byte[] GetByteArray() {
+  public byte[] getByteArray() {
     byte[] bytes = new byte[length];
     for (int i=0 ; i < length ; i++) {
-      long val = items[offset+i].GetLong();
+      long val = items[offset+i].getLong();
       if (val < 0 | val > 255)
         throw new UnsupportedOperationException();
       bytes[i] = (byte) val;
@@ -95,8 +95,8 @@ abstract class SeqObj extends Obj {
     return "(" + String.join(", ", reprs) + ")";
   }
 
-  public Obj Concat(Obj seq) {
-    int seqLen = seq.GetSize();
+  public Obj concat(Obj seq) {
+    int seqLen = seq.getSize();
     int minLen = length + seqLen;
     Obj[] newItems = new Obj[Math.max(4 * minLen, 32)];
     System.arraycopy(items, offset, newItems, 0, length);
@@ -105,7 +105,7 @@ abstract class SeqObj extends Obj {
     return new MasterSeqObj(newItems, minLen);
   }
 
-  public void CopyItems(Obj[] array, int offset) {
+  public void copyItems(Obj[] array, int offset) {
     System.arraycopy(items, offset, array, offset, length);
   }
 
@@ -116,9 +116,9 @@ abstract class SeqObj extends Obj {
     return hashcodesSum ^ length;
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      boolean breakLine = MinPrintedSize() > maxLineLen;
+      boolean breakLine = minPrintedSize() > maxLineLen;
 
       writer.write('(');
 
@@ -129,22 +129,22 @@ abstract class SeqObj extends Obj {
         if (newLine)
           writer.write(' ');
         else
-          Miscellanea.WriteIndentedNewLine(writer, indentLevel + 1);
+          Miscellanea.writeIndentedNewLine(writer, indentLevel + 1);
       }
 
       for (int i=0 ; i < length ; i++) {
         if (i > 0) {
           writer.write(',');
           if (breakLine)
-            Miscellanea.WriteIndentedNewLine(writer, indentLevel + 1);
+            Miscellanea.writeIndentedNewLine(writer, indentLevel + 1);
           else
             writer.write(' ');
         }
-        items[offset+i].Print(writer, maxLineLen, breakLine & !newLine, indentLevel + 1);
+        items[offset+i].print(writer, maxLineLen, breakLine & !newLine, indentLevel + 1);
       }
 
       if (breakLine)
-        Miscellanea.WriteIndentedNewLine(writer, indentLevel);
+        Miscellanea.writeIndentedNewLine(writer, indentLevel);
 
       writer.write(')');
     }
@@ -153,35 +153,35 @@ abstract class SeqObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     if (minPrintedSize == -1) {
       minPrintedSize = 2 * length;
       for (int i=0 ; i < length ; i++)
-        minPrintedSize += items[offset+i].MinPrintedSize();
+        minPrintedSize += items[offset+i].minPrintedSize();
     }
     return minPrintedSize;
   }
 
-  public ValueBase GetValue() {
+  public ValueBase getValue() {
     ValueBase[] values = new ValueBase[length];
     for (int i=0 ; i < length ; i++)
-      values[i] = items[offset+i].GetValue();
+      values[i] = items[offset+i].getValue();
     return new SeqValue(values);
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return 3;
   }
 
-  protected int InternalCmp(Obj other) {
-    return other.CmpSeq(items, offset, length);
+  protected int internalCmp(Obj other) {
+    return other.cmpSeq(items, offset, length);
   }
 
-  public int CmpSeq(Obj[] other_items, int other_offset, int other_length) {
+  public int cmpSeq(Obj[] other_items, int other_offset, int other_length) {
     if (other_length != length)
       return other_length < length ? 1 : -1;
     for (int i=0 ; i < length ; i++) {
-      int res = other_items[other_offset+i].Cmp(items[offset+i]);
+      int res = other_items[other_offset+i].cmp(items[offset+i]);
       if (res != 0)
         return res;
     }
@@ -190,7 +190,7 @@ abstract class SeqObj extends Obj {
 
   static Obj emptySeq = new MasterSeqObj(new Obj[] {});
 
-  public static Obj Empty() {
+  public static Obj empty() {
     return emptySeq;
   }
 }

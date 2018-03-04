@@ -12,17 +12,17 @@ class SeqOrSetIter {
     this.last = last;
   }
 
-  public Obj Get() {
-    Miscellanea.Assert(next <= last);
+  public Obj get() {
+    Miscellanea._assert(next <= last);
     return objs[next];
   }
 
-  public void Next() {
-    Miscellanea.Assert(next <= last);
+  public void next() {
+    Miscellanea._assert(next <= last);
     next++;
   }
 
-  public boolean Done() {
+  public boolean done() {
     return next > last;
   }
 }

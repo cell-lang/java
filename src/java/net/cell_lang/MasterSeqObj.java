@@ -6,14 +6,14 @@ import java.io.Writer;
 class MasterSeqObj extends SeqObj {
   public int used;
 
-  public void Dump() {
+  public void dump() {
     System.out.printf("items.length = %d, length = %d, used = %d\n", items.length, length, used);
   }
 
   public MasterSeqObj(Obj[] items, int length) {
      super(items, length);
     // for (int i=0 ; i < length ; i++)
-    //   Miscellanea.Assert(items[i] != null);
+    //   Miscellanea._assert(items[i] != null);
     this.used = length;
   }
 
@@ -26,30 +26,30 @@ class MasterSeqObj extends SeqObj {
     this.used = (int) length;
   }
 
-  public Obj GetItem(long idx) {
+  public Obj getItem(long idx) {
     if (idx < length)
       return items[(int) idx];
     else
       throw new IndexOutOfBoundsException();
   }
 
-  public SeqOrSetIter GetSeqOrSetIter() {
+  public SeqOrSetIter getSeqOrSetIter() {
     return new SeqOrSetIter(items, 0, length-1);
   }
 
-  public void InitAt(long idx, Obj value) {
-    Miscellanea.Assert(idx >= 0 & idx < length);
-    Miscellanea.Assert(items[(int) idx] == null);
+  public void initAt(long idx, Obj value) {
+    Miscellanea._assert(idx >= 0 & idx < length);
+    Miscellanea._assert(items[(int) idx] == null);
     items[(int) idx] = value;
   }
 
-  public Obj GetSlice(long first, long len) {
+  public Obj getSlice(long first, long len) {
     if (first + len > length)
       throw new IndexOutOfBoundsException();
     return new SliceObj(this, (int) first, (int) len);
   }
 
-  public Obj Append(Obj obj) {
+  public Obj append(Obj obj) {
     if (used == length && length + 1 < items.length) {
       items[length] = obj;
       return new SliceObj(this, 0, length+1);
@@ -63,26 +63,26 @@ class MasterSeqObj extends SeqObj {
     }
   }
 
-  public Obj Concat(Obj seq) {
-    Miscellanea.Assert(seq != null);
+  public Obj concat(Obj seq) {
+    Miscellanea._assert(seq != null);
 
-    int seqLen = seq.GetSize();
+    int seqLen = seq.getSize();
     int newLen = length + seqLen;
 
     if (used == length && newLen < items.length) {
 //        SeqObj seqObj = (SeqObj) seq;
-//        Array.Copy(seqObj.items, seqObj.Offset(), items, length, seqObj.length);
+//        Array.copy(seqObj.items, seqObj.offset(), items, length, seqObj.length);
       for (int i=0; i < seqLen ; i++)
-        items[length+i] = seq.GetItem(i);
+        items[length+i] = seq.getItem(i);
       used += seqLen;
       return new SliceObj(this, 0, newLen);
     }
 
-    return super.Concat(seq);
+    return super.concat(seq);
     // return new RopeObj(this, seq);
   }
 
-  protected int Offset() {
+  protected int offset() {
     return 0;
   }
 }

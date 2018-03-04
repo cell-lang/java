@@ -5,7 +5,7 @@ import java.io.Writer;
 
 
 class NullObj extends Obj {
-  public boolean IsNullObj() {
+  public boolean isNullObj() {
     return true;
   }
 
@@ -13,7 +13,7 @@ class NullObj extends Obj {
     throw new UnsupportedOperationException();
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       writer.write("Null");
     }
@@ -22,21 +22,21 @@ class NullObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     return "Null".length();
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return -1;
   }
 
-  protected int InternalCmp(Obj o) {
+  protected int internalCmp(Obj o) {
     throw new UnsupportedOperationException();
   }
 
   static NullObj singleton = new NullObj();
 
-  public static NullObj Singleton() {
+  public static NullObj singleton() {
     return singleton;
   }
 }

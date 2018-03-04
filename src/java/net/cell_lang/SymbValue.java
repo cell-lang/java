@@ -8,15 +8,15 @@ class SymbValue extends ValueBase {
     this.id = id;
   }
 
-  public boolean IsSymb() {
+  public boolean isSymb() {
     return true;
   }
 
-  public String AsSymb() {
-    return SymbTable.IdxToStr(id);
+  public String asSymb() {
+    return SymbTable.idxToStr(id);
   }
 
-  public Obj AsObj() {
-    return SymbObj.Get(id);
+  public Obj asObj() {
+    return SymbObj.get(id);
   }
 }

@@ -99,7 +99,7 @@ class Parser extends TokenStream {
 
       case Int:
         read();
-        return IntObj.Get(((Long) token.value).longValue());
+        return IntObj.get(((Long) token.value).longValue());
 
       case Float:
         read();
@@ -119,7 +119,7 @@ class Parser extends TokenStream {
 
       case String:
         read();
-        return Miscellanea.StrToObj((String) token.value);
+        return Miscellanea.strToObj((String) token.value);
 
       default:
         throw new RuntimeException("Internal error"); // Unreachable code
@@ -132,7 +132,7 @@ class Parser extends TokenStream {
     consume(TokenType.OpenPar);
 
     if (tryConsuming(TokenType.ClosePar))
-      return SeqObj.Empty();
+      return SeqObj.empty();
 
     ArrayList<Obj> elts = new ArrayList<Obj>();
     do {
@@ -141,13 +141,13 @@ class Parser extends TokenStream {
 
     consume(TokenType.ClosePar);
 
-    return Builder.CreateSeq(elts);
+    return Builder.createSeq(elts);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
   boolean isRecord() {
-    Miscellanea.Assert(nextIs(TokenType.OpenPar));
+    Miscellanea._assert(nextIs(TokenType.OpenPar));
     return nextIs(TokenType.Symbol, 1) && nextIs(TokenType.Colon, 2);
   }
 
@@ -167,7 +167,7 @@ class Parser extends TokenStream {
 
     consume(TokenType.ClosePar);
 
-    return Builder.CreateBinRel(labels, values); // Creating a binary relation instead of a map
+    return Builder.createBinRel(labels, values); // Creating a binary relation instead of a map
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -176,9 +176,9 @@ class Parser extends TokenStream {
     SymbObj symbObj = (SymbObj) forceRead(TokenType.Symbol).value;
     if (nextIs(TokenType.OpenPar)) {
       Obj innerObj = isRecord() ? parseRec() : parseSeq();
-      if (innerObj.IsSeq() && innerObj.GetSize() == 1)
-        innerObj = innerObj.GetItem(0);
-      return new TaggedObj(symbObj.GetSymbId(), innerObj);
+      if (innerObj.isSeq() && innerObj.getSize() == 1)
+        innerObj = innerObj.getItem(0);
+      return new TaggedObj(symbObj.getSymbId(), innerObj);
     }
     else
       return symbObj;
@@ -190,7 +190,7 @@ class Parser extends TokenStream {
     consume(TokenType.OpenBracket);
 
     if (tryConsuming(TokenType.CloseBracket))
-      return EmptyRelObj.Singleton();
+      return EmptyRelObj.singleton();
 
     ArrayList<Obj> objs = new ArrayList<Obj>();
     do {
@@ -198,7 +198,7 @@ class Parser extends TokenStream {
     } while (tryConsuming(TokenType.Comma));
 
     if (tryConsuming(TokenType.CloseBracket))
-      return Builder.CreateSet(objs);
+      return Builder.createSet(objs);
 
     int len = objs.size();
 
@@ -212,7 +212,7 @@ class Parser extends TokenStream {
         values.add(parseObj());
       }
       consume(TokenType.CloseBracket);
-      return Builder.CreateBinRel(objs, values); // Here we create a binary relation rather than a map
+      return Builder.createBinRel(objs, values); // Here we create a binary relation rather than a map
     }
 
     if (len == 2) {
@@ -226,7 +226,7 @@ class Parser extends TokenStream {
         consume(TokenType.Comma);
         col2.add(parseObj());
       }
-      return Builder.CreateBinRel(col1, col2);
+      return Builder.createBinRel(col1, col2);
     }
 
     if (len == 3) {
@@ -244,7 +244,7 @@ class Parser extends TokenStream {
         consume(TokenType.Comma);
         col3.add(parseObj());
       }
-      return Builder.CreateTernRel(col1, col2, col3);
+      return Builder.createTernRel(col1, col2, col3);
     }
 
     throw failHere();

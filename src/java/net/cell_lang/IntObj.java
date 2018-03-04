@@ -11,33 +11,33 @@ class IntObj extends Obj {
     this.value = value;
   }
 
-  public static IntObj Get(long value) {
+  public static IntObj get(long value) {
     if (value >= 0 & value < 256)
       return byteObjs[(int) value];
     return new IntObj(value);
   }
 
-  public boolean IsInt() {
+  public boolean isInt() {
     return true;
   }
 
-  public boolean IsInt(long value) {
+  public boolean isInt(long value) {
     return this.value == value;
   }
 
-  public long GetLong() {
+  public long getLong() {
     return value;
   }
 
-  public boolean IsEq(Obj obj) {
-    return obj.IsInt(value);
+  public boolean isEq(Obj obj) {
+    return obj.isInt(value);
   }
 
   public int hashCode() {
     return ((int) (value >> 32)) ^ ((int) value);
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       Long obj = new Long(value);
       writer.write(obj.toString());
@@ -47,21 +47,21 @@ class IntObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     Long obj = new Long(value);
     return obj.toString().length();
   }
 
-  public ValueBase GetValue() {
+  public ValueBase getValue() {
     return new IntValue(value);
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return 1;
   }
 
-  protected int InternalCmp(Obj obj) {
-    long other_value = obj.GetLong();
+  protected int internalCmp(Obj obj) {
+    long other_value = obj.getLong();
     return value == other_value ? 0 : (value < other_value ? 1 : -1);
   }
 

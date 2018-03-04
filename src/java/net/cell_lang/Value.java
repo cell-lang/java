@@ -4,33 +4,33 @@ import java.io.Writer;
 
 
 interface Value {
-  boolean IsSymb();
-  boolean IsInt();
-  boolean IsFloat();
-  boolean IsSeq();
-  boolean IsSet();
-  boolean IsBinRel();
-  boolean IsTernRel();
-  boolean IsTagged();
+  boolean isSymb();
+  boolean isInt();
+  boolean isFloat();
+  boolean isSeq();
+  boolean isSet();
+  boolean isBinRel();
+  boolean isTernRel();
+  boolean isTagged();
 
-  String AsSymb();
-  long   AsLong();
-  double AsDouble();
+  String asSymb();
+  long   asLong();
+  double asDouble();
 
-  int Size();
-  Value Item(int index);
-  Value Arg1(int index);
-  Value Arg2(int index);
-  Value Arg3(int index);
+  int size();
+  Value item(int index);
+  Value arg1(int index);
+  Value arg2(int index);
+  Value arg3(int index);
 
-  String Tag();
-  Value Untagged();
+  String tag();
+  Value untagged();
 
-  boolean IsString();
-  boolean IsRecord();
+  boolean isString();
+  boolean isRecord();
 
-  String AsString();
-  Value Lookup(String field);
+  String asString();
+  Value lookup(String field);
 
-  void Print(Writer writer);
+  void print(Writer writer);
 }

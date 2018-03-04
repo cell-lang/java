@@ -7,33 +7,33 @@ class SliceObj extends SeqObj {
   MasterSeqObj master;
   int offset;
 
-  public void Dump() {
+  public void dump() {
     System.out.printf("offset = %d, length = %d\n", offset, length);
     System.out.printf(
       "master: items.length = %d, length = %d, used = %d",
       master.items.length, master.length, master.used
     );
-    Miscellanea.Assert(items == master.items);
+    Miscellanea._assert(items == master.items);
   }
 
   public SliceObj(MasterSeqObj master, int offset, int length) {
     super(master.items, offset, length);
     // for (int i=0 ; i < offset+length ; i++)
-    //   Miscellanea.Assert(master.items[i] != null);
+    //   Miscellanea._assert(master.items[i] != null);
     this.master = master;
   }
 
-  public SeqOrSetIter GetSeqOrSetIter() {
+  public SeqOrSetIter getSeqOrSetIter() {
     return new SeqOrSetIter(items, offset, offset+length-1);
   }
 
-  public Obj GetSlice(long first, long len) {
+  public Obj getSlice(long first, long len) {
     if (first + len > length)
       throw new IndexOutOfBoundsException();
     return new SliceObj(master, offset + (int) first, (int) len);
   }
 
-  public Obj Append(Obj obj) {
+  public Obj append(Obj obj) {
     int used = offset + length;
     if (master.used == used && used + 1 < master.items.length) {
       master.items[used] = obj;
@@ -49,23 +49,23 @@ class SliceObj extends SeqObj {
     }
   }
 
-  public Obj Concat(Obj seq) {
-    int seqLen = seq.GetSize();
+  public Obj concat(Obj seq) {
+    int seqLen = seq.getSize();
     int used = offset + length;
     int newLen = used + seqLen;
 
     if (master.used == used && newLen <= master.items.length) {
       for (int i=0 ; i < seqLen ; i++)
-        master.items[used+i] = seq.GetItem(i);
+        master.items[used+i] = seq.getItem(i);
       master.used += seqLen;
       return new SliceObj(master, offset, newLen);
     }
 
-    return super.Concat(seq);
+    return super.concat(seq);
     // return new RopeObj(this, seq);
   }
 
-  protected int Offset() {
+  protected int offset() {
     return offset;
   }
 }

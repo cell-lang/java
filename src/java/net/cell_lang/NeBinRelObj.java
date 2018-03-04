@@ -12,93 +12,93 @@ class NeBinRelObj extends Obj {
   int minPrintedSize = -1;
 
   public NeBinRelObj(Obj[] col1, Obj[] col2, boolean isMap) {
-    Miscellanea.Assert(col1 != null && col2 != null);
-    Miscellanea.Assert(col1.length > 0);
-    Miscellanea.Assert(col1.length == col2.length);
+    Miscellanea._assert(col1 != null && col2 != null);
+    Miscellanea._assert(col1.length > 0);
+    Miscellanea._assert(col1.length == col2.length);
     this.col1 = col1;
     this.col2 = col2;
     this.isMap = isMap;
   }
 
-  public boolean IsBinRel() {
+  public boolean isBinRel() {
     return true;
   }
 
-  public boolean IsNeBinRel() {
+  public boolean isNeBinRel() {
     return true;
   }
 
-  public boolean IsNeMap() {
+  public boolean isNeMap() {
     return isMap;
   }
 
-  public boolean HasKey(Obj obj) {
-    Miscellanea.Assert(isMap);
-    return Algs.BinSearch(col1, obj) != -1;
+  public boolean hasKey(Obj obj) {
+    Miscellanea._assert(isMap);
+    return Algs.binSearch(col1, obj) != -1;
   }
 
-  public boolean HasField(int symb_id) {
+  public boolean hasField(int symb_id) {
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
-      if (col1[i].IsSymb(symb_id))
+      if (col1[i].isSymb(symb_id))
         return true;
     return false;
   }
 
-  public boolean HasPair(Obj obj1, Obj obj2) {
+  public boolean hasPair(Obj obj1, Obj obj2) {
     if (isMap) {
-      int idx = Algs.BinSearch(col1, obj1);
-      return idx != -1 && col2[idx].IsEq(obj2);
+      int idx = Algs.binSearch(col1, obj1);
+      return idx != -1 && col2[idx].isEq(obj2);
     }
     else {
-      int[] first_and_count = Algs.BinSearchRange(col1, 0, col1.length, obj1);
+      int[] first_and_count = Algs.binSearchRange(col1, 0, col1.length, obj1);
       int first = first_and_count[0];
       int count = first_and_count[1];
       if (count == 0)
         return false;
-      int idx = Algs.BinSearch(col2, first, count, obj2);
+      int idx = Algs.binSearch(col2, first, count, obj2);
       return idx != -1;
     }
   }
 
-  public int GetSize() {
+  public int getSize() {
     return col1.length;
   }
 
-  public BinRelIter GetBinRelIter() {
+  public BinRelIter getBinRelIter() {
     return new BinRelIter(col1, col2);
   }
 
-  public BinRelIter GetBinRelIterByCol1(Obj obj) {
-    int[] first_and_count = Algs.BinSearchRange(col1, 0, col1.length, obj);
+  public BinRelIter getBinRelIterByCol1(Obj obj) {
+    int[] first_and_count = Algs.binSearchRange(col1, 0, col1.length, obj);
     int first = first_and_count[0];
     int count = first_and_count[1];
     return new BinRelIter(col1, col2, first, first+count-1);
   }
 
-  public BinRelIter GetBinRelIterByCol2(Obj obj) {
+  public BinRelIter getBinRelIterByCol2(Obj obj) {
     if (revIdxs == null)
-      revIdxs = Algs.SortedIndexes(col2, col1);
-    int[] first_and_count = Algs.BinSearchRange(revIdxs, col2, obj);
+      revIdxs = Algs.sortedIndexes(col2, col1);
+    int[] first_and_count = Algs.binSearchRange(revIdxs, col2, obj);
     int first = first_and_count[0];
     int count = first_and_count[1];
     return new BinRelIter(col1, col2, revIdxs, first, first+count-1);
   }
 
-  public Obj Lookup(Obj key) {
-    int idx = Algs.BinSearch(col1, key);
+  public Obj lookup(Obj key) {
+    int idx = Algs.binSearch(col1, key);
     if (idx == -1)
       throw new RuntimeException();
     if (!isMap)
-      if ((idx > 0 && col1[idx-1].IsEq(key)) || (idx+1 < col1.length && col1[idx+1].IsEq(key)))
+      if ((idx > 0 && col1[idx-1].isEq(key)) || (idx+1 < col1.length && col1[idx+1].isEq(key)))
         throw new RuntimeException();
     return col2[idx];
   }
 
-  public Obj LookupField(int symb_id) {
+  public Obj lookupField(int symb_id) {
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
-      if (col1[i].IsSymb(symb_id))
+      if (col1[i].isSymb(symb_id))
         return col2[i];
     // We should never get here. The typechecker should prevent it.
     throw new UnsupportedOperationException();
@@ -111,11 +111,11 @@ class NeBinRelObj extends Obj {
     return hashcodesSum ^ (int) col1.length;
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       int len = col1.length;
-      boolean isRec = IsNeRecord();
-      boolean breakLine = MinPrintedSize() > maxLineLen;
+      boolean isRec = isNeRecord();
+      boolean breakLine = minPrintedSize() > maxLineLen;
       String argSep = isMap ? (isRec ? ":" : " ->") : ",";
       String entrySep = isMap ? "," : ";";
 
@@ -128,7 +128,7 @@ class NeBinRelObj extends Obj {
         if (newLine)
           writer.write(' ');
         else
-          Miscellanea.WriteIndentedNewLine(writer, indentLevel + 1);
+          Miscellanea.writeIndentedNewLine(writer, indentLevel + 1);
       }
 
       for (int i=0 ; i < len ; i++) {
@@ -136,44 +136,44 @@ class NeBinRelObj extends Obj {
         Obj arg2 = col2[i];
 
         // Writing the first argument, followed by the separator
-        arg1.Print(writer, maxLineLen, newLine | (i > 0), indentLevel + 1);
+        arg1.print(writer, maxLineLen, newLine | (i > 0), indentLevel + 1);
         writer.write(argSep);
 
-        int arg1Len = arg1.MinPrintedSize();
-        int arg2Len = arg2.MinPrintedSize();
+        int arg1Len = arg1.minPrintedSize();
+        int arg2Len = arg2.minPrintedSize();
 
         if (arg1Len + arg2Len + argSep.length() <= maxLineLen) {
           // The entire entry fits into one line
           // We just insert a space and start printing the second argument
           writer.write(' ');
-          arg2.Print(writer, maxLineLen, false, indentLevel);
+          arg2.print(writer, maxLineLen, false, indentLevel);
         }
         else if (arg1Len <= maxLineLen) {
           // The first argument fits into one line, but the whole entry doesn't.
-          if ((arg2.IsTagged() & !arg2.IsSyntacticSugaredString()) | arg2Len <= maxLineLen) {
+          if ((arg2.isTagged() & !arg2.isSyntacticSugaredString()) | arg2Len <= maxLineLen) {
             // If the second argument fits into one line (and therefore cannot break itself)
             // or if it's an unsugared tagged object, we break the line.
-            Miscellanea.WriteIndentedNewLine(writer, indentLevel + 2);
-            arg2.Print(writer, maxLineLen, false, indentLevel + 2);
+            Miscellanea.writeIndentedNewLine(writer, indentLevel + 2);
+            arg2.print(writer, maxLineLen, false, indentLevel + 2);
           }
           else {
             // Otherwise we keep going on the same line, and let the second argument break itself
             writer.write(' ');
-            arg2.Print(writer, maxLineLen, false, indentLevel + 1);
+            arg2.print(writer, maxLineLen, false, indentLevel + 1);
           }
         }
-        else if (arg2.IsTagged() & !arg2.IsSyntacticSugaredString() & arg2Len > maxLineLen) {
+        else if (arg2.isTagged() & !arg2.isSyntacticSugaredString() & arg2Len > maxLineLen) {
           // The first argument does not fit into a line, and the second one
           // is a multiline unsugared tagged object, so we break the line
-          Miscellanea.WriteIndentedNewLine(writer, indentLevel + 1);
-          arg2.Print(writer, maxLineLen, true, indentLevel + 1);
+          Miscellanea.writeIndentedNewLine(writer, indentLevel + 1);
+          arg2.print(writer, maxLineLen, true, indentLevel + 1);
         }
         else {
           // The first argument doesn't fit into a line, and the second
           // one is not special, so we just keep going on the same line
           // and let the second argument break itself is need be
           writer.write(' ');
-          arg2.Print(writer, maxLineLen, true, indentLevel + 1);
+          arg2.print(writer, maxLineLen, true, indentLevel + 1);
         }
 
         // We print the entry separator/terminator when appropriate
@@ -183,7 +183,7 @@ class NeBinRelObj extends Obj {
 
         // Either we break the line, or insert a space if this is not the last entry
         if (breakLine)
-          Miscellanea.WriteIndentedNewLine(writer, indentLevel + (lastLine ? 0 : 1));
+          Miscellanea.writeIndentedNewLine(writer, indentLevel + (lastLine ? 0 : 1));
         else if (!lastLine)
           writer.write(' ');
       }
@@ -195,60 +195,60 @@ class NeBinRelObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     if (minPrintedSize == -1) {
       int len = col1.length;
-      boolean isRec = IsNeRecord();
+      boolean isRec = isNeRecord();
       minPrintedSize = (2 + (isMap & !isRec ? 4 : 2)) * len + ((!isMap & len == 1) ? 1 : 0);
       for (int i=0 ; i < len ; i++)
-        minPrintedSize += col1[i].MinPrintedSize() + col2[i].MinPrintedSize();
+        minPrintedSize += col1[i].minPrintedSize() + col2[i].minPrintedSize();
     }
     return minPrintedSize;
   }
 
-  public ValueBase GetValue() {
+  public ValueBase getValue() {
     int size = col1.length;
     ValueBase[] values1 = new ValueBase[size];
     ValueBase[] values2 = new ValueBase[size];
     for (int i=0 ; i < size ; i++) {
-      values1[i] = col1[i].GetValue();
-      values2[i] = col2[i].GetValue();
+      values1[i] = col1[i].getValue();
+      values2[i] = col2[i].getValue();
     }
     return new NeBinRelValue(values1, values2, isMap);
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return 6;
   }
 
-  protected int InternalCmp(Obj other) {
-    return other.CmpNeBinRel(col1, col2);
+  protected int internalCmp(Obj other) {
+    return other.cmpNeBinRel(col1, col2);
   }
 
-  public int CmpNeBinRel(Obj[] other_col_1, Obj[] other_col_2) {
+  public int cmpNeBinRel(Obj[] other_col_1, Obj[] other_col_2) {
     int len = col1.length;
     int other_len = other_col_1.length;
     if (other_len != len)
       return other_len < len ? 1 : -1;
     for (int i=0 ; i < len ; i++) {
-      int res = other_col_1[i].Cmp(col1[i]);
+      int res = other_col_1[i].cmp(col1[i]);
       if (res != 0)
         return res;
     }
     for (int i=0 ; i < len ; i++) {
-      int res = other_col_2[i].Cmp(col2[i]);
+      int res = other_col_2[i].cmp(col2[i]);
       if (res != 0)
         return res;
     }
     return 0;
   }
 
-  public boolean IsNeRecord() {
+  public boolean isNeRecord() {
     if (!isMap)
       return false;
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
-      if (!col1[i].IsSymb())
+      if (!col1[i].isSymb())
         return false;
     return true;
   }

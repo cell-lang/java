@@ -5,7 +5,7 @@ import java.io.Writer;
 
 
 class BlankObj extends Obj {
-  public boolean IsBlankObj() {
+  public boolean isBlankObj() {
     return true;
   }
 
@@ -13,7 +13,7 @@ class BlankObj extends Obj {
     throw new UnsupportedOperationException();
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       writer.write("Blank");
     }
@@ -22,21 +22,21 @@ class BlankObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     return "Blank".length();
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return -2;
   }
 
-  protected int InternalCmp(Obj o) {
+  protected int internalCmp(Obj o) {
     throw new UnsupportedOperationException();
   }
 
   static BlankObj singleton = new BlankObj();
 
-  public static BlankObj Singleton() {
+  public static BlankObj singleton() {
     return singleton;
   }
 }

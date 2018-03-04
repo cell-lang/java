@@ -9,103 +9,103 @@ class EmptyRelObj extends Obj {
 
   }
 
-  public boolean IsEmptyRel() {
+  public boolean isEmptyRel() {
     return true;
   }
 
-  public boolean IsSet() {
+  public boolean isSet() {
     return true;
   }
 
-  public boolean IsBinRel() {
+  public boolean isBinRel() {
     return true;
   }
 
-  public boolean IsTernRel() {
+  public boolean isTernRel() {
     return true;
   }
 
-  public boolean IsEq(Obj obj) {
-    return obj.IsEmptyRel();
+  public boolean isEq(Obj obj) {
+    return obj.isEmptyRel();
   }
 
-  public boolean HasElem(Obj obj) {
+  public boolean hasElem(Obj obj) {
     return false;
   }
 
-  public boolean HasKey(Obj key) {
+  public boolean hasKey(Obj key) {
     return false;
   }
 
-  public boolean HasField(int id) {
+  public boolean hasField(int id) {
     return false;
   }
 
-  public boolean HasPair(Obj obj1, Obj obj2) {
+  public boolean hasPair(Obj obj1, Obj obj2) {
     return false;
   }
 
-  public boolean HasTriple(Obj obj1, Obj obj2, Obj obj3) {
+  public boolean hasTriple(Obj obj1, Obj obj2, Obj obj3) {
     return false;
   }
 
-  public int GetSize() {
+  public int getSize() {
     return 0;
   }
 
-  public SeqOrSetIter GetSeqOrSetIter() {
+  public SeqOrSetIter getSeqOrSetIter() {
     return iter1;
   }
 
-  public BinRelIter GetBinRelIter() {
+  public BinRelIter getBinRelIter() {
     return iter2;
   }
 
-  public BinRelIter GetBinRelIterByCol1(Obj obj) {
+  public BinRelIter getBinRelIterByCol1(Obj obj) {
     return iter2;
   }
 
-  public BinRelIter GetBinRelIterByCol2(Obj obj) {
+  public BinRelIter getBinRelIterByCol2(Obj obj) {
     return iter2;
   }
 
-  public TernRelIter GetTernRelIter() {
+  public TernRelIter getTernRelIter() {
     return iter3;
   }
 
-  public TernRelIter GetTernRelIterByCol1(Obj val) {
+  public TernRelIter getTernRelIterByCol1(Obj val) {
     return iter3;
   }
 
-  public TernRelIter GetTernRelIterByCol2(Obj val) {
+  public TernRelIter getTernRelIterByCol2(Obj val) {
     return iter3;
   }
 
-  public TernRelIter GetTernRelIterByCol3(Obj val) {
+  public TernRelIter getTernRelIterByCol3(Obj val) {
     return iter3;
   }
 
-  public TernRelIter GetTernRelIterByCol12(Obj val1, Obj val2) {
+  public TernRelIter getTernRelIterByCol12(Obj val1, Obj val2) {
     return iter3;
   }
 
-  public TernRelIter GetTernRelIterByCol13(Obj val1, Obj val3) {
+  public TernRelIter getTernRelIterByCol13(Obj val1, Obj val3) {
     return iter3;
   }
 
-  public TernRelIter GetTernRelIterByCol23(Obj val2, Obj val3) {
+  public TernRelIter getTernRelIterByCol23(Obj val2, Obj val3) {
     return iter3;
   }
 
-  public Obj InternalSort() {
-    return SeqObj.Empty();
+  public Obj internalSort() {
+    return SeqObj.empty();
   }
 
   public int hashCode() {
     return 0; //## FIND BETTER VALUE
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       writer.write("[]");
     }
@@ -114,19 +114,19 @@ class EmptyRelObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     return 2;
   }
 
-  public ValueBase GetValue() {
+  public ValueBase getValue() {
     return new EmptyRelValue();
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return 4;
   }
 
-  protected int InternalCmp(Obj other) {
+  protected int internalCmp(Obj other) {
     return 0;
   }
 
@@ -136,7 +136,7 @@ class EmptyRelObj extends Obj {
 
   static EmptyRelObj singleton = new EmptyRelObj();
 
-  public static EmptyRelObj Singleton() {
+  public static EmptyRelObj singleton() {
     return singleton;
   }
 }

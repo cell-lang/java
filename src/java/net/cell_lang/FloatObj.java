@@ -11,20 +11,20 @@ class FloatObj extends Obj {
     this.value = value;
   }
 
-  public boolean IsFloat() {
+  public boolean isFloat() {
     return true;
   }
 
-  public boolean IsFloat(double value) {
+  public boolean isFloat(double value) {
     return this.value == value;
   }
 
-  public double GetDouble() {
+  public double getDouble() {
     return value;
   }
 
-  public boolean IsEq(Obj obj) {
-    return obj.IsFloat(value);
+  public boolean isEq(Obj obj) {
+    return obj.isFloat(value);
   }
 
   public int hashCode() {
@@ -32,7 +32,7 @@ class FloatObj extends Obj {
     return ((int) (longVal >> 32)) ^ ((int) longVal);
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       Double obj = new Double(value);
       writer.write(obj.toString());
@@ -42,21 +42,21 @@ class FloatObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     Double obj = new Double(value);
     return obj.toString().length();
   }
 
-  public ValueBase GetValue() {
+  public ValueBase getValue() {
     return new FloatValue(value);
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return 2;
   }
 
-  protected int InternalCmp(Obj other) {
-    double other_value = other.GetDouble();
+  protected int internalCmp(Obj other) {
+    double other_value = other.getDouble();
     return value == other_value ? 0 : (value < other_value ? 1 : -1);
   }
 }

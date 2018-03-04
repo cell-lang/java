@@ -14,47 +14,47 @@ class NeBinRelValue extends ValueBase {
     this.isMap = isMap;
   }
 
-  public boolean IsBinRel() {
+  public boolean isBinRel() {
     return true;
   }
 
-  public int Size() {
+  public int size() {
     return col1.length;
   }
 
-  public Value Arg1(int index) {
+  public Value arg1(int index) {
     return col1[index];
   }
 
-  public Value Arg2(int index) {
+  public Value arg2(int index) {
     return col2[index];
   }
 
-  public boolean IsRecord() {
+  public boolean isRecord() {
     if (!isMap)
       return false;
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
-      if (!col1[i].IsSymb())
+      if (!col1[i].isSymb())
         return false;
     return isMap;
   }
 
-  public Value Lookup(String field) {
+  public Value lookup(String field) {
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
-      if (col1[i].AsSymb() == field)
+      if (col1[i].asSymb() == field)
         return col1[i];
     throw new NoSuchElementException();
   }
 
-  public Obj AsObj() {
+  public Obj asObj() {
     int len = col1.length;
     Obj[] col1 = new Obj[len];
     Obj[] col2 = new Obj[len];
     for (int i=0 ; i < len ; i++) {
-      col1[i] = this.col1[i].AsObj();
-      col2[i] = this.col2[i].AsObj();
+      col1[i] = this.col1[i].asObj();
+      col2[i] = this.col2[i].asObj();
     }
     return new NeBinRelObj(col1, col2, isMap);
   }

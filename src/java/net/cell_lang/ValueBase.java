@@ -5,104 +5,104 @@ import java.io.Writer;
 
 
 abstract class ValueBase implements Value {
-  public boolean IsSymb() {
+  public boolean isSymb() {
     return false;
   }
 
-  public boolean IsInt() {
+  public boolean isInt() {
     return false;
   }
 
-  public boolean IsFloat() {
+  public boolean isFloat() {
     return false;
   }
 
-  public boolean IsSeq() {
+  public boolean isSeq() {
     return false;
   }
 
-  public boolean IsSet() {
+  public boolean isSet() {
     return false;
   }
 
-  public boolean IsBinRel() {
+  public boolean isBinRel() {
     return false;
   }
 
-  public boolean IsTernRel() {
+  public boolean isTernRel() {
     return false;
   }
 
-  public boolean IsTagged() {
+  public boolean isTagged() {
     return false;
   }
 
-  public String AsSymb() {
+  public String asSymb() {
     throw new UnsupportedOperationException();
   }
 
-  public long AsLong() {
+  public long asLong() {
     throw new UnsupportedOperationException();
   }
 
-  public double AsDouble() {
+  public double asDouble() {
     throw new UnsupportedOperationException();
   }
 
-  public int Size() {
+  public int size() {
     throw new UnsupportedOperationException();
   }
 
-  public Value Item(int index) {
+  public Value item(int index) {
     throw new UnsupportedOperationException();
   }
 
-  public Value Arg1(int index) {
+  public Value arg1(int index) {
     throw new UnsupportedOperationException();
   }
 
-  public Value Arg2(int index) {
+  public Value arg2(int index) {
     throw new UnsupportedOperationException();
   }
 
-  public Value Arg3(int index) {
+  public Value arg3(int index) {
     throw new UnsupportedOperationException();
   }
 
-  public String Tag() {
+  public String tag() {
     throw new UnsupportedOperationException();
   }
 
-  public Value Untagged() {
+  public Value untagged() {
     throw new UnsupportedOperationException();
   }
 
-  public boolean IsString() {
+  public boolean isString() {
     return false;
   }
 
-  public boolean IsRecord() {
+  public boolean isRecord() {
     return false;
   }
 
-  public String AsString() {
+  public String asString() {
     throw new UnsupportedOperationException();
   }
 
-  public Value Lookup(String field) {
+  public Value lookup(String field) {
     throw new UnsupportedOperationException();
   }
 
-  public void Print(Writer writer) {
-    Obj obj = AsObj();
-    obj.Print(writer, 90, true, 0);
+  public void print(Writer writer) {
+    Obj obj = asObj();
+    obj.print(writer, 90, true, 0);
   }
 
   public String toString() {
     StringWriter writer = new StringWriter();
-    Print(writer);
+    print(writer);
     return writer.toString();
   }
 
-  public abstract Obj AsObj();
+  public abstract Obj asObj();
 }

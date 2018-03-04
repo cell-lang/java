@@ -8,23 +8,23 @@ class NeSetValue extends ValueBase {
     this.values = values;
   }
 
-  public boolean IsSet() {
+  public boolean isSet() {
     return true;
   }
 
-  public int Size() {
+  public int size() {
     return values.length;
   }
 
-  public Value Item(int index) {
+  public Value item(int index) {
     return values[index];
   }
 
-  public Obj AsObj() {
+  public Obj asObj() {
     int len = values.length;
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
-      objs[i] = values[i].AsObj();
+      objs[i] = values[i].asObj();
     return new NeSetObj(objs);
   }
 }

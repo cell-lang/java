@@ -9,58 +9,58 @@ class TaggedObj extends Obj {
   int minPrintedSize = -1;
 
   public TaggedObj(int tag, Obj obj) {
-    Miscellanea.Assert(obj != null);
+    Miscellanea._assert(obj != null);
     this.tag = tag;
     this.obj = obj;
   }
 
   public TaggedObj(Obj tag, Obj obj) {
-    this(tag.GetSymbId(), obj);
+    this(tag.getSymbId(), obj);
   }
 
-  public boolean IsTagged() {
+  public boolean isTagged() {
     return true;
   }
 
-  public boolean IsSyntacticSugaredString() {
-    if (tag != SymbTable.StringSymbId | !obj.IsSeq())
+  public boolean isSyntacticSugaredString() {
+    if (tag != SymbTable.StringSymbId | !obj.isSeq())
       return false;
-    int len = obj.GetSize();
+    int len = obj.getSize();
     for (int i=0 ; i < len ; i++) {
-      Obj item = obj.GetItem(i);
-      if (!item.IsInt())
+      Obj item = obj.getItem(i);
+      if (!item.isInt())
         return false;
-      long value = item.GetLong();
+      long value = item.getLong();
       if (value < 0 | value > 65535)
         return false;
     }
     return true;
   }
 
-  public boolean HasField(int id) {
-    return obj.HasField(id);
+  public boolean hasField(int id) {
+    return obj.hasField(id);
   }
 
-  public int GetTagId() {
+  public int getTagId() {
     return tag;
   }
 
-  public Obj GetTag() {
-    return SymbObj.Get(tag);
+  public Obj getTag() {
+    return SymbObj.get(tag);
   }
 
-  public Obj GetInnerObj() {
+  public Obj getInnerObj() {
     return obj;
   }
 
-  public Obj LookupField(int id) {
-    return obj.LookupField(id);
+  public Obj lookupField(int id) {
+    return obj.lookupField(id);
   }
 
-  public String GetString() {
+  public String getString() {
     if (tag != SymbTable.StringSymbId)
       throw new UnsupportedOperationException();
-    long[] codes = obj.GetLongArray();
+    long[] codes = obj.getLongArray();
     char[] chars = new char[codes.length];
     for (int i=0 ; i < codes.length ; i++) {
       long code = codes[i];
@@ -76,10 +76,10 @@ class TaggedObj extends Obj {
     return ((int) tag) ^ obj.hashCode();
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      if (IsSyntacticSugaredString()) {
-        long[] codes = obj.GetLongArray();
+      if (isSyntacticSugaredString()) {
+        long[] codes = obj.getLongArray();
         int len = codes.length;
         writer.write('"');
         for (int i=0 ; i < len ; i++) {
@@ -107,26 +107,26 @@ class TaggedObj extends Obj {
         return;
       }
 
-      String tagStr = SymbTable.IdxToStr(tag);
+      String tagStr = SymbTable.idxToStr(tag);
       writer.write(tagStr);
 
-      if (obj.IsNeRecord() | (obj.IsNeSeq() && obj.GetSize() > 1)) {
-        obj.Print(writer, maxLineLen, false, indentLevel);
+      if (obj.isNeRecord() | (obj.isNeSeq() && obj.getSize() > 1)) {
+        obj.print(writer, maxLineLen, false, indentLevel);
         return;
       }
 
-      boolean breakLine = MinPrintedSize() > maxLineLen;
+      boolean breakLine = minPrintedSize() > maxLineLen;
       if (breakLine)
-        breakLine = (obj.IsTagged() & !obj.IsSyntacticSugaredString()) | obj.MinPrintedSize() <= maxLineLen;
+        breakLine = (obj.isTagged() & !obj.isSyntacticSugaredString()) | obj.minPrintedSize() <= maxLineLen;
 
       writer.write('(');
       if (breakLine) {
-        Miscellanea.WriteIndentedNewLine(writer, indentLevel + 1);
-        obj.Print(writer, maxLineLen, breakLine, indentLevel + 1);
-        Miscellanea.WriteIndentedNewLine(writer, indentLevel);
+        Miscellanea.writeIndentedNewLine(writer, indentLevel + 1);
+        obj.print(writer, maxLineLen, breakLine, indentLevel + 1);
+        Miscellanea.writeIndentedNewLine(writer, indentLevel);
       }
       else
-        obj.Print(writer, maxLineLen, breakLine, indentLevel);
+        obj.print(writer, maxLineLen, breakLine, indentLevel);
       writer.write(')');
     }
     catch (Exception e) {
@@ -134,14 +134,14 @@ class TaggedObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     if (minPrintedSize == -1)
-      if (!IsSyntacticSugaredString()) {
-        boolean skipPars = obj.IsNeRecord() | obj.IsNeSeq();
-        minPrintedSize = SymbTable.IdxToStr(tag).length() + obj.MinPrintedSize() + (skipPars ? 0 : 2);
+      if (!isSyntacticSugaredString()) {
+        boolean skipPars = obj.isNeRecord() | obj.isNeSeq();
+        minPrintedSize = SymbTable.idxToStr(tag).length() + obj.minPrintedSize() + (skipPars ? 0 : 2);
       }
       else {
-        long[] codes = obj.GetLongArray();
+        long[] codes = obj.getLongArray();
         int len = codes.length;
         minPrintedSize = 2;
         for (int i=0 ; i < len ; i++) {
@@ -159,22 +159,22 @@ class TaggedObj extends Obj {
     return minPrintedSize;
   }
 
-  public ValueBase GetValue() {
-    return new TaggedValue(tag, obj.GetValue());
+  public ValueBase getValue() {
+    return new TaggedValue(tag, obj.getValue());
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return 8;
   }
 
-  protected int InternalCmp(Obj other) {
-    return other.CmpTaggedObj(tag, obj);
+  protected int internalCmp(Obj other) {
+    return other.cmpTaggedObj(tag, obj);
   }
 
-  public int CmpTaggedObj(int other_tag, Obj other_obj) {
+  public int cmpTaggedObj(int other_tag, Obj other_obj) {
     if (other_tag != tag)
-      return SymbTable.CompSymbs(other_tag, tag);
+      return SymbTable.compSymbs(other_tag, tag);
     else
-      return other_obj.Cmp(obj);
+      return other_obj.cmp(obj);
   }
 }

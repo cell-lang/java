@@ -9,31 +9,31 @@ class NeSetObj extends Obj {
   int minPrintedSize = -1;
 
   public NeSetObj(Obj[] elts) {
-    Miscellanea.Assert(elts.length > 0);
+    Miscellanea._assert(elts.length > 0);
     this.elts = elts;
   }
 
-  public boolean IsSet() {
+  public boolean isSet() {
     return true;
   }
 
-  public boolean IsNeSet() {
+  public boolean isNeSet() {
     return true;
   }
 
-  public boolean HasElem(Obj obj) {
-    return Algs.BinSearch(elts, obj) != -1;
+  public boolean hasElem(Obj obj) {
+    return Algs.binSearch(elts, obj) != -1;
   }
 
-  public int GetSize() {
+  public int getSize() {
     return elts.length;
   }
 
-  public SeqOrSetIter GetSeqOrSetIter() {
+  public SeqOrSetIter getSeqOrSetIter() {
     return new SeqOrSetIter(elts, 0, elts.length-1);
   }
 
-  public Obj InternalSort() {
+  public Obj internalSort() {
     return new MasterSeqObj(elts);
   }
 
@@ -44,10 +44,10 @@ class NeSetObj extends Obj {
     return hashcodesSum ^ (int) elts.length;
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       int len = elts.length;
-      boolean breakLine = MinPrintedSize() > maxLineLen;
+      boolean breakLine = minPrintedSize() > maxLineLen;
 
       writer.write('[');
 
@@ -58,22 +58,22 @@ class NeSetObj extends Obj {
         if (newLine)
           writer.write(' ');
         else
-          Miscellanea.WriteIndentedNewLine(writer, indentLevel + 1);
+          Miscellanea.writeIndentedNewLine(writer, indentLevel + 1);
       }
 
       for (int i=0 ; i < len ; i++) {
         if (i > 0) {
           writer.write(',');
           if (breakLine)
-            Miscellanea.WriteIndentedNewLine(writer, indentLevel + 1);
+            Miscellanea.writeIndentedNewLine(writer, indentLevel + 1);
           else
             writer.write(' ');
         }
-        elts[i].Print(writer, maxLineLen, breakLine & !newLine, indentLevel + 1);
+        elts[i].print(writer, maxLineLen, breakLine & !newLine, indentLevel + 1);
       }
 
       if (breakLine)
-        Miscellanea.WriteIndentedNewLine(writer, indentLevel);
+        Miscellanea.writeIndentedNewLine(writer, indentLevel);
 
       writer.write(']');
     }
@@ -82,46 +82,46 @@ class NeSetObj extends Obj {
     }
   }
 
-  public int MinPrintedSize() {
+  public int minPrintedSize() {
     if (minPrintedSize == -1) {
       int len = elts.length;
       minPrintedSize = 2 * len;
       for (int i=0 ; i < len ; i++)
-        minPrintedSize += elts[i].MinPrintedSize();
+        minPrintedSize += elts[i].minPrintedSize();
     }
     return minPrintedSize;
   }
 
-  public ValueBase GetValue() {
+  public ValueBase getValue() {
     int size = elts.length;
     ValueBase[] values = new ValueBase[size];
     for (int i=0 ; i < size ; i++)
-      values[i] = elts[i].GetValue();
+      values[i] = elts[i].getValue();
     return new NeSetValue(values);
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return 5;
   }
 
-  protected int InternalCmp(Obj other) {
-    return other.CmpNeSet(elts);
+  protected int internalCmp(Obj other) {
+    return other.cmpNeSet(elts);
   }
 
-  public int CmpNeSet(Obj[] other_elts) {
+  public int cmpNeSet(Obj[] other_elts) {
     int len = elts.length;
     int other_len = other_elts.length;
     if (other_len != len)
       return other_len < len ? 1 : -1;
     for (int i=0 ; i < len ; i++) {
-      int res = other_elts[i].Cmp(elts[i]);
+      int res = other_elts[i].cmp(elts[i]);
       if (res != 0)
         return res;
     }
     return 0;
   }
 
-  public Obj RandElem() {
+  public Obj randElem() {
     return elts[0];
   }
 }

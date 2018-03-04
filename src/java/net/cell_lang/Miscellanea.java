@@ -10,13 +10,13 @@ import java.io.PrintWriter;
 
 
 class Miscellanea {
-  public static Obj StrToObj(String str) {
+  public static Obj strToObj(String str) {
     int len = str.length();
     Obj[] chars = new Obj[len];
     int count = 0;
     for (int i=0 ; i < len ; i++) {
       int ch = str.codePointAt(i);
-      chars[count++] = IntObj.Get(ch);
+      chars[count++] = IntObj.get(ch);
       if (ch > Character.MAX_VALUE)
         i++;
     }
@@ -27,62 +27,62 @@ class Miscellanea {
     // int count = 0;
     // int i = 0;
     // while (i < len) {
-    //   int ch = Char.ConvertToUtf32(str, i);
-    //   chars[count++] = IntObj.Get(ch);
-    //   i += Char.IsSurrogatePair(str, i) ? 2 : 1;
+    //   int ch = Char.convertToUtf32(str, i);
+    //   chars[count++] = IntObj.get(ch);
+    //   i += Char.isSurrogatePair(str, i) ? 2 : 1;
     // }
     // return new TaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
   }
 
-  public static String ObjToStr(Obj str) {
+  public static String objToStr(Obj str) {
     return null;
   }
 
-  public static Obj Fail() {
+  public static Obj fail() {
     PrintCallStack();
     System.exit(1);
     return null;
   }
 
-  public static Obj SoftFail() {
+  public static Obj softFail() {
     PrintCallStack();
     throw new UnsupportedOperationException();
   }
 
-  public static Obj SoftFail(String msg) {
+  public static Obj softFail(String msg) {
     System.err.println(msg);
-    return SoftFail();
+    return softFail();
   }
 
-  public static Obj HardFail() {
+  public static Obj hardFail() {
     PrintCallStack();
     System.exit(1);
     return null;
   }
 
-  public static void ImplFail(String msg) {
+  public static void implFail(String msg) {
     if (msg != null)
       System.err.println(msg + "\n");
     PrintCallStack();
     System.exit(1);
   }
 
-  public static void InternalFail() {
+  public static void internalFail() {
     System.err.println("Internal error!\n");
     PrintCallStack();
     System.exit(1);
   }
 
-  public static void PrintAssertionFailedMsg(String file, int line, String text) {
+  public static void printAssertionFailedMsg(String file, int line, String text) {
     if (text == null)
       System.out.printf("\nAssertion failed. File: %s, line: %d\n\n\n", file, line);
     else
       System.out.printf("\nAssertion failed: %s\nFile: %s, line: %d\n\n\n", text, file, line);
   }
 
-  public static void DumpVar(String name, Obj obj) {
+  public static void dumpVar(String name, Obj obj) {
     try {
-      String str = PrintedObjOrFilename(obj, true);
+      String str = printedObjOrFilename(obj, true);
       System.out.printf("%s = %s\n\n", name, str);
     }
     catch (Exception e) {
@@ -92,27 +92,27 @@ class Miscellanea {
 
   static Random random = new Random(0);
 
-  public static long RandNat(long max) {
+  public static long randNat(long max) {
     return random.nextInt((int) max);
   }
 
   static int nextUniqueNat = 0;
-  public static long UniqueNat() {
+  public static long uniqueNat() {
     return nextUniqueNat++;
   }
 
-  public static long GetTickCount() {
+  public static long getTickCount() {
     return System.currentTimeMillis();
   }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static void Assert(boolean cond) {
-    Assert(cond, null);
+  public static void _assert(boolean cond) {
+    _assert(cond, null);
   }
 
-  public static void Assert(boolean cond, String message) {
+  public static void _assert(boolean cond, String message) {
     if (!cond) {
       System.out.println("Assertion failed" + (message != null ? ": " + message : ""));
       if (stackDepth > 0) {
@@ -128,7 +128,7 @@ class Miscellanea {
     }
   }
 
-  public static void Trace(boolean cond, String message) {
+  public static void trace(boolean cond, String message) {
     if (!cond) {
       System.out.println("*** TRACE: " + message);
     }
@@ -141,7 +141,7 @@ class Miscellanea {
   static String[] fnNamesStack = new String[100];
   static Obj[][]  argsStack = new Obj[100][];
 
-  public static void PushCallInfo(String fnName, Obj[] args) {
+  public static void pushCallInfo(String fnName, Obj[] args) {
     if (stackDepth < 100) {
       fnNamesStack[stackDepth] = fnName;
       argsStack[stackDepth]    = args;
@@ -149,7 +149,7 @@ class Miscellanea {
     stackDepth++;
   }
 
-  public static void PopCallInfo() {
+  public static void popCallInfo() {
     stackDepth--;
   }
 
@@ -192,7 +192,7 @@ class Miscellanea {
 
   static void PrintIndentedArg(Obj arg, boolean isLast, Writer writer) {
     try {
-      String str = arg.IsBlankObj() ? "<closure>" : PrintedObjOrFilename(arg, false);
+      String str = arg.isBlankObj() ? "<closure>" : printedObjOrFilename(arg, false);
       for (int i=0 ; i < str.length() ; i++) {
         if (i == 0 || str.charAt(i) == '\n')
           writer.write("  ");
@@ -213,11 +213,11 @@ class Miscellanea {
 
   static ArrayList<Obj> filedObjs = new ArrayList<Obj>();
 
-  static String PrintedObjOrFilename(Obj obj, boolean addPath) {
+  static String printedObjOrFilename(Obj obj, boolean addPath) {
     String path = addPath ? "debug" + File.separator : "";
 
     for (int i=0 ; i < filedObjs.size() ; i++)
-      if (filedObjs.get(i).IsEq(obj))
+      if (filedObjs.get(i).isEq(obj))
         return String.format("<%sobj-%d.txt>", path, i);
 
     String str = obj.toString();
@@ -242,25 +242,25 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static boolean IsHexDigit(byte b) {
+  public static boolean isHexDigit(byte b) {
     char ch = (char) b;
     return ('0' <= ch & ch <= '9') | ('a' <= ch & ch <= 'f') | ('A' <= ch & ch <= 'F');
   }
 
-  public static int HexDigitValue(byte b) {
+  public static int hexDigitValue(byte b) {
     char ch = (char) b;
     return ch - (ch >= '0' & ch <= '9' ? '0' : (ch >= 'a' & ch <= 'f' ? 'a' : 'A'));
   }
 
-  public static int Hashcode(int n) {
+  public static int hashcode(int n) {
     return n;
   }
 
-  public static int Hashcode(int n1, int n2) {
+  public static int hashcode(int n1, int n2) {
     return n1 ^ n2;
   }
 
-  public static int Hashcode(int n1, int n2, int n3) {
+  public static int hashcode(int n1, int n2, int n3) {
     return n1 ^ n2 ^ n3;
   }
 
@@ -268,11 +268,11 @@ class Miscellanea {
   //   int len = str.length();
   //   List<int> cps = new List<int>(len);
   //   for (int i=0 ; i < len ; i++) {
-  //     cps.Add(Char.ConvertToUtf32(str, i));
-  //     if (Char.IsHighSurrogate(str[i]))
+  //     cps.add(Char.convertToUtf32(str, i));
+  //     if (Char.isHighSurrogate(str[i]))
   //       i++;
   //   }
-  //   return cps.ToArray();
+  //   return cps.toArray();
   // }
 
   public static boolean debugFlag = false;
@@ -280,11 +280,11 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static void WriteIndentedNewLine(Writer writer, int level) {
-    WriteIndentedNewLine(writer, "", level);
+  public static void writeIndentedNewLine(Writer writer, int level) {
+    writeIndentedNewLine(writer, "", level);
   }
 
-  public static void WriteIndentedNewLine(Writer writer, String str, int level) {
+  public static void writeIndentedNewLine(Writer writer, String str, int level) {
     try {
       writer.write(str);
       writer.write("\n");

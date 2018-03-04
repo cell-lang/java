@@ -2,39 +2,39 @@ package net.cell_lang;
 
 
 class EmptyRelValue extends ValueBase {
-  public boolean IsSet() {
+  public boolean isSet() {
     return true;
   }
 
-  public boolean IsBinRel() {
+  public boolean isBinRel() {
     return true;
   }
 
-  public boolean IsTernRel() {
+  public boolean isTernRel() {
     return true;
   }
 
-  public int Size() {
+  public int size() {
     return 0;
   }
 
-  public Value Item(int index) {
+  public Value item(int index) {
     throw new IndexOutOfBoundsException();
   }
 
-  public Value Arg1(int index) {
+  public Value arg1(int index) {
     throw new IndexOutOfBoundsException();
   }
 
-  public Value Arg2(int index) {
+  public Value arg2(int index) {
     throw new IndexOutOfBoundsException();
   }
 
-  public boolean IsRecord() {
+  public boolean isRecord() {
     return true;
   }
 
-  public Obj AsObj() {
-    return EmptyRelObj.Singleton();
+  public Obj asObj() {
+    return EmptyRelObj.singleton();
   }
 }

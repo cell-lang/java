@@ -6,96 +6,96 @@ import java.io.OutputStreamWriter;
 
 
 abstract class Obj implements Comparable<Obj> {
-  public boolean IsBlankObj()                              {return false;}
-  public boolean IsNullObj()                               {return false;}
-  public boolean IsSymb()                                  {return false;}
-  // public boolean IsBool()                                  {return false;}
-  public boolean IsInt()                                   {return false;}
-  public boolean IsFloat()                                 {return false;}
-  public boolean IsSeq()                                   {return false;}
-  public boolean IsEmptySeq()                              {return false;}
-  public boolean IsNeSeq()                                 {return false;}
-  public boolean IsEmptyRel()                              {return false;}
-  public boolean IsSet()                                   {return false;}
-  public boolean IsNeSet()                                 {return false;}
-  public boolean IsBinRel()                                {return false;}
-  public boolean IsNeBinRel()                              {return false;}
-  public boolean IsNeMap()                                 {return false;}
-  public boolean IsNeRecord()                              {return false;}
-  public boolean IsTernRel()                               {return false;}
-  public boolean IsNeTernRel()                             {return false;}
-  public boolean IsTagged()                                {return false;}
-  public boolean IsSyntacticSugaredString()                {return false;}
+  public boolean isBlankObj()                           {return false;}
+  public boolean isNullObj()                            {return false;}
+  public boolean isSymb()                               {return false;}
+  // public boolean IsBool()                               {return false;}
+  public boolean isInt()                                {return false;}
+  public boolean isFloat()                              {return false;}
+  public boolean isSeq()                                {return false;}
+  public boolean isEmptySeq()                           {return false;}
+  public boolean isNeSeq()                              {return false;}
+  public boolean isEmptyRel()                           {return false;}
+  public boolean isSet()                                {return false;}
+  public boolean isNeSet()                              {return false;}
+  public boolean isBinRel()                             {return false;}
+  public boolean isNeBinRel()                           {return false;}
+  public boolean isNeMap()                              {return false;}
+  public boolean isNeRecord()                           {return false;}
+  public boolean isTernRel()                            {return false;}
+  public boolean isNeTernRel()                          {return false;}
+  public boolean isTagged()                             {return false;}
+  public boolean isSyntacticSugaredString()             {return false;}
 
-  public boolean IsSymb(int id)                            {return false;}
-  public boolean IsInt(long n)                             {return false;}
-  public boolean IsFloat(double x)                         {return false;}
+  public boolean isSymb(int id)                         {return false;}
+  public boolean isInt(long n)                          {return false;}
+  public boolean isFloat(double x)                      {return false;}
 
-  public boolean HasElem(Obj o)                            {throw new UnsupportedOperationException();}
-  public boolean HasKey(Obj o)                             {throw new UnsupportedOperationException();}
-  public boolean HasField(int id)                          {throw new UnsupportedOperationException();}
-  public boolean HasPair(Obj o1, Obj o2)                   {throw new UnsupportedOperationException();}
-  public boolean HasTriple(Obj o1, Obj o2, Obj o3)         {throw new UnsupportedOperationException();}
+  public boolean hasElem(Obj o)                         {throw new UnsupportedOperationException();}
+  public boolean hasKey(Obj o)                          {throw new UnsupportedOperationException();}
+  public boolean hasField(int id)                       {throw new UnsupportedOperationException();}
+  public boolean hasPair(Obj o1, Obj o2)                {throw new UnsupportedOperationException();}
+  public boolean hasTriple(Obj o1, Obj o2, Obj o3)      {throw new UnsupportedOperationException();}
 
-  public int    GetSymbId()                             {throw new UnsupportedOperationException();}
-  public boolean   GetBool()                               {throw new UnsupportedOperationException();}
-  public long   GetLong()                               {throw new UnsupportedOperationException();}
-  public double GetDouble()                             {throw new UnsupportedOperationException();}
-  public int    GetSize()                               {throw new UnsupportedOperationException();}
-  public Obj    GetItem(long i)                         {throw new UnsupportedOperationException();}
-  public int    GetTagId()                              {throw new UnsupportedOperationException();}
-  public Obj    GetTag()                                {throw new UnsupportedOperationException();}
-  public Obj    GetInnerObj()                           {throw new UnsupportedOperationException();}
+  public int     getSymbId()                            {throw new UnsupportedOperationException();}
+  public boolean getBool()                              {throw new UnsupportedOperationException();}
+  public long    getLong()                              {throw new UnsupportedOperationException();}
+  public double  getDouble()                            {throw new UnsupportedOperationException();}
+  public int     getSize()                              {throw new UnsupportedOperationException();}
+  public Obj     getItem(long i)                        {throw new UnsupportedOperationException();}
+  public int     getTagId()                             {throw new UnsupportedOperationException();}
+  public Obj     getTag()                               {throw new UnsupportedOperationException();}
+  public Obj     getInnerObj()                          {throw new UnsupportedOperationException();}
 
-  public SeqOrSetIter GetSeqOrSetIter()                 {throw new UnsupportedOperationException();}
-  public BinRelIter   GetBinRelIter()                   {throw new UnsupportedOperationException();}
-  public TernRelIter  GetTernRelIter()                  {throw new UnsupportedOperationException();}
+  public SeqOrSetIter getSeqOrSetIter()                 {throw new UnsupportedOperationException();}
+  public BinRelIter   getBinRelIter()                   {throw new UnsupportedOperationException();}
+  public TernRelIter  getTernRelIter()                  {throw new UnsupportedOperationException();}
 
   // Copy-on-write update
-  public Obj UpdatedAt(long i, Obj v)                   {throw new UnsupportedOperationException();}
+  public Obj updatedAt(long i, Obj v)                   {throw new UnsupportedOperationException();}
 
-  public BinRelIter GetBinRelIterByCol1(Obj obj)        {throw new UnsupportedOperationException();}
-  public BinRelIter GetBinRelIterByCol2(Obj obj)        {throw new UnsupportedOperationException();}
+  public BinRelIter getBinRelIterByCol1(Obj obj)        {throw new UnsupportedOperationException();}
+  public BinRelIter getBinRelIterByCol2(Obj obj)        {throw new UnsupportedOperationException();}
 
-  public TernRelIter GetTernRelIterByCol1(Obj val)      {throw new UnsupportedOperationException();}
-  public TernRelIter GetTernRelIterByCol2(Obj val)      {throw new UnsupportedOperationException();}
-  public TernRelIter GetTernRelIterByCol3(Obj val)      {throw new UnsupportedOperationException();}
+  public TernRelIter getTernRelIterByCol1(Obj val)      {throw new UnsupportedOperationException();}
+  public TernRelIter getTernRelIterByCol2(Obj val)      {throw new UnsupportedOperationException();}
+  public TernRelIter getTernRelIterByCol3(Obj val)      {throw new UnsupportedOperationException();}
 
-  public TernRelIter GetTernRelIterByCol12(Obj val1, Obj val2)  {throw new UnsupportedOperationException();}
-  public TernRelIter GetTernRelIterByCol13(Obj val1, Obj val3)  {throw new UnsupportedOperationException();}
-  public TernRelIter GetTernRelIterByCol23(Obj val2, Obj val3)  {throw new UnsupportedOperationException();}
+  public TernRelIter getTernRelIterByCol12(Obj val1, Obj val2)  {throw new UnsupportedOperationException();}
+  public TernRelIter getTernRelIterByCol13(Obj val1, Obj val3)  {throw new UnsupportedOperationException();}
+  public TernRelIter getTernRelIterByCol23(Obj val2, Obj val3)  {throw new UnsupportedOperationException();}
 
-  public long Mantissa()                                {throw new UnsupportedOperationException();}
-  public long DecExp()                                  {throw new UnsupportedOperationException();}
+  public long mantissa()                                {throw new UnsupportedOperationException();}
+  public long decExp()                                  {throw new UnsupportedOperationException();}
 
-  public Obj Negate()                                   {throw new UnsupportedOperationException();}
-  public Obj Reverse()                                  {throw new UnsupportedOperationException();}
-  public void InitAt(long i, Obj v)                     {throw new UnsupportedOperationException();}
+  public Obj negate()                                   {throw new UnsupportedOperationException();}
+  public Obj reverse()                                  {throw new UnsupportedOperationException();}
+  public void initAt(long i, Obj v)                     {throw new UnsupportedOperationException();}
 
-  public Obj InternalSort()                             {throw new UnsupportedOperationException();}
-  public Obj GetSlice(long first, long len)             {throw new UnsupportedOperationException();}
+  public Obj internalSort()                             {throw new UnsupportedOperationException();}
+  public Obj getSlice(long first, long len)             {throw new UnsupportedOperationException();}
 
-  public long[] GetLongArray()                          {throw new UnsupportedOperationException();}
-  public byte[] GetByteArray()                          {throw new UnsupportedOperationException();}
-  public String GetString()                             {throw new UnsupportedOperationException();}
+  public long[] getLongArray()                          {throw new UnsupportedOperationException();}
+  public byte[] getByteArray()                          {throw new UnsupportedOperationException();}
+  public String getString()                             {throw new UnsupportedOperationException();}
 
-  public Obj Lookup(Obj key)                            {throw new UnsupportedOperationException();}
-  public Obj LookupField(int id)                        {throw new UnsupportedOperationException();}
+  public Obj lookup(Obj key)                            {throw new UnsupportedOperationException();}
+  public Obj lookupField(int id)                        {throw new UnsupportedOperationException();}
 
-  public Obj Append(Obj obj)                            {throw new UnsupportedOperationException();}
-  public Obj Concat(Obj seq)                            {throw new UnsupportedOperationException();}
+  public Obj append(Obj obj)                            {throw new UnsupportedOperationException();}
+  public Obj concat(Obj seq)                            {throw new UnsupportedOperationException();}
 
-  public void CopyItems(Obj[] items, int offset)        {throw new UnsupportedOperationException();}
+  public void copyItems(Obj[] items, int offset)        {throw new UnsupportedOperationException();}
 
-  public int CmpSeq(Obj[] es, int o, int l)             {throw new UnsupportedOperationException();}
-  public int CmpNeSet(Obj[] es)                         {throw new UnsupportedOperationException();}
-  public int CmpNeBinRel(Obj[] c1, Obj[] c2)            {throw new UnsupportedOperationException();}
-  public int CmpNeTernRel(Obj[] c1, Obj[] c2, Obj[] c3) {throw new UnsupportedOperationException();}
-  public int CmpTaggedObj(int tag, Obj obj)             {throw new UnsupportedOperationException();}
+  public int cmpSeq(Obj[] es, int o, int l)             {throw new UnsupportedOperationException();}
+  public int cmpNeSet(Obj[] es)                         {throw new UnsupportedOperationException();}
+  public int cmpNeBinRel(Obj[] c1, Obj[] c2)            {throw new UnsupportedOperationException();}
+  public int cmpNeTernRel(Obj[] c1, Obj[] c2, Obj[] c3) {throw new UnsupportedOperationException();}
+  public int cmpTaggedObj(int tag, Obj obj)             {throw new UnsupportedOperationException();}
 
-  public ValueBase GetValue()                           {throw new UnsupportedOperationException();}
+  public ValueBase getValue()                           {throw new UnsupportedOperationException();}
 
-  public void Dump() {
+  public void dump() {
     System.out.println("ERROR: NO DUMP AVAILABLE");
   }
 
@@ -103,48 +103,48 @@ abstract class Obj implements Comparable<Obj> {
   ////////////////////////////////////////////////////////////////////////////
 
   public abstract int hashCode();
-  public abstract void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel);
-  public abstract int MinPrintedSize();
+  public abstract void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel);
+  public abstract int minPrintedSize();
 
-  protected abstract int TypeId();
-  protected abstract int InternalCmp(Obj o);
-
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
-
-  public Obj RandElem() {throw new UnsupportedOperationException();}
+  protected abstract int typeId();
+  protected abstract int internalCmp(Obj o);
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public boolean IsEq(Obj o) {
-    return Cmp(o) == 0;
+  public Obj randElem() {throw new UnsupportedOperationException();}
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public boolean isEq(Obj o) {
+    return cmp(o) == 0;
   }
 
   public int compareTo(Obj other) {
-    return -Cmp(other);
+    return -cmp(other);
   }
 
-  public int Cmp(Obj o) {
+  public int cmp(Obj o) {
     if (this == o)
       return 0;
-    int id1 = TypeId();
-    int id2 = o.TypeId();
+    int id1 = typeId();
+    int id2 = o.typeId();
     if (id1 == id2)
-      return InternalCmp(o);
+      return internalCmp(o);
     return id1 < id2 ? 1 : -1;
   }
 
   public String toString() {
     StringWriter writer = new StringWriter();
-    Print(writer, 90, true, 0);
+    print(writer, 90, true, 0);
     return writer.toString();
   }
 
-  public void Print() {
+  public void print() {
     Writer writer = new OutputStreamWriter(System.out);
     try {
-      Print(writer, 90, true, 0);
+      print(writer, 90, true, 0);
       writer.write('\n');
     }
     catch (Exception e) {
@@ -160,7 +160,7 @@ abstract class Obj implements Comparable<Obj> {
     }
   }
 
-  public Obj Printed() {
-    return Miscellanea.StrToObj(toString());
+  public Obj printed() {
+    return Miscellanea.strToObj(toString());
   }
 }

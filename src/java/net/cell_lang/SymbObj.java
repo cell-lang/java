@@ -11,27 +11,27 @@ class SymbObj extends Obj {
     this.id = id;
   }
 
-  public static SymbObj Get(int id) {
-    return SymbTable.Get(id);
+  public static SymbObj get(int id) {
+    return SymbTable.get(id);
   }
 
-  public static SymbObj Get(boolean b) {
-    return SymbTable.Get(b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
+  public static SymbObj get(boolean b) {
+    return SymbTable.get(b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
   }
 
-  public boolean IsSymb() {
+  public boolean isSymb() {
     return true;
   }
 
-  public boolean IsSymb(int id) {
+  public boolean isSymb(int id) {
     return this.id == id;
   }
 
-  public int GetSymbId() {
+  public int getSymbId() {
     return id;
   }
 
-  public boolean GetBool() {
+  public boolean getBool() {
     if (id == SymbTable.FalseSymbId)
       return false;
     if (id == SymbTable.TrueSymbId)
@@ -39,15 +39,15 @@ class SymbObj extends Obj {
     throw new UnsupportedOperationException();
   }
 
-  public boolean IsEq(Obj obj) {
-    return obj.IsSymb(id);
+  public boolean isEq(Obj obj) {
+    return obj.isSymb(id);
   }
 
-  public Obj Negate() {
+  public Obj negate() {
     if (id == SymbTable.FalseSymbId)
-      return SymbObj.Get(SymbTable.TrueSymbId);
+      return SymbObj.get(SymbTable.TrueSymbId);
     if (id == SymbTable.TrueSymbId)
-      return SymbObj.Get(SymbTable.FalseSymbId);
+      return SymbObj.get(SymbTable.FalseSymbId);
     throw new UnsupportedOperationException();
   }
 
@@ -55,28 +55,28 @@ class SymbObj extends Obj {
     return (int) id; //## BAD HASHCODE, IT'S NOT STABLE
   }
 
-  public void Print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      writer.write(SymbTable.IdxToStr(id));
+      writer.write(SymbTable.idxToStr(id));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
-  public int MinPrintedSize() {
-    return SymbTable.IdxToStr(id).length();
+  public int minPrintedSize() {
+    return SymbTable.idxToStr(id).length();
   }
 
-  public ValueBase GetValue() {
+  public ValueBase getValue() {
     return new SymbValue(id);
   }
 
-  protected int TypeId() {
+  protected int typeId() {
     return 0;
   }
 
-  protected int InternalCmp(Obj other) {
-    return SymbTable.CompSymbs(id, other.GetSymbId());
+  protected int internalCmp(Obj other) {
+    return SymbTable.compSymbs(id, other.getSymbId());
   }
 }

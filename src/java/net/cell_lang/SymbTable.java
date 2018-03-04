@@ -39,16 +39,16 @@ class SymbTable {
     }
 
     for (int i=0 ; i < Generated.EmbeddedSymbols.length ; i++) {
-      int idx = SymbTable.StrToIdx(Generated.EmbeddedSymbols[i]);
-      Miscellanea.Assert(idx == i);
+      int idx = SymbTable.strToIdx(Generated.EmbeddedSymbols[i]);
+      Miscellanea._assert(idx == i);
     }
   }
 
-  public static SymbObj Get(int id) {
+  public static SymbObj get(int id) {
     return symbObjs.get(id);
   }
 
-  public static int StrToIdx(String str) {
+  public static int strToIdx(String str) {
     Integer idxObj = symbMap.get(str);
     if (idxObj != null)
       return idxObj;
@@ -62,11 +62,11 @@ class SymbTable {
     throw new UnsupportedOperationException();
   }
 
-  public static String IdxToStr(int idx) {
+  public static String idxToStr(int idx) {
     return symbTable.get(idx);
   }
 
-  public static int CompSymbs(int id1, int id2) {
+  public static int compSymbs(int id1, int id2) {
     if (id1 == id2)
       return 0;
     int len = Generated.EmbeddedSymbols.length;

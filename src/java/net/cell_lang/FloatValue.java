@@ -8,15 +8,15 @@ class FloatValue extends ValueBase {
     this.value = value;
   }
 
-  public boolean IsFloat() {
+  public boolean isFloat() {
     return true;
   }
 
-  public double AsDouble() {
+  public double asDouble() {
     return value;
   }
 
-  public Obj AsObj() {
+  public Obj asObj() {
     return new FloatObj(value);
   }
 }

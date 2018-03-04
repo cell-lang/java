@@ -204,7 +204,7 @@ class Lexer extends ByteStream {
   }
 
   Token readSymbol() {
-    Miscellanea.Assert(nextIsLower());
+    Miscellanea._assert(nextIsLower());
 
     int startOffset = offset();
     for ( ; ; ) {
@@ -217,12 +217,12 @@ class Lexer extends ByteStream {
     }
 
     int len = offset() - startOffset;
-    SymbObj obj = SymbObj.Get(SymbTable.StrToIdx(string(startOffset, len)));
+    SymbObj obj = SymbObj.get(SymbTable.strToIdx(string(startOffset, len)));
     return new Token(offset, len, TokenType.Symbol, obj);
   }
 
   Token readString() {
-    Miscellanea.Assert(nextIs('"'));
+    Miscellanea._assert(nextIs('"'));
 
     int startOffset = offset();
     read();
@@ -280,7 +280,7 @@ class Lexer extends ByteStream {
 
       chars[i] = ch;
     }
-    Miscellanea.Assert(nextIs('"'));
+    Miscellanea._assert(nextIs('"'));
     read();
 
     return new Token(startOffset, offset() - startOffset, TokenType.String, new String(chars));
