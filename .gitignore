@@ -4,3 +4,8 @@ src/java/net/cell_lang/*.class
 src/java/net/cell_lang/Tests.java
 dump-*
 convert
+codegen
+generated.cs
+inputs/
+runtime/
+tmp/
