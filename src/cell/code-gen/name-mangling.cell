@@ -213,7 +213,7 @@ String aux_struct_var_ref_name(ValueStoreId vs) = "updater." & aux_struct_var_de
 ////////////////////////////////////////////////////////////////////////////////
 
 String var_decl(ObjVar v)       = "Obj "          & native_var_decl_name(v) & " = null;"; ## CHANGE THIS
-String var_decl(BoolVar v)      = "bool "         & native_var_decl_name(v) & ";";
+String var_decl(BoolVar v)      = "boolean "      & native_var_decl_name(v) & ";";
 String var_decl(IntVar v)       = "long "         & native_var_decl_name(v) & ";";
 String var_decl(SeqItVar v)     = "SeqOrSetIter " & native_var_decl_name(v) & ";";
 String var_decl(SetItVar v)     = "SeqOrSetIter " & native_var_decl_name(v) & ";";
@@ -260,7 +260,7 @@ String time_slots_table_name(AutoSymbol auto_name, Atom table_id) =
 String native_var_type(ObjVar)           = "Obj";
 String native_var_type(IntVar)           = "long";
 String native_var_type(MembIntVectVar)   = "long[]";
-String native_var_type(BoolVar)          = "bool";
+String native_var_type(BoolVar)          = "boolean";
 
 
 String native_table_type(Table table) {

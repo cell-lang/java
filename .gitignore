@@ -5,7 +5,8 @@ src/java/net/cell_lang/Tests.java
 dump-*
 convert
 codegen
-generated.cs
+generated.java
 inputs/
 runtime/
 tmp/
+codegen.exe

@@ -2,10 +2,10 @@
   symbs = used_symbols(prg);
   assert |symbs| <= 64 * 1024; ## IMPLEMENT PROPERLY
 
-  c_code = ("const ushort " & symb_idx_name(s) & " = " & printed(i) & ";" : s @ i <- symbs) & 4 * ("");
+  c_code = ("static final int " & symb_idx_name(s) & " = " & printed(i) & ";" : s @ i <- symbs) & 4 * ("");
 
   symb_strs  = ("  \"" & _str_(bare_obj(s)) & "\"," : s <- symbs);
-  c_code     = c_code & ("public static string[] EmbeddedSymbols = {") & symb_strs & ("};") & 4 * ("");
+  c_code     = c_code & ("public static String[] EmbeddedSymbols = {") & symb_strs & ("};") & 4 * ("");
 
   cls_defs = cls_defs(prg);
 
@@ -62,26 +62,32 @@
   has_automata = prg.react_blocks != [] or prg.static_blocks != [];
 
   gen_code = join((
-    ( "using System;",
-      "using System.Collections.Generic;",
-      "using System.Text;",
-      "using System.Diagnostics;",
-      "using System.IO;",
+    ( "package net.cell_lang;",
       "",
-      "#pragma warning disable CS0162 CS0168 CS0414",
+      "import java.io.File;",
+      "import java.io.FileOutputStream;",
+      "import java.io.OutputStreamWriter;",
+      "import java.io.PrintWriter;",
+      "import java.io.StringWriter;",
+      "import java.io.Writer;",
+      "import java.nio.file.Files;",
+      "import java.nio.file.Path;",
+      "import java.nio.file.Paths;",
+      "import java.util.ArrayList;",
+      "import java.util.Arrays;",
+      "import java.util.HashMap;",
+      "import java.util.NoSuchElementException;",
+      "import java.util.Random;",
       "",
-      ""
+      "",
+      "class Generated {"
     ),
 
-    ( "namespace CellLang {",
-      "  static class Generated {"
-    ),
+    indent_lines(c_code & proc_code & int_seqs_defs & ("", "") & wrappers),
 
-    indent_lines(indent_lines(c_code & proc_code & int_seqs_defs & ("", "") & wrappers)),
+    indent_lines(c_main_fn) if (p <- prg.procs : p.name == proc_symbol(:main)),
 
-    indent_lines(indent_lines(c_main_fn)) if (p <- prg.procs : p.name == proc_symbol(:main)),
-
-    ("  }", "}", ""),
+    ("}", ""),
 
     // Runtime support for the functional subset of the language
     core_runtime if include_runtime,
@@ -102,8 +108,8 @@
   String* generate_cls_obj_typedef([NzNat] arities) {
     return () if arities == [];
     methods = ((
-      "  public virtual Obj Invoke(" & append(("Obj a" & printed(i) : i < a), ", ") & ", Env env) {",
-      "    throw new InvalidOperationException();",
+      "  public Obj invoke(" & append(("Obj a" & printed(i) : i < a), ", ") & ", Env env) {",
+      "    throw new UnsupportedOperationException();",
       "  }"
       ) : a <- isort(arities)
     );
@@ -137,10 +143,7 @@ String native_int_type(Int min_val, Int max_val) {
 
 
 (Int, Int, String)+ type_bounds = (
-  (0,             pow(2, 8),    "byte"),
-  (0,             pow(2, 16),   "ushort"),
-  (0,             pow(2, 32),   "uint"),
-  (-pow(2, 7),    pow(2, 7),    "sbyte"),
+  (-pow(2, 7),    pow(2, 7),    "byte"),
   (-pow(2, 15),   pow(2, 15),   "short"),
   (-pow(2, 31),   pow(2, 31),   "int")
 );
@@ -317,7 +320,7 @@ implicit {
 
     String ret_type_str(ProcDef) =
       obj_proc_def()    = "Obj ",
-      bool_proc_def()   = "bool ";
+      bool_proc_def()   = "boolean ";
 
     String gen_fn_arg(ObjProcPar par, Nat pos) =
       obj   = "Obj " & native_var_decl_name(fn_arg(pos)),
@@ -358,7 +361,7 @@ implicit {
     id_str = printed(id);
 
     return (
-      "class Lambda" & id_str & " : Lambda {",
+      "class Lambda" & id_str & " extends Lambda {",
       "  Obj[] captured_vars;",
       "  Lambda[] captured_cls;",
       "",
@@ -367,7 +370,7 @@ implicit {
       "    this.captured_cls = captured_cls;",
       "  }",
       "",
-      "  override public Obj Invoke(" & append(("Obj a" & printed(i) & ", " : i < cd.arity)) & "Env env) {"
+      "  public Obj invoke(" & append(("Obj a" & printed(i) & ", " : i < cd.arity)) & "Env env) {"
     ) & indent_lines(indent_lines(full_body)) &
     ( "  }",
       "}"
@@ -389,7 +392,7 @@ implicit {
   String* native_code(Instr* instrs, Maybe[Nat] block_id) = join((native_code(instr, block_id) : instr <- instrs));
 
 
-  String block_end_label(Int id) = "Block" & printed(id) & "End";
+  String block_label(Int id) = "block" & printed(id);
 
   String* native_code(Instr instr, Maybe[Nat] block_id) =
     init_stream(v?)       = (native_new_call(v, "List<Obj>", ())),
@@ -417,9 +420,11 @@ implicit {
     break_loop            = ("break;"),
     execute_block(body?)  = { new_block_id = _counter_(:any_value_will_do);
                               body_code = native_code(body, just(new_block_id));
-                              return body_code & (block_end_label(new_block_id) & ":;");
+                              block_start = block_label(new_block_id) & ": do {";
+                              block_end = "} while (false);";
+                              return (block_start) & indent_lines(body_code) & (block_end);
                             },
-    exit_block            = ("goto " & block_end_label(value_unsafe(block_id)) & ";"),
+    exit_block            = ("break " & block_label(value_unsafe(block_id)) & ";"),
     switch_on_nat()       = native_nat_switch_code(instr.value, instr.cases, block_id),
     symb_switch()         = native_symb_switch_code(instr.value, instr.cases, instr.else, block_id),
     call_proc()           = native_call_proc_code(if instr.var? then just(instr.var) else nothing, instr.name, instr.args, block_id),
@@ -654,7 +659,7 @@ String native_assignment_code(AnyVar var, Encodable value) =
 String* c_main_fn = (
   "",
   "",
-  "static int Main(string[] args) {",
+  "public static int main(String[] args) {",
   "  Obj[] cell_args = new Obj[args.Length];",
   "  for (int i=0 ; i < args.Length ; i++)",
   "    cell_args[i] = Miscellanea.StrToObj(args[i]);",
