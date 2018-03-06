@@ -1,5 +1,5 @@
 package net.cell_lang;
 
 public class Generated {
-  public static String[] EmbeddedSymbols = {};
+  public static String[] embeddedSymbols = {};
 }

@@ -38,8 +38,8 @@ class SymbTable {
       symbObjs.add(new SymbObj(i));
     }
 
-    for (int i=0 ; i < Generated.EmbeddedSymbols.length ; i++) {
-      int idx = SymbTable.strToIdx(Generated.EmbeddedSymbols[i]);
+    for (int i=0 ; i < Generated.embeddedSymbols.length ; i++) {
+      int idx = SymbTable.strToIdx(Generated.embeddedSymbols[i]);
       Miscellanea._assert(idx == i);
     }
   }
@@ -69,7 +69,7 @@ class SymbTable {
   public static int compSymbs(int id1, int id2) {
     if (id1 == id2)
       return 0;
-    int len = Generated.EmbeddedSymbols.length;
+    int len = Generated.embeddedSymbols.length;
     if (id1 < len | id2 < len)
       return id1 < id2 ? 1 : -1;
     String str1 = symbTable.get(id1);

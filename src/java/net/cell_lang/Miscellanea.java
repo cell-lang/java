@@ -44,14 +44,14 @@ class Miscellanea {
     return null;
   }
 
-  public static Obj softFail() {
+  public static RuntimeException softFail() {
     PrintCallStack();
     throw new UnsupportedOperationException();
   }
 
   public static Obj softFail(String msg) {
     System.err.println(msg);
-    return softFail();
+    throw softFail();
   }
 
   public static Obj hardFail() {

@@ -275,7 +275,7 @@ Int Main(String* args) {
   if output != nothing:
     code, docs = value(output);
     body = append(code, "\n");
-    ok = FileWrite("generated.cs", chars(body));
+    ok = FileWrite("Generated.java", chars(body));
     if docs != ():
       header = append(docs, "\n");
       ok = FileWrite("interfaces.txt", chars(header));

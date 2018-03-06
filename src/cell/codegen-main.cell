@@ -34,7 +34,7 @@ Main(String* args) {
   cs_code, docs = native_code(prg, false, debug_mode);
 
   text = append(cs_code, "\n");
-  ok = FileWrite("generated.java", chars(text));
+  ok = FileWrite("Generated.java", chars(text));
   fail if not ok;
 
   if docs != ():

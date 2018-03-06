@@ -98,7 +98,7 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
     prev_var_value(v?)            = prefix & ad_hoc_var_name(v) & "d",
     pending_state_var(a?)         = prefix & _str_(a) & "_Mp",
     lvar(<*..*> n?)               = "l" & printed(n),
-    evar()                        = "vec_" & printed(var.id) & "[" & native_idx_expr(var.idx) & "]",
+    evar()                        = "vec_" & printed(var.id) & "[(int)(" & native_idx_expr(var.idx) & ")]",
     pending_input_var(<+> a?)     = prefix & _str_(a) & "_Sp";
 
 
@@ -212,14 +212,14 @@ String aux_struct_var_ref_name(ValueStoreId vs) = "updater." & aux_struct_var_de
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String var_decl(ObjVar v)       = "Obj "          & native_var_decl_name(v) & " = null;"; ## CHANGE THIS
-String var_decl(BoolVar v)      = "boolean "      & native_var_decl_name(v) & ";";
-String var_decl(IntVar v)       = "long "         & native_var_decl_name(v) & ";";
-String var_decl(SeqItVar v)     = "SeqOrSetIter " & native_var_decl_name(v) & ";";
-String var_decl(SetItVar v)     = "SeqOrSetIter " & native_var_decl_name(v) & ";";
-String var_decl(BinRelItVar v)  = "BinRelIter "   & native_var_decl_name(v) & ";";
-String var_decl(TernRelItVar v) = "TernRelIter "  & native_var_decl_name(v) & ";";
-String var_decl(StreamVar v)    = "List<Obj> "    & native_var_decl_name(v) & ";";
+String var_decl(ObjVar v)       = "Obj "            & native_var_decl_name(v) & " = null;"; ## CHANGE THIS
+String var_decl(BoolVar v)      = "boolean "        & native_var_decl_name(v) & ";";
+String var_decl(IntVar v)       = "long "           & native_var_decl_name(v) & ";";
+String var_decl(SeqItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";
+String var_decl(SetItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";
+String var_decl(BinRelItVar v)  = "BinRelIter "     & native_var_decl_name(v) & ";";
+String var_decl(TernRelItVar v) = "TernRelIter "    & native_var_decl_name(v) & ";";
+String var_decl(StreamVar v)    = "ArrayList<Obj> " & native_var_decl_name(v) & ";";
 String var_decl(VecVar v)       = "Obj[] " & native_var_decl_name(v) & " = new Obj[" & printed(v.size) & "];";
 String var_decl(TableItVar v)   = table_it_var_type[v.arity] & " " & native_var_decl_name(v) & ";";
 
@@ -345,7 +345,9 @@ String node_specific_method_name_prefix(BlockNodeId id, AutoSymbol auto) =
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-String const_int_seq_c_name(Nat seq_id) = "const_int_seq_" & printed(seq_id);
+String const_int_seq_holder_class_name(Nat seq_id) = "ConstIntSeq" & printed(seq_id);
+
+String const_int_seq_ref_name(Nat seq_id) = const_int_seq_holder_class_name(seq_id) & ".data";
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////

@@ -33,6 +33,7 @@ codegen.exe: tmp/codegen.cs
 clean:
 	@rm -rf tmp
 	@rm -f generated.cpp generated.java
+	@rm -f *.class
 	@rm -f codegen codegen-dbg
 	@rm -f cellc-java cellcd-java
 	@mkdir tmp

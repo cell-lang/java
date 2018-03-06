@@ -10,3 +10,5 @@ inputs/
 runtime/
 tmp/
 codegen.exe
+*.class
+tests.cell
