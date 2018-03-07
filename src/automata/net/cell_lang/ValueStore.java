@@ -38,11 +38,11 @@ class ValueStore : ValueStoreBase {
 
   override public void Resize(int minCapacity) {
     base.Resize(minCapacity);
-    int capacity = slots.Length;
+    int capacity = slots.length;
 
     int[] currRefCounts   = refCounts;
     int[] currNextFreeIdx = nextFreeIdx;
-    int currCapacity = currRefCounts.Length;
+    int currCapacity = currRefCounts.length;
 
     refCounts   = new int[capacity];
     nextFreeIdx = new int[capacity];
@@ -55,10 +55,10 @@ class ValueStore : ValueStoreBase {
   }
 
   public int NextFreeIdx(int index) {
-    Miscellanea.Assert(index == -1 || index >= slots.Length || (slots[index] == null & nextFreeIdx[index] != -1));
+    Miscellanea.Assert(index == -1 || index >= slots.length || (slots[index] == null & nextFreeIdx[index] != -1));
     if (index == -1)
       return firstFreeIdx;
-    if (index >= nextFreeIdx.Length)
+    if (index >= nextFreeIdx.length)
       return index + 1;
     return nextFreeIdx[index];
   }

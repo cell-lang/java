@@ -82,8 +82,8 @@ class BinaryTable {
 
   public Iter GetIter1(long surr1) {
     uint[] col2 = LookupByCol1((uint) surr1);
-    uint[,] entries = new uint[col2.Length, 2];
-    for (int i=0 ; i < col2.Length ; i++) {
+    uint[,] entries = new uint[col2.length, 2];
+    for (int i=0 ; i < col2.length ; i++) {
       entries[i, 0] = (uint) surr1;
       entries[i, 1] = col2[i];
     }
@@ -92,8 +92,8 @@ class BinaryTable {
 
   public Iter GetIter2(long surr2) {
     uint[] col1 = LookupByCol2((uint) surr2);
-    uint[,] entries = new uint[col1.Length, 2];
-    for (int i=0 ; i < col1.Length ; i++) {
+    uint[,] entries = new uint[col1.length, 2];
+    for (int i=0 ; i < col1.length ; i++) {
       entries[i, 0] = col1[i];
       entries[i, 1] = (uint) surr2;
     }
@@ -130,7 +130,7 @@ class BinaryTable {
     Obj[] objs2 = new Obj[count];
 
     int next = 0;
-    for (uint i=0 ; i < table1.column.Length ; i++) {
+    for (uint i=0 ; i < table1.column.length ; i++) {
       uint code = table1.column[i];
       if (code != OverflowTable.EmptyMarker) {
         Obj val1 = store1.GetValue(i);

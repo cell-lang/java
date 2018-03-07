@@ -57,7 +57,7 @@ class OverflowTable {
   uint head16;
 
   public void Check(uint[] column, int count) {
-    int len = slots.Length;
+    int len = slots.length;
     bool[] slotOK = new bool[len];
     for (int i=0 ; i < len ; i++)
       Miscellanea.Assert(!slotOK[i]);
@@ -149,7 +149,7 @@ class OverflowTable {
     }
 
     uint actualCount = 0;
-    for (int i=0 ; i < column.Length ; i++) {
+    for (int i=0 ; i < column.length ; i++) {
       uint content = column[i];
       if (content == EmptyMarker)
         continue;
@@ -166,9 +166,9 @@ class OverflowTable {
 
     Check(count == actualCount, "count == actualCount");
 
-    for (int i=0 ; i < slotOK.Length ; i++) {
+    for (int i=0 ; i < slotOK.length ; i++) {
       if (!slotOK[i]) {
-        for (int j=0 ; j < slotOK.Length ; j++) {
+        for (int j=0 ; j < slotOK.length ; j++) {
           if (j != 0 & j % 256 == 0)
             Console.WriteLine();
           if (j != 0 & j % 128 == 0)
@@ -266,7 +266,7 @@ class OverflowTable {
 
   public void Dump() {
     Console.Write("  slots:");
-    for (int i=0 ; i < slots.Length ; i++) {
+    for (int i=0 ; i < slots.length ; i++) {
       if (i != 0 & i % 256 == 0)
         Console.WriteLine();
       if (i != 0 & i % 128 == 0)
@@ -1172,7 +1172,7 @@ class OverflowTable {
 
   uint Alloc16Block() {
     if (head16 == EmptyMarker) {
-      uint len = (uint) slots.Length;
+      uint len = (uint) slots.length;
       uint[] newSlots = new uint[2*len];
       Array.Copy(slots, newSlots, len);
       for (uint i=len ; i < 2 * len ; i += 16) {

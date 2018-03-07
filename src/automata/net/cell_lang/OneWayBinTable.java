@@ -17,7 +17,7 @@ class OneWayBinTable {
   public void Dump() {
     Console.WriteLine("count = " + count.ToString());
     Console.Write("column = [");
-    for (int i=0 ; i < column.Length ; i++)
+    for (int i=0 ; i < column.length ; i++)
       Console.Write("{0}{1:X}", (i > 0 ? " " : ""), column[i]);
     Console.WriteLine("]");
     overflowTable.Dump();
@@ -33,7 +33,7 @@ class OneWayBinTable {
     Miscellanea.Assert(count == 0);
 
     uint[] srcCol = source.column;
-    int len = srcCol.Length;
+    int len = srcCol.length;
 
     for (uint i=0 ; i < len ; i++) {
       uint code = srcCol[i];
@@ -52,7 +52,7 @@ class OneWayBinTable {
   }
 
   public bool Contains(uint surr1, uint surr2) {
-    if (surr1 >= column.Length)
+    if (surr1 >= column.length)
       return false;
     uint code = column[surr1];
     if (code == OverflowTable.EmptyMarker)
@@ -63,11 +63,11 @@ class OneWayBinTable {
   }
 
   public bool ContainsKey(uint surr1) {
-    return surr1 < column.Length && column[surr1] != OverflowTable.EmptyMarker;
+    return surr1 < column.length && column[surr1] != OverflowTable.EmptyMarker;
   }
 
   public uint[] Lookup(uint surr) {
-    if (surr >= column.Length)
+    if (surr >= column.length)
       return emptyArray;
     uint code = column[surr];
     if (code == OverflowTable.EmptyMarker)
@@ -88,7 +88,7 @@ class OneWayBinTable {
   }
 
   public void Insert(uint surr1, uint surr2) {
-    int size = column.Length;
+    int size = column.length;
     if (surr1 >= size) {
       int newSize = size == 0 ? MinCapacity : 2 * size;
       while (surr1 >= newSize)
@@ -132,7 +132,7 @@ class OneWayBinTable {
   public uint[,] Copy() {
     uint[,] res = new uint[count, 2];
     int next = 0;
-    for (uint i=0 ; i < column.Length ; i++) {
+    for (uint i=0 ; i < column.length ; i++) {
       uint code = column[i];
       if (code != OverflowTable.EmptyMarker) {
         if (code >> 29 == 0) {

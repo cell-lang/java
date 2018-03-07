@@ -24,7 +24,7 @@ class Index {
 
   public void Clear() {
     if (hashtable != null) {
-      int size = hashtable.Length;
+      int size = hashtable.length;
       for (int i=0 ; i < size ; i++) {
         hashtable[i] = Empty;
         buckets[i] = Empty;
@@ -34,16 +34,16 @@ class Index {
 
   public void Insert(uint index, uint hashcode) {
     Miscellanea.Assert(buckets[index] == Empty);
-    Miscellanea.Assert(index < hashtable.Length);
+    Miscellanea.Assert(index < hashtable.length);
 
-    uint hashIdx = hashcode % (uint) hashtable.Length;
+    uint hashIdx = hashcode % (uint) hashtable.length;
     uint head = hashtable[hashIdx];
     hashtable[hashIdx] = index;
     buckets[index] = head;
   }
 
   public void Delete(uint index, uint hashcode) {
-    uint hashIdx = hashcode % (uint) hashtable.Length;
+    uint hashIdx = hashcode % (uint) hashtable.length;
     uint head = hashtable[hashIdx];
     Miscellanea.Assert(head != Empty);
 
@@ -71,7 +71,7 @@ class Index {
   }
 
   public uint Head(uint hashcode) {
-    return hashtable[hashcode % hashtable.Length];
+    return hashtable[hashcode % hashtable.length];
   }
 
   public uint Next(uint index) {
@@ -81,7 +81,7 @@ class Index {
   public void Dump() {
     Console.Write("hashtable =");
     if (hashtable != null)
-      for (int i=0 ; i < hashtable.Length ; i++)
+      for (int i=0 ; i < hashtable.length ; i++)
         Console.Write(" " + (hashtable[i] == Empty ? "-" : hashtable[i].ToString()));
     else
       Console.Write(" null");
@@ -89,7 +89,7 @@ class Index {
 
     Console.Write("buckets   =");
     if (hashtable != null)
-      for (int i=0 ; i < buckets.Length ; i++)
+      for (int i=0 ; i < buckets.length ; i++)
         Console.Write(" " + (buckets[i] == Empty ? "-" : buckets[i].ToString()));
     else
       Console.Write(" null");

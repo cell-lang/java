@@ -62,13 +62,13 @@ class BinaryTableUpdater {
 
   public void Delete1(long value) {
     uint[] assocs = table.LookupByCol1((uint) value);
-    for (int i=0 ; i < assocs.Length ; i++)
+    for (int i=0 ; i < assocs.length ; i++)
       deleteList.Add(new Tuple((uint) value, assocs[i]));
   }
 
   public void Delete2(long value) {
     uint[] assocs = table.LookupByCol2((uint) value);
-    for (int i=0 ; i < assocs.Length ; i++)
+    for (int i=0 ; i < assocs.length ; i++)
       deleteList.Add(new Tuple(assocs[i], (uint) value));
   }
 

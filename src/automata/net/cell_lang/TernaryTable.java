@@ -77,7 +77,7 @@ class TernaryTable {
       Miscellanea.Assert(index != Tuple.Empty);
       switch (type) {
         case Type.F123:
-          int len = table.tuples.Length;
+          int len = table.tuples.length;
           do {
             index++;
             if (index == len) {
@@ -184,8 +184,8 @@ class TernaryTable {
       return;
 
     // Increasing the size of the table if need be
-    if (firstFree >= tuples.Length) {
-      uint size = (uint) tuples.Length;
+    if (firstFree >= tuples.length) {
+      uint size = (uint) tuples.length;
       Miscellanea.Assert(count == size);
       Tuple[] newTuples = new Tuple[2*size];
       Array.Copy(tuples, newTuples, size);
@@ -236,7 +236,7 @@ class TernaryTable {
     count = 0;
     firstFree = 0;
 
-    int size = tuples.Length;
+    int size = tuples.length;
     for (uint i=0 ; i < size ; i++) {
       tuples[i].field1OrNext = i + 1;
       tuples[i].field2OrEmptyMarker = Tuple.Empty;
@@ -394,7 +394,7 @@ class TernaryTable {
     Obj[] objs2 = new Obj[count];
     Obj[] objs3 = new Obj[count];
 
-    int len = tuples.Length;
+    int len = tuples.length;
     int next = 0;
     for (uint i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
@@ -450,7 +450,7 @@ class TernaryTable {
   }
 
   void BuildIndex123() {
-    uint len = (uint) tuples.Length;
+    uint len = (uint) tuples.length;
     index123.Init(len);
     for (uint i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
@@ -460,7 +460,7 @@ class TernaryTable {
   }
 
   void BuildIndex12() {
-    uint len = (uint) tuples.Length;
+    uint len = (uint) tuples.length;
     index12.Init(len);
     for (uint i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
@@ -470,7 +470,7 @@ class TernaryTable {
   }
 
   void BuildIndex13() {
-    uint len = (uint) tuples.Length;
+    uint len = (uint) tuples.length;
     index13.Init(len);
     for (uint i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
@@ -480,7 +480,7 @@ class TernaryTable {
   }
 
   void BuildIndex23() {
-    uint len = (uint) tuples.Length;
+    uint len = (uint) tuples.length;
     index23.Init(len);
     for (uint i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
@@ -492,7 +492,7 @@ class TernaryTable {
   }
 
   void BuildIndex1() {
-    uint len = (uint) tuples.Length;
+    uint len = (uint) tuples.length;
     index1.Init(len);
     for (uint i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
@@ -502,7 +502,7 @@ class TernaryTable {
   }
 
   void BuildIndex2() {
-    uint len = (uint) tuples.Length;
+    uint len = (uint) tuples.length;
     index2.Init(len);
     for (uint i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
@@ -512,7 +512,7 @@ class TernaryTable {
   }
 
   void BuildIndex3() {
-    uint len = (uint) tuples.Length;
+    uint len = (uint) tuples.length;
     index3.Init(len);
     for (uint i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
