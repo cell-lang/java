@@ -184,7 +184,7 @@ class ValueStoreBase {
         if (i > 0)
           System.out.print(", ");
         Obj obj = objs[i];
-        System.out.print(obj != null ? obj.ToString() : "null");
+        System.out.print(obj != null ? obj.toString() : "null");
       }
       System.out.println("]");
     }
@@ -199,7 +199,7 @@ class ValueStoreBase {
       for (int i=0 ; i < ints.length ; i++) {
         if (i > 0)
           System.out.print(", ");
-        System.out.print(ints[i].ToString());
+        System.out.print(ints[i].toString());
       }
       System.out.println("]");
     }
@@ -214,7 +214,7 @@ class ValueStoreBase {
       for (int i=0 ; i < ints.length ; i++) {
         if (i > 0)
           System.out.print(", ");
-        System.out.print(ints[i].ToString());
+        System.out.print(ints[i].toString());
       }
       System.out.println("]");
     }

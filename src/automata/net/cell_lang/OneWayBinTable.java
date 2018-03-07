@@ -15,7 +15,7 @@ class OneWayBinTable {
   }
 
   public void Dump() {
-    System.out.println("count = " + count.ToString());
+    System.out.println("count = " + count.toString());
     System.out.print("column = [");
     for (int i=0 ; i < column.length ; i++)
       System.out.print("{0}{1:X}", (i > 0 ? " " : ""), column[i]);

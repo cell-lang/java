@@ -82,7 +82,7 @@ class Index {
     System.out.print("hashtable =");
     if (hashtable != null)
       for (int i=0 ; i < hashtable.length ; i++)
-        System.out.print(" " + (hashtable[i] == Empty ? "-" : hashtable[i].ToString()));
+        System.out.print(" " + (hashtable[i] == Empty ? "-" : hashtable[i].toString()));
     else
       System.out.print(" null");
     System.out.println("");
@@ -90,7 +90,7 @@ class Index {
     System.out.print("buckets   =");
     if (hashtable != null)
       for (int i=0 ; i < buckets.length ; i++)
-        System.out.print(" " + (buckets[i] == Empty ? "-" : buckets[i].ToString()));
+        System.out.print(" " + (buckets[i] == Empty ? "-" : buckets[i].toString()));
     else
       System.out.print(" null");
     System.out.println("");

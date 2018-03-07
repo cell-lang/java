@@ -64,7 +64,7 @@ class OverflowTable {
 
     if (head2 != EmptyMarker) {
       int curr = head2;
-      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (2), curr = " + curr.ToString());
+      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (2), curr = " + curr.toString());
       for ( ; ; ) {
         Check(curr < len, "curr < len");
         int slot1 = slots[curr + 1];
@@ -84,7 +84,7 @@ class OverflowTable {
 
     if (head4 != EmptyMarker) {
       int curr = head4;
-      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (4), curr = " + curr.ToString());
+      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (4), curr = " + curr.toString());
       for ( ; ; ) {
         Check(curr < len, "curr < len");
         int slot1 = slots[curr + 1];
@@ -106,7 +106,7 @@ class OverflowTable {
 
     if (head8 != EmptyMarker) {
       int curr = head8;
-      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (8), curr = " + curr.ToString());
+      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (8), curr = " + curr.toString());
       for ( ; ; ) {
         Check(curr < len, "curr < len");
         int slot1 = slots[curr + 1];
@@ -128,7 +128,7 @@ class OverflowTable {
 
     if (head16 != EmptyMarker) {
       int curr = head16;
-      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (16), curr = " + curr.ToString());
+      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (16), curr = " + curr.toString());
       for ( ; ; ) {
         Check(curr < len, "curr < len");
         int slot1 = slots[curr + 1];
@@ -277,16 +277,16 @@ class OverflowTable {
         System.out.print("  ");
       int slot = slots[i];
       int payload = slot & PayloadMask;
-      System.out.print("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFFU ? "-" : payload.ToString());
+      System.out.print("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFFU ? "-" : payload.toString());
     }
     System.out.println();
     System.out.println();
     System.out.println(
       "  heads: 2 = {0}, 4 = {1}, 8 = {2}, 16 = {3}",
-      head2 != EmptyMarker ? head2.ToString() : "-",
-      head4 != EmptyMarker ? head4.ToString() : "-",
-      head8 != EmptyMarker ? head8.ToString() : "-",
-      head16 != EmptyMarker ? head16.ToString() : "-"
+      head2 != EmptyMarker ? head2.toString() : "-",
+      head4 != EmptyMarker ? head4.toString() : "-",
+      head8 != EmptyMarker ? head8.toString() : "-",
+      head16 != EmptyMarker ? head16.toString() : "-"
     );
   }
 
