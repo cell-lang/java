@@ -47,8 +47,8 @@ class ValueStore : ValueStoreBase {
     refCounts   = new int[capacity];
     nextFreeIdx = new int[capacity];
 
-    Array.copy(currRefCounts, refCounts, currCapacity);
-    Array.copy(currNextFreeIdx, nextFreeIdx, currCapacity);
+    Miscellanea.arrayCopy(currRefCounts, refCounts, currCapacity);
+    Miscellanea.arrayCopy(currNextFreeIdx, nextFreeIdx, currCapacity);
 
     for (int i=currCapacity ; i < capacity ; i++)
       nextFreeIdx[i] = i + 1;

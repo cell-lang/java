@@ -188,7 +188,7 @@ class TernaryTable {
       int size = tuples.length;
       Miscellanea._assert(count == size);
       Tuple[] newTuples = new Tuple[2*size];
-      Array.copy(tuples, newTuples, size);
+      Miscellanea.arrayCopy(tuples, newTuples, size);
       for (int i=size ; i < 2 * size ; i++) {
         newTuples[i].field1OrNext = i + 1;
         newTuples[i].field2OrEmptyMarker = Tuple.Empty;

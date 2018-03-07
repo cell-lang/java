@@ -79,7 +79,7 @@ class UnaryTable {
       while (widx >= newLen)
         newLen *= 2;
       ulong[] newBitmap = new ulong[newLen];
-      Array.copy(bitmap, newBitmap, len);
+      Miscellanea.arrayCopy(bitmap, newBitmap, len);
       bitmap = newBitmap;
     }
 

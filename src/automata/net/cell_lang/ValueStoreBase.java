@@ -69,7 +69,7 @@ class ValueStoreBase {
   }
 
   public void insert(Obj value, int slotIdx) {
-    Insert(value, value.hashCode(), slotIdx);
+    insert(value, value.hashCode(), slotIdx);
   }
 
   public void insert(Obj value, int hashcode, int slotIdx) {
@@ -136,8 +136,8 @@ class ValueStoreBase {
       hashtable = new int[newCapacity];
       buckets   = new int[newCapacity];
 
-      Array.copy(currSlots, slots, currCapacity);
-      Array.copy(currHashcodes, hashcodes, currCapacity);
+      Miscellanea.arrayCopy(currSlots, slots, currCapacity);
+      Miscellanea.arrayCopy(currHashcodes, hashcodes, currCapacity);
 
       for (int i=0 ; i < newCapacity ; i++) {
         hashtable[i] = -1;
@@ -185,21 +185,6 @@ class ValueStoreBase {
           System.out.print(", ");
         Obj obj = objs[i];
         System.out.print(obj != null ? obj.toString() : "null");
-      }
-      System.out.println("]");
-    }
-    else
-      System.out.println("null");
-  }
-
-  protected void writeInts(String name, int[] ints) {
-    System.out.print(name + " = ");
-    if (ints != null) {
-      System.out.print("[");
-      for (int i=0 ; i < ints.length ; i++) {
-        if (i > 0)
-          System.out.print(", ");
-        System.out.print(ints[i].toString());
       }
       System.out.println("]");
     }

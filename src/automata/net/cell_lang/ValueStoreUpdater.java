@@ -29,7 +29,7 @@ class ValueStoreUpdater : ValueStoreBase {
     int[] currSurrogates = surrogates;
     surrogates = new int[slots.length];
     if (count > 0)
-      Array.copy(currSurrogates, surrogates, count);
+      Miscellanea.arrayCopy(currSurrogates, surrogates, count);
   }
 
   public void apply() {
