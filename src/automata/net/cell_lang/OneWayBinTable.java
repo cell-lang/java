@@ -16,9 +16,9 @@ class OneWayBinTable {
 
   public void Dump() {
     Console.WriteLine("count = " + count.ToString());
-    Console.Write("column = [");
+    System.out.print("column = [");
     for (int i=0 ; i < column.length ; i++)
-      Console.Write("{0}{1:X}", (i > 0 ? " " : ""), column[i]);
+      System.out.print("{0}{1:X}", (i > 0 ? " " : ""), column[i]);
     Console.WriteLine("]");
     overflowTable.Dump();
   }

@@ -79,20 +79,20 @@ class Index {
   }
 
   public void Dump() {
-    Console.Write("hashtable =");
+    System.out.print("hashtable =");
     if (hashtable != null)
       for (int i=0 ; i < hashtable.length ; i++)
-        Console.Write(" " + (hashtable[i] == Empty ? "-" : hashtable[i].ToString()));
+        System.out.print(" " + (hashtable[i] == Empty ? "-" : hashtable[i].ToString()));
     else
-      Console.Write(" null");
+      System.out.print(" null");
     Console.WriteLine("");
 
-    Console.Write("buckets   =");
+    System.out.print("buckets   =");
     if (hashtable != null)
       for (int i=0 ; i < buckets.length ; i++)
-        Console.Write(" " + (buckets[i] == Empty ? "-" : buckets[i].ToString()));
+        System.out.print(" " + (buckets[i] == Empty ? "-" : buckets[i].ToString()));
     else
-      Console.Write(" null");
+      System.out.print(" null");
     Console.WriteLine("");
     Console.WriteLine("");
   }

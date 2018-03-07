@@ -174,8 +174,8 @@ class OverflowTable {
           if (j != 0 & j % 128 == 0)
             Console.WriteLine();
           if (j % 16 == 0)
-            Console.Write("\n  ");
-          Console.Write("{0} ", slotOK[j] ? 1 : 0);
+            System.out.print("\n  ");
+          System.out.print("{0} ", slotOK[j] ? 1 : 0);
         }
         Console.WriteLine();
         Console.WriteLine();
@@ -265,19 +265,19 @@ class OverflowTable {
   }
 
   public void Dump() {
-    Console.Write("  slots:");
+    System.out.print("  slots:");
     for (int i=0 ; i < slots.length ; i++) {
       if (i != 0 & i % 256 == 0)
         Console.WriteLine();
       if (i != 0 & i % 128 == 0)
         Console.WriteLine();
       if (i % 16 == 0)
-        Console.Write("\n   ");
+        System.out.print("\n   ");
       else if (i % 8 == 0)
-        Console.Write("  ");
+        System.out.print("  ");
       int slot = slots[i];
       int payload = slot & PayloadMask;
-      Console.Write("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFFU ? "-" : payload.ToString());
+      System.out.print("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFFU ? "-" : payload.ToString());
     }
     Console.WriteLine();
     Console.WriteLine();

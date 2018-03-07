@@ -180,31 +180,31 @@ class BinaryTableUpdater {
   }
 
   public void Dump() {
-    Console.Write("deleteList =");
+    System.out.print("deleteList =");
     for (int i=0 ; i < deleteList.Count ; i++)
-      Console.Write(" {0}", deleteList[i]);
+      System.out.print(" {0}", deleteList[i]);
     Console.WriteLine("");
 
-    Console.Write("insertList =");
+    System.out.print("insertList =");
     for (int i=0 ; i < insertList.Count ; i++)
-      Console.Write(" {0}", insertList[i]);
+      System.out.print(" {0}", insertList[i]);
     Console.WriteLine("\n");
 
-    Console.Write("deleteList =");
+    System.out.print("deleteList =");
     for (int i=0 ; i < deleteList.Count ; i++) {
       Tuple tuple = deleteList[i];
       Obj obj1 = store1.LookupSurrogateEx(tuple.field1);
       Obj obj2 = store2.LookupSurrogateEx(tuple.field2);
-      Console.Write(" ({0}, {1})", obj1, obj2);
+      System.out.print(" ({0}, {1})", obj1, obj2);
     }
     Console.WriteLine("");
 
-    Console.Write("insertList =");
+    System.out.print("insertList =");
     for (int i=0 ; i < insertList.Count ; i++) {
       Tuple tuple = insertList[i];
       Obj obj1 = store1.LookupSurrogateEx(tuple.field1);
       Obj obj2 = store2.LookupSurrogateEx(tuple.field2);
-      Console.Write(" ({0}, {1})", obj1, obj2);
+      System.out.print(" ({0}, {1})", obj1, obj2);
     }
     Console.WriteLine("\n\n{0}\n\n", table.Copy(true));
 
