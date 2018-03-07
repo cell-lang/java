@@ -213,7 +213,7 @@ class BinaryTableUpdater {
     store2.dump();
   }
 
-  static boolean ContainsField1(ArrayList<Tuple> tuples, int field1) {
+  static boolean containsField1(ArrayList<Tuple> tuples, int field1) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -231,7 +231,7 @@ class BinaryTableUpdater {
     return false;
   }
 
-  static boolean ContainsField2(ArrayList<Tuple> tuples, int field2) {
+  static boolean containsField2(ArrayList<Tuple> tuples, int field2) {
     int low = 0;
     int high = tuples.Count - 1;
 

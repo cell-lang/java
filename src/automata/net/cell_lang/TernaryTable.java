@@ -418,7 +418,7 @@ class TernaryTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  void DeleteAt(int index, int hashcode) {
+  void deleteAt(int index, int hashcode) {
     Tuple tuple = tuples[index];
     Miscellanea._assert(tuple.field2OrEmptyMarker != Tuple.Empty);
 
@@ -450,7 +450,7 @@ class TernaryTable {
     store3.release(tuple.field3);
   }
 
-  void BuildIndex123() {
+  void buildIndex123() {
     int len = tuples.length;
     index123.init(len);
     for (int i=0 ; i < len ; i++) {
@@ -460,7 +460,7 @@ class TernaryTable {
     }
   }
 
-  void BuildIndex12() {
+  void buildIndex12() {
     int len = tuples.length;
     index12.init(len);
     for (int i=0 ; i < len ; i++) {
@@ -470,7 +470,7 @@ class TernaryTable {
     }
   }
 
-  void BuildIndex13() {
+  void buildIndex13() {
     int len = tuples.length;
     index13.init(len);
     for (int i=0 ; i < len ; i++) {
@@ -480,7 +480,7 @@ class TernaryTable {
     }
   }
 
-  void BuildIndex23() {
+  void buildIndex23() {
     int len = tuples.length;
     index23.init(len);
     for (int i=0 ; i < len ; i++) {
@@ -492,7 +492,7 @@ class TernaryTable {
     }
   }
 
-  void BuildIndex1() {
+  void buildIndex1() {
     int len = tuples.length;
     index1.init(len);
     for (int i=0 ; i < len ; i++) {
@@ -502,7 +502,7 @@ class TernaryTable {
     }
   }
 
-  void BuildIndex2() {
+  void buildIndex2() {
     int len = tuples.length;
     index2.init(len);
     for (int i=0 ; i < len ; i++) {
@@ -512,7 +512,7 @@ class TernaryTable {
     }
   }
 
-  void BuildIndex3() {
+  void buildIndex3() {
     int len = tuples.length;
     index3.init(len);
     for (int i=0 ; i < len ; i++) {

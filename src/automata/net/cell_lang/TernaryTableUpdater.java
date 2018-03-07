@@ -267,7 +267,7 @@ class TernaryTableUpdater {
   }
 
 
-  static boolean Contains12(ArrayList<TernaryTable.Tuple> tuples, int field1, int field2) {
+  static boolean contains12(ArrayList<TernaryTable.Tuple> tuples, int field1, int field2) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -289,7 +289,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static boolean Contains23(ArrayList<TernaryTable.Tuple> tuples, int field2, int field3) {
+  static boolean contains23(ArrayList<TernaryTable.Tuple> tuples, int field2, int field3) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -311,7 +311,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static boolean Contains31(ArrayList<TernaryTable.Tuple> tuples, int field3, int field1) {
+  static boolean contains31(ArrayList<TernaryTable.Tuple> tuples, int field3, int field1) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -333,7 +333,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static boolean Contains3(ArrayList<TernaryTable.Tuple> tuples, int field3) {
+  static boolean contains3(ArrayList<TernaryTable.Tuple> tuples, int field3) {
     int low = 0;
     int high = tuples.Count - 1;
 

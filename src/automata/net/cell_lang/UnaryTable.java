@@ -58,7 +58,7 @@ class UnaryTable {
     return new Iter(0, this);
   }
 
-  int LiveCount() {
+  int liveCount() {
     int liveCount = 0;
     for (int i=0 ; i < bitmap.length ; i++) {
       ulong mask = bitmap[i];

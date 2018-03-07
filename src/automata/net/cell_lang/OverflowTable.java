@@ -186,7 +186,7 @@ class OverflowTable {
     }
   }
 
-  void CheckGroup(int tag, int blockIdx, boolean[] slotOK, ref int totalCount) {
+  void checkGroup(int tag, int blockIdx, boolean[] slotOK, ref int totalCount) {
     Check(tag >= Block2Tag, "tag >= Block2Tag");
     Check(tag <= HashedBlockTag, "tag <= HashedBlockTag");
 
@@ -254,7 +254,7 @@ class OverflowTable {
     }
   }
 
-  void Check(boolean cond, String msg) {
+  void check(boolean cond, String msg) {
     if (!cond) {
       System.out.println(msg);
       System.out.println("");
@@ -454,11 +454,11 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  boolean In2Block(int value, int blockIdx) {
+  boolean in2Block(int value, int blockIdx) {
     return value == slots[blockIdx] || value == slots[blockIdx+1];
   }
 
-  boolean InBlock(int value, int blockIdx, int blockSize) {
+  boolean inBlock(int value, int blockIdx, int blockSize) {
     for (int i=0 ; i < blockSize ; i++) {
       int content = slots[blockIdx+i];
       if (content == value)
@@ -469,7 +469,7 @@ class OverflowTable {
     return false;
   }
 
-  boolean InHashedBlock(int value, int blockIdx, int hashcode) {
+  boolean inHashedBlock(int value, int blockIdx, int hashcode) {
     int slotIdx = blockIdx + hashcode % 15 + 1;
     int content = slots[slotIdx];
     if (content == value)
@@ -488,7 +488,7 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  int CountFrom(int offset, int max) {
+  int countFrom(int offset, int max) {
     for (int i=0 ; i < max ; i++)
       if (slots[offset+i] == EmptyMarker)
         return i;
@@ -497,7 +497,7 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  Iter HashedBlockIter(int blockIdx) {
+  Iter hashedBlockIter(int blockIdx) {
     int count = slots[blockIdx];
     int[] values = new int[count];
     int next = 0;
@@ -506,7 +506,7 @@ class OverflowTable {
     return new Iter(values, 0, count);
   }
 
-  void CopyHashedBlock(int blockIdx, int[] dest, ref int next) {
+  void copyHashedBlock(int blockIdx, int[] dest, ref int next) {
     for (int i=1 ; i < 16 ; i++) {
       int content = slots[blockIdx+i];
       if (content != EmptyMarker) {
@@ -519,7 +519,7 @@ class OverflowTable {
     }
   }
 
-  void Copy(int handle, int[] dest, ref int next) {
+  void copy(int handle, int[] dest, ref int next) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
     Miscellanea._assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
@@ -556,7 +556,7 @@ class OverflowTable {
     }
   }
 
-  void CopyNonEmpty(int offset, int max, int[] dest, ref int next) {
+  void copyNonEmpty(int offset, int max, int[] dest, ref int next) {
     for (int i=0 ; i < max ; i++) {
       int content = slots[offset + i];
       if (content == EmptyMarker)
@@ -567,7 +567,7 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  int Insert2Block(int value0, int value1, out boolean inserted) {
+  int insert2Block(int value0, int value1, out boolean inserted) {
     // The newly inserted 2-block is not ordered
     // The returned handle is the address of the two-block,
     // tagged with the 2-values tag (= 1)
@@ -587,7 +587,7 @@ class OverflowTable {
     return blockIdx | (Block2Tag << 29);
   }
 
-  int DeleteFrom2Block(int blockIdx, int value, int handle, out boolean deleted) {
+  int deleteFrom2Block(int blockIdx, int value, int handle, out boolean deleted) {
     int value0 = slots[blockIdx];
     int value1 = slots[blockIdx+1];
 
@@ -601,7 +601,7 @@ class OverflowTable {
     return value == value0 ? value1 : value0;
   }
 
-  int InsertWith2Block(int block2Idx, int value, int handle, out boolean inserted) {
+  int insertWith2Block(int block2Idx, int value, int handle, out boolean inserted) {
     // Going from a 2-block to a 4-block
     // Values are not sorted
     // The last slot is set to 0xFFFFFFFFU
@@ -628,7 +628,7 @@ class OverflowTable {
     return block4Idx | (Block4Tag << 29);
   }
 
-  int DeleteFrom4Block(int blockIdx, int value, int handle, out boolean deleted) {
+  int deleteFrom4Block(int blockIdx, int value, int handle, out boolean deleted) {
     int value0 = slots[blockIdx];
     int value1 = slots[blockIdx+1];
     int value2 = slots[blockIdx+2];
@@ -684,7 +684,7 @@ class OverflowTable {
     return handle;
   }
 
-  int InsertWith4Block(int block4Idx, int value, int handle, out boolean inserted) {
+  int insertWith4Block(int block4Idx, int value, int handle, out boolean inserted) {
     // The entry contains between two and four values already
     // The unused slots are at the end, and they are set to 0xFFFFFFFFU
 
@@ -732,7 +732,7 @@ class OverflowTable {
   }
 
   //## BAD BAD: THE IMPLEMENTATION IS ALMOST THE SAME AS THAT OF DeleteFrom16Block()
-  int DeleteFrom8Block(int blockIdx, int value, int handle, out boolean deleted) {
+  int deleteFrom8Block(int blockIdx, int value, int handle, out boolean deleted) {
     int lastValue = EmptyMarker;
     int targetIdx = -1;
 
@@ -771,7 +771,7 @@ class OverflowTable {
     return handle;
   }
 
-  int InsertWith8Block(int block8Idx, int value, int handle, out boolean inserted) {
+  int insertWith8Block(int block8Idx, int value, int handle, out boolean inserted) {
     // The block contains between 4 and 8 values already
     // The unused ones are at the end, and they are set to 0xFFFFFFFFU
 
@@ -830,7 +830,7 @@ class OverflowTable {
   }
 
   //## BAD BAD: THE IMPLEMENTATION IS ALMOST THE SAME AS THAT OF DeleteFrom8Block()
-  int DeleteFrom16Block(int blockIdx, int value, int handle, out boolean deleted) {
+  int deleteFrom16Block(int blockIdx, int value, int handle, out boolean deleted) {
     int lastValue = EmptyMarker;
     int targetIdx = -1;
 
@@ -869,7 +869,7 @@ class OverflowTable {
     return handle;
   }
 
-  int InsertWith16Block(int blockIdx, int value, int handle, out boolean inserted) {
+  int insertWith16Block(int blockIdx, int value, int handle, out boolean inserted) {
     // a 16-slot standard block, which can contain between 7 and 16 entries
     int value15 = slots[blockIdx+15];
     if (value15 == EmptyMarker) {
@@ -921,7 +921,7 @@ class OverflowTable {
     return hashedBlockIdx | (HashedBlockTag << 29);
   }
 
-  int DeleteFromHashedBlock(int blockIdx, int value, int handle, int hashcode, out boolean deleted) {
+  int deleteFromHashedBlock(int blockIdx, int value, int handle, int hashcode, out boolean deleted) {
     int slotIdx = blockIdx + hashcode % 15 + 1;
     int content = slots[slotIdx];
     if (content == EmptyMarker) {
@@ -961,7 +961,7 @@ class OverflowTable {
     return handle;
   }
 
-  int ShrinkHashedBlock(int blockIdx) {
+  int shrinkHashedBlock(int blockIdx) {
     int slot1  = slots[blockIdx + 1];
     int slot2  = slots[blockIdx + 2];
     int slot3  = slots[blockIdx + 3];
@@ -987,7 +987,7 @@ class OverflowTable {
     return blockIdx | (Block8Tag << 29);
   }
 
-  int CopyAndReleaseBlock(int handle, int nextIdx) {
+  int copyAndReleaseBlock(int handle, int nextIdx) {
     if (handle != EmptyMarker) {
       int tag = handle >> 29;
       int blockIdx = handle & PayloadMask;
@@ -1032,7 +1032,7 @@ class OverflowTable {
   }
 
 
-  void InsertIntoHashedBlock(int blockIdx, int value, int hashcode, out boolean inserted) {
+  void insertIntoHashedBlock(int blockIdx, int value, int hashcode, out boolean inserted) {
     int slotIdx = blockIdx + hashcode % 15 + 1;
     int content = slots[slotIdx];
     if (content == EmptyMarker) {
@@ -1062,7 +1062,7 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  int Alloc2Block() {
+  int alloc2Block() {
     if (head2 != EmptyMarker) {
       Miscellanea._assert(slots[head2] == EndLowerMarker);
       Miscellanea._assert(slots[head2+1] == End2UpperMarker || slots[head2+1] >> 29 == Block2Tag);
@@ -1078,7 +1078,7 @@ class OverflowTable {
     }
   }
 
-  void Release2Block(int blockIdx) {
+  void release2Block(int blockIdx) {
     Miscellanea._assert((blockIdx & 1) == 0);
 
     boolean isFirst = (blockIdx & 3) == 0;
@@ -1100,7 +1100,7 @@ class OverflowTable {
     }
   }
 
-  int Alloc4Block() {
+  int alloc4Block() {
     if (head4 != EmptyMarker) {
       Miscellanea._assert(slots[head4] == EndLowerMarker);
       Miscellanea._assert(slots[head4+1] == End4UpperMarker | slots[head4+1] >> 29 == Block4Tag);
@@ -1116,7 +1116,7 @@ class OverflowTable {
     }
   }
 
-  void Release4Block(int blockIdx) {
+  void release4Block(int blockIdx) {
     Miscellanea._assert((blockIdx & 3) == 0);
 
     boolean isFirst = (blockIdx & 7) == 0;
@@ -1132,7 +1132,7 @@ class OverflowTable {
       AddBlockToChain(blockIdx, Block4Tag, End4UpperMarker, ref head4);
   }
 
-  int Alloc8Block() {
+  int alloc8Block() {
     if (head8 != EmptyMarker) {
       Miscellanea._assert(slots[head8] == EndLowerMarker);
       Miscellanea._assert(slots[head8+1] == End8UpperMarker | slots[head8+1] >> 29 == Block8Tag);
@@ -1150,7 +1150,7 @@ class OverflowTable {
     }
   }
 
-  void Release8Block(int blockIdx) {
+  void release8Block(int blockIdx) {
     Miscellanea._assert((blockIdx & 7) == 0);
 
     boolean isFirst = (blockIdx & 15) == 0;
@@ -1166,11 +1166,11 @@ class OverflowTable {
       AddBlockToChain(blockIdx, Block8Tag, End8UpperMarker, ref head8);
   }
 
-  void Release8BlockUpperHalf(int blockIdx) {
+  void release8BlockUpperHalf(int blockIdx) {
     AddBlockToChain(blockIdx+4, Block4Tag, End4UpperMarker, ref head4);
   }
 
-  int Alloc16Block() {
+  int alloc16Block() {
     if (head16 == EmptyMarker) {
       int len = slots.length;
       int[] newSlots = new int[2*len];
@@ -1193,17 +1193,17 @@ class OverflowTable {
     return blockIdx;
   }
 
-  void Release16Block(int blockIdx) {
+  void release16Block(int blockIdx) {
     AddBlockToChain(blockIdx, Block16Tag, End16UpperMarker, ref head16);
   }
 
-  void Release16BlockUpperHalf(int blockIdx) {
+  void release16BlockUpperHalf(int blockIdx) {
     AddBlockToChain(blockIdx+8, Block8Tag, End8UpperMarker, ref head8);
   }
 
   ////////////////////////////////////////////////////////////////////////////
 
-  void RemoveBlockFromChain(int blockIdx, int slot0, int endUpperMarker, ref int head) {
+  void removeBlockFromChain(int blockIdx, int slot0, int endUpperMarker, ref int head) {
     int slot1 = slots[blockIdx + 1];
 
     if (slot0 != EndLowerMarker) {
@@ -1243,7 +1243,7 @@ class OverflowTable {
     }
   }
 
-  void AddBlockToChain(int blockIdx, int sizeTag, int endUpperMarker, ref int head) {
+  void addBlockToChain(int blockIdx, int sizeTag, int endUpperMarker, ref int head) {
     // The 'previous' field of the newly released block must be cleared
     slots[blockIdx] = EndLowerMarker;
     if (head != EmptyMarker) {
