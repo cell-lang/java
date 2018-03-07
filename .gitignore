@@ -21,3 +21,4 @@ generated.cs
 java.hprof.txt
 bin/compiler.jar
 codegen.jar
+Tests.java
