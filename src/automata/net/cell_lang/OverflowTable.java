@@ -170,17 +170,17 @@ class OverflowTable {
       if (!slotOK[i]) {
         for (int j=0 ; j < slotOK.length ; j++) {
           if (j != 0 & j % 256 == 0)
-            Console.WriteLine();
+            System.out.println();
           if (j != 0 & j % 128 == 0)
-            Console.WriteLine();
+            System.out.println();
           if (j % 16 == 0)
             System.out.print("\n  ");
           System.out.print("{0} ", slotOK[j] ? 1 : 0);
         }
-        Console.WriteLine();
-        Console.WriteLine();
-        Console.WriteLine("i = {0}", i);
-        Console.WriteLine();
+        System.out.println();
+        System.out.println();
+        System.out.println("i = {0}", i);
+        System.out.println();
       }
       Check(slotOK[i], "slotOK[i]");
     }
@@ -256,10 +256,10 @@ class OverflowTable {
 
   void Check(bool cond, string msg) {
     if (!cond) {
-      Console.WriteLine(msg);
-      Console.WriteLine("");
+      System.out.println(msg);
+      System.out.println("");
       Dump();
-      Console.WriteLine("");
+      System.out.println("");
       Miscellanea.Assert(false);
     }
   }
@@ -268,9 +268,9 @@ class OverflowTable {
     System.out.print("  slots:");
     for (int i=0 ; i < slots.length ; i++) {
       if (i != 0 & i % 256 == 0)
-        Console.WriteLine();
+        System.out.println();
       if (i != 0 & i % 128 == 0)
-        Console.WriteLine();
+        System.out.println();
       if (i % 16 == 0)
         System.out.print("\n   ");
       else if (i % 8 == 0)
@@ -279,9 +279,9 @@ class OverflowTable {
       int payload = slot & PayloadMask;
       System.out.print("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFFU ? "-" : payload.ToString());
     }
-    Console.WriteLine();
-    Console.WriteLine();
-    Console.WriteLine(
+    System.out.println();
+    System.out.println();
+    System.out.println(
       "  heads: 2 = {0}, 4 = {1}, 8 = {2}, 16 = {3}",
       head2 != EmptyMarker ? head2.ToString() : "-",
       head4 != EmptyMarker ? head4.ToString() : "-",

@@ -183,12 +183,12 @@ class BinaryTableUpdater {
     System.out.print("deleteList =");
     for (int i=0 ; i < deleteList.Count ; i++)
       System.out.print(" {0}", deleteList[i]);
-    Console.WriteLine("");
+    System.out.println("");
 
     System.out.print("insertList =");
     for (int i=0 ; i < insertList.Count ; i++)
       System.out.print(" {0}", insertList[i]);
-    Console.WriteLine("\n");
+    System.out.println("\n");
 
     System.out.print("deleteList =");
     for (int i=0 ; i < deleteList.Count ; i++) {
@@ -197,7 +197,7 @@ class BinaryTableUpdater {
       Obj obj2 = store2.LookupSurrogateEx(tuple.field2);
       System.out.print(" ({0}, {1})", obj1, obj2);
     }
-    Console.WriteLine("");
+    System.out.println("");
 
     System.out.print("insertList =");
     for (int i=0 ; i < insertList.Count ; i++) {
@@ -206,7 +206,7 @@ class BinaryTableUpdater {
       Obj obj2 = store2.LookupSurrogateEx(tuple.field2);
       System.out.print(" ({0}, {1})", obj1, obj2);
     }
-    Console.WriteLine("\n\n{0}\n\n", table.Copy(true));
+    System.out.println("\n\n{0}\n\n", table.Copy(true));
 
     store1.Dump();
     store2.Dump();

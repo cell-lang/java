@@ -138,10 +138,10 @@ class TernaryTable {
     }
 
     public void Dump() {
-      Console.WriteLine("fields = ({0}, {1}, {2})", field1, field2, field3);
-      Console.WriteLine("index  = {0}", index);
-      Console.WriteLine("type   = {0}", type);
-      Console.WriteLine("Done() = {0}", Done());
+      System.out.println("fields = ({0}, {1}, {2})", field1, field2, field3);
+      System.out.println("index  = {0}", index);
+      System.out.println("type   = {0}", type);
+      System.out.println("Done() = {0}", Done());
     }
   }
 

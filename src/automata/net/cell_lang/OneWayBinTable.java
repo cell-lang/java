@@ -15,11 +15,11 @@ class OneWayBinTable {
   }
 
   public void Dump() {
-    Console.WriteLine("count = " + count.ToString());
+    System.out.println("count = " + count.ToString());
     System.out.print("column = [");
     for (int i=0 ; i < column.length ; i++)
       System.out.print("{0}{1:X}", (i > 0 ? " " : ""), column[i]);
-    Console.WriteLine("]");
+    System.out.println("]");
     overflowTable.Dump();
   }
 

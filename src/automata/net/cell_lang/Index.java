@@ -85,7 +85,7 @@ class Index {
         System.out.print(" " + (hashtable[i] == Empty ? "-" : hashtable[i].ToString()));
     else
       System.out.print(" null");
-    Console.WriteLine("");
+    System.out.println("");
 
     System.out.print("buckets   =");
     if (hashtable != null)
@@ -93,7 +93,7 @@ class Index {
         System.out.print(" " + (buckets[i] == Empty ? "-" : buckets[i].ToString()));
     else
       System.out.print(" null");
-    Console.WriteLine("");
-    Console.WriteLine("");
+    System.out.println("");
+    System.out.println("");
   }
 }

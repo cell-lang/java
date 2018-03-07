@@ -67,6 +67,6 @@ class ValueStore : ValueStoreBase {
     base.Dump();
     WriteInts("refCounts", refCounts);
     WriteInts("nextFreeIdx", nextFreeIdx);
-    Console.WriteLine("firstFreeIdx = " + firstFreeIdx.ToString());
+    System.out.println("firstFreeIdx = " + firstFreeIdx.ToString());
   }
 }
