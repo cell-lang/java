@@ -3,17 +3,17 @@ package net.cell_lang;
 
 class OverflowTable {
   public struct Iter {
-    uint[] values;
-    uint   next;
-    uint   end;
+    int[] values;
+    int   next;
+    int   end;
 
-    public Iter(uint[] values, uint first, uint count) {
+    public Iter(int[] values, int first, int count) {
       this.values = values;
       this.next   = first;
       this.end    = first + count;
     }
 
-    public uint Get() {
+    public int Get() {
       Miscellanea.Assert(!Done());
       return values[next];
     }
@@ -31,51 +31,51 @@ class OverflowTable {
 
   const int MinSize = 32;
 
-  public const uint EmptyMarker  = 0xFFFFFFFFU;
+  public const int EmptyMarker  = 0xFFFFFFFFU;
 
-  const uint EndLowerMarker   = 0xDFFFFFFFU;
-  const uint End2UpperMarker  = 0x3FFFFFFFU;
-  const uint End4UpperMarker  = 0x5FFFFFFFU;
-  const uint End8UpperMarker  = 0x7FFFFFFFU;
-  const uint End16UpperMarker = 0x9FFFFFFFU;
+  const int EndLowerMarker   = 0xDFFFFFFFU;
+  const int End2UpperMarker  = 0x3FFFFFFFU;
+  const int End4UpperMarker  = 0x5FFFFFFFU;
+  const int End8UpperMarker  = 0x7FFFFFFFU;
+  const int End16UpperMarker = 0x9FFFFFFFU;
 
-  public const uint PayloadMask  = 0x1FFFFFFFU;
+  public const int PayloadMask  = 0x1FFFFFFFU;
 
-  const uint InlineTag            = 0;
-  const uint Block2Tag            = 1;
-  const uint Block4Tag            = 2;
-  const uint Block8Tag            = 3;
-  const uint Block16Tag           = 4;
-  const uint HashedBlockTag       = 5;
-  const uint AvailableTag         = 6;
-  const uint Unused               = 7;
+  const int InlineTag            = 0;
+  const int Block2Tag            = 1;
+  const int Block4Tag            = 2;
+  const int Block8Tag            = 3;
+  const int Block16Tag           = 4;
+  const int HashedBlockTag       = 5;
+  const int AvailableTag         = 6;
+  const int Unused               = 7;
 
-  uint[] slots;
-  uint head2;
-  uint head4;
-  uint head8;
-  uint head16;
+  int[] slots;
+  int head2;
+  int head4;
+  int head8;
+  int head16;
 
-  public void Check(uint[] column, int count) {
+  public void Check(int[] column, int count) {
     int len = slots.length;
     bool[] slotOK = new bool[len];
     for (int i=0 ; i < len ; i++)
       Miscellanea.Assert(!slotOK[i]);
 
     if (head2 != EmptyMarker) {
-      uint curr = head2;
+      int curr = head2;
       Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (2), curr = " + curr.ToString());
       for ( ; ; ) {
         Check(curr < len, "curr < len");
-        uint slot1 = slots[curr + 1];
-        uint tag = slot1 >> 29;
-        uint payload = slot1 & PayloadMask;
+        int slot1 = slots[curr + 1];
+        int tag = slot1 >> 29;
+        int payload = slot1 & PayloadMask;
         Check(slot1 == End2UpperMarker | (tag == Block2Tag & payload < len), "slot1 == End2UpperMarker | (tag == Block2Tag & payload < len)");
         Check(!slotOK[curr] & !slotOK[curr+1], "!slotOK[curr] & !slotOK[curr+1]");
         slotOK[curr] = slotOK[curr+1] = true;
         if (slot1 == End2UpperMarker)
           break;
-        uint nextSlot0 = slots[payload];
+        int nextSlot0 = slots[payload];
         Check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
         Check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
         curr = payload;
@@ -83,13 +83,13 @@ class OverflowTable {
     }
 
     if (head4 != EmptyMarker) {
-      uint curr = head4;
+      int curr = head4;
       Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (4), curr = " + curr.ToString());
       for ( ; ; ) {
         Check(curr < len, "curr < len");
-        uint slot1 = slots[curr + 1];
-        uint tag = slot1 >> 29;
-        uint payload = slot1 & PayloadMask;
+        int slot1 = slots[curr + 1];
+        int tag = slot1 >> 29;
+        int payload = slot1 & PayloadMask;
         Check(slot1 == End4UpperMarker | (tag == Block4Tag & payload < len), "slot1 == End4UpperMarker | (tag == Block4Tag & payload < len)");
         for (int i=0 ; i < 4 ; i++) {
           Check(!slotOK[curr+i], "!slotOK[curr+i]");
@@ -97,7 +97,7 @@ class OverflowTable {
         }
         if (slot1 == End4UpperMarker)
           break;
-        uint nextSlot0 = slots[payload];
+        int nextSlot0 = slots[payload];
         Check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
         Check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
         curr = payload;
@@ -105,13 +105,13 @@ class OverflowTable {
     }
 
     if (head8 != EmptyMarker) {
-      uint curr = head8;
+      int curr = head8;
       Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (8), curr = " + curr.ToString());
       for ( ; ; ) {
         Check(curr < len, "curr < len");
-        uint slot1 = slots[curr + 1];
-        uint tag = slot1 >> 29;
-        uint payload = slot1 & PayloadMask;
+        int slot1 = slots[curr + 1];
+        int tag = slot1 >> 29;
+        int payload = slot1 & PayloadMask;
         Check(slot1 == End8UpperMarker | (tag == Block8Tag & payload < len), "slot1 == End8UpperMarker | (tag == Block8Tag & payload < len)");
         for (int i=0 ; i < 8 ; i++) {
           Check(!slotOK[curr+i], "!slotOK[curr+i]");
@@ -119,7 +119,7 @@ class OverflowTable {
         }
         if (slot1 == End8UpperMarker)
           break;
-        uint nextSlot0 = slots[payload];
+        int nextSlot0 = slots[payload];
         Check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
         Check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
         curr = payload;
@@ -127,13 +127,13 @@ class OverflowTable {
     }
 
     if (head16 != EmptyMarker) {
-      uint curr = head16;
+      int curr = head16;
       Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (16), curr = " + curr.ToString());
       for ( ; ; ) {
         Check(curr < len, "curr < len");
-        uint slot1 = slots[curr + 1];
-        uint tag = slot1 >> 29;
-        uint payload = slot1 & PayloadMask;
+        int slot1 = slots[curr + 1];
+        int tag = slot1 >> 29;
+        int payload = slot1 & PayloadMask;
         Check(slot1 == End16UpperMarker | (tag == Block16Tag & payload < len), "slot1 == End16UpperMarker | (tag == Block16Tag & payload < len)");
         for (int i=0 ; i < 16 ; i++) {
           Check(!slotOK[curr+i], "!slotOK[curr+i]");
@@ -141,20 +141,20 @@ class OverflowTable {
         }
         if (slot1 == End16UpperMarker)
           break;
-        uint nextSlot0 = slots[payload];
+        int nextSlot0 = slots[payload];
         Check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
         Check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
         curr = payload;
       }
     }
 
-    uint actualCount = 0;
+    int actualCount = 0;
     for (int i=0 ; i < column.length ; i++) {
-      uint content = column[i];
+      int content = column[i];
       if (content == EmptyMarker)
         continue;
-      uint tag = content >> 29;
-      uint payload = content & PayloadMask;
+      int tag = content >> 29;
+      int payload = content & PayloadMask;
       if (tag == 0) {
         Check(payload < 1000, "payload < 1000");
         actualCount++;
@@ -186,7 +186,7 @@ class OverflowTable {
     }
   }
 
-  void CheckGroup(uint tag, uint blockIdx, bool[] slotOK, ref uint totalCount) {
+  void CheckGroup(int tag, int blockIdx, bool[] slotOK, ref int totalCount) {
     Check(tag >= Block2Tag, "tag >= Block2Tag");
     Check(tag <= HashedBlockTag, "tag <= HashedBlockTag");
 
@@ -220,7 +220,7 @@ class OverflowTable {
 
     if (tag != HashedBlockTag) {
       for (int i=0 ; i < capacity ; i++) {
-        uint slot = slots[blockIdx + i];
+        int slot = slots[blockIdx + i];
         if (i < minUsage)
           Check(slot != EmptyMarker, "slot != EmptyMarker");
         if (slot == EmptyMarker) {
@@ -234,13 +234,13 @@ class OverflowTable {
       }
     }
     else {
-      uint blockCount = slots[blockIdx];
-      uint actualBlockCount = 0;
+      int blockCount = slots[blockIdx];
+      int actualBlockCount = 0;
       for (int i=1 ; i < 16 ; i++) {
-        uint slot = slots[blockIdx + i];
+        int slot = slots[blockIdx + i];
         if (slot != EmptyMarker) {
-          uint slotTag = slot >> 29;
-          uint slotPayload = slot & PayloadMask;
+          int slotTag = slot >> 29;
+          int slotPayload = slot & PayloadMask;
           if (slotTag == 0) {
             Check(slotPayload < 1000, "slotPayload < 1000");
             actualBlockCount++;
@@ -275,8 +275,8 @@ class OverflowTable {
         Console.Write("\n   ");
       else if (i % 8 == 0)
         Console.Write("  ");
-      uint slot = slots[i];
-      uint payload = slot & PayloadMask;
+      int slot = slots[i];
+      int payload = slot & PayloadMask;
       Console.Write("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFFU ? "-" : payload.ToString());
     }
     Console.WriteLine();
@@ -294,8 +294,8 @@ class OverflowTable {
   ////////////////////////////////////////////////////////////////////////////
 
   public void Init() {
-    slots = new uint[MinSize];
-    for (uint i=0 ; i < MinSize ; i += 16) {
+    slots = new int[MinSize];
+    for (int i=0 ; i < MinSize ; i += 16) {
       slots[i]   = (i - 16) | AvailableTag << 29;
       slots[i+1] = (i + 16) | Block16Tag << 29;
     }
@@ -305,9 +305,9 @@ class OverflowTable {
     head16 = 0;
   }
 
-  public uint Insert(uint handle, uint value, out bool inserted) {
-    uint tag = handle >> 29;
-    uint payload = handle & PayloadMask;
+  public int Insert(int handle, int value, out bool inserted) {
+    int tag = handle >> 29;
+    int payload = handle & PayloadMask;
     Miscellanea.Assert(((tag << 29) | payload) == handle);
 
     switch (tag) {
@@ -342,9 +342,9 @@ class OverflowTable {
     }
   }
 
-  public uint Delete(uint handle, uint value, out bool deleted) {
-    uint tag = handle >> 29;
-    uint blockIdx = handle & PayloadMask;
+  public int Delete(int handle, int value, out bool deleted) {
+    int tag = handle >> 29;
+    int blockIdx = handle & PayloadMask;
     Miscellanea.Assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
@@ -369,9 +369,9 @@ class OverflowTable {
     }
   }
 
-  public bool In(uint value, uint handle) {
-    uint tag = handle >> 29;
-    uint blockIdx = handle & PayloadMask;
+  public bool In(int value, int handle) {
+    int tag = handle >> 29;
+    int blockIdx = handle & PayloadMask;
     Miscellanea.Assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
@@ -396,9 +396,9 @@ class OverflowTable {
     }
   }
 
-  public uint Count(uint handle) {
-    uint tag = handle >> 29;
-    uint blockIdx = handle & PayloadMask;
+  public int Count(int handle) {
+    int tag = handle >> 29;
+    int blockIdx = handle & PayloadMask;
     Miscellanea.Assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
@@ -426,9 +426,9 @@ class OverflowTable {
     }
   }
 
-  public Iter GetIter(uint handle) {
-    uint tag = handle >> 29;
-    uint blockIdx = handle & PayloadMask;
+  public Iter GetIter(int handle) {
+    int tag = handle >> 29;
+    int blockIdx = handle & PayloadMask;
     Miscellanea.Assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
@@ -454,13 +454,13 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  bool In2Block(uint value, uint blockIdx) {
+  bool In2Block(int value, int blockIdx) {
     return value == slots[blockIdx] || value == slots[blockIdx+1];
   }
 
-  bool InBlock(uint value, uint blockIdx, int blockSize) {
+  bool InBlock(int value, int blockIdx, int blockSize) {
     for (int i=0 ; i < blockSize ; i++) {
-      uint content = slots[blockIdx+i];
+      int content = slots[blockIdx+i];
       if (content == value)
         return true;
       if (content == EmptyMarker)
@@ -469,14 +469,14 @@ class OverflowTable {
     return false;
   }
 
-  bool InHashedBlock(uint value, uint blockIdx, uint hashcode) {
-    uint slotIdx = blockIdx + hashcode % 15 + 1;
-    uint content = slots[slotIdx];
+  bool InHashedBlock(int value, int blockIdx, int hashcode) {
+    int slotIdx = blockIdx + hashcode % 15 + 1;
+    int content = slots[slotIdx];
     if (content == value)
       return true;
     if (content == EmptyMarker)
       return false;
-    uint tag = content >> 29;
+    int tag = content >> 29;
     Miscellanea.Assert(tag <= 5);
     if (tag == 0)
       return false;
@@ -488,8 +488,8 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  uint CountFrom(uint offset, uint max) {
-    for (uint i=0 ; i < max ; i++)
+  int CountFrom(int offset, int max) {
+    for (int i=0 ; i < max ; i++)
       if (slots[offset+i] == EmptyMarker)
         return i;
     return max;
@@ -497,20 +497,20 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  Iter HashedBlockIter(uint blockIdx) {
-    uint count = slots[blockIdx];
-    uint[] values = new uint[count];
+  Iter HashedBlockIter(int blockIdx) {
+    int count = slots[blockIdx];
+    int[] values = new int[count];
     int next = 0;
     CopyHashedBlock(blockIdx, values, ref next);
     Miscellanea.Assert(next == count);
     return new Iter(values, 0, count);
   }
 
-  void CopyHashedBlock(uint blockIdx, uint[] dest, ref int next) {
+  void CopyHashedBlock(int blockIdx, int[] dest, ref int next) {
     for (int i=1 ; i < 16 ; i++) {
-      uint content = slots[blockIdx+i];
+      int content = slots[blockIdx+i];
       if (content != EmptyMarker) {
-        uint tag = content >> 29;
+        int tag = content >> 29;
         if (tag == 0)
           dest[next++] = content;
         else
@@ -519,9 +519,9 @@ class OverflowTable {
     }
   }
 
-  void Copy(uint handle, uint[] dest, ref int next) {
-    uint tag = handle >> 29;
-    uint blockIdx = handle & PayloadMask;
+  void Copy(int handle, int[] dest, ref int next) {
+    int tag = handle >> 29;
+    int blockIdx = handle & PayloadMask;
     Miscellanea.Assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
 
     switch (tag) {
@@ -556,9 +556,9 @@ class OverflowTable {
     }
   }
 
-  void CopyNonEmpty(uint offset, uint max, uint[] dest, ref int next) {
+  void CopyNonEmpty(int offset, int max, int[] dest, ref int next) {
     for (int i=0 ; i < max ; i++) {
-      uint content = slots[offset + i];
+      int content = slots[offset + i];
       if (content == EmptyMarker)
         return;
       dest[next++] = content;
@@ -567,7 +567,7 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  uint Insert2Block(uint value0, uint value1, out bool inserted) {
+  int Insert2Block(int value0, int value1, out bool inserted) {
     // The newly inserted 2-block is not ordered
     // The returned handle is the address of the two-block,
     // tagged with the 2-values tag (= 1)
@@ -579,7 +579,7 @@ class OverflowTable {
       return value0;
     }
 
-    uint blockIdx = Alloc2Block();
+    int blockIdx = Alloc2Block();
     slots[blockIdx]   = value0;
     slots[blockIdx+1] = value1;
 
@@ -587,9 +587,9 @@ class OverflowTable {
     return blockIdx | (Block2Tag << 29);
   }
 
-  uint DeleteFrom2Block(uint blockIdx, uint value, uint handle, out bool deleted) {
-    uint value0 = slots[blockIdx];
-    uint value1 = slots[blockIdx+1];
+  int DeleteFrom2Block(int blockIdx, int value, int handle, out bool deleted) {
+    int value0 = slots[blockIdx];
+    int value1 = slots[blockIdx+1];
 
     if (value != value0 & value != value1) {
       deleted = false;
@@ -601,15 +601,15 @@ class OverflowTable {
     return value == value0 ? value1 : value0;
   }
 
-  uint InsertWith2Block(uint block2Idx, uint value, uint handle, out bool inserted) {
+  int InsertWith2Block(int block2Idx, int value, int handle, out bool inserted) {
     // Going from a 2-block to a 4-block
     // Values are not sorted
     // The last slot is set to 0xFFFFFFFFU
     // The return value is the address of the 4-block,
     // tagged with the 4-values tag (= 2)
 
-    uint value0 = slots[block2Idx];
-    uint value1 = slots[block2Idx+1];
+    int value0 = slots[block2Idx];
+    int value1 = slots[block2Idx+1];
 
     if (value == value0 | value == value1) {
       inserted = false;
@@ -618,7 +618,7 @@ class OverflowTable {
 
     Release2Block(block2Idx);
 
-    uint block4Idx = Alloc4Block();
+    int block4Idx = Alloc4Block();
     slots[block4Idx]   = value0;
     slots[block4Idx+1] = value1;
     slots[block4Idx+2] = value;
@@ -628,11 +628,11 @@ class OverflowTable {
     return block4Idx | (Block4Tag << 29);
   }
 
-  uint DeleteFrom4Block(uint blockIdx, uint value, uint handle, out bool deleted) {
-    uint value0 = slots[blockIdx];
-    uint value1 = slots[blockIdx+1];
-    uint value2 = slots[blockIdx+2];
-    uint value3 = slots[blockIdx+3];
+  int DeleteFrom4Block(int blockIdx, int value, int handle, out bool deleted) {
+    int value0 = slots[blockIdx];
+    int value1 = slots[blockIdx+1];
+    int value2 = slots[blockIdx+2];
+    int value3 = slots[blockIdx+3];
 
     if (value == value3) {
       deleted = true;
@@ -684,14 +684,14 @@ class OverflowTable {
     return handle;
   }
 
-  uint InsertWith4Block(uint block4Idx, uint value, uint handle, out bool inserted) {
+  int InsertWith4Block(int block4Idx, int value, int handle, out bool inserted) {
     // The entry contains between two and four values already
     // The unused slots are at the end, and they are set to 0xFFFFFFFFU
 
-    uint value0 = slots[block4Idx];
-    uint value1 = slots[block4Idx+1];
-    uint value2 = slots[block4Idx+2];
-    uint value3 = slots[block4Idx+3];
+    int value0 = slots[block4Idx];
+    int value1 = slots[block4Idx+1];
+    int value2 = slots[block4Idx+2];
+    int value3 = slots[block4Idx+3];
 
     if (value == value0 | value == value1 | value == value2 | value == value3) {
       inserted = false;
@@ -717,7 +717,7 @@ class OverflowTable {
       // tagged with the 8-value tag
       Release4Block(block4Idx);
 
-      uint block8Idx = Alloc8Block();
+      int block8Idx = Alloc8Block();
       slots[block8Idx]   = value0;
       slots[block8Idx+1] = value1;
       slots[block8Idx+2] = value2;
@@ -732,13 +732,13 @@ class OverflowTable {
   }
 
   //## BAD BAD: THE IMPLEMENTATION IS ALMOST THE SAME AS THAT OF DeleteFrom16Block()
-  uint DeleteFrom8Block(uint blockIdx, uint value, uint handle, out bool deleted) {
-    uint lastValue = EmptyMarker;
+  int DeleteFrom8Block(int blockIdx, int value, int handle, out bool deleted) {
+    int lastValue = EmptyMarker;
     int targetIdx = -1;
 
     int idx = 0;
     while (idx < 8) {
-      uint valueI = slots[blockIdx + idx];
+      int valueI = slots[blockIdx + idx];
       if (valueI == value)
         targetIdx = idx;
       else if (valueI == EmptyMarker)
@@ -771,18 +771,18 @@ class OverflowTable {
     return handle;
   }
 
-  uint InsertWith8Block(uint block8Idx, uint value, uint handle, out bool inserted) {
+  int InsertWith8Block(int block8Idx, int value, int handle, out bool inserted) {
     // The block contains between 4 and 8 values already
     // The unused ones are at the end, and they are set to 0xFFFFFFFFU
 
-    uint value0 = slots[block8Idx];
-    uint value1 = slots[block8Idx+1];
-    uint value2 = slots[block8Idx+2];
-    uint value3 = slots[block8Idx+3];
-    uint value4 = slots[block8Idx+4];
-    uint value5 = slots[block8Idx+5];
-    uint value6 = slots[block8Idx+6];
-    uint value7 = slots[block8Idx+7];
+    int value0 = slots[block8Idx];
+    int value1 = slots[block8Idx+1];
+    int value2 = slots[block8Idx+2];
+    int value3 = slots[block8Idx+3];
+    int value4 = slots[block8Idx+4];
+    int value5 = slots[block8Idx+5];
+    int value6 = slots[block8Idx+6];
+    int value7 = slots[block8Idx+7];
 
     bool isDuplicate = (value == value0 | value == value1 | value == value2 | value == value3) ||
                        (value == value4 | value == value5 | value == value6 | value == value7);
@@ -813,7 +813,7 @@ class OverflowTable {
 
     Release8Block(block8Idx);
 
-    uint block16Idx = Alloc16Block();
+    int block16Idx = Alloc16Block();
     slots[block16Idx]   = value0;
     slots[block16Idx+1] = value1;
     slots[block16Idx+2] = value2;
@@ -830,13 +830,13 @@ class OverflowTable {
   }
 
   //## BAD BAD: THE IMPLEMENTATION IS ALMOST THE SAME AS THAT OF DeleteFrom8Block()
-  uint DeleteFrom16Block(uint blockIdx, uint value, uint handle, out bool deleted) {
-    uint lastValue = EmptyMarker;
+  int DeleteFrom16Block(int blockIdx, int value, int handle, out bool deleted) {
+    int lastValue = EmptyMarker;
     int targetIdx = -1;
 
     int idx = 0;
     while (idx < 16) {
-      uint valueI = slots[blockIdx + idx];
+      int valueI = slots[blockIdx + idx];
       if (valueI == value)
         targetIdx = idx;
       else if (valueI == EmptyMarker)
@@ -869,13 +869,13 @@ class OverflowTable {
     return handle;
   }
 
-  uint InsertWith16Block(uint blockIdx, uint value, uint handle, out bool inserted) {
+  int InsertWith16Block(int blockIdx, int value, int handle, out bool inserted) {
     // a 16-slot standard block, which can contain between 7 and 16 entries
-    uint value15 = slots[blockIdx+15];
+    int value15 = slots[blockIdx+15];
     if (value15 == EmptyMarker) {
       // The slot still contains some empty space
       for (int i=0 ; i < 16 ; i++) {
-        uint valueI = slots[blockIdx+i];
+        int valueI = slots[blockIdx+i];
         if (value == valueI) {
           inserted = false;
           return handle;
@@ -898,14 +898,14 @@ class OverflowTable {
       }
 
     // Allocating and initializing the hashed block
-    uint hashedBlockIdx = Alloc16Block();
+    int hashedBlockIdx = Alloc16Block();
     slots[hashedBlockIdx] = 0;
     for (int i=1 ; i < 16 ; i++)
       slots[hashedBlockIdx + i] = EmptyMarker;
 
     // Transferring the existing values
     for (int i=0 ; i < 16 ; i++) {
-      uint content = slots[blockIdx+i];
+      int content = slots[blockIdx+i];
       InsertIntoHashedBlock(hashedBlockIdx, content, Hashcode(content), out inserted);
       Miscellanea.Assert(inserted);
     }
@@ -921,14 +921,14 @@ class OverflowTable {
     return hashedBlockIdx | (HashedBlockTag << 29);
   }
 
-  uint DeleteFromHashedBlock(uint blockIdx, uint value, uint handle, uint hashcode, out bool deleted) {
-    uint slotIdx = blockIdx + hashcode % 15 + 1;
-    uint content = slots[slotIdx];
+  int DeleteFromHashedBlock(int blockIdx, int value, int handle, int hashcode, out bool deleted) {
+    int slotIdx = blockIdx + hashcode % 15 + 1;
+    int content = slots[slotIdx];
     if (content == EmptyMarker) {
       deleted = false;
       return handle;
     }
-    uint tag = content >> 29;
+    int tag = content >> 29;
     Miscellanea.Assert(tag <= 5);
     if (tag == 0) {
       if (content == value) {
@@ -941,17 +941,17 @@ class OverflowTable {
       }
     }
     else if (tag < 5) {
-      uint newHandle = Delete(content, value, out deleted);
+      int newHandle = Delete(content, value, out deleted);
       slots[slotIdx] = newHandle;
     }
     else {
-      uint nestedBlockIdx = content & PayloadMask;
-      uint newHandle = DeleteFromHashedBlock(nestedBlockIdx, value, content, hashcode / 15, out deleted);
+      int nestedBlockIdx = content & PayloadMask;
+      int newHandle = DeleteFromHashedBlock(nestedBlockIdx, value, content, hashcode / 15, out deleted);
       slots[slotIdx] = newHandle;
     }
 
     if (deleted) {
-      uint count = slots[blockIdx] - 1;
+      int count = slots[blockIdx] - 1;
       Miscellanea.Assert(count >= 6);
       if (count == 6)
         return ShrinkHashedBlock(blockIdx);
@@ -961,12 +961,12 @@ class OverflowTable {
     return handle;
   }
 
-  uint ShrinkHashedBlock(uint blockIdx) {
-    uint slot1  = slots[blockIdx + 1];
-    uint slot2  = slots[blockIdx + 2];
-    uint slot3  = slots[blockIdx + 3];
-    uint slot4  = slots[blockIdx + 4];
-    uint slot5  = slots[blockIdx + 5];
+  int ShrinkHashedBlock(int blockIdx) {
+    int slot1  = slots[blockIdx + 1];
+    int slot2  = slots[blockIdx + 2];
+    int slot3  = slots[blockIdx + 3];
+    int slot4  = slots[blockIdx + 4];
+    int slot5  = slots[blockIdx + 5];
 
     int nextIdx = CopyAndReleaseBlock(slot1, (int) blockIdx);
     nextIdx = CopyAndReleaseBlock(slot2, nextIdx);
@@ -974,7 +974,7 @@ class OverflowTable {
     nextIdx = CopyAndReleaseBlock(slot4, nextIdx);
     nextIdx = CopyAndReleaseBlock(slot5, nextIdx);
 
-    uint endIdx = blockIdx + 6;
+    int endIdx = blockIdx + 6;
     for (int i=6 ; nextIdx < endIdx ; i++) {
       Miscellanea.Assert(i < 16);
       nextIdx = CopyAndReleaseBlock(slots[blockIdx + i], nextIdx);
@@ -987,10 +987,10 @@ class OverflowTable {
     return blockIdx | (Block8Tag << 29);
   }
 
-  int CopyAndReleaseBlock(uint handle, int nextIdx) {
+  int CopyAndReleaseBlock(int handle, int nextIdx) {
     if (handle != EmptyMarker) {
-      uint tag = handle >> 29;
-      uint blockIdx = handle & PayloadMask;
+      int tag = handle >> 29;
+      int blockIdx = handle & PayloadMask;
       Miscellanea.Assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
 
       switch (tag) {
@@ -1032,19 +1032,19 @@ class OverflowTable {
   }
 
 
-  void InsertIntoHashedBlock(uint blockIdx, uint value, uint hashcode, out bool inserted) {
-    uint slotIdx = blockIdx + hashcode % 15 + 1;
-    uint content = slots[slotIdx];
+  void InsertIntoHashedBlock(int blockIdx, int value, int hashcode, out bool inserted) {
+    int slotIdx = blockIdx + hashcode % 15 + 1;
+    int content = slots[slotIdx];
     if (content == EmptyMarker) {
       slots[slotIdx] = value;
       slots[blockIdx]++;
       inserted = true;
     }
     else {
-      uint tag = content >> 29;
+      int tag = content >> 29;
       Miscellanea.Assert(tag <= 5);
       if (tag < 5) {
-        uint newHandle = Insert(content, value, out inserted);
+        int newHandle = Insert(content, value, out inserted);
         slots[slotIdx] = newHandle;
       }
       else
@@ -1056,34 +1056,34 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  uint Hashcode(uint value) {
+  int Hashcode(int value) {
     return value;
   }
 
   ////////////////////////////////////////////////////////////////////////////
 
-  uint Alloc2Block() {
+  int Alloc2Block() {
     if (head2 != EmptyMarker) {
       Miscellanea.Assert(slots[head2] == EndLowerMarker);
       Miscellanea.Assert(slots[head2+1] == End2UpperMarker || slots[head2+1] >> 29 == Block2Tag);
 
-      uint blockIdx = head2;
+      int blockIdx = head2;
       RemoveBlockFromChain(blockIdx, EndLowerMarker, End2UpperMarker, ref head2);
       return blockIdx;
     }
     else {
-      uint block4Idx = Alloc4Block();
+      int block4Idx = Alloc4Block();
       AddBlockToChain(block4Idx, Block2Tag, End2UpperMarker, ref head2);
       return block4Idx + 2;
     }
   }
 
-  void Release2Block(uint blockIdx) {
+  void Release2Block(int blockIdx) {
     Miscellanea.Assert((blockIdx & 1) == 0);
 
     bool isFirst = (blockIdx & 3) == 0;
-    uint otherBlockIdx = blockIdx + (isFirst ? 2 : -2);
-    uint otherBlockSlot0 = slots[otherBlockIdx];
+    int otherBlockIdx = blockIdx + (isFirst ? 2 : -2);
+    int otherBlockSlot0 = slots[otherBlockIdx];
 
     if (otherBlockSlot0 >> 29 == AvailableTag) {
       Miscellanea.Assert(slots[otherBlockIdx+1] >> 29 == Block2Tag);
@@ -1100,29 +1100,29 @@ class OverflowTable {
     }
   }
 
-  uint Alloc4Block() {
+  int Alloc4Block() {
     if (head4 != EmptyMarker) {
       Miscellanea.Assert(slots[head4] == EndLowerMarker);
       Miscellanea.Assert(slots[head4+1] == End4UpperMarker | slots[head4+1] >> 29 == Block4Tag);
 
-      uint blockIdx = head4;
+      int blockIdx = head4;
       RemoveBlockFromChain(blockIdx, EndLowerMarker, End4UpperMarker, ref head4);
       return blockIdx;
     }
     else {
-      uint block8Idx = Alloc8Block();
+      int block8Idx = Alloc8Block();
       AddBlockToChain(block8Idx, Block4Tag, End4UpperMarker, ref head4);
       return block8Idx + 4;
     }
   }
 
-  void Release4Block(uint blockIdx) {
+  void Release4Block(int blockIdx) {
     Miscellanea.Assert((blockIdx & 3) == 0);
 
     bool isFirst = (blockIdx & 7) == 0;
-    uint otherBlockIdx = blockIdx + (isFirst ? 4 : -4);
-    uint otherBlockSlot0 = slots[otherBlockIdx];
-    uint otherBlockSlot1 = slots[otherBlockIdx+1];
+    int otherBlockIdx = blockIdx + (isFirst ? 4 : -4);
+    int otherBlockSlot0 = slots[otherBlockIdx];
+    int otherBlockSlot1 = slots[otherBlockIdx+1];
 
     if (otherBlockSlot0 >> 29 == AvailableTag & otherBlockSlot1 >> 29 == Block4Tag) {
       RemoveBlockFromChain(otherBlockIdx, otherBlockSlot0, End4UpperMarker, ref head4);
@@ -1132,17 +1132,17 @@ class OverflowTable {
       AddBlockToChain(blockIdx, Block4Tag, End4UpperMarker, ref head4);
   }
 
-  uint Alloc8Block() {
+  int Alloc8Block() {
     if (head8 != EmptyMarker) {
       Miscellanea.Assert(slots[head8] == EndLowerMarker);
       Miscellanea.Assert(slots[head8+1] == End8UpperMarker | slots[head8+1] >> 29 == Block8Tag);
 
-      uint blockIdx = head8;
+      int blockIdx = head8;
       RemoveBlockFromChain(blockIdx, EndLowerMarker, End8UpperMarker, ref head8);
       return blockIdx;
     }
     else {
-      uint block16Idx = Alloc16Block();
+      int block16Idx = Alloc16Block();
       Miscellanea.Assert(slots[block16Idx] == EndLowerMarker);
       Miscellanea.Assert(slots[block16Idx+1] == End16UpperMarker | slots[block16Idx+1] >> 29 == Block16Tag);
       AddBlockToChain(block16Idx, Block8Tag, End8UpperMarker, ref head8);
@@ -1150,13 +1150,13 @@ class OverflowTable {
     }
   }
 
-  void Release8Block(uint blockIdx) {
+  void Release8Block(int blockIdx) {
     Miscellanea.Assert((blockIdx & 7) == 0);
 
     bool isFirst = (blockIdx & 15) == 0;
-    uint otherBlockIdx = blockIdx + (isFirst ? 8 : -8);
-    uint otherBlockSlot0 = slots[otherBlockIdx];
-    uint otherBlockSlot1 = slots[otherBlockIdx+1];
+    int otherBlockIdx = blockIdx + (isFirst ? 8 : -8);
+    int otherBlockSlot0 = slots[otherBlockIdx];
+    int otherBlockSlot1 = slots[otherBlockIdx+1];
 
     if (otherBlockSlot0 >> 29 == AvailableTag & otherBlockSlot1 >> 29 == Block8Tag) {
       RemoveBlockFromChain(otherBlockIdx, otherBlockSlot0, End8UpperMarker, ref head8);
@@ -1166,16 +1166,16 @@ class OverflowTable {
       AddBlockToChain(blockIdx, Block8Tag, End8UpperMarker, ref head8);
   }
 
-  void Release8BlockUpperHalf(uint blockIdx) {
+  void Release8BlockUpperHalf(int blockIdx) {
     AddBlockToChain(blockIdx+4, Block4Tag, End4UpperMarker, ref head4);
   }
 
-  uint Alloc16Block() {
+  int Alloc16Block() {
     if (head16 == EmptyMarker) {
-      uint len = slots.length;
-      uint[] newSlots = new uint[2*len];
+      int len = slots.length;
+      int[] newSlots = new int[2*len];
       Array.Copy(slots, newSlots, len);
-      for (uint i=len ; i < 2 * len ; i += 16) {
+      for (int i=len ; i < 2 * len ; i += 16) {
         newSlots[i]   = (i - 16) | AvailableTag << 29;
         newSlots[i+1] = (i + 16) | Block16Tag << 29;
       }
@@ -1188,33 +1188,33 @@ class OverflowTable {
     Miscellanea.Assert(slots[head16] == EndLowerMarker);
     Miscellanea.Assert(slots[head16+1] == End16UpperMarker | slots[head16+1] >> 29 == Block16Tag);
 
-    uint blockIdx = head16;
+    int blockIdx = head16;
     RemoveBlockFromChain(blockIdx, EndLowerMarker, End16UpperMarker, ref head16);
     return blockIdx;
   }
 
-  void Release16Block(uint blockIdx) {
+  void Release16Block(int blockIdx) {
     AddBlockToChain(blockIdx, Block16Tag, End16UpperMarker, ref head16);
   }
 
-  void Release16BlockUpperHalf(uint blockIdx) {
+  void Release16BlockUpperHalf(int blockIdx) {
     AddBlockToChain(blockIdx+8, Block8Tag, End8UpperMarker, ref head8);
   }
 
   ////////////////////////////////////////////////////////////////////////////
 
-  void RemoveBlockFromChain(uint blockIdx, uint slot0, uint endUpperMarker, ref uint head) {
-    uint slot1 = slots[blockIdx + 1];
+  void RemoveBlockFromChain(int blockIdx, int slot0, int endUpperMarker, ref int head) {
+    int slot1 = slots[blockIdx + 1];
 
     if (slot0 != EndLowerMarker) {
       // Not the first block in the chain
       Miscellanea.Assert(head != blockIdx);
-      uint prevBlockIdx = slot0 & PayloadMask;
+      int prevBlockIdx = slot0 & PayloadMask;
 
       if (slot1 != endUpperMarker) {
         // The block is in the middle of the chain
         // The previous and next blocks must be repointed to each other
-        uint nextBlockIdx = slot1 & PayloadMask;
+        int nextBlockIdx = slot1 & PayloadMask;
         slots[prevBlockIdx+1] = slot1;
         slots[nextBlockIdx]   = slot0;
       }
@@ -1231,7 +1231,7 @@ class OverflowTable {
       if (slot1 != endUpperMarker) {
         // The head must be repointed at the next block,
         // whose 'previous' field must now be cleared
-        uint nextBlockIdx = slot1 & PayloadMask;
+        int nextBlockIdx = slot1 & PayloadMask;
         head = nextBlockIdx;
         slots[nextBlockIdx] = EndLowerMarker;
       }
@@ -1243,7 +1243,7 @@ class OverflowTable {
     }
   }
 
-  void AddBlockToChain(uint blockIdx, uint sizeTag, uint endUpperMarker, ref uint head) {
+  void AddBlockToChain(int blockIdx, int sizeTag, int endUpperMarker, ref int head) {
     // The 'previous' field of the newly released block must be cleared
     slots[blockIdx] = EndLowerMarker;
     if (head != EmptyMarker) {

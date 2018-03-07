@@ -267,7 +267,7 @@ class TernaryTableUpdater {
   }
 
 
-  static bool Contains12(List<TernaryTable.Tuple> tuples, uint field1, uint field2) {
+  static bool Contains12(List<TernaryTable.Tuple> tuples, int field1, int field2) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -289,7 +289,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains23(List<TernaryTable.Tuple> tuples, uint field2, uint field3) {
+  static bool Contains23(List<TernaryTable.Tuple> tuples, int field2, int field3) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -311,7 +311,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains31(List<TernaryTable.Tuple> tuples, uint field3, uint field1) {
+  static bool Contains31(List<TernaryTable.Tuple> tuples, int field3, int field1) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -333,13 +333,13 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains3(List<TernaryTable.Tuple> tuples, uint field3) {
+  static bool Contains3(List<TernaryTable.Tuple> tuples, int field3) {
     int low = 0;
     int high = tuples.Count - 1;
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      uint midField3 = tuples[mid].field3;
+      int midField3 = tuples[mid].field3;
       if (midField3 > field3)
         high = mid - 1;
       else if (midField3 < field3)

@@ -13,11 +13,11 @@ class ValueStore : ValueStoreBase {
       nextFreeIdx[i] = i + 1;
   }
 
-  public void AddRef(uint index) {
+  public void AddRef(int index) {
     refCounts[index] = refCounts[index] + 1;
   }
 
-  public void Release(uint index) {
+  public void Release(int index) {
     int refCount = refCounts[index];
     Miscellanea.Assert(refCount > 0);
     refCounts[index] = refCount - 1;
@@ -28,7 +28,7 @@ class ValueStore : ValueStoreBase {
     }
   }
 
-  override public void Insert(Obj value, uint hashcode, int index) {
+  override public void Insert(Obj value, int hashcode, int index) {
     Miscellanea.Assert(firstFreeIdx == index);
     Miscellanea.Assert(nextFreeIdx[index] != -1);
     base.Insert(value, hashcode, index);

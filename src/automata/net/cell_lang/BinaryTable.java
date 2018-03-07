@@ -4,9 +4,9 @@ package net.cell_lang;
 class BinaryTable {
   public static class Iter {
     int next;
-    uint[,] entries;
+    int[,] entries;
 
-    public Iter(uint[,] entries) {
+    public Iter(int[,] entries) {
       this.entries = entries;
       next = 0;
     }
@@ -15,11 +15,11 @@ class BinaryTable {
       return next >= entries.GetLength(0);
     }
 
-    public uint GetField1() {
+    public int GetField1() {
       return entries[next, 0];
     }
 
-    public uint GetField2() {
+    public int GetField2() {
       return entries[next, 1];
     }
 
@@ -56,21 +56,21 @@ class BinaryTable {
     return table1.Contains(surr1, surr2);
   }
 
-  public bool ContainsField1(uint surr1) {
+  public bool ContainsField1(int surr1) {
     return table1.ContainsKey(surr1);
   }
 
-  public bool ContainsField2(uint surr2) {
+  public bool ContainsField2(int surr2) {
     if (table2.count == 0 & table1.count > 0)
       table2.InitReverse(ref table1);
     return table2.ContainsKey(surr2);
   }
 
-  public uint[] LookupByCol1(uint surr) {
+  public int[] LookupByCol1(int surr) {
     return table1.Lookup(surr);
   }
 
-  public uint[] LookupByCol2(uint surr) {
+  public int[] LookupByCol2(int surr) {
     if (table2.count == 0 & table1.count > 0)
       table2.InitReverse(ref table1);
     return table2.Lookup(surr);
@@ -81,8 +81,8 @@ class BinaryTable {
   }
 
   public Iter GetIter1(long surr1) {
-    uint[] col2 = LookupByCol1(surr1);
-    uint[,] entries = new uint[col2.length, 2];
+    int[] col2 = LookupByCol1(surr1);
+    int[,] entries = new int[col2.length, 2];
     for (int i=0 ; i < col2.length ; i++) {
       entries[i, 0] = surr1;
       entries[i, 1] = col2[i];
@@ -91,8 +91,8 @@ class BinaryTable {
   }
 
   public Iter GetIter2(long surr2) {
-    uint[] col1 = LookupByCol2(surr2);
-    uint[,] entries = new uint[col1.length, 2];
+    int[] col1 = LookupByCol2(surr2);
+    int[,] entries = new int[col1.length, 2];
     for (int i=0 ; i < col1.length ; i++) {
       entries[i, 0] = col1[i];
       entries[i, 1] = surr2;
@@ -100,7 +100,7 @@ class BinaryTable {
     return new Iter(entries);
   }
 
-  public void Insert(uint surr1, uint surr2) {
+  public void Insert(int surr1, int surr2) {
     table1.Insert(surr1, surr2);
     if (table2.count > 0)
       table2.Insert(surr2, surr1);
@@ -113,7 +113,7 @@ class BinaryTable {
     // Check();
   }
 
-  public void Delete(uint surr1, uint surr2) {
+  public void Delete(int surr1, int surr2) {
     table1.Delete(surr1, surr2);
     if (table2.count > 0)
       table2.Delete(surr2, surr1);
@@ -130,8 +130,8 @@ class BinaryTable {
     Obj[] objs2 = new Obj[count];
 
     int next = 0;
-    for (uint i=0 ; i < table1.column.length ; i++) {
-      uint code = table1.column[i];
+    for (int i=0 ; i < table1.column.length ; i++) {
+      int code = table1.column[i];
       if (code != OverflowTable.EmptyMarker) {
         Obj val1 = store1.GetValue(i);
         if (code >> 29 == 0) {
@@ -141,7 +141,7 @@ class BinaryTable {
         else {
           OverflowTable.Iter it = table1.overflowTable.GetIter(code);
           while (!it.Done()) {
-            uint surr2 = it.Get();
+            int surr2 = it.Get();
             objs1[next] = val1;
             objs2[next++] = store2.GetValue(surr2);
             it.Next();
@@ -154,7 +154,7 @@ class BinaryTable {
     return Builder.CreateBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
   }
 
-  public uint[,] RawCopy() {
+  public int[,] RawCopy() {
     return table1.Copy();
   }
 }

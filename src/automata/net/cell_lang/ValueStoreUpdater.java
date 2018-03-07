@@ -69,7 +69,7 @@ class ValueStoreUpdater : ValueStoreBase {
     return surrogates[index];
   }
 
-  public Obj LookupSurrogateEx(uint surr) {
+  public Obj LookupSurrogateEx(int surr) {
     Obj obj1 = LookupSurrogate(surr);
     if (obj1 != null)
       return obj1;

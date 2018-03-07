@@ -4,9 +4,9 @@ package net.cell_lang;
 class OneWayBinTable {
   final int MinCapacity = 16;
 
-  static uint[] emptyArray = new uint[0];
+  static int[] emptyArray = new int[0];
 
-  public uint[] column;
+  public int[] column;
   public OverflowTable overflowTable;
   public int count;
 
@@ -32,11 +32,11 @@ class OneWayBinTable {
   public void InitReverse(ref OneWayBinTable source) {
     Miscellanea.Assert(count == 0);
 
-    uint[] srcCol = source.column;
+    int[] srcCol = source.column;
     int len = srcCol.length;
 
-    for (uint i=0 ; i < len ; i++) {
-      uint code = srcCol[i];
+    for (int i=0 ; i < len ; i++) {
+      int code = srcCol[i];
       if (code != OverflowTable.EmptyMarker)
         if (code >> 29 == 0) {
           Insert(code, i);
@@ -51,10 +51,10 @@ class OneWayBinTable {
     }
   }
 
-  public bool Contains(uint surr1, uint surr2) {
+  public bool Contains(int surr1, int surr2) {
     if (surr1 >= column.length)
       return false;
-    uint code = column[surr1];
+    int code = column[surr1];
     if (code == OverflowTable.EmptyMarker)
       return false;
     if (code >> 29 == 0)
@@ -62,22 +62,22 @@ class OneWayBinTable {
     return overflowTable.In(surr2, code);
   }
 
-  public bool ContainsKey(uint surr1) {
+  public bool ContainsKey(int surr1) {
     return surr1 < column.length && column[surr1] != OverflowTable.EmptyMarker;
   }
 
-  public uint[] Lookup(uint surr) {
+  public int[] Lookup(int surr) {
     if (surr >= column.length)
       return emptyArray;
-    uint code = column[surr];
+    int code = column[surr];
     if (code == OverflowTable.EmptyMarker)
       return emptyArray;
     if (code >> 29 == 0)
-      return new uint[] {code};
+      return new int[] {code};
 
-    uint count = overflowTable.Count(code);
+    int count = overflowTable.Count(code);
     OverflowTable.Iter it = overflowTable.GetIter(code);
-    uint[] surrs = new uint[count];
+    int[] surrs = new int[count];
     int next = 0;
     while (!it.Done()) {
       surrs[next++] = it.Get();
@@ -87,20 +87,20 @@ class OneWayBinTable {
     return surrs;
   }
 
-  public void Insert(uint surr1, uint surr2) {
+  public void Insert(int surr1, int surr2) {
     int size = column.length;
     if (surr1 >= size) {
       int newSize = size == 0 ? MinCapacity : 2 * size;
       while (surr1 >= newSize)
         newSize *= 2;
-      uint[] newColumn = new uint[newSize];
+      int[] newColumn = new int[newSize];
       Array.Copy(column, newColumn, size);
       for (int i=size ; i < newSize ; i++)
         newColumn[i] = OverflowTable.EmptyMarker;
       column = newColumn;
     }
 
-    uint code = column[surr1];
+    int code = column[surr1];
     if (code == OverflowTable.EmptyMarker) {
       column[surr1] = surr2;
       count++;
@@ -113,8 +113,8 @@ class OneWayBinTable {
     }
   }
 
-  public void Delete(uint surr1, uint surr2) {
-    uint code = column[surr1];
+  public void Delete(int surr1, int surr2) {
+    int code = column[surr1];
     if (code == OverflowTable.EmptyMarker)
       return;
     if (code == surr2) {
@@ -129,11 +129,11 @@ class OneWayBinTable {
     }
   }
 
-  public uint[,] Copy() {
-    uint[,] res = new uint[count, 2];
+  public int[,] Copy() {
+    int[,] res = new int[count, 2];
     int next = 0;
-    for (uint i=0 ; i < column.length ; i++) {
-      uint code = column[i];
+    for (int i=0 ; i < column.length ; i++) {
+      int code = column[i];
       if (code != OverflowTable.EmptyMarker) {
         if (code >> 29 == 0) {
           res[next, 0] = i;

@@ -3,10 +3,10 @@ package net.cell_lang;
 
 class UnaryTable {
   public struct Iter {
-    uint index;
+    int index;
     UnaryTable table;
 
-    public Iter(uint index, UnaryTable table) {
+    public Iter(int index, UnaryTable table) {
       this.table = table;
       if (table.count == 0)
         this.index = 64 * table.bitmap.length;
@@ -17,7 +17,7 @@ class UnaryTable {
       }
     }
 
-    public uint Get() {
+    public int Get() {
       return index;
     }
 
@@ -37,7 +37,7 @@ class UnaryTable {
   final int InitSize = 4;
 
   ulong[] bitmap = new ulong[InitSize];
-  uint count = 0;
+  int count = 0;
 
   public ValueStore store;
 
@@ -45,12 +45,12 @@ class UnaryTable {
     this.store = store;
   }
 
-  public uint Size() {
+  public int Size() {
     return count;
   }
 
-  public bool Contains(uint surr) {
-    uint widx = surr / 64;
+  public bool Contains(int surr) {
+    int widx = surr / 64;
     return widx < bitmap.length && ((bitmap[widx] >> (int) (surr % 64) & 1) != 0);
   }
 
@@ -58,8 +58,8 @@ class UnaryTable {
     return new Iter(0, this);
   }
 
-  uint LiveCount() {
-    uint liveCount = 0;
+  int LiveCount() {
+    int liveCount = 0;
     for (int i=0 ; i < bitmap.length ; i++) {
       ulong mask = bitmap[i];
       for (int j=0 ; j < 64 ; j++)
@@ -69,8 +69,8 @@ class UnaryTable {
     return liveCount;
   }
 
-  public void Insert(uint surr) {
-    uint widx = surr / 64;
+  public void Insert(int surr) {
+    int widx = surr / 64;
     int bidx = (int) (surr % 64);
 
     int len = bitmap.length;
@@ -91,10 +91,10 @@ class UnaryTable {
     // Miscellanea.Assert(count == LiveCount());
   }
 
-  public void Delete(uint surr) {
+  public void Delete(int surr) {
     Miscellanea.Assert(surr < 64 * bitmap.length);
 
-    uint widx = surr / 64;
+    int widx = surr / 64;
     if (widx < bitmap.length) {
       ulong mask = bitmap[widx];
       int bidx = (int) surr % 64;
@@ -111,9 +111,9 @@ class UnaryTable {
       return EmptyRelObj.Singleton();
     Obj[] objs = new Obj[count];
     int next = 0;
-    for (uint i=0 ; i < bitmap.length ; i++) {
+    for (int i=0 ; i < bitmap.length ; i++) {
       ulong mask = bitmap[i];
-      for (uint j=0 ; j < 64 ; j++)
+      for (int j=0 ; j < 64 ; j++)
         if (((mask >> (int) j) & 1) != 0)
           objs[next++] = store.GetValue(j + 64 * i);
     }

@@ -2,8 +2,8 @@ package net.cell_lang;
 
 
 class UnaryTableUpdater {
-  List<uint> deleteList = new List<uint>();
-  List<uint> insertList = new List<uint>();
+  List<int> deleteList = new List<int>();
+  List<int> insertList = new List<int>();
 
   UnaryTable table;
   ValueStoreUpdater store;
@@ -47,7 +47,7 @@ class UnaryTableUpdater {
 
   public void Apply() {
     for (int i=0 ; i < deleteList.Count ; i++) {
-      uint surr = deleteList[i];
+      int surr = deleteList[i];
       if (table.Contains(surr))
         table.Delete(surr);
       else
@@ -56,7 +56,7 @@ class UnaryTableUpdater {
 
     var it = insertList.GetEnumerator();
     while (it.MoveNext()) {
-      uint surr = it.Current;
+      int surr = it.Current;
       if (!table.Contains(surr)) {
         table.Insert(surr);
         table.store.AddRef(surr);
@@ -67,7 +67,7 @@ class UnaryTableUpdater {
   public void Finish() {
     var it = deleteList.GetEnumerator();
     while (it.MoveNext()) {
-      uint surr = it.Current;
+      int surr = it.Current;
       if (surr != 0xFFFFFFFF)
         table.store.Release(surr);
     }

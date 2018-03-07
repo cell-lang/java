@@ -3,7 +3,7 @@ package net.cell_lang;
 
 class ValueStoreBase {
   protected Obj[] slots;
-  protected int[] hashcodes; //## WAS uint
+  protected int[] hashcodes; //## WAS int
   protected int[] hashtable;
   protected int[] buckets;
   protected int   count = 0;
@@ -48,7 +48,7 @@ class ValueStoreBase {
   public int LookupValue(Obj value) {
     if (count == 0)
       return -1;
-    int hashcode = value.Hashcode(); //## WAS uint
+    int hashcode = value.Hashcode(); //## WAS int
     int idx = hashtable[hashcode % hashtable.length];
     while (idx != -1) {
       Miscellanea.Assert(slots[idx] != null);
@@ -80,8 +80,8 @@ class ValueStoreBase {
     slots[slotIdx] = value;
     hashcodes[slotIdx] = hashcode;
 
-    //## DOES IT MAKE ANY DIFFERENCE HERE TO USE int INSTEAD OF uint?
-    int hashtableIdx = hashcode % slots.length; //## WAS uint
+    //## DOES IT MAKE ANY DIFFERENCE HERE TO USE int INSTEAD OF int?
+    int hashtableIdx = hashcode % slots.length; //## WAS int
     int head = hashtable[hashtableIdx];
     hashtable[hashtableIdx] = slotIdx;
     buckets[slotIdx] = head;

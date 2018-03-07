@@ -3,10 +3,10 @@ package net.cell_lang;
 
 class BinaryTableUpdater {
   static class Tuple {
-    public uint field1;
-    public uint field2;
+    public int field1;
+    public int field2;
 
-    public Tuple(uint field1, uint field2) {
+    public Tuple(int field1, int field2) {
       this.field1 = field1;
       this.field2 = field2;
     }
@@ -30,7 +30,7 @@ class BinaryTableUpdater {
   }
 
   public void Clear() {
-    uint[,] columns = table.RawCopy();
+    int[,] columns = table.RawCopy();
     int len = columns.GetLength(0);
     deleteList.Clear();
     for (int i=0 ; i < len ; i++)
@@ -61,13 +61,13 @@ class BinaryTableUpdater {
   }
 
   public void Delete1(long value) {
-    uint[] assocs = table.LookupByCol1(value);
+    int[] assocs = table.LookupByCol1(value);
     for (int i=0 ; i < assocs.length ; i++)
       deleteList.Add(new Tuple(value, assocs[i]));
   }
 
   public void Delete2(long value) {
-    uint[] assocs = table.LookupByCol2(value);
+    int[] assocs = table.LookupByCol2(value);
     for (int i=0 ; i < assocs.length ; i++)
       deleteList.Add(new Tuple(assocs[i], value));
   }
@@ -212,13 +212,13 @@ class BinaryTableUpdater {
     store2.Dump();
   }
 
-  static bool ContainsField1(List<Tuple> tuples, uint field1) {
+  static bool ContainsField1(List<Tuple> tuples, int field1) {
     int low = 0;
     int high = tuples.Count - 1;
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      uint midField1 = tuples[mid].field1;
+      int midField1 = tuples[mid].field1;
       if (midField1 > field1)
         high = mid - 1;
       else if (midField1 < field1)
@@ -230,13 +230,13 @@ class BinaryTableUpdater {
     return false;
   }
 
-  static bool ContainsField2(List<Tuple> tuples, uint field2) {
+  static bool ContainsField2(List<Tuple> tuples, int field2) {
     int low = 0;
     int high = tuples.Count - 1;
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      uint midField2 = tuples[mid].field2;
+      int midField2 = tuples[mid].field2;
       if (midField2 > field2)
         high = mid - 1;
       else if (midField2 < field2)

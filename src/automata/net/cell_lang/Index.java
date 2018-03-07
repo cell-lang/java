@@ -4,13 +4,13 @@ package net.cell_lang;
 class Index {
   final int Empty = 0xFFFFFFFF;
 
-  public uint[] hashtable;
-  public uint[] buckets;
+  public int[] hashtable;
+  public int[] buckets;
 
-  public void Init(uint size) {
+  public void Init(int size) {
     Miscellanea.Assert(hashtable == null & buckets == null);
-    hashtable = new uint[size];
-    buckets   = new uint[size];
+    hashtable = new int[size];
+    buckets   = new int[size];
     for (int i=0 ; i < size ; i++) {
       hashtable[i] = Empty;
       buckets[i] = Empty;
@@ -32,19 +32,19 @@ class Index {
     }
   }
 
-  public void Insert(uint index, uint hashcode) {
+  public void Insert(int index, int hashcode) {
     Miscellanea.Assert(buckets[index] == Empty);
     Miscellanea.Assert(index < hashtable.length);
 
-    uint hashIdx = hashcode % hashtable.length;
-    uint head = hashtable[hashIdx];
+    int hashIdx = hashcode % hashtable.length;
+    int head = hashtable[hashIdx];
     hashtable[hashIdx] = index;
     buckets[index] = head;
   }
 
-  public void Delete(uint index, uint hashcode) {
-    uint hashIdx = hashcode % hashtable.length;
-    uint head = hashtable[hashIdx];
+  public void Delete(int index, int hashcode) {
+    int hashIdx = hashcode % hashtable.length;
+    int head = hashtable[hashIdx];
     Miscellanea.Assert(head != Empty);
 
     if (head == index) {
@@ -53,9 +53,9 @@ class Index {
       return;
     }
 
-    uint curr = head;
+    int curr = head;
     for ( ; ; ) {
-      uint next = buckets[curr];
+      int next = buckets[curr];
       Miscellanea.Assert(next != Empty);
       if (next == index) {
         buckets[curr] = buckets[next];
@@ -70,11 +70,11 @@ class Index {
     return hashtable == null;
   }
 
-  public uint Head(uint hashcode) {
+  public int Head(int hashcode) {
     return hashtable[hashcode % hashtable.length];
   }
 
-  public uint Next(uint index) {
+  public int Next(int index) {
     return buckets[index];
   }
 
