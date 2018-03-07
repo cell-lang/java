@@ -66,7 +66,7 @@ class Index {
     }
   }
 
-  public boolean IsBlank() {
+  public boolean isBlank() {
     return hashtable == null;
   }
 

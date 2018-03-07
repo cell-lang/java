@@ -50,7 +50,7 @@ class TernaryTable {
       }
     }
 
-    public boolean Done() {
+    public boolean done() {
       return index == Tuple.Empty;
     }
 
@@ -263,7 +263,7 @@ class TernaryTable {
     }
   }
 
-  public boolean Contains(long field1, long field2, long field3) {
+  public boolean contains(long field1, long field2, long field3) {
     int hashcode = Miscellanea.hashcode(field1, field2, field3);
     for (int idx = index123.head(hashcode) ; idx != Tuple.Empty ; idx = index123.next(idx)) {
       Tuple tuple = tuples[idx];
@@ -273,7 +273,7 @@ class TernaryTable {
     return false;
   }
 
-  public boolean Contains12(int field1, int field2) {
+  public boolean contains12(int field1, int field2) {
     int hashcode = Miscellanea.hashcode(field1, field2);
     for (int idx = index12.head(hashcode) ; idx != Tuple.Empty ; idx = index12.next(idx)) {
       Tuple tuple = tuples[idx];
@@ -283,7 +283,7 @@ class TernaryTable {
     return false;
   }
 
-  public boolean Contains13(int field1, int field3) {
+  public boolean contains13(int field1, int field3) {
     if (index13.isBlank())
       BuildIndex13();
     int hashcode = Miscellanea.hashcode(field1, field3);
@@ -295,7 +295,7 @@ class TernaryTable {
     return false;
   }
 
-  public boolean Contains23(int field2, int field3) {
+  public boolean contains23(int field2, int field3) {
     if (index23.isBlank())
       BuildIndex23();
     int hashcode = Miscellanea.hashcode(field2, field3);
@@ -307,7 +307,7 @@ class TernaryTable {
     return false;
   }
 
-  public boolean Contains1(int field1) {
+  public boolean contains1(int field1) {
     if (index1.isBlank())
       BuildIndex1();
     int hashcode = Miscellanea.hashcode(field1);
@@ -319,7 +319,7 @@ class TernaryTable {
     return false;
   }
 
-  public boolean Contains2(int field2) {
+  public boolean contains2(int field2) {
     if (index2.isBlank())
       BuildIndex2();
     int hashcode = Miscellanea.hashcode(field2);
@@ -331,7 +331,7 @@ class TernaryTable {
     return false;
   }
 
-  public boolean Contains3(int field3) {
+  public boolean contains3(int field3) {
     if (index3.isBlank())
       BuildIndex3();
     int hashcode = Miscellanea.hashcode(field3);

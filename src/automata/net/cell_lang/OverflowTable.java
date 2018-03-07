@@ -18,7 +18,7 @@ class OverflowTable {
       return values[next];
     }
 
-    public boolean Done() {
+    public boolean done() {
       return next >= end;
     }
 
@@ -369,7 +369,7 @@ class OverflowTable {
     }
   }
 
-  public boolean In(int value, int handle) {
+  public boolean in(int value, int handle) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
     Miscellanea._assert(((tag << 29) | blockIdx) == handle);

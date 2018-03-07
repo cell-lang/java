@@ -51,7 +51,7 @@ class OneWayBinTable {
     }
   }
 
-  public boolean Contains(int surr1, int surr2) {
+  public boolean contains(int surr1, int surr2) {
     if (surr1 >= column.length)
       return false;
     int code = column[surr1];
@@ -62,7 +62,7 @@ class OneWayBinTable {
     return overflowTable.in(surr2, code);
   }
 
-  public boolean ContainsKey(int surr1) {
+  public boolean containsKey(int surr1) {
     return surr1 < column.length && column[surr1] != OverflowTable.EmptyMarker;
   }
 
