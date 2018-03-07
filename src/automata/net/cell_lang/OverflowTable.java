@@ -31,15 +31,15 @@ class OverflowTable {
 
   final int MinSize = 32;
 
-  public final int EmptyMarker  = 0xFFFFFFFFU;
+  public final int EmptyMarker  = 0xFFFFFFFF;
 
-  final int EndLowerMarker   = 0xDFFFFFFFU;
-  final int End2UpperMarker  = 0x3FFFFFFFU;
-  final int End4UpperMarker  = 0x5FFFFFFFU;
-  final int End8UpperMarker  = 0x7FFFFFFFU;
-  final int End16UpperMarker = 0x9FFFFFFFU;
+  final int EndLowerMarker   = 0xDFFFFFFF;
+  final int End2UpperMarker  = 0x3FFFFFFF;
+  final int End4UpperMarker  = 0x5FFFFFFF;
+  final int End8UpperMarker  = 0x7FFFFFFF;
+  final int End16UpperMarker = 0x9FFFFFFF;
 
-  public final int PayloadMask  = 0x1FFFFFFFU;
+  public final int PayloadMask  = 0x1FFFFFFF;
 
   final int InlineTag            = 0;
   final int Block2Tag            = 1;
@@ -277,7 +277,7 @@ class OverflowTable {
         System.out.print("  ");
       int slot = slots[i];
       int payload = slot & PayloadMask;
-      System.out.print("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFFU ? "-" : payload.toString());
+      System.out.print("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFF ? "-" : payload.toString());
     }
     System.out.println();
     System.out.println();
@@ -604,7 +604,7 @@ class OverflowTable {
   int insertWith2Block(int block2Idx, int value, int handle, out boolean inserted) {
     // Going from a 2-block to a 4-block
     // Values are not sorted
-    // The last slot is set to 0xFFFFFFFFU
+    // The last slot is set to 0xFFFFFFFF
     // The return value is the address of the 4-block,
     // tagged with the 4-values tag (= 2)
 
@@ -686,7 +686,7 @@ class OverflowTable {
 
   int insertWith4Block(int block4Idx, int value, int handle, out boolean inserted) {
     // The entry contains between two and four values already
-    // The unused slots are at the end, and they are set to 0xFFFFFFFFU
+    // The unused slots are at the end, and they are set to 0xFFFFFFFF
 
     int value0 = slots[block4Idx];
     int value1 = slots[block4Idx+1];
@@ -713,7 +713,7 @@ class OverflowTable {
     else {
       // The block is already full, we need to allocate an 8-block now
       // We store the values in the first five slots, and set the rest
-      // to 0xFFFFFFFFU. The return value is the index of the block,
+      // to 0xFFFFFFFF. The return value is the index of the block,
       // tagged with the 8-value tag
       Release4Block(block4Idx);
 
@@ -773,7 +773,7 @@ class OverflowTable {
 
   int insertWith8Block(int block8Idx, int value, int handle, out boolean inserted) {
     // The block contains between 4 and 8 values already
-    // The unused ones are at the end, and they are set to 0xFFFFFFFFU
+    // The unused ones are at the end, and they are set to 0xFFFFFFFF
 
     int value0 = slots[block8Idx];
     int value1 = slots[block8Idx+1];
