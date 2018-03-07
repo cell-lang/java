@@ -10,7 +10,13 @@ class Parsing {
 
   public static Obj parse(Obj text) {
     byte[] bytes = text.getInnerObj().getByteArray();
-    Token[] tokens = Lexer.lex(bytes);
-    return Parser.parse(tokens);
+    try {
+      Token[] tokens = Lexer.lex(bytes);
+      Obj obj = Parser.parse(tokens);
+      return new TaggedObj(SymbTable.SuccessSymbId, obj);
+    }
+    catch (ParsingException e) {
+      return new TaggedObj(SymbTable.FailureSymbId, IntObj.get(e.errorOffset));
+    }
   }
 }

@@ -31,6 +31,7 @@ class Procs {
 
   public static void Print_P(Obj str, Object env) {
     System.out.print(str.getString());
+    System.out.flush();
   }
 
   public static Obj GetChar_P(Object env) {

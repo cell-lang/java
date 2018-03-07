@@ -5,7 +5,6 @@ import java.io.Writer;
 
 class SliceObj extends SeqObj {
   MasterSeqObj master;
-  int offset;
 
   public void dump() {
     System.out.printf("offset = %d, length = %d\n", offset, length);

@@ -152,7 +152,7 @@ abstract class Obj implements Comparable<Obj> {
     }
     finally {
       try {
-        writer.close();
+        writer.flush();
       }
       catch (Exception e) {
 

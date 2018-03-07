@@ -27,13 +27,41 @@ tmp/codegen.cs: $(SRC-FILES)
 codegen.exe: tmp/codegen.cs
 	mcs -nowarn:219 tmp/codegen.cs -out:codegen.exe
 
+codegen.jar: $(SRC-FILES) $(RUNTIME-FILES)
+	java -jar bin/compiler.jar projects/codegen.txt
+	javac -d tmp/codegen/ Generated.java
+	mv Generated.java tmp/codegen.java
+	jar cfe codegen.jar net.cell_lang.Generated -C tmp/codegen/ net/
+
+compiler.jar: $(SRC-FILES) $(RUNTIME-FILES)
+	java -jar bin/compiler.jar projects/java-compiler-no-runtime.txt
+	bin/apply-hacks < Generated.java > src/java/net/cell_lang/Generated.java
+	# javac -g -d tmp/ src/java/net/cell_lang/Generated.java
+	javac -d tmp/ src/java/net/cell_lang/Generated.java
+	mv Generated.java tmp/
+	jar cfe compiler.jar net.cell_lang.Generated -C tmp net/
+
+inputs/tests.txt: tests.cell
+	cellc-cs.exe -p projects/tests.txt
+	mv dump-opt-code.txt inputs/tests.txt
+
+tests.jar: codegen.exe inputs/tests.txt
+	./codegen.exe inputs/tests.txt
+	javac -g -d tmp/ Generated.java
+	cp Generated.java src/java/net/cell_lang/
+	mv Generated.java tmp/tests-by-codegen.exe.java
+
 ################################################################################
 ################################################################################
 
 clean:
-	@rm -rf tmp
-	@rm -f generated.cpp generated.java
+	@rm -f codegen.exe codegen codegen-dbg
+	@make -s soft-clean
+
+soft-clean:
+	@rm -f generated.cpp generated.cs Generated.java
 	@rm -f *.class
-	@rm -f codegen codegen-dbg
 	@rm -f cellc-java cellcd-java
+	@rm -rf tmp
 	@mkdir tmp
+	@mkdir tmp/codegen

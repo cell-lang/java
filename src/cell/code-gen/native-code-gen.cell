@@ -21,7 +21,7 @@
   code = (code |
     "",
     "",
-    "public static String[] embeddedSymbols;",
+    "public static String[] embeddedSymbols = new String[" & printed(|symbs|) & "];",
     "",
     "",
     "static {"
@@ -193,7 +193,7 @@ String* gen_int_seq_code(Int+ int_seq, Nat seq_id) {
 
   type_name = native_int_type(min_elem, max_elem);
 
-  sgn = "public static " & type_name & "[] data";
+  sgn = "  public static " & type_name & "[] data = {";
 
   strs = (printed(n) : n <- int_seq);
   total_len = sum((length(s) : s <- strs)) + 2 * |strs|;
@@ -201,13 +201,13 @@ String* gen_int_seq_code(Int+ int_seq, Nat seq_id) {
   code = ("static class " & const_int_seq_holder_class_name(seq_id) & " {");
 
   if total_len < 60:
-    code = (code | "  " & sgn & " = {" & append(strs, ", ") & "};");
+    code = (code | sgn & append(strs, ", ") & "};");
   else
     max_len = nat(max((length(printed(n)) : n <- (min_elem, max_elem))));
     last_idx = |int_seq| - 1;
     strs = (align_text(s, max_len, ascii_space) & if i != last_idx then ", " else "" : s @ i <- strs);
     cont_lines = ("    " & append(ss) : ss <- split_into_groups(strs, nz_nat(100 / #(max_len + 2))));
-    code = code & (sgn & " = {") & cont_lines & ("  };");
+    code = code & (sgn) & cont_lines & ("  };");
   ;
   code = (code | "}");
 
@@ -684,12 +684,12 @@ String native_assignment_code(AnyVar var, Encodable value) =
 String* c_main_fn = (
   "",
   "",
-  "public static int main(String[] args) {",
+  "public static void main(String[] args) {",
   "  Obj[] cellArgs = new Obj[args.length];",
   "  for (int i=0 ; i < args.length ; i++)",
   "    cellArgs[i] = Miscellanea.strToObj(args[i]);",
   "  Env env = new Env();",
   "  Obj res = Main_P(new MasterSeqObj(cellArgs), env);",
-  "  return res.isInt() ? (int) res.getLong() : 0;",
+  "  System.exit(res.isInt() ? (int) res.getLong() : 0);",
   "}"
 );
