@@ -16,8 +16,8 @@ class BinaryTableUpdater {
     }
   }
 
-  List<Tuple> deleteList = new List<Tuple>();
-  List<Tuple> insertList = new List<Tuple>();
+  ArrayList<Tuple> deleteList = new ArrayList<Tuple>();
+  ArrayList<Tuple> insertList = new ArrayList<Tuple>();
 
   BinaryTable table;
   ValueStoreUpdater store1;
@@ -212,7 +212,7 @@ class BinaryTableUpdater {
     store2.Dump();
   }
 
-  static bool ContainsField1(List<Tuple> tuples, int field1) {
+  static bool ContainsField1(ArrayList<Tuple> tuples, int field1) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -230,7 +230,7 @@ class BinaryTableUpdater {
     return false;
   }
 
-  static bool ContainsField2(List<Tuple> tuples, int field2) {
+  static bool ContainsField2(ArrayList<Tuple> tuples, int field2) {
     int low = 0;
     int high = tuples.Count - 1;
 

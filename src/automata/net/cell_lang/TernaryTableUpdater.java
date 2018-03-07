@@ -2,8 +2,8 @@ package net.cell_lang;
 
 
 class TernaryTableUpdater {
-  List<TernaryTable.Tuple> deleteList = new List<TernaryTable.Tuple>();
-  List<TernaryTable.Tuple> insertList = new List<TernaryTable.Tuple>();
+  ArrayList<TernaryTable.Tuple> deleteList = new ArrayList<TernaryTable.Tuple>();
+  ArrayList<TernaryTable.Tuple> insertList = new ArrayList<TernaryTable.Tuple>();
 
   TernaryTable table;
   ValueStoreUpdater store1, store2, store3;
@@ -267,7 +267,7 @@ class TernaryTableUpdater {
   }
 
 
-  static bool Contains12(List<TernaryTable.Tuple> tuples, int field1, int field2) {
+  static bool Contains12(ArrayList<TernaryTable.Tuple> tuples, int field1, int field2) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -289,7 +289,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains23(List<TernaryTable.Tuple> tuples, int field2, int field3) {
+  static bool Contains23(ArrayList<TernaryTable.Tuple> tuples, int field2, int field3) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -311,7 +311,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains31(List<TernaryTable.Tuple> tuples, int field3, int field1) {
+  static bool Contains31(ArrayList<TernaryTable.Tuple> tuples, int field3, int field1) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -333,7 +333,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains3(List<TernaryTable.Tuple> tuples, int field3) {
+  static bool Contains3(ArrayList<TernaryTable.Tuple> tuples, int field3) {
     int low = 0;
     int high = tuples.Count - 1;
 

@@ -2,8 +2,8 @@ package net.cell_lang;
 
 
 class UnaryTableUpdater {
-  List<int> deleteList = new List<int>();
-  List<int> insertList = new List<int>();
+  ArrayList<int> deleteList = new ArrayList<int>();
+  ArrayList<int> insertList = new ArrayList<int>();
 
   UnaryTable table;
   ValueStoreUpdater store;
