@@ -36,14 +36,14 @@ class Index {
     Miscellanea.Assert(buckets[index] == Empty);
     Miscellanea.Assert(index < hashtable.length);
 
-    uint hashIdx = hashcode % (uint) hashtable.length;
+    uint hashIdx = hashcode % hashtable.length;
     uint head = hashtable[hashIdx];
     hashtable[hashIdx] = index;
     buckets[index] = head;
   }
 
   public void Delete(uint index, uint hashcode) {
-    uint hashIdx = hashcode % (uint) hashtable.length;
+    uint hashIdx = hashcode % hashtable.length;
     uint head = hashtable[hashIdx];
     Miscellanea.Assert(head != Empty);
 

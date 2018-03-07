@@ -53,7 +53,7 @@ class BinaryTable {
   }
 
   public bool Contains(long surr1, long surr2) {
-    return table1.Contains((uint) surr1, (uint) surr2);
+    return table1.Contains(surr1, surr2);
   }
 
   public bool ContainsField1(uint surr1) {
@@ -81,21 +81,21 @@ class BinaryTable {
   }
 
   public Iter GetIter1(long surr1) {
-    uint[] col2 = LookupByCol1((uint) surr1);
+    uint[] col2 = LookupByCol1(surr1);
     uint[,] entries = new uint[col2.length, 2];
     for (int i=0 ; i < col2.length ; i++) {
-      entries[i, 0] = (uint) surr1;
+      entries[i, 0] = surr1;
       entries[i, 1] = col2[i];
     }
     return new Iter(entries);
   }
 
   public Iter GetIter2(long surr2) {
-    uint[] col1 = LookupByCol2((uint) surr2);
+    uint[] col1 = LookupByCol2(surr2);
     uint[,] entries = new uint[col1.length, 2];
     for (int i=0 ; i < col1.length ; i++) {
       entries[i, 0] = col1[i];
-      entries[i, 1] = (uint) surr2;
+      entries[i, 1] = surr2;
     }
     return new Iter(entries);
   }

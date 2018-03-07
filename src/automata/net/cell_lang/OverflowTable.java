@@ -1082,7 +1082,7 @@ class OverflowTable {
     Miscellanea.Assert((blockIdx & 1) == 0);
 
     bool isFirst = (blockIdx & 3) == 0;
-    uint otherBlockIdx = (uint) (blockIdx + (isFirst ? 2 : -2));
+    uint otherBlockIdx = blockIdx + (isFirst ? 2 : -2);
     uint otherBlockSlot0 = slots[otherBlockIdx];
 
     if (otherBlockSlot0 >> 29 == AvailableTag) {
@@ -1120,7 +1120,7 @@ class OverflowTable {
     Miscellanea.Assert((blockIdx & 3) == 0);
 
     bool isFirst = (blockIdx & 7) == 0;
-    uint otherBlockIdx = (uint) (blockIdx + (isFirst ? 4 : -4));
+    uint otherBlockIdx = blockIdx + (isFirst ? 4 : -4);
     uint otherBlockSlot0 = slots[otherBlockIdx];
     uint otherBlockSlot1 = slots[otherBlockIdx+1];
 
@@ -1154,7 +1154,7 @@ class OverflowTable {
     Miscellanea.Assert((blockIdx & 7) == 0);
 
     bool isFirst = (blockIdx & 15) == 0;
-    uint otherBlockIdx = (uint) (blockIdx + (isFirst ? 8 : -8));
+    uint otherBlockIdx = blockIdx + (isFirst ? 8 : -8);
     uint otherBlockSlot0 = slots[otherBlockIdx];
     uint otherBlockSlot1 = slots[otherBlockIdx+1];
 
@@ -1172,7 +1172,7 @@ class OverflowTable {
 
   uint Alloc16Block() {
     if (head16 == EmptyMarker) {
-      uint len = (uint) slots.length;
+      uint len = slots.length;
       uint[] newSlots = new uint[2*len];
       Array.Copy(slots, newSlots, len);
       for (uint i=len ; i < 2 * len ; i += 16) {

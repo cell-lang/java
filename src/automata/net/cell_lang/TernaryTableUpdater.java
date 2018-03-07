@@ -43,22 +43,22 @@ class TernaryTableUpdater {
       int surr3 = store3.LookupValueEx(val3);
       if (surr3 == -1)
         surr3 = store3.Insert(val3);
-      insertList.Add(new TernaryTable.Tuple((uint) surr1, (uint) surr2, (uint) surr3));
+      insertList.Add(new TernaryTable.Tuple(surr1, surr2, surr3));
       it.Next();
     }
   }
 
   public void Insert(long value1, long value2, long value3) {
-    insertList.Add(new TernaryTable.Tuple((uint) value1, (uint) value2, (uint) value3));
+    insertList.Add(new TernaryTable.Tuple(value1, value2, value3));
   }
 
   public void Delete(long value1, long value2, long value3) {
-    if (table.Contains((uint) value1, (uint) value2, (uint) value3))
-      deleteList.Add(new TernaryTable.Tuple((uint) value1, (uint) value2, (uint) value3));
+    if (table.Contains(value1, value2, value3))
+      deleteList.Add(new TernaryTable.Tuple(value1, value2, value3));
   }
 
   public void Delete12(long value1, long value2) {
-    TernaryTable.Iter it = table.GetIter12((uint) value1, (uint) value2);
+    TernaryTable.Iter it = table.GetIter12(value1, value2);
     while (!it.Done()) {
       deleteList.Add(it.Get());
       it.Next();
@@ -66,7 +66,7 @@ class TernaryTableUpdater {
   }
 
   public void Delete13(long value1, long value3) {
-    TernaryTable.Iter it = table.GetIter13((uint) value1, (uint) value3);
+    TernaryTable.Iter it = table.GetIter13(value1, value3);
     while (!it.Done()) {
       deleteList.Add(it.Get());
       it.Next();
@@ -74,7 +74,7 @@ class TernaryTableUpdater {
   }
 
   public void Delete23(long value2, long value3) {
-    TernaryTable.Iter it = table.GetIter23((uint) value2, (uint) value3);
+    TernaryTable.Iter it = table.GetIter23(value2, value3);
     while (!it.Done()) {
       deleteList.Add(it.Get());
       it.Next();
@@ -82,7 +82,7 @@ class TernaryTableUpdater {
   }
 
   public void Delete1(long value1) {
-    TernaryTable.Iter it = table.GetIter1((uint) value1);
+    TernaryTable.Iter it = table.GetIter1(value1);
     while (!it.Done()) {
       deleteList.Add(it.Get());
       it.Next();
@@ -90,7 +90,7 @@ class TernaryTableUpdater {
   }
 
   public void Delete2(long value2) {
-    TernaryTable.Iter it = table.GetIter2((uint) value2);
+    TernaryTable.Iter it = table.GetIter2(value2);
     while (!it.Done()) {
       deleteList.Add(it.Get());
       it.Next();
@@ -98,7 +98,7 @@ class TernaryTableUpdater {
   }
 
   public void Delete3(long value3) {
-    TernaryTable.Iter it = table.GetIter3((uint) value3);
+    TernaryTable.Iter it = table.GetIter3(value3);
     while (!it.Done()) {
       deleteList.Add(it.Get());
       it.Next();

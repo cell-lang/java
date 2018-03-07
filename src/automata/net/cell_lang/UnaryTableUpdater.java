@@ -31,18 +31,18 @@ class UnaryTableUpdater {
       int surr = store.LookupValueEx(val);
       if (surr == -1)
         surr = store.Insert(val);
-      insertList.Add((uint) surr);
+      insertList.Add(surr);
       it.Next();
     }
   }
 
   public void Delete(long value) {
-    if (table.Contains((uint) value))
-      deleteList.Add((uint) value);
+    if (table.Contains(value))
+      deleteList.Add(value);
   }
 
   public void Insert(long value) {
-    insertList.Add((uint) value);
+    insertList.Add(value);
   }
 
   public void Apply() {

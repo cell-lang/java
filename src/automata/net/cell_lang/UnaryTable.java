@@ -9,7 +9,7 @@ class UnaryTable {
     public Iter(uint index, UnaryTable table) {
       this.table = table;
       if (table.count == 0)
-        this.index = (uint) (64 * table.bitmap.length);
+        this.index = 64 * table.bitmap.length;
       else {
         this.index = index;
         if (!table.Contains(0))

@@ -50,30 +50,30 @@ class BinaryTableUpdater {
       int surr2 = store2.LookupValueEx(val2);
       if (surr2 == -1)
         surr2 = store2.Insert(val2);
-      insertList.Add(new Tuple((uint) surr1, (uint) surr2));
+      insertList.Add(new Tuple(surr1, surr2));
       it.Next();
     }
   }
 
   public void Delete(long value1, long value2) {
-    if (table.Contains((uint) value1, (uint) value2))
-      deleteList.Add(new Tuple((uint) value1, (uint) value2));
+    if (table.Contains(value1, value2))
+      deleteList.Add(new Tuple(value1, value2));
   }
 
   public void Delete1(long value) {
-    uint[] assocs = table.LookupByCol1((uint) value);
+    uint[] assocs = table.LookupByCol1(value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList.Add(new Tuple((uint) value, assocs[i]));
+      deleteList.Add(new Tuple(value, assocs[i]));
   }
 
   public void Delete2(long value) {
-    uint[] assocs = table.LookupByCol2((uint) value);
+    uint[] assocs = table.LookupByCol2(value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList.Add(new Tuple(assocs[i], (uint) value));
+      deleteList.Add(new Tuple(assocs[i], value));
   }
 
   public void Insert(long value1, long value2) {
-    insertList.Add(new Tuple((uint) value1, (uint) value2));
+    insertList.Add(new Tuple(value1, value2));
   }
 
   public bool CheckUpdates_1() {
