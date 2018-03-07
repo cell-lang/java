@@ -15,7 +15,7 @@ class TernaryTable {
       this.field3 = field3;
     }
 
-    override public string ToString() {
+    override public String ToString() {
       return "(" + field1OrNext.ToString() + ", " + field2OrEmptyMarker.ToString() + ", " + field3.ToString() + ")";
     }
   }

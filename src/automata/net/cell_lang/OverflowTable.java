@@ -254,7 +254,7 @@ class OverflowTable {
     }
   }
 
-  void Check(bool cond, string msg) {
+  void Check(bool cond, String msg) {
     if (!cond) {
       System.out.println(msg);
       System.out.println("");

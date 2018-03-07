@@ -121,8 +121,8 @@ class UnaryTable {
     return Builder.CreateSet(objs, objs.length);
   }
 
-//    public static string IntToBinaryString(int number) {
-//      string binStr = "";
+//    public static String IntToBinaryString(int number) {
+//      String binStr = "";
 //      while (number != 0) {
 //        binStr = (number & 1) + binStr;
 //        number = number >> 1;
@@ -132,8 +132,8 @@ class UnaryTable {
 //      return binStr;
 //    }
 //
-//    public static string IntToBinaryString(ulong number) {
-//      string binStr = "";
+//    public static String IntToBinaryString(ulong number) {
+//      String binStr = "";
 //      while (number > 0) {
 //        binStr = (number & 1) + binStr;
 //        number = number >> 1;

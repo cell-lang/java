@@ -11,7 +11,7 @@ class BinaryTableUpdater {
       this.field2 = field2;
     }
 
-    override public string ToString() {
+    override public String ToString() {
       return "(" + field1.ToString() + ", " + field2.ToString() + ")";
     }
   }

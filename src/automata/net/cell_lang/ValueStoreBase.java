@@ -176,7 +176,7 @@ class ValueStoreBase {
     WriteInts("buckets", buckets);
   }
 
-  protected void WriteObjs(string name, Obj[] objs) {
+  protected void WriteObjs(String name, Obj[] objs) {
     System.out.print(name + " = ");
     if (objs != null) {
       System.out.print("[");
@@ -192,7 +192,7 @@ class ValueStoreBase {
       System.out.println("null");
   }
 
-  protected void WriteInts(string name, int[] ints) {
+  protected void WriteInts(String name, int[] ints) {
     System.out.print(name + " = ");
     if (ints != null) {
       System.out.print("[");
@@ -207,7 +207,7 @@ class ValueStoreBase {
       System.out.println("null");
   }
 
-  protected void WriteInts(string name, int[] ints) {
+  protected void WriteInts(String name, int[] ints) {
     System.out.print(name + " = ");
     if (ints != null) {
       System.out.print("[");
