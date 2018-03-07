@@ -13,11 +13,11 @@ class ValueStore : ValueStoreBase {
       nextFreeIdx[i] = i + 1;
   }
 
-  public void AddRef(int index) {
+  public void addRef(int index) {
     refCounts[index] = refCounts[index] + 1;
   }
 
-  public void Release(int index) {
+  public void release(int index) {
     int refCount = refCounts[index];
     Miscellanea._assert(refCount > 0);
     refCounts[index] = refCount - 1;
@@ -31,13 +31,13 @@ class ValueStore : ValueStoreBase {
   override public void Insert(Obj value, int hashcode, int index) {
     Miscellanea._assert(firstFreeIdx == index);
     Miscellanea._assert(nextFreeIdx[index] != -1);
-    base.Insert(value, hashcode, index);
+    base.insert(value, hashcode, index);
     firstFreeIdx = nextFreeIdx[index];
     nextFreeIdx[index] = -1; //## UNNECESSARY, BUT USEFUL FOR DEBUGGING
   }
 
   override public void Resize(int minCapacity) {
-    base.Resize(minCapacity);
+    base.resize(minCapacity);
     int capacity = slots.length;
 
     int[] currRefCounts   = refCounts;
@@ -47,14 +47,14 @@ class ValueStore : ValueStoreBase {
     refCounts   = new int[capacity];
     nextFreeIdx = new int[capacity];
 
-    Array.Copy(currRefCounts, refCounts, currCapacity);
-    Array.Copy(currNextFreeIdx, nextFreeIdx, currCapacity);
+    Array.copy(currRefCounts, refCounts, currCapacity);
+    Array.copy(currNextFreeIdx, nextFreeIdx, currCapacity);
 
     for (int i=currCapacity ; i < capacity ; i++)
       nextFreeIdx[i] = i + 1;
   }
 
-  public int NextFreeIdx(int index) {
+  public int nextFreeIdx(int index) {
     Miscellanea._assert(index == -1 || index >= slots.length || (slots[index] == null & nextFreeIdx[index] != -1));
     if (index == -1)
       return firstFreeIdx;
@@ -64,7 +64,7 @@ class ValueStore : ValueStoreBase {
   }
 
   override public void Dump() {
-    base.Dump();
+    base.dump();
     WriteInts("refCounts", refCounts);
     WriteInts("nextFreeIdx", nextFreeIdx);
     System.out.println("firstFreeIdx = " + firstFreeIdx.toString());

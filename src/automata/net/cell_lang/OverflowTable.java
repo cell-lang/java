@@ -13,7 +13,7 @@ class OverflowTable {
       this.end    = first + count;
     }
 
-    public int Get() {
+    public int get() {
       Miscellanea._assert(!Done());
       return values[next];
     }
@@ -22,7 +22,7 @@ class OverflowTable {
       return next >= end;
     }
 
-    public void Next() {
+    public void next() {
       Miscellanea._assert(!Done());
       next++;
     }
@@ -56,7 +56,7 @@ class OverflowTable {
   int head8;
   int head16;
 
-  public void Check(int[] column, int count) {
+  public void check(int[] column, int count) {
     int len = slots.length;
     bool[] slotOK = new bool[len];
     for (int i=0 ; i < len ; i++)
@@ -264,7 +264,7 @@ class OverflowTable {
     }
   }
 
-  public void Dump() {
+  public void dump() {
     System.out.print("  slots:");
     for (int i=0 ; i < slots.length ; i++) {
       if (i != 0 & i % 256 == 0)
@@ -293,7 +293,7 @@ class OverflowTable {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public void Init() {
+  public void init() {
     slots = new int[MinSize];
     for (int i=0 ; i < MinSize ; i += 16) {
       slots[i]   = (i - 16) | AvailableTag << 29;
@@ -305,7 +305,7 @@ class OverflowTable {
     head16 = 0;
   }
 
-  public int Insert(int handle, int value, out bool inserted) {
+  public int insert(int handle, int value, out bool inserted) {
     int tag = handle >> 29;
     int payload = handle & PayloadMask;
     Miscellanea._assert(((tag << 29) | payload) == handle);
@@ -316,55 +316,55 @@ class OverflowTable {
         // The payload contains the existing value.
         Miscellanea._assert(handle == payload);
         Miscellanea._assert(payload != value);
-        return Insert2Block(handle, value, out inserted);
+        return insert2Block(handle, value, out inserted);
 
       // From now on the payload is the index of the block
 
       case 1: // 2-slots block
-        return InsertWith2Block(payload, value, handle, out inserted);
+        return insertWith2Block(payload, value, handle, out inserted);
 
       case 2: // 4-slot block
-        return InsertWith4Block(payload, value, handle, out inserted);
+        return insertWith4Block(payload, value, handle, out inserted);
 
       case 3: // 8-slot block
-        return InsertWith8Block(payload, value, handle, out inserted);
+        return insertWith8Block(payload, value, handle, out inserted);
 
       case 4: // 16-slot block
-        return InsertWith16Block(payload, value, handle, out inserted);
+        return insertWith16Block(payload, value, handle, out inserted);
 
       case 5: // Hashed block
         InsertIntoHashedBlock(payload, value, hashCode(value), out inserted);
         return handle;
 
       default:
-        Miscellanea.InternalFail();
+        Miscellanea.internalFail();
         throw new NotImplementedException(); // Control flow cannot get here
     }
   }
 
-  public int Delete(int handle, int value, out bool deleted) {
+  public int delete(int handle, int value, out bool deleted) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
     Miscellanea._assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
       case 1: // 2-slots block
-        return DeleteFrom2Block(blockIdx, value, handle, out deleted);
+        return deleteFrom2Block(blockIdx, value, handle, out deleted);
 
       case 2: // 4-slot block
-        return DeleteFrom4Block(blockIdx, value, handle, out deleted);
+        return deleteFrom4Block(blockIdx, value, handle, out deleted);
 
       case 3: // 8-slot block
-        return DeleteFrom8Block(blockIdx, value, handle, out deleted);
+        return deleteFrom8Block(blockIdx, value, handle, out deleted);
 
       case 4: // 16-slot block
-        return DeleteFrom16Block(blockIdx, value, handle, out deleted);
+        return deleteFrom16Block(blockIdx, value, handle, out deleted);
 
       case 5: // Hashed block
-        return DeleteFromHashedBlock(blockIdx, value, handle, hashCode(value), out deleted);
+        return deleteFromHashedBlock(blockIdx, value, handle, hashCode(value), out deleted);
 
       default:
-        Miscellanea.InternalFail();
+        Miscellanea.internalFail();
         throw new NotImplementedException(); // Control flow cannot get here
     }
   }
@@ -376,27 +376,27 @@ class OverflowTable {
 
     switch (tag) {
       case 1: // 2-block slot
-        return In2Block(value, blockIdx);
+        return in2Block(value, blockIdx);
 
       case 2: // 4-block slot
-        return InBlock(value, blockIdx, 4);
+        return inBlock(value, blockIdx, 4);
 
       case 3: // 8-block slot
-        return InBlock(value, blockIdx, 8);
+        return inBlock(value, blockIdx, 8);
 
       case 4: // 16-slot block
-        return InBlock(value, blockIdx, 16);
+        return inBlock(value, blockIdx, 16);
 
       case 5: // Hashed block
-        return InHashedBlock(value, blockIdx, hashCode(value));
+        return inHashedBlock(value, blockIdx, hashCode(value));
 
       default:
-        Miscellanea.InternalFail();
+        Miscellanea.internalFail();
         throw new NotImplementedException(); // Control flow cannot get here
     }
   }
 
-  public int Count(int handle) {
+  public int count(int handle) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
     Miscellanea._assert(((tag << 29) | blockIdx) == handle);
@@ -421,12 +421,12 @@ class OverflowTable {
         return slots[blockIdx];
 
       default:
-        Miscellanea.InternalFail();
+        Miscellanea.internalFail();
         throw new NotImplementedException(); // Control flow cannot get here
     }
   }
 
-  public Iter GetIter(int handle) {
+  public Iter getIter(int handle) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
     Miscellanea._assert(((tag << 29) | blockIdx) == handle);
@@ -444,10 +444,10 @@ class OverflowTable {
         return new Iter(slots, blockIdx, Count(handle));
 
       case 5: // Hashed block
-        return HashedBlockIter(blockIdx);
+        return hashedBlockIter(blockIdx);
 
       default:
-        Miscellanea.InternalFail();
+        Miscellanea.internalFail();
         throw new NotImplementedException(); // Control flow cannot get here
     }
   }
@@ -481,9 +481,9 @@ class OverflowTable {
     if (tag == 0)
       return false;
     else if (tag < 5)
-      return In(value, content);
+      return in(value, content);
     else
-      return InHashedBlock(value, content & PayloadMask, hashcode / 15);
+      return inHashedBlock(value, content & PayloadMask, hashcode / 15);
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -551,7 +551,7 @@ class OverflowTable {
         return;
 
       default:
-        Miscellanea.InternalFail();
+        Miscellanea.internalFail();
         throw new NotImplementedException(); // Control flow cannot get here
     }
   }
@@ -579,7 +579,7 @@ class OverflowTable {
       return value0;
     }
 
-    int blockIdx = Alloc2Block();
+    int blockIdx = alloc2Block();
     slots[blockIdx]   = value0;
     slots[blockIdx+1] = value1;
 
@@ -618,7 +618,7 @@ class OverflowTable {
 
     Release2Block(block2Idx);
 
-    int block4Idx = Alloc4Block();
+    int block4Idx = alloc4Block();
     slots[block4Idx]   = value0;
     slots[block4Idx+1] = value1;
     slots[block4Idx+2] = value;
@@ -717,7 +717,7 @@ class OverflowTable {
       // tagged with the 8-value tag
       Release4Block(block4Idx);
 
-      int block8Idx = Alloc8Block();
+      int block8Idx = alloc8Block();
       slots[block8Idx]   = value0;
       slots[block8Idx+1] = value1;
       slots[block8Idx+2] = value2;
@@ -813,7 +813,7 @@ class OverflowTable {
 
     Release8Block(block8Idx);
 
-    int block16Idx = Alloc16Block();
+    int block16Idx = alloc16Block();
     slots[block16Idx]   = value0;
     slots[block16Idx+1] = value1;
     slots[block16Idx+2] = value2;
@@ -898,7 +898,7 @@ class OverflowTable {
       }
 
     // Allocating and initializing the hashed block
-    int hashedBlockIdx = Alloc16Block();
+    int hashedBlockIdx = alloc16Block();
     slots[hashedBlockIdx] = 0;
     for (int i=1 ; i < 16 ; i++)
       slots[hashedBlockIdx + i] = EmptyMarker;
@@ -941,12 +941,12 @@ class OverflowTable {
       }
     }
     else if (tag < 5) {
-      int newHandle = Delete(content, value, out deleted);
+      int newHandle = delete(content, value, out deleted);
       slots[slotIdx] = newHandle;
     }
     else {
       int nestedBlockIdx = content & PayloadMask;
-      int newHandle = DeleteFromHashedBlock(nestedBlockIdx, value, content, hashcode / 15, out deleted);
+      int newHandle = deleteFromHashedBlock(nestedBlockIdx, value, content, hashcode / 15, out deleted);
       slots[slotIdx] = newHandle;
     }
 
@@ -954,7 +954,7 @@ class OverflowTable {
       int count = slots[blockIdx] - 1;
       Miscellanea._assert(count >= 6);
       if (count == 6)
-        return ShrinkHashedBlock(blockIdx);
+        return shrinkHashedBlock(blockIdx);
       slots[blockIdx] = count;
     }
 
@@ -968,16 +968,16 @@ class OverflowTable {
     int slot4  = slots[blockIdx + 4];
     int slot5  = slots[blockIdx + 5];
 
-    int nextIdx = CopyAndReleaseBlock(slot1, (int) blockIdx);
-    nextIdx = CopyAndReleaseBlock(slot2, nextIdx);
-    nextIdx = CopyAndReleaseBlock(slot3, nextIdx);
-    nextIdx = CopyAndReleaseBlock(slot4, nextIdx);
-    nextIdx = CopyAndReleaseBlock(slot5, nextIdx);
+    int nextIdx = copyAndReleaseBlock(slot1, (int) blockIdx);
+    nextIdx = copyAndReleaseBlock(slot2, nextIdx);
+    nextIdx = copyAndReleaseBlock(slot3, nextIdx);
+    nextIdx = copyAndReleaseBlock(slot4, nextIdx);
+    nextIdx = copyAndReleaseBlock(slot5, nextIdx);
 
     int endIdx = blockIdx + 6;
     for (int i=6 ; nextIdx < endIdx ; i++) {
       Miscellanea._assert(i < 16);
-      nextIdx = CopyAndReleaseBlock(slots[blockIdx + i], nextIdx);
+      nextIdx = copyAndReleaseBlock(slots[blockIdx + i], nextIdx);
     }
 
     slots[blockIdx + 6] = EmptyMarker;
@@ -1023,7 +1023,7 @@ class OverflowTable {
         //   break;
 
         default:
-          Miscellanea.InternalFail();
+          Miscellanea.internalFail();
           throw new NotImplementedException(); // Control flow cannot get here
       }
     }
@@ -1044,7 +1044,7 @@ class OverflowTable {
       int tag = content >> 29;
       Miscellanea._assert(tag <= 5);
       if (tag < 5) {
-        int newHandle = Insert(content, value, out inserted);
+        int newHandle = insert(content, value, out inserted);
         slots[slotIdx] = newHandle;
       }
       else
@@ -1072,7 +1072,7 @@ class OverflowTable {
       return blockIdx;
     }
     else {
-      int block4Idx = Alloc4Block();
+      int block4Idx = alloc4Block();
       AddBlockToChain(block4Idx, Block2Tag, End2UpperMarker, ref head2);
       return block4Idx + 2;
     }
@@ -1110,7 +1110,7 @@ class OverflowTable {
       return blockIdx;
     }
     else {
-      int block8Idx = Alloc8Block();
+      int block8Idx = alloc8Block();
       AddBlockToChain(block8Idx, Block4Tag, End4UpperMarker, ref head4);
       return block8Idx + 4;
     }
@@ -1142,7 +1142,7 @@ class OverflowTable {
       return blockIdx;
     }
     else {
-      int block16Idx = Alloc16Block();
+      int block16Idx = alloc16Block();
       Miscellanea._assert(slots[block16Idx] == EndLowerMarker);
       Miscellanea._assert(slots[block16Idx+1] == End16UpperMarker | slots[block16Idx+1] >> 29 == Block16Tag);
       AddBlockToChain(block16Idx, Block8Tag, End8UpperMarker, ref head8);
@@ -1174,7 +1174,7 @@ class OverflowTable {
     if (head16 == EmptyMarker) {
       int len = slots.length;
       int[] newSlots = new int[2*len];
-      Array.Copy(slots, newSlots, len);
+      Array.copy(slots, newSlots, len);
       for (int i=len ; i < 2 * len ; i += 16) {
         newSlots[i]   = (i - 16) | AvailableTag << 29;
         newSlots[i+1] = (i + 16) | Block16Tag << 29;

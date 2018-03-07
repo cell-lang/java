@@ -13,68 +13,68 @@ class UnaryTableUpdater {
     this.store = store;
   }
 
-  public void Clear() {
-    deleteList.Clear();
-    UnaryTable.Iter it = table.GetIter();
-    while (!it.Done()) {
-      deleteList.Add(it.Get());
-      it.Next();
+  public void clear() {
+    deleteList.clear();
+    UnaryTable.Iter it = table.getIter();
+    while (!it.done()) {
+      deleteList.add(it.get());
+      it.next();
     }
   }
 
-  public void Set(Obj value) {
+  public void set(Obj value) {
     Clear();
     Miscellanea._assert(insertList.Count == 0);
-    SeqOrSetIter it = value.GetSeqOrSetIter();
-    while (!it.Done()) {
-      Obj val = it.Get();
-      int surr = store.LookupValueEx(val);
+    SeqOrSetIter it = value.getSeqOrSetIter();
+    while (!it.done()) {
+      Obj val = it.get();
+      int surr = store.lookupValueEx(val);
       if (surr == -1)
-        surr = store.Insert(val);
-      insertList.Add(surr);
-      it.Next();
+        surr = store.insert(val);
+      insertList.add(surr);
+      it.next();
     }
   }
 
-  public void Delete(long value) {
-    if (table.Contains(value))
-      deleteList.Add(value);
+  public void delete(long value) {
+    if (table.contains(value))
+      deleteList.add(value);
   }
 
-  public void Insert(long value) {
-    insertList.Add(value);
+  public void insert(long value) {
+    insertList.add(value);
   }
 
-  public void Apply() {
+  public void apply() {
     for (int i=0 ; i < deleteList.Count ; i++) {
       int surr = deleteList[i];
-      if (table.Contains(surr))
-        table.Delete(surr);
+      if (table.contains(surr))
+        table.delete(surr);
       else
         deleteList[i] = 0xFFFFFFFF;
     }
 
-    var it = insertList.GetEnumerator();
-    while (it.MoveNext()) {
+    var it = insertList.getEnumerator();
+    while (it.moveNext()) {
       int surr = it.Current;
-      if (!table.Contains(surr)) {
-        table.Insert(surr);
-        table.store.AddRef(surr);
+      if (!table.contains(surr)) {
+        table.insert(surr);
+        table.store.addRef(surr);
       }
     }
   }
 
-  public void Finish() {
-    var it = deleteList.GetEnumerator();
-    while (it.MoveNext()) {
+  public void finish() {
+    var it = deleteList.getEnumerator();
+    while (it.moveNext()) {
       int surr = it.Current;
       if (surr != 0xFFFFFFFF)
-        table.store.Release(surr);
+        table.store.release(surr);
     }
   }
 
-  public void Reset() {
-    deleteList.Clear();
-    insertList.Clear();
+  public void reset() {
+    deleteList.clear();
+    insertList.clear();
   }
 }

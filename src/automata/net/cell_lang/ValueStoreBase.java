@@ -24,7 +24,7 @@ class ValueStoreBase {
     }
   }
 
-  public void Reset() {
+  public void reset() {
     if (slots != null) {
       int size = slots.length;
       for (int i=0 ; i < size ; i++) {
@@ -37,22 +37,22 @@ class ValueStoreBase {
     }
   }
 
-  public int Count() {
+  public int count() {
     return count;
   }
 
-  public int Capacity() {
+  public int capacity() {
     return slots != null ? slots.length : 0;
   }
 
-  public int LookupValue(Obj value) {
+  public int lookupValue(Obj value) {
     if (count == 0)
       return -1;
     int hashcode = value.hashCode(); //## WAS int
     int idx = hashtable[hashcode % hashtable.length];
     while (idx != -1) {
       Miscellanea._assert(slots[idx] != null);
-      if (hashcodes[idx] == hashcode && value.IsEq(slots[idx]))
+      if (hashcodes[idx] == hashcode && value.isEq(slots[idx]))
         return idx;
       idx = buckets[idx];
     }
@@ -60,19 +60,19 @@ class ValueStoreBase {
   }
 
   //## IS THIS A DUPLICATE OF GetValue()?
-  public Obj LookupSurrogate(int index) {
+  public Obj lookupSurrogate(int index) {
     return slots[index];
   }
 
-  public Obj GetValue(int index) {
+  public Obj getValue(int index) {
     return slots[index];
   }
 
-  public void Insert(Obj value, int slotIdx) {
+  public void insert(Obj value, int slotIdx) {
     Insert(value, value.hashCode(), slotIdx);
   }
 
-  public void Insert(Obj value, int hashcode, int slotIdx) {
+  public void insert(Obj value, int hashcode, int slotIdx) {
     Miscellanea._assert(slots != null && slotIdx < slots.length);
     Miscellanea._assert(slots[slotIdx] == null);
     Miscellanea._assert(hashcode == value.hashCode());
@@ -89,7 +89,7 @@ class ValueStoreBase {
     count++;
   }
 
-  protected void Delete(int index) {
+  protected void delete(int index) {
     Miscellanea._assert(slots != null && index < slots.length);
     Miscellanea._assert(slots[index] != null);
 
@@ -121,7 +121,7 @@ class ValueStoreBase {
     buckets[idx] = -1;
   }
 
-  public void Resize(int minCapacity) {
+  public void resize(int minCapacity) {
     if (slots != null) {
       int   currCapacity  = slots.length;
       Obj[] currSlots     = slots;
@@ -136,8 +136,8 @@ class ValueStoreBase {
       hashtable = new int[newCapacity];
       buckets   = new int[newCapacity];
 
-      Array.Copy(currSlots, slots, currCapacity);
-      Array.Copy(currHashcodes, hashcodes, currCapacity);
+      Array.copy(currSlots, slots, currCapacity);
+      Array.copy(currHashcodes, hashcodes, currCapacity);
 
       for (int i=0 ; i < newCapacity ; i++) {
         hashtable[i] = -1;
@@ -167,7 +167,7 @@ class ValueStoreBase {
     }
   }
 
-  public void Dump() {
+  public void dump() {
     System.out.println("");
     System.out.printf("count = %d\n", count);
     WriteObjs("slots", slots);
@@ -176,7 +176,7 @@ class ValueStoreBase {
     WriteInts("buckets", buckets);
   }
 
-  protected void WriteObjs(String name, Obj[] objs) {
+  protected void writeObjs(String name, Obj[] objs) {
     System.out.print(name + " = ");
     if (objs != null) {
       System.out.print("[");
@@ -192,7 +192,7 @@ class ValueStoreBase {
       System.out.println("null");
   }
 
-  protected void WriteInts(String name, int[] ints) {
+  protected void writeInts(String name, int[] ints) {
     System.out.print(name + " = ");
     if (ints != null) {
       System.out.print("[");
@@ -207,7 +207,7 @@ class ValueStoreBase {
       System.out.println("null");
   }
 
-  protected void WriteInts(String name, int[] ints) {
+  protected void writeInts(String name, int[] ints) {
     System.out.print(name + " = ");
     if (ints != null) {
       System.out.print("[");

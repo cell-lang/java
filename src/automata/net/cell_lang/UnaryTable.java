@@ -12,12 +12,12 @@ class UnaryTable {
         this.index = 64 * table.bitmap.length;
       else {
         this.index = index;
-        if (!table.Contains(0))
+        if (!table.contains(0))
           Next();
       }
     }
 
-    public int Get() {
+    public int get() {
       return index;
     }
 
@@ -25,11 +25,11 @@ class UnaryTable {
       return index >= 64 * table.bitmap.length;
     }
 
-    public void Next() {
+    public void next() {
       int size = 64 * table.bitmap.length;
       do {
         index++;
-      } while (index < size && !table.Contains(index));
+      } while (index < size && !table.contains(index));
     }
   }
 
@@ -45,7 +45,7 @@ class UnaryTable {
     this.store = store;
   }
 
-  public int Size() {
+  public int size() {
     return count;
   }
 
@@ -54,7 +54,7 @@ class UnaryTable {
     return widx < bitmap.length && ((bitmap[widx] >> (int) (surr % 64) & 1) != 0);
   }
 
-  public Iter GetIter() {
+  public Iter getIter() {
     return new Iter(0, this);
   }
 
@@ -69,7 +69,7 @@ class UnaryTable {
     return liveCount;
   }
 
-  public void Insert(int surr) {
+  public void insert(int surr) {
     int widx = surr / 64;
     int bidx = (int) (surr % 64);
 
@@ -79,7 +79,7 @@ class UnaryTable {
       while (widx >= newLen)
         newLen *= 2;
       ulong[] newBitmap = new ulong[newLen];
-      Array.Copy(bitmap, newBitmap, len);
+      Array.copy(bitmap, newBitmap, len);
       bitmap = newBitmap;
     }
 
@@ -91,7 +91,7 @@ class UnaryTable {
     // Miscellanea._assert(count == LiveCount());
   }
 
-  public void Delete(int surr) {
+  public void delete(int surr) {
     Miscellanea._assert(surr < 64 * bitmap.length);
 
     int widx = surr / 64;
@@ -106,19 +106,19 @@ class UnaryTable {
     // Miscellanea._assert(count == LiveCount());
   }
 
-  public Obj Copy() {
+  public Obj copy() {
     if (count == 0)
-      return EmptyRelObj.Singleton();
+      return EmptyRelObj.singleton();
     Obj[] objs = new Obj[count];
     int next = 0;
     for (int i=0 ; i < bitmap.length ; i++) {
       ulong mask = bitmap[i];
       for (int j=0 ; j < 64 ; j++)
         if (((mask >> (int) j) & 1) != 0)
-          objs[next++] = store.GetValue(j + 64 * i);
+          objs[next++] = store.getValue(j + 64 * i);
     }
     Miscellanea._assert(next == count);
-    return Builder.CreateSet(objs, objs.length);
+    return Builder.createSet(objs, objs.length);
   }
 
 //    public static String IntToBinaryString(int number) {

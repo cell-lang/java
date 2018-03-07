@@ -12,18 +12,18 @@ class BinaryTable {
     }
 
     public bool Done() {
-      return next >= entries.GetLength(0);
+      return next >= entries.getLength(0);
     }
 
-    public int GetField1() {
+    public int getField1() {
       return entries[next, 0];
     }
 
-    public int GetField2() {
+    public int getField2() {
       return entries[next, 1];
     }
 
-    public void Next() {
+    public void next() {
       next++;
     }
   }
@@ -36,52 +36,52 @@ class BinaryTable {
   public ValueStore store2;
 
   public BinaryTable(ValueStore store1, ValueStore store2) {
-    table1.Init();
-    table2.Init();
+    table1.init();
+    table2.init();
     this.store1 = store1;
     this.store2 = store2;
     // Check();
   }
 
-  public void Check() {
-    table1.Check();
-    table2.Check();
+  public void check() {
+    table1.check();
+    table2.check();
   }
 
-  public int Size() {
+  public int size() {
     return table1.count;
   }
 
   public bool Contains(long surr1, long surr2) {
-    return table1.Contains(surr1, surr2);
+    return table1.contains(surr1, surr2);
   }
 
   public bool ContainsField1(int surr1) {
-    return table1.ContainsKey(surr1);
+    return table1.containsKey(surr1);
   }
 
   public bool ContainsField2(int surr2) {
     if (table2.count == 0 & table1.count > 0)
-      table2.InitReverse(ref table1);
-    return table2.ContainsKey(surr2);
+      table2.initReverse(ref table1);
+    return table2.containsKey(surr2);
   }
 
-  public int[] LookupByCol1(int surr) {
-    return table1.Lookup(surr);
+  public int[] lookupByCol1(int surr) {
+    return table1.lookup(surr);
   }
 
-  public int[] LookupByCol2(int surr) {
+  public int[] lookupByCol2(int surr) {
     if (table2.count == 0 & table1.count > 0)
-      table2.InitReverse(ref table1);
-    return table2.Lookup(surr);
+      table2.initReverse(ref table1);
+    return table2.lookup(surr);
   }
 
-  public Iter GetIter() {
-    return new Iter(table1.Copy());
+  public Iter getIter() {
+    return new Iter(table1.copy());
   }
 
-  public Iter GetIter1(long surr1) {
-    int[] col2 = LookupByCol1(surr1);
+  public Iter getIter1(long surr1) {
+    int[] col2 = lookupByCol1(surr1);
     int[,] entries = new int[col2.length, 2];
     for (int i=0 ; i < col2.length ; i++) {
       entries[i, 0] = surr1;
@@ -90,8 +90,8 @@ class BinaryTable {
     return new Iter(entries);
   }
 
-  public Iter GetIter2(long surr2) {
-    int[] col1 = LookupByCol2(surr2);
+  public Iter getIter2(long surr2) {
+    int[] col1 = lookupByCol2(surr2);
     int[,] entries = new int[col1.length, 2];
     for (int i=0 ; i < col1.length ; i++) {
       entries[i, 0] = col1[i];
@@ -100,31 +100,31 @@ class BinaryTable {
     return new Iter(entries);
   }
 
-  public void Insert(int surr1, int surr2) {
-    table1.Insert(surr1, surr2);
+  public void insert(int surr1, int surr2) {
+    table1.insert(surr1, surr2);
     if (table2.count > 0)
-      table2.Insert(surr2, surr1);
+      table2.insert(surr2, surr1);
     // Check();
   }
 
-  public void Clear() {
-    table1.Init();
-    table2.Init();
+  public void clear() {
+    table1.init();
+    table2.init();
     // Check();
   }
 
-  public void Delete(int surr1, int surr2) {
-    table1.Delete(surr1, surr2);
+  public void delete(int surr1, int surr2) {
+    table1.delete(surr1, surr2);
     if (table2.count > 0)
-      table2.Delete(surr2, surr1);
+      table2.delete(surr2, surr1);
     // Check();
   }
 
-  public Obj Copy(bool flipped) {
+  public Obj copy(bool flipped) {
     int count = table1.count;
 
     if (count == 0)
-      return EmptyRelObj.Singleton();
+      return EmptyRelObj.singleton();
 
     Obj[] objs1 = new Obj[count];
     Obj[] objs2 = new Obj[count];
@@ -133,28 +133,28 @@ class BinaryTable {
     for (int i=0 ; i < table1.column.length ; i++) {
       int code = table1.column[i];
       if (code != OverflowTable.EmptyMarker) {
-        Obj val1 = store1.GetValue(i);
+        Obj val1 = store1.getValue(i);
         if (code >> 29 == 0) {
           objs1[next] = val1;
-          objs2[next++] = store2.GetValue(code);
+          objs2[next++] = store2.getValue(code);
         }
         else {
-          OverflowTable.Iter it = table1.overflowTable.GetIter(code);
-          while (!it.Done()) {
-            int surr2 = it.Get();
+          OverflowTable.Iter it = table1.overflowTable.getIter(code);
+          while (!it.done()) {
+            int surr2 = it.get();
             objs1[next] = val1;
-            objs2[next++] = store2.GetValue(surr2);
-            it.Next();
+            objs2[next++] = store2.getValue(surr2);
+            it.next();
           }
         }
       }
     }
     Miscellanea._assert(next == count);
 
-    return Builder.CreateBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
+    return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
   }
 
   public int[,] RawCopy() {
-    return table1.Copy();
+    return table1.copy();
   }
 }

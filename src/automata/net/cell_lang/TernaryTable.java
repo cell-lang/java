@@ -53,27 +53,27 @@ class TernaryTable {
       return index == Tuple.Empty;
     }
 
-    public Tuple Get() {
+    public Tuple get() {
       Miscellanea._assert(index != Tuple.Empty);
       return table.tuples[index];
     }
 
-    public int GetField1() {
+    public int getField1() {
       Miscellanea._assert(index != Tuple.Empty);
       return table.tuples[index].field1OrNext;
     }
 
-    public int GetField2() {
+    public int getField2() {
       Miscellanea._assert(index != Tuple.Empty);
       return table.tuples[index].field2OrEmptyMarker;
     }
 
-    public int GetField3() {
+    public int getField3() {
       Miscellanea._assert(index != Tuple.Empty);
       return table.tuples[index].field3;
     }
 
-    public void Next() {
+    public void next() {
       Miscellanea._assert(index != Tuple.Empty);
       switch (type) {
         case Type.F123:
@@ -89,7 +89,7 @@ class TernaryTable {
 
         case Type.F12:
           for ( ; ; ) {
-            index = table.index12.Next(index);
+            index = table.index12.next(index);
             if (index == Tuple.Empty)
               return;
             Tuple tuple = table.tuples[index];
@@ -99,7 +99,7 @@ class TernaryTable {
 
         case Type.F13:
           for ( ; ; ) {
-            index = table.index13.Next(index);
+            index = table.index13.next(index);
             if (index == Tuple.Empty)
               return;
             Tuple tuple = table.tuples[index];
@@ -109,7 +109,7 @@ class TernaryTable {
 
         case Type.F23:
           for ( ; ; ) {
-            index = table.index23.Next(index);
+            index = table.index23.next(index);
             if (index == Tuple.Empty)
               return;
             Tuple tuple = table.tuples[index];
@@ -119,25 +119,25 @@ class TernaryTable {
 
         case Type.F1:
           do {
-            index = table.index1.Next(index);
+            index = table.index1.next(index);
           } while (index != Tuple.Empty && table.tuples[index].field1OrNext != field1);
           break;
 
         case Type.F2:
           do {
-            index = table.index2.Next(index);
+            index = table.index2.next(index);
           } while (index != Tuple.Empty && table.tuples[index].field2OrEmptyMarker != field2);
           break;
 
         case Type.F3:
           do {
-            index = table.index3.Next(index);
+            index = table.index3.next(index);
           } while (index != Tuple.Empty && table.tuples[index].field3 != field3);
           break;
       }
     }
 
-    public void Dump() {
+    public void dump() {
       System.out.println("fields = ({0}, {1}, {2})", field1, field2, field3);
       System.out.println("index  = {0}", index);
       System.out.println("type   = {0}", type);
@@ -171,15 +171,15 @@ class TernaryTable {
       Miscellanea._assert(tuples[i].field2OrEmptyMarker == Tuple.Empty);
     }
 
-    index123.Init(MinSize);
-    index12.Init(MinSize);
+    index123.init(MinSize);
+    index12.init(MinSize);
   }
 
-  public int Size() {
+  public int size() {
     return (int) count;
   }
 
-  public void Insert(int field1, int field2, int field3) {
+  public void insert(int field1, int field2, int field3) {
     if (Contains(field1, field2, field3))
       return;
 
@@ -188,7 +188,7 @@ class TernaryTable {
       int size = tuples.length;
       Miscellanea._assert(count == size);
       Tuple[] newTuples = new Tuple[2*size];
-      Array.Copy(tuples, newTuples, size);
+      Array.copy(tuples, newTuples, size);
       for (int i=size ; i < 2 * size ; i++) {
         newTuples[i].field1OrNext = i + 1;
         newTuples[i].field2OrEmptyMarker = Tuple.Empty;
@@ -196,12 +196,12 @@ class TernaryTable {
         Miscellanea._assert(newTuples[i].field2OrEmptyMarker == Tuple.Empty);
       }
       tuples = newTuples;
-      index123.Reset();
-      index12.Reset();
-      index13.Reset();
-      index1.Reset();
-      index2.Reset();
-      index3.Reset();
+      index123.reset();
+      index12.reset();
+      index13.reset();
+      index1.reset();
+      index2.reset();
+      index3.reset();
       BuildIndex123();
       BuildIndex12();
     }
@@ -213,26 +213,26 @@ class TernaryTable {
     count++;
 
     // Updating the indexes
-    index123.Insert(index, Miscellanea.Hashcode(field1, field2, field3));
-    index12.Insert(index, Miscellanea.Hashcode(field1, field2));
-    if (!index13.IsBlank())
-      index13.Insert(index, Miscellanea.Hashcode(field1, field3));
-    if (!index23.IsBlank())
-      index23.Insert(index, Miscellanea.Hashcode(field2, field3));
-    if (!index1.IsBlank())
-      index1.Insert(index, Miscellanea.Hashcode(field1));
-    if (!index2.IsBlank())
-      index2.Insert(index, Miscellanea.Hashcode(field2));
-    if (!index3.IsBlank())
-      index3.Insert(index, Miscellanea.Hashcode(field3));
+    index123.insert(index, Miscellanea.hashcode(field1, field2, field3));
+    index12.insert(index, Miscellanea.hashcode(field1, field2));
+    if (!index13.isBlank())
+      index13.insert(index, Miscellanea.hashcode(field1, field3));
+    if (!index23.isBlank())
+      index23.insert(index, Miscellanea.hashcode(field2, field3));
+    if (!index1.isBlank())
+      index1.insert(index, Miscellanea.hashcode(field1));
+    if (!index2.isBlank())
+      index2.insert(index, Miscellanea.hashcode(field2));
+    if (!index3.isBlank())
+      index3.insert(index, Miscellanea.hashcode(field3));
 
     // Updating the reference count in the value stores
-    store1.AddRef(field1);
-    store2.AddRef(field2);
-    store3.AddRef(field3);
+    store1.addRef(field1);
+    store2.addRef(field2);
+    store3.addRef(field3);
   }
 
-  public void Clear() {
+  public void clear() {
     count = 0;
     firstFree = 0;
 
@@ -242,18 +242,18 @@ class TernaryTable {
       tuples[i].field2OrEmptyMarker = Tuple.Empty;
     }
 
-    index123.Clear();
-    index12.Clear();
-    index13.Clear();
-    index23.Clear();
-    index1.Clear();
-    index2.Clear();
-    index3.Clear();
+    index123.clear();
+    index12.clear();
+    index13.clear();
+    index23.clear();
+    index1.clear();
+    index2.clear();
+    index3.clear();
   }
 
-  public void Delete(int field1, int field2, int field3) {
-    int hashcode = Miscellanea.Hashcode(field1, field2, field3);
-    for (int idx = index123.Head(hashcode) ; idx != Tuple.Empty ; idx = index123.Next(idx)) {
+  public void delete(int field1, int field2, int field3) {
+    int hashcode = Miscellanea.hashcode(field1, field2, field3);
+    for (int idx = index123.head(hashcode) ; idx != Tuple.Empty ; idx = index123.next(idx)) {
       Tuple tuple = tuples[idx];
       if (tuple.field1OrNext == field1 & tuple.field2OrEmptyMarker == field2 & tuple.field3 == field3) {
         DeleteAt(idx, hashcode);
@@ -263,8 +263,8 @@ class TernaryTable {
   }
 
   public bool Contains(long field1, long field2, long field3) {
-    int hashcode = Miscellanea.Hashcode(field1, field2, field3);
-    for (int idx = index123.Head(hashcode) ; idx != Tuple.Empty ; idx = index123.Next(idx)) {
+    int hashcode = Miscellanea.hashcode(field1, field2, field3);
+    for (int idx = index123.head(hashcode) ; idx != Tuple.Empty ; idx = index123.next(idx)) {
       Tuple tuple = tuples[idx];
       if (tuple.field1OrNext == field1 & tuple.field2OrEmptyMarker == field2 & tuple.field3 == field3)
         return true;
@@ -273,8 +273,8 @@ class TernaryTable {
   }
 
   public bool Contains12(int field1, int field2) {
-    int hashcode = Miscellanea.Hashcode(field1, field2);
-    for (int idx = index12.Head(hashcode) ; idx != Tuple.Empty ; idx = index12.Next(idx)) {
+    int hashcode = Miscellanea.hashcode(field1, field2);
+    for (int idx = index12.head(hashcode) ; idx != Tuple.Empty ; idx = index12.next(idx)) {
       Tuple tuple = tuples[idx];
       if (tuple.field1OrNext == field1 & tuple.field2OrEmptyMarker == field2)
         return true;
@@ -283,10 +283,10 @@ class TernaryTable {
   }
 
   public bool Contains13(int field1, int field3) {
-    if (index13.IsBlank())
+    if (index13.isBlank())
       BuildIndex13();
-    int hashcode = Miscellanea.Hashcode(field1, field3);
-    for (int idx = index13.Head(hashcode) ; idx != Tuple.Empty ; idx = index13.Next(idx)) {
+    int hashcode = Miscellanea.hashcode(field1, field3);
+    for (int idx = index13.head(hashcode) ; idx != Tuple.Empty ; idx = index13.next(idx)) {
       Tuple tuple = tuples[idx];
       if (tuple.field1OrNext == field1 & tuple.field3 == field3)
         return true;
@@ -295,10 +295,10 @@ class TernaryTable {
   }
 
   public bool Contains23(int field2, int field3) {
-    if (index23.IsBlank())
+    if (index23.isBlank())
       BuildIndex23();
-    int hashcode = Miscellanea.Hashcode(field2, field3);
-    for (int idx = index23.Head(hashcode) ; idx != Tuple.Empty ; idx = index23.Next(idx)) {
+    int hashcode = Miscellanea.hashcode(field2, field3);
+    for (int idx = index23.head(hashcode) ; idx != Tuple.Empty ; idx = index23.next(idx)) {
       Tuple tuple = tuples[idx];
       if (tuple.field2OrEmptyMarker == field2 & tuple.field3 == field3)
         return true;
@@ -307,10 +307,10 @@ class TernaryTable {
   }
 
   public bool Contains1(int field1) {
-    if (index1.IsBlank())
+    if (index1.isBlank())
       BuildIndex1();
-    int hashcode = Miscellanea.Hashcode(field1);
-    for (int idx = index1.Head(hashcode) ; idx != Tuple.Empty ; idx = index1.Next(idx)) {
+    int hashcode = Miscellanea.hashcode(field1);
+    for (int idx = index1.head(hashcode) ; idx != Tuple.Empty ; idx = index1.next(idx)) {
       Tuple tuple = tuples[idx];
       if (tuple.field1OrNext == field1)
         return true;
@@ -319,10 +319,10 @@ class TernaryTable {
   }
 
   public bool Contains2(int field2) {
-    if (index2.IsBlank())
+    if (index2.isBlank())
       BuildIndex2();
-    int hashcode = Miscellanea.Hashcode(field2);
-    for (int idx = index2.Head(hashcode) ; idx != Tuple.Empty ; idx = index2.Next(idx)) {
+    int hashcode = Miscellanea.hashcode(field2);
+    for (int idx = index2.head(hashcode) ; idx != Tuple.Empty ; idx = index2.next(idx)) {
       Tuple tuple = tuples[idx];
       if (tuple.field2OrEmptyMarker == field2)
         return true;
@@ -331,10 +331,10 @@ class TernaryTable {
   }
 
   public bool Contains3(int field3) {
-    if (index3.IsBlank())
+    if (index3.isBlank())
       BuildIndex3();
-    int hashcode = Miscellanea.Hashcode(field3);
-    for (int idx = index3.Head(hashcode) ; idx != Tuple.Empty ; idx = index3.Next(idx)) {
+    int hashcode = Miscellanea.hashcode(field3);
+    for (int idx = index3.head(hashcode) ; idx != Tuple.Empty ; idx = index3.next(idx)) {
       Tuple tuple = tuples[idx];
       if (tuple.field3 == field3)
         return true;
@@ -342,53 +342,53 @@ class TernaryTable {
     return false;
   }
 
-  public Iter GetIter() {
+  public Iter getIter() {
     return new Iter(Tuple.Empty, Tuple.Empty, Tuple.Empty, 0, Iter.Type.F123, this);
   }
 
-  public Iter GetIter12(long field1, long field2) {
-    int hashcode = Miscellanea.Hashcode(field1, field2);
-    return new Iter(field1, field2, Tuple.Empty, index12.Head(hashcode), Iter.Type.F12, this);
+  public Iter getIter12(long field1, long field2) {
+    int hashcode = Miscellanea.hashcode(field1, field2);
+    return new Iter(field1, field2, Tuple.Empty, index12.head(hashcode), Iter.Type.F12, this);
   }
 
-  public Iter GetIter13(long field1, long field3) {
-    if (index13.IsBlank())
+  public Iter getIter13(long field1, long field3) {
+    if (index13.isBlank())
       BuildIndex13();
-    int hashcode = Miscellanea.Hashcode(field1, field3);
-    return new Iter(field1, Tuple.Empty, field3, index13.Head(hashcode), Iter.Type.F13, this);
+    int hashcode = Miscellanea.hashcode(field1, field3);
+    return new Iter(field1, Tuple.Empty, field3, index13.head(hashcode), Iter.Type.F13, this);
   }
 
-  public Iter GetIter23(long field2, long field3) {
-    if (index23.IsBlank())
+  public Iter getIter23(long field2, long field3) {
+    if (index23.isBlank())
       BuildIndex23();
-    int hashcode = Miscellanea.Hashcode(field2, field3);
-    return new Iter(Tuple.Empty, field2, field3, index23.Head(hashcode), Iter.Type.F23, this);
+    int hashcode = Miscellanea.hashcode(field2, field3);
+    return new Iter(Tuple.Empty, field2, field3, index23.head(hashcode), Iter.Type.F23, this);
   }
 
-  public Iter GetIter1(long field1) {
-    if (index1.IsBlank())
+  public Iter getIter1(long field1) {
+    if (index1.isBlank())
       BuildIndex1();
-    int hashcode = Miscellanea.Hashcode(field1);
-    return new Iter(field1, Tuple.Empty, Tuple.Empty, index1.Head(hashcode), Iter.Type.F1, this);
+    int hashcode = Miscellanea.hashcode(field1);
+    return new Iter(field1, Tuple.Empty, Tuple.Empty, index1.head(hashcode), Iter.Type.F1, this);
   }
 
-  public Iter GetIter2(long field2) {
-    if (index2.IsBlank())
+  public Iter getIter2(long field2) {
+    if (index2.isBlank())
       BuildIndex2();
-    int hashcode = Miscellanea.Hashcode(field2);
-    return new Iter(Tuple.Empty, field2, Tuple.Empty, index2.Head(hashcode), Iter.Type.F2, this);
+    int hashcode = Miscellanea.hashcode(field2);
+    return new Iter(Tuple.Empty, field2, Tuple.Empty, index2.head(hashcode), Iter.Type.F2, this);
   }
 
-  public Iter GetIter3(long field3) {
-    if (index3.IsBlank())
+  public Iter getIter3(long field3) {
+    if (index3.isBlank())
       BuildIndex3();
-    int hashcode = Miscellanea.Hashcode(field3);
-    return new Iter(Tuple.Empty, Tuple.Empty, field3, index3.Head(hashcode), Iter.Type.F3, this);
+    int hashcode = Miscellanea.hashcode(field3);
+    return new Iter(Tuple.Empty, Tuple.Empty, field3, index3.head(hashcode), Iter.Type.F3, this);
   }
 
-  public Obj Copy(int idx1, int idx2, int idx3) {
+  public Obj copy(int idx1, int idx2, int idx3) {
     if (count == 0)
-      return EmptyRelObj.Singleton();
+      return EmptyRelObj.singleton();
 
     Obj[] objs1 = new Obj[count];
     Obj[] objs2 = new Obj[count];
@@ -399,9 +399,9 @@ class TernaryTable {
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty) {
-        objs1[next] = store1.GetValue(tuple.field1OrNext);
-        objs2[next] = store2.GetValue(tuple.field2OrEmptyMarker);
-        objs3[next] = store3.GetValue(tuple.field3);
+        objs1[next] = store1.getValue(tuple.field1OrNext);
+        objs2[next] = store2.getValue(tuple.field2OrEmptyMarker);
+        objs3[next] = store3.getValue(tuple.field3);
         next++;
       }
     }
@@ -412,7 +412,7 @@ class TernaryTable {
     cols[idx2] = objs2;
     cols[idx3] = objs3;
 
-    return Builder.CreateTernRel(cols[0], cols[1], cols[2], count);
+    return Builder.createTernRel(cols[0], cols[1], cols[2], count);
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -430,94 +430,94 @@ class TernaryTable {
     count--;
 
     // Updating the indexes
-    index123.Delete(index, hashcode);
-    index12.Delete(index, Miscellanea.Hashcode(tuple.field1OrNext, tuple.field2OrEmptyMarker));
-    if (!index13.IsBlank())
-      index13.Delete(index, Miscellanea.Hashcode(tuple.field1OrNext, tuple.field3));
-    if (!index23.IsBlank())
-      index23.Delete(index, Miscellanea.Hashcode(tuple.field2OrEmptyMarker, tuple.field3));
-    if (!index1.IsBlank())
-      index1.Delete(index, Miscellanea.Hashcode(tuple.field1OrNext));
-    if (!index2.IsBlank())
-      index2.Delete(index, Miscellanea.Hashcode(tuple.field2OrEmptyMarker));
-    if (!index3.IsBlank())
-      index3.Delete(index, Miscellanea.Hashcode(tuple.field3));
+    index123.delete(index, hashcode);
+    index12.delete(index, Miscellanea.hashcode(tuple.field1OrNext, tuple.field2OrEmptyMarker));
+    if (!index13.isBlank())
+      index13.delete(index, Miscellanea.hashcode(tuple.field1OrNext, tuple.field3));
+    if (!index23.isBlank())
+      index23.delete(index, Miscellanea.hashcode(tuple.field2OrEmptyMarker, tuple.field3));
+    if (!index1.isBlank())
+      index1.delete(index, Miscellanea.hashcode(tuple.field1OrNext));
+    if (!index2.isBlank())
+      index2.delete(index, Miscellanea.hashcode(tuple.field2OrEmptyMarker));
+    if (!index3.isBlank())
+      index3.delete(index, Miscellanea.hashcode(tuple.field3));
 
     // Updating the reference count in the value stores
-    store1.Release(tuple.field1OrNext);
-    store2.Release(tuple.field2OrEmptyMarker);
-    store3.Release(tuple.field3);
+    store1.release(tuple.field1OrNext);
+    store2.release(tuple.field2OrEmptyMarker);
+    store3.release(tuple.field3);
   }
 
   void BuildIndex123() {
     int len = tuples.length;
-    index123.Init(len);
+    index123.init(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
-        index123.Insert(i, Miscellanea.Hashcode(tuple.field1OrNext, tuple.field2OrEmptyMarker, tuple.field3));
+        index123.insert(i, Miscellanea.hashcode(tuple.field1OrNext, tuple.field2OrEmptyMarker, tuple.field3));
     }
   }
 
   void BuildIndex12() {
     int len = tuples.length;
-    index12.Init(len);
+    index12.init(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
-        index12.Insert(i, Miscellanea.Hashcode(tuple.field1OrNext, tuple.field2OrEmptyMarker));
+        index12.insert(i, Miscellanea.hashcode(tuple.field1OrNext, tuple.field2OrEmptyMarker));
     }
   }
 
   void BuildIndex13() {
     int len = tuples.length;
-    index13.Init(len);
+    index13.init(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
-        index13.Insert(i, Miscellanea.Hashcode(tuple.field1OrNext, tuple.field3));
+        index13.insert(i, Miscellanea.hashcode(tuple.field1OrNext, tuple.field3));
     }
   }
 
   void BuildIndex23() {
     int len = tuples.length;
-    index23.Init(len);
+    index23.init(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty) {
-        int hashcode = Miscellanea.Hashcode(tuple.field2OrEmptyMarker, tuple.field3);
-        index23.Insert(i, hashcode);
+        int hashcode = Miscellanea.hashcode(tuple.field2OrEmptyMarker, tuple.field3);
+        index23.insert(i, hashcode);
       }
     }
   }
 
   void BuildIndex1() {
     int len = tuples.length;
-    index1.Init(len);
+    index1.init(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
-        index1.Insert(i, Miscellanea.Hashcode(tuple.field1OrNext));
+        index1.insert(i, Miscellanea.hashcode(tuple.field1OrNext));
     }
   }
 
   void BuildIndex2() {
     int len = tuples.length;
-    index2.Init(len);
+    index2.init(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
-        index2.Insert(i, Miscellanea.Hashcode(tuple.field2OrEmptyMarker));
+        index2.insert(i, Miscellanea.hashcode(tuple.field2OrEmptyMarker));
     }
   }
 
   void BuildIndex3() {
     int len = tuples.length;
-    index3.Init(len);
+    index3.init(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
-        index3.Insert(i, Miscellanea.Hashcode(tuple.field3));
+        index3.insert(i, Miscellanea.hashcode(tuple.field3));
     }
   }
 }

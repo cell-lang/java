@@ -15,99 +15,99 @@ class TernaryTableUpdater {
     this.store3 = store3;
   }
 
-  public void Clear() {
-    deleteList.Clear();
-    TernaryTable.Iter it = table.GetIter();
-    while (!it.Done()) {
-      deleteList.Add(it.Get());
-      it.Next();
+  public void clear() {
+    deleteList.clear();
+    TernaryTable.Iter it = table.getIter();
+    while (!it.done()) {
+      deleteList.add(it.get());
+      it.next();
     }
   }
 
-  public void Set(Obj value, int idx1, int idx2, int idx3) {
+  public void set(Obj value, int idx1, int idx2, int idx3) {
     Miscellanea._assert(deleteList.Count == 0 || deleteList.Count == table.count);
     Miscellanea._assert(insertList.Count == 0);
 
     Clear();
-    TernRelIter it = value.GetTernRelIter();
-    while (!it.Done()) {
-      Obj val1 = idx1 == 0 ? it.Get1() : (idx1 == 1 ? it.Get2() : it.Get3());
-      Obj val2 = idx2 == 0 ? it.Get1() : (idx2 == 1 ? it.Get2() : it.Get3());
-      Obj val3 = idx3 == 0 ? it.Get1() : (idx3 == 1 ? it.Get2() : it.Get3());
-      int surr1 = store1.LookupValueEx(val1);
+    TernRelIter it = value.getTernRelIter();
+    while (!it.done()) {
+      Obj val1 = idx1 == 0 ? it.get1() : (idx1 == 1 ? it.get2() : it.get3());
+      Obj val2 = idx2 == 0 ? it.get1() : (idx2 == 1 ? it.get2() : it.get3());
+      Obj val3 = idx3 == 0 ? it.get1() : (idx3 == 1 ? it.get2() : it.get3());
+      int surr1 = store1.lookupValueEx(val1);
       if (surr1 == -1)
-        surr1 = store1.Insert(val1);
-      int surr2 = store2.LookupValueEx(val2);
+        surr1 = store1.insert(val1);
+      int surr2 = store2.lookupValueEx(val2);
       if (surr2 == -1)
-        surr2 = store2.Insert(val2);
-      int surr3 = store3.LookupValueEx(val3);
+        surr2 = store2.insert(val2);
+      int surr3 = store3.lookupValueEx(val3);
       if (surr3 == -1)
-        surr3 = store3.Insert(val3);
-      insertList.Add(new TernaryTable.Tuple(surr1, surr2, surr3));
-      it.Next();
+        surr3 = store3.insert(val3);
+      insertList.add(new TernaryTable.tuple(surr1, surr2, surr3));
+      it.next();
     }
   }
 
-  public void Insert(long value1, long value2, long value3) {
-    insertList.Add(new TernaryTable.Tuple(value1, value2, value3));
+  public void insert(long value1, long value2, long value3) {
+    insertList.add(new TernaryTable.tuple(value1, value2, value3));
   }
 
-  public void Delete(long value1, long value2, long value3) {
-    if (table.Contains(value1, value2, value3))
-      deleteList.Add(new TernaryTable.Tuple(value1, value2, value3));
+  public void delete(long value1, long value2, long value3) {
+    if (table.contains(value1, value2, value3))
+      deleteList.add(new TernaryTable.tuple(value1, value2, value3));
   }
 
-  public void Delete12(long value1, long value2) {
-    TernaryTable.Iter it = table.GetIter12(value1, value2);
-    while (!it.Done()) {
-      deleteList.Add(it.Get());
-      it.Next();
+  public void delete12(long value1, long value2) {
+    TernaryTable.Iter it = table.getIter12(value1, value2);
+    while (!it.done()) {
+      deleteList.add(it.get());
+      it.next();
     }
   }
 
-  public void Delete13(long value1, long value3) {
-    TernaryTable.Iter it = table.GetIter13(value1, value3);
-    while (!it.Done()) {
-      deleteList.Add(it.Get());
-      it.Next();
+  public void delete13(long value1, long value3) {
+    TernaryTable.Iter it = table.getIter13(value1, value3);
+    while (!it.done()) {
+      deleteList.add(it.get());
+      it.next();
     }
   }
 
-  public void Delete23(long value2, long value3) {
-    TernaryTable.Iter it = table.GetIter23(value2, value3);
-    while (!it.Done()) {
-      deleteList.Add(it.Get());
-      it.Next();
+  public void delete23(long value2, long value3) {
+    TernaryTable.Iter it = table.getIter23(value2, value3);
+    while (!it.done()) {
+      deleteList.add(it.get());
+      it.next();
     }
   }
 
-  public void Delete1(long value1) {
-    TernaryTable.Iter it = table.GetIter1(value1);
-    while (!it.Done()) {
-      deleteList.Add(it.Get());
-      it.Next();
+  public void delete1(long value1) {
+    TernaryTable.Iter it = table.getIter1(value1);
+    while (!it.done()) {
+      deleteList.add(it.get());
+      it.next();
     }
   }
 
-  public void Delete2(long value2) {
-    TernaryTable.Iter it = table.GetIter2(value2);
-    while (!it.Done()) {
-      deleteList.Add(it.Get());
-      it.Next();
+  public void delete2(long value2) {
+    TernaryTable.Iter it = table.getIter2(value2);
+    while (!it.done()) {
+      deleteList.add(it.get());
+      it.next();
     }
   }
 
-  public void Delete3(long value3) {
-    TernaryTable.Iter it = table.GetIter3(value3);
-    while (!it.Done()) {
-      deleteList.Add(it.Get());
-      it.Next();
+  public void delete3(long value3) {
+    TernaryTable.Iter it = table.getIter3(value3);
+    while (!it.done()) {
+      deleteList.add(it.get());
+      it.next();
     }
   }
 
   public bool CheckUpdates_12() {
-    deleteList.Sort(compare123);
-    insertList.Sort(compare123);
+    deleteList.sort(compare123);
+    insertList.sort(compare123);
 
     int count = insertList.Count;
     if (count == 0)
@@ -115,7 +115,7 @@ class TernaryTableUpdater {
 
     TernaryTable.Tuple prev = insertList[0];
     if (!Contains12(deleteList, prev.field1OrNext, prev.field2OrEmptyMarker))
-      if (table.Contains12(prev.field1OrNext, prev.field2OrEmptyMarker))
+      if (table.contains12(prev.field1OrNext, prev.field2OrEmptyMarker))
         return false;
 
     for (int i=1 ; i < count ; i++) {
@@ -126,7 +126,7 @@ class TernaryTableUpdater {
          )
         return false;
       if (!Contains12(deleteList, curr.field1OrNext, curr.field2OrEmptyMarker))
-        if (table.Contains12(curr.field1OrNext, curr.field2OrEmptyMarker))
+        if (table.contains12(curr.field1OrNext, curr.field2OrEmptyMarker))
           return false;
       prev = curr;
     }
@@ -138,8 +138,8 @@ class TernaryTableUpdater {
     if (!CheckUpdates_12())
       return false;
 
-    deleteList.Sort(compare312);
-    insertList.Sort(compare312);
+    deleteList.sort(compare312);
+    insertList.sort(compare312);
 
     int count = insertList.Count;
     if (count == 0)
@@ -147,7 +147,7 @@ class TernaryTableUpdater {
 
     TernaryTable.Tuple prev = insertList[0];
     if (!Contains3(deleteList, prev.field3))
-      if (table.Contains3(prev.field3))
+      if (table.contains3(prev.field3))
         return false;
 
     for (int i=1 ; i < count ; i++) {
@@ -157,7 +157,7 @@ class TernaryTableUpdater {
          )
         return false;
       if (!Contains3(deleteList, prev.field3))
-        if (table.Contains3(prev.field3))
+        if (table.contains3(prev.field3))
       prev = curr;
     }
 
@@ -168,8 +168,8 @@ class TernaryTableUpdater {
     if (!CheckUpdates_12())
       return false;
 
-    deleteList.Sort(compare231);
-    insertList.Sort(compare231);
+    deleteList.sort(compare231);
+    insertList.sort(compare231);
 
     int count = insertList.Count;
     if (count == 0)
@@ -177,7 +177,7 @@ class TernaryTableUpdater {
 
     TernaryTable.Tuple prev = insertList[0];
     if (!Contains23(deleteList, prev.field2OrEmptyMarker, prev.field3))
-      if (table.Contains23(prev.field2OrEmptyMarker, prev.field3))
+      if (table.contains23(prev.field2OrEmptyMarker, prev.field3))
         return false;
 
     for (int i=1 ; i < count ; i++) {
@@ -188,7 +188,7 @@ class TernaryTableUpdater {
          )
         return false;
       if (!Contains23(deleteList, curr.field2OrEmptyMarker, curr.field3))
-        if (table.Contains23(curr.field2OrEmptyMarker, curr.field3))
+        if (table.contains23(curr.field2OrEmptyMarker, curr.field3))
           return false;
       prev = curr;
     }
@@ -200,8 +200,8 @@ class TernaryTableUpdater {
     if (!CheckUpdates_12_23())
       return false;
 
-    deleteList.Sort(compare312);
-    insertList.Sort(compare312);
+    deleteList.sort(compare312);
+    insertList.sort(compare312);
 
     int count = insertList.Count;
     if (count == 0)
@@ -209,7 +209,7 @@ class TernaryTableUpdater {
 
     TernaryTable.Tuple prev = insertList[0];
     if (!Contains31(deleteList, prev.field3, prev.field1OrNext))
-      if (table.Contains13(prev.field1OrNext, prev.field3))
+      if (table.contains13(prev.field1OrNext, prev.field3))
         return false;
 
     for (int i=1 ; i < count ; i++) {
@@ -220,7 +220,7 @@ class TernaryTableUpdater {
          )
         return false;
       if (!Contains31(deleteList, curr.field3, curr.field1OrNext))
-        if (table.Contains13(curr.field1OrNext, curr.field3))
+        if (table.contains13(curr.field1OrNext, curr.field3))
           return false;
       prev = curr;
     }
@@ -228,42 +228,42 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public void Apply() {
+  public void apply() {
     for (int i=0 ; i < deleteList.Count ; i++) {
       var tuple = deleteList[i];
-      if (table.Contains(tuple.field1OrNext, tuple.field2OrEmptyMarker, tuple.field3))
-        table.Delete(tuple.field1OrNext, tuple.field2OrEmptyMarker, tuple.field3);
+      if (table.contains(tuple.field1OrNext, tuple.field2OrEmptyMarker, tuple.field3))
+        table.delete(tuple.field1OrNext, tuple.field2OrEmptyMarker, tuple.field3);
       else
-        deleteList[i] = new TernaryTable.Tuple(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
+        deleteList[i] = new TernaryTable.tuple(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
     }
 
-    var it = insertList.GetEnumerator();
-    while (it.MoveNext()) {
+    var it = insertList.getEnumerator();
+    while (it.moveNext()) {
       var curr = it.Current;
-      if (!table.Contains(curr.field1OrNext, curr.field2OrEmptyMarker, curr.field3)) {
-        table.Insert(curr.field1OrNext, curr.field2OrEmptyMarker, curr.field3);
-        table.store1.AddRef(curr.field1OrNext);
-        table.store2.AddRef(curr.field2OrEmptyMarker);
-        table.store3.AddRef(curr.field3);
+      if (!table.contains(curr.field1OrNext, curr.field2OrEmptyMarker, curr.field3)) {
+        table.insert(curr.field1OrNext, curr.field2OrEmptyMarker, curr.field3);
+        table.store1.addRef(curr.field1OrNext);
+        table.store2.addRef(curr.field2OrEmptyMarker);
+        table.store3.addRef(curr.field3);
       }
     }
   }
 
-  public void Finish() {
-    var it = deleteList.GetEnumerator();
-    while (it.MoveNext()) {
+  public void finish() {
+    var it = deleteList.getEnumerator();
+    while (it.moveNext()) {
       var tuple = it.Current;
       if (tuple.field1OrNext != 0xFFFFFFFF) {
-        table.store1.Release(tuple.field1OrNext);
-        table.store2.Release(tuple.field2OrEmptyMarker);
-        table.store3.Release(tuple.field3);
+        table.store1.release(tuple.field1OrNext);
+        table.store2.release(tuple.field2OrEmptyMarker);
+        table.store3.release(tuple.field3);
       }
     }
   }
 
-  public void Reset() {
-    deleteList.Clear();
-    insertList.Clear();
+  public void reset() {
+    deleteList.clear();
+    insertList.clear();
   }
 
 

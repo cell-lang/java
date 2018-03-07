@@ -7,7 +7,7 @@ class Index {
   public int[] hashtable;
   public int[] buckets;
 
-  public void Init(int size) {
+  public void init(int size) {
     Miscellanea._assert(hashtable == null & buckets == null);
     hashtable = new int[size];
     buckets   = new int[size];
@@ -17,12 +17,12 @@ class Index {
     }
   }
 
-  public void Reset() {
+  public void reset() {
     hashtable = null;
     buckets = null;
   }
 
-  public void Clear() {
+  public void clear() {
     if (hashtable != null) {
       int size = hashtable.length;
       for (int i=0 ; i < size ; i++) {
@@ -32,7 +32,7 @@ class Index {
     }
   }
 
-  public void Insert(int index, int hashcode) {
+  public void insert(int index, int hashcode) {
     Miscellanea._assert(buckets[index] == Empty);
     Miscellanea._assert(index < hashtable.length);
 
@@ -42,7 +42,7 @@ class Index {
     buckets[index] = head;
   }
 
-  public void Delete(int index, int hashcode) {
+  public void delete(int index, int hashcode) {
     int hashIdx = hashcode % hashtable.length;
     int head = hashtable[hashIdx];
     Miscellanea._assert(head != Empty);
@@ -70,15 +70,15 @@ class Index {
     return hashtable == null;
   }
 
-  public int Head(int hashcode) {
+  public int head(int hashcode) {
     return hashtable[hashcode % hashtable.length];
   }
 
-  public int Next(int index) {
+  public int next(int index) {
     return buckets[index];
   }
 
-  public void Dump() {
+  public void dump() {
     System.out.print("hashtable =");
     if (hashtable != null)
       for (int i=0 ; i < hashtable.length ; i++)

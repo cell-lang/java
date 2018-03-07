@@ -29,51 +29,51 @@ class BinaryTableUpdater {
     this.store2 = store2;
   }
 
-  public void Clear() {
-    int[,] columns = table.RawCopy();
-    int len = columns.GetLength(0);
-    deleteList.Clear();
+  public void clear() {
+    int[,] columns = table.rawCopy();
+    int len = columns.getLength(0);
+    deleteList.clear();
     for (int i=0 ; i < len ; i++)
-      deleteList.Add(new Tuple(columns[i, 0], columns[i, 1]));
+      deleteList.add(new Tuple(columns[i, 0], columns[i, 1]));
   }
 
-  public void Set(Obj value, bool flipped) {
+  public void set(Obj value, bool flipped) {
     Clear();
     Miscellanea._assert(insertList.Count == 0);
-    BinRelIter it = value.GetBinRelIter();
-    while (!it.Done()) {
-      Obj val1 = flipped ? it.Get2() : it.Get1();
-      Obj val2 = flipped ? it.Get1() : it.Get2();
-      int surr1 = store1.LookupValueEx(val1);
+    BinRelIter it = value.getBinRelIter();
+    while (!it.done()) {
+      Obj val1 = flipped ? it.get2() : it.get1();
+      Obj val2 = flipped ? it.get1() : it.get2();
+      int surr1 = store1.lookupValueEx(val1);
       if (surr1 == -1)
-        surr1 = store1.Insert(val1);
-      int surr2 = store2.LookupValueEx(val2);
+        surr1 = store1.insert(val1);
+      int surr2 = store2.lookupValueEx(val2);
       if (surr2 == -1)
-        surr2 = store2.Insert(val2);
-      insertList.Add(new Tuple(surr1, surr2));
-      it.Next();
+        surr2 = store2.insert(val2);
+      insertList.add(new Tuple(surr1, surr2));
+      it.next();
     }
   }
 
-  public void Delete(long value1, long value2) {
-    if (table.Contains(value1, value2))
-      deleteList.Add(new Tuple(value1, value2));
+  public void delete(long value1, long value2) {
+    if (table.contains(value1, value2))
+      deleteList.add(new Tuple(value1, value2));
   }
 
-  public void Delete1(long value) {
-    int[] assocs = table.LookupByCol1(value);
+  public void delete1(long value) {
+    int[] assocs = table.lookupByCol1(value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList.Add(new Tuple(value, assocs[i]));
+      deleteList.add(new Tuple(value, assocs[i]));
   }
 
-  public void Delete2(long value) {
-    int[] assocs = table.LookupByCol2(value);
+  public void delete2(long value) {
+    int[] assocs = table.lookupByCol2(value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList.Add(new Tuple(assocs[i], value));
+      deleteList.add(new Tuple(assocs[i], value));
   }
 
-  public void Insert(long value1, long value2) {
-    insertList.Add(new Tuple(value1, value2));
+  public void insert(long value1, long value2) {
+    insertList.add(new Tuple(value1, value2));
   }
 
   public bool CheckUpdates_1() {
@@ -81,8 +81,8 @@ class BinaryTableUpdater {
       return (int) (t1.field1 != t2.field1 ? t1.field1 - t2.field1 : t1.field2 - t2.field2);
     };
 
-    deleteList.Sort(cmp);
-    insertList.Sort(cmp);
+    deleteList.sort(cmp);
+    insertList.sort(cmp);
 
     int count = insertList.Count;
     if (count == 0)
@@ -90,7 +90,7 @@ class BinaryTableUpdater {
 
     Tuple prev = insertList[0];
     if (!ContainsField1(deleteList, prev.field1))
-      if (table.ContainsField1(prev.field1))
+      if (table.containsField1(prev.field1))
         return false;
 
     for (int i=1 ; i < count ; i++) {
@@ -98,7 +98,7 @@ class BinaryTableUpdater {
       if (curr.field1 == prev.field1 & curr.field2 != prev.field2)
         return false;
       if (!ContainsField1(deleteList, curr.field1))
-        if (table.ContainsField1(curr.field1))
+        if (table.containsField1(curr.field1))
           return false;
       prev = curr;
     }
@@ -114,8 +114,8 @@ class BinaryTableUpdater {
       return (int) (t1.field2 != t2.field2 ? t1.field2 - t2.field2 : t1.field1 - t2.field1);
     };
 
-    deleteList.Sort(cmp);
-    insertList.Sort(cmp);
+    deleteList.sort(cmp);
+    insertList.sort(cmp);
 
     int count = insertList.Count;
     if (count == 0)
@@ -123,7 +123,7 @@ class BinaryTableUpdater {
 
     Tuple prev = insertList[0];
     if (!ContainsField2(deleteList, prev.field2))
-      if (table.ContainsField2(prev.field2))
+      if (table.containsField2(prev.field2))
         return false;
 
     for (int i=1 ; i < count ; i++) {
@@ -131,7 +131,7 @@ class BinaryTableUpdater {
       if (curr.field2 == prev.field2 & curr.field1 != prev.field1)
         return false;
       if (!ContainsField2(deleteList, curr.field2))
-        if (table.ContainsField2(curr.field2))
+        if (table.containsField2(curr.field2))
           return false;
       prev = curr;
     }
@@ -139,47 +139,47 @@ class BinaryTableUpdater {
     return true;
   }
 
-  public void Apply() {
+  public void apply() {
     for (int i=0 ; i < deleteList.Count ; i++) {
       Tuple tuple = deleteList[i];
-      if (table.Contains(tuple.field1, tuple.field2)) {
-        table.Delete(tuple.field1, tuple.field2);
+      if (table.contains(tuple.field1, tuple.field2)) {
+        table.delete(tuple.field1, tuple.field2);
       }
       else
         deleteList[i] = new Tuple(0xFFFFFFFF, 0xFFFFFFFF);
     }
 
-    var it = insertList.GetEnumerator();
-    while (it.MoveNext()) {
+    var it = insertList.getEnumerator();
+    while (it.moveNext()) {
       var curr = it.Current;
-      if (!table.Contains(curr.field1, curr.field2)) {
-        table.Insert(curr.field1, curr.field2);
-        table.store1.AddRef(curr.field1);
-        table.store2.AddRef(curr.field2);
+      if (!table.contains(curr.field1, curr.field2)) {
+        table.insert(curr.field1, curr.field2);
+        table.store1.addRef(curr.field1);
+        table.store2.addRef(curr.field2);
       }
     }
   }
 
-  public void Finish() {
-    var it = deleteList.GetEnumerator();
-    while (it.MoveNext()) {
+  public void finish() {
+    var it = deleteList.getEnumerator();
+    while (it.moveNext()) {
       var tuple = it.Current;
       if (tuple.field1 != 0xFFFFFFFF) {
-        Miscellanea._assert(table.store1.LookupSurrogate(tuple.field1) != null);
-        Miscellanea._assert(table.store2.LookupSurrogate(tuple.field2) != null);
-        table.store1.Release(tuple.field1);
-        table.store2.Release(tuple.field2);
+        Miscellanea._assert(table.store1.lookupSurrogate(tuple.field1) != null);
+        Miscellanea._assert(table.store2.lookupSurrogate(tuple.field2) != null);
+        table.store1.release(tuple.field1);
+        table.store2.release(tuple.field2);
       }
     }
     Reset();
   }
 
-  public void Reset() {
-    deleteList.Clear();
-    insertList.Clear();
+  public void reset() {
+    deleteList.clear();
+    insertList.clear();
   }
 
-  public void Dump() {
+  public void dump() {
     System.out.print("deleteList =");
     for (int i=0 ; i < deleteList.Count ; i++)
       System.out.print(" {0}", deleteList[i]);
@@ -193,8 +193,8 @@ class BinaryTableUpdater {
     System.out.print("deleteList =");
     for (int i=0 ; i < deleteList.Count ; i++) {
       Tuple tuple = deleteList[i];
-      Obj obj1 = store1.LookupSurrogateEx(tuple.field1);
-      Obj obj2 = store2.LookupSurrogateEx(tuple.field2);
+      Obj obj1 = store1.lookupSurrogateEx(tuple.field1);
+      Obj obj2 = store2.lookupSurrogateEx(tuple.field2);
       System.out.print(" ({0}, {1})", obj1, obj2);
     }
     System.out.println("");
@@ -202,14 +202,14 @@ class BinaryTableUpdater {
     System.out.print("insertList =");
     for (int i=0 ; i < insertList.Count ; i++) {
       Tuple tuple = insertList[i];
-      Obj obj1 = store1.LookupSurrogateEx(tuple.field1);
-      Obj obj2 = store2.LookupSurrogateEx(tuple.field2);
+      Obj obj1 = store1.lookupSurrogateEx(tuple.field1);
+      Obj obj2 = store2.lookupSurrogateEx(tuple.field2);
       System.out.print(" ({0}, {1})", obj1, obj2);
     }
-    System.out.println("\n\n{0}\n\n", table.Copy(true));
+    System.out.println("\n\n{0}\n\n", table.copy(true));
 
-    store1.Dump();
-    store2.Dump();
+    store1.dump();
+    store2.dump();
   }
 
   static bool ContainsField1(ArrayList<Tuple> tuples, int field1) {

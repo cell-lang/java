@@ -10,26 +10,26 @@ class OneWayBinTable {
   public OverflowTable overflowTable;
   public int count;
 
-  public void Check() {
-    overflowTable.Check(column, count);
+  public void check() {
+    overflowTable.check(column, count);
   }
 
-  public void Dump() {
+  public void dump() {
     System.out.println("count = " + count.toString());
     System.out.print("column = [");
     for (int i=0 ; i < column.length ; i++)
       System.out.print("{0}{1:X}", (i > 0 ? " " : ""), column[i]);
     System.out.println("]");
-    overflowTable.Dump();
+    overflowTable.dump();
   }
 
-  public void Init() {
+  public void init() {
     column = emptyArray;
-    overflowTable.Init();
+    overflowTable.init();
     count = 0;
   }
 
-  public void InitReverse(ref OneWayBinTable source) {
+  public void initReverse(ref OneWayBinTable source) {
     Miscellanea._assert(count == 0);
 
     int[] srcCol = source.column;
@@ -42,10 +42,10 @@ class OneWayBinTable {
           Insert(code, i);
         }
         else {
-          OverflowTable.Iter it = source.overflowTable.GetIter(code);
-          while (!it.Done()) {
-            Insert(it.Get(), i);
-            it.Next();
+          OverflowTable.Iter it = source.overflowTable.getIter(code);
+          while (!it.done()) {
+            Insert(it.get(), i);
+            it.next();
           }
         }
     }
@@ -59,14 +59,14 @@ class OneWayBinTable {
       return false;
     if (code >> 29 == 0)
       return code == surr2;
-    return overflowTable.In(surr2, code);
+    return overflowTable.in(surr2, code);
   }
 
   public bool ContainsKey(int surr1) {
     return surr1 < column.length && column[surr1] != OverflowTable.EmptyMarker;
   }
 
-  public int[] Lookup(int surr) {
+  public int[] lookup(int surr) {
     if (surr >= column.length)
       return emptyArray;
     int code = column[surr];
@@ -75,26 +75,26 @@ class OneWayBinTable {
     if (code >> 29 == 0)
       return new int[] {code};
 
-    int count = overflowTable.Count(code);
-    OverflowTable.Iter it = overflowTable.GetIter(code);
+    int count = overflowTable.count(code);
+    OverflowTable.Iter it = overflowTable.getIter(code);
     int[] surrs = new int[count];
     int next = 0;
-    while (!it.Done()) {
-      surrs[next++] = it.Get();
-      it.Next();
+    while (!it.done()) {
+      surrs[next++] = it.get();
+      it.next();
     }
     Miscellanea._assert(next == count);
     return surrs;
   }
 
-  public void Insert(int surr1, int surr2) {
+  public void insert(int surr1, int surr2) {
     int size = column.length;
     if (surr1 >= size) {
       int newSize = size == 0 ? MinCapacity : 2 * size;
       while (surr1 >= newSize)
         newSize *= 2;
       int[] newColumn = new int[newSize];
-      Array.Copy(column, newColumn, size);
+      Array.copy(column, newColumn, size);
       for (int i=size ; i < newSize ; i++)
         newColumn[i] = OverflowTable.EmptyMarker;
       column = newColumn;
@@ -107,13 +107,13 @@ class OneWayBinTable {
     }
     else {
       bool inserted;
-      column[surr1] = overflowTable.Insert(code, surr2, out inserted);
+      column[surr1] = overflowTable.insert(code, surr2, out inserted);
       if (inserted)
         count++;
     }
   }
 
-  public void Delete(int surr1, int surr2) {
+  public void delete(int surr1, int surr2) {
     int code = column[surr1];
     if (code == OverflowTable.EmptyMarker)
       return;
@@ -123,7 +123,7 @@ class OneWayBinTable {
     }
     else if (code >> 29 != 0) {
       bool deleted;
-      column[surr1] = overflowTable.Delete(code, surr2, out deleted);
+      column[surr1] = overflowTable.delete(code, surr2, out deleted);
       if (deleted)
         count--;
     }
@@ -140,11 +140,11 @@ class OneWayBinTable {
           res[next++, 1] = code;
         }
         else {
-          OverflowTable.Iter it = overflowTable.GetIter(code);
-          while (!it.Done()) {
+          OverflowTable.Iter it = overflowTable.getIter(code);
+          while (!it.done()) {
             res[next, 0] = i;
-            res[next++, 1] = it.Get();
-            it.Next();
+            res[next++, 1] = it.get();
+            it.next();
           }
         }
       }
