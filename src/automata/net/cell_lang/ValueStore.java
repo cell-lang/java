@@ -1,14 +1,15 @@
 package net.cell_lang;
 
 
-class ValueStore : ValueStoreBase {
-  final int InitSize = 16;
+class ValueStore extends ValueStoreBase {
+  final int InitSize = 16; //## REMEMBER TO CHANGE super{16} IN THE CONSTRUCTOR WHEN CHANGING THIS
 
   int[] refCounts     = new int[InitSize];
   int[] nextFreeIdx   = new int[InitSize];
   int   firstFreeIdx  = 0;
 
-  public ValueStore() : base(InitSize) {
+  public ValueStore() {
+    super(16); //## SHOULD BE super(InitSize)
     for (int i=0 ; i < InitSize ; i++)
       nextFreeIdx[i] = i + 1;
   }
@@ -22,22 +23,22 @@ class ValueStore : ValueStoreBase {
     Miscellanea._assert(refCount > 0);
     refCounts[index] = refCount - 1;
     if (refCount == 1) {
-      Delete((int) index);
+      delete(index);
       nextFreeIdx[index] = firstFreeIdx;
       firstFreeIdx = (int) index;
     }
   }
 
-  override public void Insert(Obj value, int hashcode, int index) {
+  public void insert(Obj value, int hashcode, int index) {
     Miscellanea._assert(firstFreeIdx == index);
     Miscellanea._assert(nextFreeIdx[index] != -1);
-    base.insert(value, hashcode, index);
+    super.insert(value, hashcode, index);
     firstFreeIdx = nextFreeIdx[index];
     nextFreeIdx[index] = -1; //## UNNECESSARY, BUT USEFUL FOR DEBUGGING
   }
 
-  override public void Resize(int minCapacity) {
-    base.resize(minCapacity);
+  public void resize(int minCapacity) {
+    super.resize(minCapacity);
     int capacity = slots.length;
 
     int[] currRefCounts   = refCounts;
@@ -63,10 +64,11 @@ class ValueStore : ValueStoreBase {
     return nextFreeIdx[index];
   }
 
-  override public void Dump() {
-    base.dump();
-    WriteInts("refCounts", refCounts);
-    WriteInts("nextFreeIdx", nextFreeIdx);
-    System.out.println("firstFreeIdx = " + firstFreeIdx.toString());
+  @Override
+  public void dump() {
+    super.dump();
+    writeInts("refCounts", refCounts);
+    writeInts("nextFreeIdx", nextFreeIdx);
+    System.out.printf("firstFreeIdx = %d\n", firstFreeIdx);
   }
 }

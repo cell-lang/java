@@ -15,7 +15,8 @@ class TernaryTable {
       this.field3 = field3;
     }
 
-    override public String toString() {
+    @Override
+    public String toString() {
       return "(" + field1OrNext.toString() + ", " + field2OrEmptyMarker.toString() + ", " + field3.toString() + ")";
     }
   }

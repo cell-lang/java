@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-class ValueStoreUpdater : ValueStoreBase {
+class ValueStoreUpdater extends ValueStoreBase {
   int[] surrogates;
   int   lastSurrogate = -1;
 
@@ -16,16 +16,17 @@ class ValueStoreUpdater : ValueStoreBase {
     Miscellanea._assert(count <= capacity);
 
     if (count == capacity)
-      Resize(count+1);
+      resize(count+1);
 
     lastSurrogate = store.nextFreeIdx(lastSurrogate);
     surrogates[count] = lastSurrogate;
-    Insert(value, count);
+    insert(value, count);
     return lastSurrogate;
   }
 
-  override public void Resize(int minCapacity) {
-    base.resize(count+1);
+  @Override
+  public void resize(int minCapacity) {
+    super.resize(count+1);
     int[] currSurrogates = surrogates;
     surrogates = new int[slots.length];
     if (count > 0)
@@ -45,11 +46,12 @@ class ValueStoreUpdater : ValueStoreBase {
     for (int i=0 ; i < count ; i++)
       store.insert(slots[i], hashcodes[i], surrogates[i]);
 
-    Reset();
+    reset();
   }
 
-  override public void Reset() {
-    base.reset();
+  @Override
+  public void reset() {
+    super.reset();
     lastSurrogate = -1;
     //## IS THIS NECESSARY?
     if (surrogates != null) {
@@ -76,9 +78,10 @@ class ValueStoreUpdater : ValueStoreBase {
     return store.lookupSurrogate(surr);
   }
 
-  override public void Dump() {
-    base.dump();
-    WriteInts("surrogates", surrogates);
+  @Override
+  public void dump() {
+    super.dump();
+    writeInts("surrogates", surrogates);
     System.out.printf("lastSurrogate = {0}", lastSurrogate);
   }
 }
