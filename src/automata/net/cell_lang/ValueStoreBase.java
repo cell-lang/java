@@ -48,7 +48,7 @@ class ValueStoreBase {
   public int LookupValue(Obj value) {
     if (count == 0)
       return -1;
-    int hashcode = value.Hashcode(); //## WAS int
+    int hashcode = value.hashCode(); //## WAS int
     int idx = hashtable[hashcode % hashtable.length];
     while (idx != -1) {
       Miscellanea._assert(slots[idx] != null);
@@ -69,13 +69,13 @@ class ValueStoreBase {
   }
 
   public void Insert(Obj value, int slotIdx) {
-    Insert(value, value.Hashcode(), slotIdx);
+    Insert(value, value.hashCode(), slotIdx);
   }
 
   public void Insert(Obj value, int hashcode, int slotIdx) {
     Miscellanea._assert(slots != null && slotIdx < slots.length);
     Miscellanea._assert(slots[slotIdx] == null);
-    Miscellanea._assert(hashcode == value.Hashcode());
+    Miscellanea._assert(hashcode == value.hashCode());
 
     slots[slotIdx] = value;
     hashcodes[slotIdx] = hashcode;
