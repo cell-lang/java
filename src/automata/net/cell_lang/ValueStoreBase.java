@@ -170,10 +170,10 @@ class ValueStoreBase {
   public void dump() {
     System.out.println("");
     System.out.printf("count = %d\n", count);
-    WriteObjs("slots", slots);
-    WriteInts("hashcodes", hashcodes);
-    WriteInts("hashtable", hashtable);
-    WriteInts("buckets", buckets);
+    writeObjs("slots", slots);
+    writeInts("hashcodes", hashcodes);
+    writeInts("hashtable", hashtable);
+    writeInts("buckets", buckets);
   }
 
   protected void writeObjs(String name, Obj[] objs) {
@@ -193,13 +193,14 @@ class ValueStoreBase {
   }
 
   protected void writeInts(String name, int[] ints) {
-    System.out.print(name + " = ");
+    System.out.print(name);
+    System.out.print(" = ");
     if (ints != null) {
       System.out.print("[");
       for (int i=0 ; i < ints.length ; i++) {
         if (i > 0)
           System.out.print(", ");
-        System.out.print(ints[i].toString());
+        System.out.printf("%d", ints[i]);
       }
       System.out.println("]");
     }
