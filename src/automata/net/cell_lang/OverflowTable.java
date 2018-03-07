@@ -2,7 +2,7 @@ package net.cell_lang;
 
 
 class OverflowTable {
-  public struct Iter {
+  public static class Iter {
     int[] values;
     int   next;
     int   end;
@@ -29,26 +29,26 @@ class OverflowTable {
   }
 
 
-  const int MinSize = 32;
+  final int MinSize = 32;
 
-  public const int EmptyMarker  = 0xFFFFFFFFU;
+  public final int EmptyMarker  = 0xFFFFFFFFU;
 
-  const int EndLowerMarker   = 0xDFFFFFFFU;
-  const int End2UpperMarker  = 0x3FFFFFFFU;
-  const int End4UpperMarker  = 0x5FFFFFFFU;
-  const int End8UpperMarker  = 0x7FFFFFFFU;
-  const int End16UpperMarker = 0x9FFFFFFFU;
+  final int EndLowerMarker   = 0xDFFFFFFFU;
+  final int End2UpperMarker  = 0x3FFFFFFFU;
+  final int End4UpperMarker  = 0x5FFFFFFFU;
+  final int End8UpperMarker  = 0x7FFFFFFFU;
+  final int End16UpperMarker = 0x9FFFFFFFU;
 
-  public const int PayloadMask  = 0x1FFFFFFFU;
+  public final int PayloadMask  = 0x1FFFFFFFU;
 
-  const int InlineTag            = 0;
-  const int Block2Tag            = 1;
-  const int Block4Tag            = 2;
-  const int Block8Tag            = 3;
-  const int Block16Tag           = 4;
-  const int HashedBlockTag       = 5;
-  const int AvailableTag         = 6;
-  const int Unused               = 7;
+  final int InlineTag            = 0;
+  final int Block2Tag            = 1;
+  final int Block4Tag            = 2;
+  final int Block8Tag            = 3;
+  final int Block16Tag           = 4;
+  final int HashedBlockTag       = 5;
+  final int AvailableTag         = 6;
+  final int Unused               = 7;
 
   int[] slots;
   int head2;
