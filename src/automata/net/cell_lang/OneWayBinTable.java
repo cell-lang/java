@@ -51,7 +51,7 @@ class OneWayBinTable {
     }
   }
 
-  public bool Contains(int surr1, int surr2) {
+  public boolean Contains(int surr1, int surr2) {
     if (surr1 >= column.length)
       return false;
     int code = column[surr1];
@@ -62,7 +62,7 @@ class OneWayBinTable {
     return overflowTable.in(surr2, code);
   }
 
-  public bool ContainsKey(int surr1) {
+  public boolean ContainsKey(int surr1) {
     return surr1 < column.length && column[surr1] != OverflowTable.EmptyMarker;
   }
 
@@ -106,7 +106,7 @@ class OneWayBinTable {
       count++;
     }
     else {
-      bool inserted;
+      boolean inserted;
       column[surr1] = overflowTable.insert(code, surr2, out inserted);
       if (inserted)
         count++;
@@ -122,7 +122,7 @@ class OneWayBinTable {
       count--;
     }
     else if (code >> 29 != 0) {
-      bool deleted;
+      boolean deleted;
       column[surr1] = overflowTable.delete(code, surr2, out deleted);
       if (deleted)
         count--;

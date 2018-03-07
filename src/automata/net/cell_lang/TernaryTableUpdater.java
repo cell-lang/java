@@ -105,7 +105,7 @@ class TernaryTableUpdater {
     }
   }
 
-  public bool CheckUpdates_12() {
+  public boolean CheckUpdates_12() {
     deleteList.sort(compare123);
     insertList.sort(compare123);
 
@@ -134,7 +134,7 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public bool CheckUpdates_12_3() {
+  public boolean CheckUpdates_12_3() {
     if (!CheckUpdates_12())
       return false;
 
@@ -164,7 +164,7 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public bool CheckUpdates_12_23() {
+  public boolean CheckUpdates_12_23() {
     if (!CheckUpdates_12())
       return false;
 
@@ -196,7 +196,7 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public bool CheckUpdates_12_23_31() {
+  public boolean CheckUpdates_12_23_31() {
     if (!CheckUpdates_12_23())
       return false;
 
@@ -267,7 +267,7 @@ class TernaryTableUpdater {
   }
 
 
-  static bool Contains12(ArrayList<TernaryTable.Tuple> tuples, int field1, int field2) {
+  static boolean Contains12(ArrayList<TernaryTable.Tuple> tuples, int field1, int field2) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -289,7 +289,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains23(ArrayList<TernaryTable.Tuple> tuples, int field2, int field3) {
+  static boolean Contains23(ArrayList<TernaryTable.Tuple> tuples, int field2, int field3) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -311,7 +311,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains31(ArrayList<TernaryTable.Tuple> tuples, int field3, int field1) {
+  static boolean Contains31(ArrayList<TernaryTable.Tuple> tuples, int field3, int field1) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -333,7 +333,7 @@ class TernaryTableUpdater {
     return false;
   }
 
-  static bool Contains3(ArrayList<TernaryTable.Tuple> tuples, int field3) {
+  static boolean Contains3(ArrayList<TernaryTable.Tuple> tuples, int field3) {
     int low = 0;
     int high = tuples.Count - 1;
 

@@ -11,7 +11,7 @@ class BinaryTable {
       next = 0;
     }
 
-    public bool Done() {
+    public boolean Done() {
       return next >= entries.getLength(0);
     }
 
@@ -52,15 +52,15 @@ class BinaryTable {
     return table1.count;
   }
 
-  public bool Contains(long surr1, long surr2) {
+  public boolean Contains(long surr1, long surr2) {
     return table1.contains(surr1, surr2);
   }
 
-  public bool ContainsField1(int surr1) {
+  public boolean ContainsField1(int surr1) {
     return table1.containsKey(surr1);
   }
 
-  public bool ContainsField2(int surr2) {
+  public boolean ContainsField2(int surr2) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(ref table1);
     return table2.containsKey(surr2);
@@ -120,7 +120,7 @@ class BinaryTable {
     // Check();
   }
 
-  public Obj copy(bool flipped) {
+  public Obj copy(boolean flipped) {
     int count = table1.count;
 
     if (count == 0)

@@ -41,16 +41,16 @@ class TernaryTable {
       this.table = table;
       if (index != Tuple.Empty) {
         Tuple tuple = table.tuples[index];
-        bool ok1 = field1 == Tuple.Empty | tuple.field1OrNext == field1;
-        bool ok2 = field2 == Tuple.Empty | tuple.field2OrEmptyMarker == field2;
-        bool ok3 = field3 == Tuple.Empty | tuple.field3 == field3;
+        boolean ok1 = field1 == Tuple.Empty | tuple.field1OrNext == field1;
+        boolean ok2 = field2 == Tuple.Empty | tuple.field2OrEmptyMarker == field2;
+        boolean ok3 = field3 == Tuple.Empty | tuple.field3 == field3;
         if ((type == Type.F123 & tuple.field2OrEmptyMarker == Tuple.Empty) | !ok1 | !ok2 | !ok3) {
           Next();
         }
       }
     }
 
-    public bool Done() {
+    public boolean Done() {
       return index == Tuple.Empty;
     }
 
@@ -263,7 +263,7 @@ class TernaryTable {
     }
   }
 
-  public bool Contains(long field1, long field2, long field3) {
+  public boolean Contains(long field1, long field2, long field3) {
     int hashcode = Miscellanea.hashcode(field1, field2, field3);
     for (int idx = index123.head(hashcode) ; idx != Tuple.Empty ; idx = index123.next(idx)) {
       Tuple tuple = tuples[idx];
@@ -273,7 +273,7 @@ class TernaryTable {
     return false;
   }
 
-  public bool Contains12(int field1, int field2) {
+  public boolean Contains12(int field1, int field2) {
     int hashcode = Miscellanea.hashcode(field1, field2);
     for (int idx = index12.head(hashcode) ; idx != Tuple.Empty ; idx = index12.next(idx)) {
       Tuple tuple = tuples[idx];
@@ -283,7 +283,7 @@ class TernaryTable {
     return false;
   }
 
-  public bool Contains13(int field1, int field3) {
+  public boolean Contains13(int field1, int field3) {
     if (index13.isBlank())
       BuildIndex13();
     int hashcode = Miscellanea.hashcode(field1, field3);
@@ -295,7 +295,7 @@ class TernaryTable {
     return false;
   }
 
-  public bool Contains23(int field2, int field3) {
+  public boolean Contains23(int field2, int field3) {
     if (index23.isBlank())
       BuildIndex23();
     int hashcode = Miscellanea.hashcode(field2, field3);
@@ -307,7 +307,7 @@ class TernaryTable {
     return false;
   }
 
-  public bool Contains1(int field1) {
+  public boolean Contains1(int field1) {
     if (index1.isBlank())
       BuildIndex1();
     int hashcode = Miscellanea.hashcode(field1);
@@ -319,7 +319,7 @@ class TernaryTable {
     return false;
   }
 
-  public bool Contains2(int field2) {
+  public boolean Contains2(int field2) {
     if (index2.isBlank())
       BuildIndex2();
     int hashcode = Miscellanea.hashcode(field2);
@@ -331,7 +331,7 @@ class TernaryTable {
     return false;
   }
 
-  public bool Contains3(int field3) {
+  public boolean Contains3(int field3) {
     if (index3.isBlank())
       BuildIndex3();
     int hashcode = Miscellanea.hashcode(field3);

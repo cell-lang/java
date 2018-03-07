@@ -38,7 +38,7 @@ class BinaryTableUpdater {
       deleteList.add(new Tuple(columns[i, 0], columns[i, 1]));
   }
 
-  public void set(Obj value, bool flipped) {
+  public void set(Obj value, boolean flipped) {
     Clear();
     Miscellanea._assert(insertList.Count == 0);
     BinRelIter it = value.getBinRelIter();
@@ -77,7 +77,7 @@ class BinaryTableUpdater {
     insertList.add(new Tuple(value1, value2));
   }
 
-  public bool CheckUpdates_1() {
+  public boolean CheckUpdates_1() {
     Comparison<Tuple> cmp = delegate(Tuple t1, Tuple t2) {
       return (int) (t1.field1 != t2.field1 ? t1.field1 - t2.field1 : t1.field2 - t2.field2);
     };
@@ -107,7 +107,7 @@ class BinaryTableUpdater {
     return true;
   }
 
-  public bool CheckUpdates_1_2() {
+  public boolean CheckUpdates_1_2() {
     if (!CheckUpdates_1())
       return false;
 
@@ -213,7 +213,7 @@ class BinaryTableUpdater {
     store2.dump();
   }
 
-  static bool ContainsField1(ArrayList<Tuple> tuples, int field1) {
+  static boolean ContainsField1(ArrayList<Tuple> tuples, int field1) {
     int low = 0;
     int high = tuples.Count - 1;
 
@@ -231,7 +231,7 @@ class BinaryTableUpdater {
     return false;
   }
 
-  static bool ContainsField2(ArrayList<Tuple> tuples, int field2) {
+  static boolean ContainsField2(ArrayList<Tuple> tuples, int field2) {
     int low = 0;
     int high = tuples.Count - 1;
 

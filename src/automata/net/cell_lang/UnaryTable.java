@@ -21,7 +21,7 @@ class UnaryTable {
       return index;
     }
 
-    public bool Done() {
+    public boolean Done() {
       return index >= 64 * table.bitmap.length;
     }
 
@@ -49,7 +49,7 @@ class UnaryTable {
     return count;
   }
 
-  public bool Contains(int surr) {
+  public boolean Contains(int surr) {
     int widx = surr / 64;
     return widx < bitmap.length && ((bitmap[widx] >> (int) (surr % 64) & 1) != 0);
   }
