@@ -88,11 +88,11 @@ class UnaryTable {
       bitmap[widx] = mask | (1UL << bidx);
       count++;
     }
-    // Miscellanea.Assert(count == LiveCount());
+    // Miscellanea._assert(count == LiveCount());
   }
 
   public void Delete(int surr) {
-    Miscellanea.Assert(surr < 64 * bitmap.length);
+    Miscellanea._assert(surr < 64 * bitmap.length);
 
     int widx = surr / 64;
     if (widx < bitmap.length) {
@@ -103,7 +103,7 @@ class UnaryTable {
         count--;
       }
     }
-    // Miscellanea.Assert(count == LiveCount());
+    // Miscellanea._assert(count == LiveCount());
   }
 
   public Obj Copy() {
@@ -117,7 +117,7 @@ class UnaryTable {
         if (((mask >> (int) j) & 1) != 0)
           objs[next++] = store.GetValue(j + 64 * i);
     }
-    Miscellanea.Assert(next == count);
+    Miscellanea._assert(next == count);
     return Builder.CreateSet(objs, objs.length);
   }
 

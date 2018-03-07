@@ -30,7 +30,7 @@ class OneWayBinTable {
   }
 
   public void InitReverse(ref OneWayBinTable source) {
-    Miscellanea.Assert(count == 0);
+    Miscellanea._assert(count == 0);
 
     int[] srcCol = source.column;
     int len = srcCol.length;
@@ -83,7 +83,7 @@ class OneWayBinTable {
       surrs[next++] = it.Get();
       it.Next();
     }
-    Miscellanea.Assert(next == count);
+    Miscellanea._assert(next == count);
     return surrs;
   }
 
@@ -149,7 +149,7 @@ class OneWayBinTable {
         }
       }
     }
-    Miscellanea.Assert(next == count);
+    Miscellanea._assert(next == count);
     return res;
   }
 }

@@ -14,7 +14,7 @@ class OverflowTable {
     }
 
     public int Get() {
-      Miscellanea.Assert(!Done());
+      Miscellanea._assert(!Done());
       return values[next];
     }
 
@@ -23,7 +23,7 @@ class OverflowTable {
     }
 
     public void Next() {
-      Miscellanea.Assert(!Done());
+      Miscellanea._assert(!Done());
       next++;
     }
   }
@@ -60,7 +60,7 @@ class OverflowTable {
     int len = slots.length;
     bool[] slotOK = new bool[len];
     for (int i=0 ; i < len ; i++)
-      Miscellanea.Assert(!slotOK[i]);
+      Miscellanea._assert(!slotOK[i]);
 
     if (head2 != EmptyMarker) {
       int curr = head2;
@@ -208,7 +208,7 @@ class OverflowTable {
       minUsage = 7;
     }
     else {
-      Miscellanea.Assert(tag == HashedBlockTag);
+      Miscellanea._assert(tag == HashedBlockTag);
       capacity = 16;
       minUsage = 7; // Unused
     }
@@ -260,7 +260,7 @@ class OverflowTable {
       System.out.println("");
       Dump();
       System.out.println("");
-      Miscellanea.Assert(false);
+      Miscellanea._assert(false);
     }
   }
 
@@ -308,14 +308,14 @@ class OverflowTable {
   public int Insert(int handle, int value, out bool inserted) {
     int tag = handle >> 29;
     int payload = handle & PayloadMask;
-    Miscellanea.Assert(((tag << 29) | payload) == handle);
+    Miscellanea._assert(((tag << 29) | payload) == handle);
 
     switch (tag) {
       case 0:
         // The entry was single-valued, and inlined.
         // The payload contains the existing value.
-        Miscellanea.Assert(handle == payload);
-        Miscellanea.Assert(payload != value);
+        Miscellanea._assert(handle == payload);
+        Miscellanea._assert(payload != value);
         return Insert2Block(handle, value, out inserted);
 
       // From now on the payload is the index of the block
@@ -333,7 +333,7 @@ class OverflowTable {
         return InsertWith16Block(payload, value, handle, out inserted);
 
       case 5: // Hashed block
-        InsertIntoHashedBlock(payload, value, Hashcode(value), out inserted);
+        InsertIntoHashedBlock(payload, value, hashCode(value), out inserted);
         return handle;
 
       default:
@@ -345,7 +345,7 @@ class OverflowTable {
   public int Delete(int handle, int value, out bool deleted) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
-    Miscellanea.Assert(((tag << 29) | blockIdx) == handle);
+    Miscellanea._assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
       case 1: // 2-slots block
@@ -361,7 +361,7 @@ class OverflowTable {
         return DeleteFrom16Block(blockIdx, value, handle, out deleted);
 
       case 5: // Hashed block
-        return DeleteFromHashedBlock(blockIdx, value, handle, Hashcode(value), out deleted);
+        return DeleteFromHashedBlock(blockIdx, value, handle, hashCode(value), out deleted);
 
       default:
         Miscellanea.InternalFail();
@@ -372,7 +372,7 @@ class OverflowTable {
   public bool In(int value, int handle) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
-    Miscellanea.Assert(((tag << 29) | blockIdx) == handle);
+    Miscellanea._assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
       case 1: // 2-block slot
@@ -388,7 +388,7 @@ class OverflowTable {
         return InBlock(value, blockIdx, 16);
 
       case 5: // Hashed block
-        return InHashedBlock(value, blockIdx, Hashcode(value));
+        return InHashedBlock(value, blockIdx, hashCode(value));
 
       default:
         Miscellanea.InternalFail();
@@ -399,7 +399,7 @@ class OverflowTable {
   public int Count(int handle) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
-    Miscellanea.Assert(((tag << 29) | blockIdx) == handle);
+    Miscellanea._assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
       case 0: // Inline
@@ -429,7 +429,7 @@ class OverflowTable {
   public Iter GetIter(int handle) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
-    Miscellanea.Assert(((tag << 29) | blockIdx) == handle);
+    Miscellanea._assert(((tag << 29) | blockIdx) == handle);
 
     switch (tag) {
       // case 0: // Inline
@@ -477,7 +477,7 @@ class OverflowTable {
     if (content == EmptyMarker)
       return false;
     int tag = content >> 29;
-    Miscellanea.Assert(tag <= 5);
+    Miscellanea._assert(tag <= 5);
     if (tag == 0)
       return false;
     else if (tag < 5)
@@ -502,7 +502,7 @@ class OverflowTable {
     int[] values = new int[count];
     int next = 0;
     CopyHashedBlock(blockIdx, values, ref next);
-    Miscellanea.Assert(next == count);
+    Miscellanea._assert(next == count);
     return new Iter(values, 0, count);
   }
 
@@ -522,7 +522,7 @@ class OverflowTable {
   void Copy(int handle, int[] dest, ref int next) {
     int tag = handle >> 29;
     int blockIdx = handle & PayloadMask;
-    Miscellanea.Assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
+    Miscellanea._assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
 
     switch (tag) {
       // case 0: // Inline
@@ -751,7 +751,7 @@ class OverflowTable {
     // <idx> is now the index of the first free block,
     // or <8> if the slot is full. It's also the number
     // of values in the block before the deletion
-    Miscellanea.Assert(idx >= 4);
+    Miscellanea._assert(idx >= 4);
 
     deleted = targetIdx != -1;
 
@@ -849,7 +849,7 @@ class OverflowTable {
     // <idx> is now the index of the first free block,
     // or <16> if the slot is full. It's also the number
     // of values in the block before the deletion
-    Miscellanea.Assert(idx >= 7);
+    Miscellanea._assert(idx >= 7);
 
     deleted = targetIdx != -1;
 
@@ -886,7 +886,7 @@ class OverflowTable {
           return handle;
         }
       }
-      Miscellanea.Assert(false); //## CONTROL FLOW CAN NEVER MAKE IT HERE...
+      Miscellanea._assert(false); //## CONTROL FLOW CAN NEVER MAKE IT HERE...
     }
 
     // The block is full, if the new value is not a duplicate
@@ -906,16 +906,16 @@ class OverflowTable {
     // Transferring the existing values
     for (int i=0 ; i < 16 ; i++) {
       int content = slots[blockIdx+i];
-      InsertIntoHashedBlock(hashedBlockIdx, content, Hashcode(content), out inserted);
-      Miscellanea.Assert(inserted);
+      InsertIntoHashedBlock(hashedBlockIdx, content, hashCode(content), out inserted);
+      Miscellanea._assert(inserted);
     }
 
     // Releasing the old block
     Release16Block(blockIdx);
 
     // Adding the new value
-    InsertIntoHashedBlock(hashedBlockIdx, value, Hashcode(value), out inserted);
-    Miscellanea.Assert(inserted);
+    InsertIntoHashedBlock(hashedBlockIdx, value, hashCode(value), out inserted);
+    Miscellanea._assert(inserted);
 
     // Returning the tagged index of the block
     return hashedBlockIdx | (HashedBlockTag << 29);
@@ -929,7 +929,7 @@ class OverflowTable {
       return handle;
     }
     int tag = content >> 29;
-    Miscellanea.Assert(tag <= 5);
+    Miscellanea._assert(tag <= 5);
     if (tag == 0) {
       if (content == value) {
         deleted = true;
@@ -952,7 +952,7 @@ class OverflowTable {
 
     if (deleted) {
       int count = slots[blockIdx] - 1;
-      Miscellanea.Assert(count >= 6);
+      Miscellanea._assert(count >= 6);
       if (count == 6)
         return ShrinkHashedBlock(blockIdx);
       slots[blockIdx] = count;
@@ -976,7 +976,7 @@ class OverflowTable {
 
     int endIdx = blockIdx + 6;
     for (int i=6 ; nextIdx < endIdx ; i++) {
-      Miscellanea.Assert(i < 16);
+      Miscellanea._assert(i < 16);
       nextIdx = CopyAndReleaseBlock(slots[blockIdx + i], nextIdx);
     }
 
@@ -991,7 +991,7 @@ class OverflowTable {
     if (handle != EmptyMarker) {
       int tag = handle >> 29;
       int blockIdx = handle & PayloadMask;
-      Miscellanea.Assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
+      Miscellanea._assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
 
       switch (tag) {
         case 0: // Inline
@@ -1042,7 +1042,7 @@ class OverflowTable {
     }
     else {
       int tag = content >> 29;
-      Miscellanea.Assert(tag <= 5);
+      Miscellanea._assert(tag <= 5);
       if (tag < 5) {
         int newHandle = Insert(content, value, out inserted);
         slots[slotIdx] = newHandle;
@@ -1056,7 +1056,7 @@ class OverflowTable {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  int Hashcode(int value) {
+  int hashCode(int value) {
     return value;
   }
 
@@ -1064,8 +1064,8 @@ class OverflowTable {
 
   int Alloc2Block() {
     if (head2 != EmptyMarker) {
-      Miscellanea.Assert(slots[head2] == EndLowerMarker);
-      Miscellanea.Assert(slots[head2+1] == End2UpperMarker || slots[head2+1] >> 29 == Block2Tag);
+      Miscellanea._assert(slots[head2] == EndLowerMarker);
+      Miscellanea._assert(slots[head2+1] == End2UpperMarker || slots[head2+1] >> 29 == Block2Tag);
 
       int blockIdx = head2;
       RemoveBlockFromChain(blockIdx, EndLowerMarker, End2UpperMarker, ref head2);
@@ -1079,14 +1079,14 @@ class OverflowTable {
   }
 
   void Release2Block(int blockIdx) {
-    Miscellanea.Assert((blockIdx & 1) == 0);
+    Miscellanea._assert((blockIdx & 1) == 0);
 
     bool isFirst = (blockIdx & 3) == 0;
     int otherBlockIdx = blockIdx + (isFirst ? 2 : -2);
     int otherBlockSlot0 = slots[otherBlockIdx];
 
     if (otherBlockSlot0 >> 29 == AvailableTag) {
-      Miscellanea.Assert(slots[otherBlockIdx+1] >> 29 == Block2Tag);
+      Miscellanea._assert(slots[otherBlockIdx+1] >> 29 == Block2Tag);
 
       // The matching block is available, so we release both at once as a 4-slot block
       // But first we have to remove the matching block from the 2-slot block chain
@@ -1102,8 +1102,8 @@ class OverflowTable {
 
   int Alloc4Block() {
     if (head4 != EmptyMarker) {
-      Miscellanea.Assert(slots[head4] == EndLowerMarker);
-      Miscellanea.Assert(slots[head4+1] == End4UpperMarker | slots[head4+1] >> 29 == Block4Tag);
+      Miscellanea._assert(slots[head4] == EndLowerMarker);
+      Miscellanea._assert(slots[head4+1] == End4UpperMarker | slots[head4+1] >> 29 == Block4Tag);
 
       int blockIdx = head4;
       RemoveBlockFromChain(blockIdx, EndLowerMarker, End4UpperMarker, ref head4);
@@ -1117,7 +1117,7 @@ class OverflowTable {
   }
 
   void Release4Block(int blockIdx) {
-    Miscellanea.Assert((blockIdx & 3) == 0);
+    Miscellanea._assert((blockIdx & 3) == 0);
 
     bool isFirst = (blockIdx & 7) == 0;
     int otherBlockIdx = blockIdx + (isFirst ? 4 : -4);
@@ -1134,8 +1134,8 @@ class OverflowTable {
 
   int Alloc8Block() {
     if (head8 != EmptyMarker) {
-      Miscellanea.Assert(slots[head8] == EndLowerMarker);
-      Miscellanea.Assert(slots[head8+1] == End8UpperMarker | slots[head8+1] >> 29 == Block8Tag);
+      Miscellanea._assert(slots[head8] == EndLowerMarker);
+      Miscellanea._assert(slots[head8+1] == End8UpperMarker | slots[head8+1] >> 29 == Block8Tag);
 
       int blockIdx = head8;
       RemoveBlockFromChain(blockIdx, EndLowerMarker, End8UpperMarker, ref head8);
@@ -1143,15 +1143,15 @@ class OverflowTable {
     }
     else {
       int block16Idx = Alloc16Block();
-      Miscellanea.Assert(slots[block16Idx] == EndLowerMarker);
-      Miscellanea.Assert(slots[block16Idx+1] == End16UpperMarker | slots[block16Idx+1] >> 29 == Block16Tag);
+      Miscellanea._assert(slots[block16Idx] == EndLowerMarker);
+      Miscellanea._assert(slots[block16Idx+1] == End16UpperMarker | slots[block16Idx+1] >> 29 == Block16Tag);
       AddBlockToChain(block16Idx, Block8Tag, End8UpperMarker, ref head8);
       return block16Idx + 8;
     }
   }
 
   void Release8Block(int blockIdx) {
-    Miscellanea.Assert((blockIdx & 7) == 0);
+    Miscellanea._assert((blockIdx & 7) == 0);
 
     bool isFirst = (blockIdx & 15) == 0;
     int otherBlockIdx = blockIdx + (isFirst ? 8 : -8);
@@ -1185,8 +1185,8 @@ class OverflowTable {
       head16 = len;
     }
 
-    Miscellanea.Assert(slots[head16] == EndLowerMarker);
-    Miscellanea.Assert(slots[head16+1] == End16UpperMarker | slots[head16+1] >> 29 == Block16Tag);
+    Miscellanea._assert(slots[head16] == EndLowerMarker);
+    Miscellanea._assert(slots[head16+1] == End16UpperMarker | slots[head16+1] >> 29 == Block16Tag);
 
     int blockIdx = head16;
     RemoveBlockFromChain(blockIdx, EndLowerMarker, End16UpperMarker, ref head16);
@@ -1208,7 +1208,7 @@ class OverflowTable {
 
     if (slot0 != EndLowerMarker) {
       // Not the first block in the chain
-      Miscellanea.Assert(head != blockIdx);
+      Miscellanea._assert(head != blockIdx);
       int prevBlockIdx = slot0 & PayloadMask;
 
       if (slot1 != endUpperMarker) {
@@ -1226,7 +1226,7 @@ class OverflowTable {
     }
     else {
       // First slot in the chain, must be the one pointed to by head
-      Miscellanea.Assert(head == blockIdx);
+      Miscellanea._assert(head == blockIdx);
 
       if (slot1 != endUpperMarker) {
         // The head must be repointed at the next block,

@@ -13,7 +13,7 @@ class ValueStoreUpdater : ValueStoreBase {
 
   public int Insert(Obj value) {
     int capacity = slots != null ? slots.length : 0;
-    Miscellanea.Assert(count <= capacity);
+    Miscellanea._assert(count <= capacity);
 
     if (count == capacity)
       Resize(count+1);

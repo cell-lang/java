@@ -24,7 +24,7 @@ class UnaryTableUpdater {
 
   public void Set(Obj value) {
     Clear();
-    Miscellanea.Assert(insertList.Count == 0);
+    Miscellanea._assert(insertList.Count == 0);
     SeqOrSetIter it = value.GetSeqOrSetIter();
     while (!it.Done()) {
       Obj val = it.Get();

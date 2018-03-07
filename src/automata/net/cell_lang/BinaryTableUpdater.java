@@ -39,7 +39,7 @@ class BinaryTableUpdater {
 
   public void Set(Obj value, bool flipped) {
     Clear();
-    Miscellanea.Assert(insertList.Count == 0);
+    Miscellanea._assert(insertList.Count == 0);
     BinRelIter it = value.GetBinRelIter();
     while (!it.Done()) {
       Obj val1 = flipped ? it.Get2() : it.Get1();
@@ -165,8 +165,8 @@ class BinaryTableUpdater {
     while (it.MoveNext()) {
       var tuple = it.Current;
       if (tuple.field1 != 0xFFFFFFFF) {
-        Miscellanea.Assert(table.store1.LookupSurrogate(tuple.field1) != null);
-        Miscellanea.Assert(table.store2.LookupSurrogate(tuple.field2) != null);
+        Miscellanea._assert(table.store1.LookupSurrogate(tuple.field1) != null);
+        Miscellanea._assert(table.store2.LookupSurrogate(tuple.field2) != null);
         table.store1.Release(tuple.field1);
         table.store2.Release(tuple.field2);
       }

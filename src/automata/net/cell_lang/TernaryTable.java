@@ -54,27 +54,27 @@ class TernaryTable {
     }
 
     public Tuple Get() {
-      Miscellanea.Assert(index != Tuple.Empty);
+      Miscellanea._assert(index != Tuple.Empty);
       return table.tuples[index];
     }
 
     public int GetField1() {
-      Miscellanea.Assert(index != Tuple.Empty);
+      Miscellanea._assert(index != Tuple.Empty);
       return table.tuples[index].field1OrNext;
     }
 
     public int GetField2() {
-      Miscellanea.Assert(index != Tuple.Empty);
+      Miscellanea._assert(index != Tuple.Empty);
       return table.tuples[index].field2OrEmptyMarker;
     }
 
     public int GetField3() {
-      Miscellanea.Assert(index != Tuple.Empty);
+      Miscellanea._assert(index != Tuple.Empty);
       return table.tuples[index].field3;
     }
 
     public void Next() {
-      Miscellanea.Assert(index != Tuple.Empty);
+      Miscellanea._assert(index != Tuple.Empty);
       switch (type) {
         case Type.F123:
           int len = table.tuples.length;
@@ -167,8 +167,8 @@ class TernaryTable {
     }
 
     for (int i=0 ; i < MinSize ; i++) {
-      Miscellanea.Assert(tuples[i].field1OrNext == i + 1);
-      Miscellanea.Assert(tuples[i].field2OrEmptyMarker == Tuple.Empty);
+      Miscellanea._assert(tuples[i].field1OrNext == i + 1);
+      Miscellanea._assert(tuples[i].field2OrEmptyMarker == Tuple.Empty);
     }
 
     index123.Init(MinSize);
@@ -186,14 +186,14 @@ class TernaryTable {
     // Increasing the size of the table if need be
     if (firstFree >= tuples.length) {
       int size = tuples.length;
-      Miscellanea.Assert(count == size);
+      Miscellanea._assert(count == size);
       Tuple[] newTuples = new Tuple[2*size];
       Array.Copy(tuples, newTuples, size);
       for (int i=size ; i < 2 * size ; i++) {
         newTuples[i].field1OrNext = i + 1;
         newTuples[i].field2OrEmptyMarker = Tuple.Empty;
-        Miscellanea.Assert(newTuples[i].field1OrNext == i + 1);
-        Miscellanea.Assert(newTuples[i].field2OrEmptyMarker == Tuple.Empty);
+        Miscellanea._assert(newTuples[i].field1OrNext == i + 1);
+        Miscellanea._assert(newTuples[i].field2OrEmptyMarker == Tuple.Empty);
       }
       tuples = newTuples;
       index123.Reset();
@@ -405,7 +405,7 @@ class TernaryTable {
         next++;
       }
     }
-    Miscellanea.Assert(next == count);
+    Miscellanea._assert(next == count);
 
     Obj[][] cols = new Obj[3][];
     cols[idx1] = objs1;
@@ -419,13 +419,13 @@ class TernaryTable {
 
   void DeleteAt(int index, int hashcode) {
     Tuple tuple = tuples[index];
-    Miscellanea.Assert(tuple.field2OrEmptyMarker != Tuple.Empty);
+    Miscellanea._assert(tuple.field2OrEmptyMarker != Tuple.Empty);
 
     // Removing the tuple
     tuples[index].field1OrNext = firstFree;
     tuples[index].field2OrEmptyMarker = Tuple.Empty;
-    Miscellanea.Assert(tuples[index].field1OrNext == firstFree);
-    Miscellanea.Assert(tuples[index].field2OrEmptyMarker == Tuple.Empty);
+    Miscellanea._assert(tuples[index].field1OrNext == firstFree);
+    Miscellanea._assert(tuples[index].field2OrEmptyMarker == Tuple.Empty);
     firstFree = index;
     count--;
 

@@ -149,7 +149,7 @@ class BinaryTable {
         }
       }
     }
-    Miscellanea.Assert(next == count);
+    Miscellanea._assert(next == count);
 
     return Builder.CreateBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
   }

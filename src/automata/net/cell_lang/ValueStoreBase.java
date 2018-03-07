@@ -51,7 +51,7 @@ class ValueStoreBase {
     int hashcode = value.Hashcode(); //## WAS int
     int idx = hashtable[hashcode % hashtable.length];
     while (idx != -1) {
-      Miscellanea.Assert(slots[idx] != null);
+      Miscellanea._assert(slots[idx] != null);
       if (hashcodes[idx] == hashcode && value.IsEq(slots[idx]))
         return idx;
       idx = buckets[idx];
@@ -73,9 +73,9 @@ class ValueStoreBase {
   }
 
   public void Insert(Obj value, int hashcode, int slotIdx) {
-    Miscellanea.Assert(slots != null && slotIdx < slots.length);
-    Miscellanea.Assert(slots[slotIdx] == null);
-    Miscellanea.Assert(hashcode == value.Hashcode());
+    Miscellanea._assert(slots != null && slotIdx < slots.length);
+    Miscellanea._assert(slots[slotIdx] == null);
+    Miscellanea._assert(hashcode == value.Hashcode());
 
     slots[slotIdx] = value;
     hashcodes[slotIdx] = hashcode;
@@ -90,8 +90,8 @@ class ValueStoreBase {
   }
 
   protected void Delete(int index) {
-    Miscellanea.Assert(slots != null && index < slots.length);
-    Miscellanea.Assert(slots[index] != null);
+    Miscellanea._assert(slots != null && index < slots.length);
+    Miscellanea._assert(slots[index] != null);
 
     int hashcode = hashcodes[index];
 
@@ -101,7 +101,7 @@ class ValueStoreBase {
 
     int hashtableIdx = hashcode % slots.length;
     int idx = hashtable[hashtableIdx];
-    Miscellanea.Assert(idx != -1);
+    Miscellanea._assert(idx != -1);
 
     if (idx == index) {
       hashtable[hashtableIdx] = buckets[idx];
@@ -114,7 +114,7 @@ class ValueStoreBase {
     while (idx != index) {
       prevIdx = idx;
       idx = buckets[idx];
-      Miscellanea.Assert(idx != -1);
+      Miscellanea._assert(idx != -1);
     }
 
     buckets[prevIdx] = buckets[idx];

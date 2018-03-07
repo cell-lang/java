@@ -8,7 +8,7 @@ class Index {
   public int[] buckets;
 
   public void Init(int size) {
-    Miscellanea.Assert(hashtable == null & buckets == null);
+    Miscellanea._assert(hashtable == null & buckets == null);
     hashtable = new int[size];
     buckets   = new int[size];
     for (int i=0 ; i < size ; i++) {
@@ -33,8 +33,8 @@ class Index {
   }
 
   public void Insert(int index, int hashcode) {
-    Miscellanea.Assert(buckets[index] == Empty);
-    Miscellanea.Assert(index < hashtable.length);
+    Miscellanea._assert(buckets[index] == Empty);
+    Miscellanea._assert(index < hashtable.length);
 
     int hashIdx = hashcode % hashtable.length;
     int head = hashtable[hashIdx];
@@ -45,7 +45,7 @@ class Index {
   public void Delete(int index, int hashcode) {
     int hashIdx = hashcode % hashtable.length;
     int head = hashtable[hashIdx];
-    Miscellanea.Assert(head != Empty);
+    Miscellanea._assert(head != Empty);
 
     if (head == index) {
       hashtable[hashIdx] = buckets[index];
@@ -56,7 +56,7 @@ class Index {
     int curr = head;
     for ( ; ; ) {
       int next = buckets[curr];
-      Miscellanea.Assert(next != Empty);
+      Miscellanea._assert(next != Empty);
       if (next == index) {
         buckets[curr] = buckets[next];
         buckets[next] = Empty;

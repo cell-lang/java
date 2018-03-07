@@ -25,8 +25,8 @@ class TernaryTableUpdater {
   }
 
   public void Set(Obj value, int idx1, int idx2, int idx3) {
-    Miscellanea.Assert(deleteList.Count == 0 || deleteList.Count == table.count);
-    Miscellanea.Assert(insertList.Count == 0);
+    Miscellanea._assert(deleteList.Count == 0 || deleteList.Count == table.count);
+    Miscellanea._assert(insertList.Count == 0);
 
     Clear();
     TernRelIter it = value.GetTernRelIter();

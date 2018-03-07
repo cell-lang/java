@@ -19,7 +19,7 @@ class ValueStore : ValueStoreBase {
 
   public void Release(int index) {
     int refCount = refCounts[index];
-    Miscellanea.Assert(refCount > 0);
+    Miscellanea._assert(refCount > 0);
     refCounts[index] = refCount - 1;
     if (refCount == 1) {
       Delete((int) index);
@@ -29,8 +29,8 @@ class ValueStore : ValueStoreBase {
   }
 
   override public void Insert(Obj value, int hashcode, int index) {
-    Miscellanea.Assert(firstFreeIdx == index);
-    Miscellanea.Assert(nextFreeIdx[index] != -1);
+    Miscellanea._assert(firstFreeIdx == index);
+    Miscellanea._assert(nextFreeIdx[index] != -1);
     base.Insert(value, hashcode, index);
     firstFreeIdx = nextFreeIdx[index];
     nextFreeIdx[index] = -1; //## UNNECESSARY, BUT USEFUL FOR DEBUGGING
@@ -55,7 +55,7 @@ class ValueStore : ValueStoreBase {
   }
 
   public int NextFreeIdx(int index) {
-    Miscellanea.Assert(index == -1 || index >= slots.length || (slots[index] == null & nextFreeIdx[index] != -1));
+    Miscellanea._assert(index == -1 || index >= slots.length || (slots[index] == null & nextFreeIdx[index] != -1));
     if (index == -1)
       return firstFreeIdx;
     if (index >= nextFreeIdx.length)
