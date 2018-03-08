@@ -14,7 +14,7 @@ class OverflowTable {
     }
 
     public int get() {
-      Miscellanea._assert(!Done());
+      Miscellanea._assert(!done());
       return values[next];
     }
 
@@ -23,7 +23,7 @@ class OverflowTable {
     }
 
     public void next() {
-      Miscellanea._assert(!Done());
+      Miscellanea._assert(!done());
       next++;
     }
   }
@@ -64,86 +64,86 @@ class OverflowTable {
 
     if (head2 != EmptyMarker) {
       int curr = head2;
-      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (2), curr = " + curr.toString());
+      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (2), curr = " + Integer.toString(curr));
       for ( ; ; ) {
-        Check(curr < len, "curr < len");
+        check(curr < len, "curr < len");
         int slot1 = slots[curr + 1];
         int tag = slot1 >> 29;
         int payload = slot1 & PayloadMask;
-        Check(slot1 == End2UpperMarker | (tag == Block2Tag & payload < len), "slot1 == End2UpperMarker | (tag == Block2Tag & payload < len)");
-        Check(!slotOK[curr] & !slotOK[curr+1], "!slotOK[curr] & !slotOK[curr+1]");
+        check(slot1 == End2UpperMarker | (tag == Block2Tag & payload < len), "slot1 == End2UpperMarker | (tag == Block2Tag & payload < len)");
+        check(!slotOK[curr] & !slotOK[curr+1], "!slotOK[curr] & !slotOK[curr+1]");
         slotOK[curr] = slotOK[curr+1] = true;
         if (slot1 == End2UpperMarker)
           break;
         int nextSlot0 = slots[payload];
-        Check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
-        Check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
+        check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
+        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
         curr = payload;
       }
     }
 
     if (head4 != EmptyMarker) {
       int curr = head4;
-      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (4), curr = " + curr.toString());
+      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (4), curr = " + Integer.toString(curr));
       for ( ; ; ) {
-        Check(curr < len, "curr < len");
+        check(curr < len, "curr < len");
         int slot1 = slots[curr + 1];
         int tag = slot1 >> 29;
         int payload = slot1 & PayloadMask;
-        Check(slot1 == End4UpperMarker | (tag == Block4Tag & payload < len), "slot1 == End4UpperMarker | (tag == Block4Tag & payload < len)");
+        check(slot1 == End4UpperMarker | (tag == Block4Tag & payload < len), "slot1 == End4UpperMarker | (tag == Block4Tag & payload < len)");
         for (int i=0 ; i < 4 ; i++) {
-          Check(!slotOK[curr+i], "!slotOK[curr+i]");
+          check(!slotOK[curr+i], "!slotOK[curr+i]");
           slotOK[curr+i] = true;
         }
         if (slot1 == End4UpperMarker)
           break;
         int nextSlot0 = slots[payload];
-        Check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
-        Check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
+        check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
+        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
         curr = payload;
       }
     }
 
     if (head8 != EmptyMarker) {
       int curr = head8;
-      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (8), curr = " + curr.toString());
+      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (8), curr = " + Integer.toString(curr));
       for ( ; ; ) {
-        Check(curr < len, "curr < len");
+        check(curr < len, "curr < len");
         int slot1 = slots[curr + 1];
         int tag = slot1 >> 29;
         int payload = slot1 & PayloadMask;
-        Check(slot1 == End8UpperMarker | (tag == Block8Tag & payload < len), "slot1 == End8UpperMarker | (tag == Block8Tag & payload < len)");
+        check(slot1 == End8UpperMarker | (tag == Block8Tag & payload < len), "slot1 == End8UpperMarker | (tag == Block8Tag & payload < len)");
         for (int i=0 ; i < 8 ; i++) {
-          Check(!slotOK[curr+i], "!slotOK[curr+i]");
+          check(!slotOK[curr+i], "!slotOK[curr+i]");
           slotOK[curr+i] = true;
         }
         if (slot1 == End8UpperMarker)
           break;
         int nextSlot0 = slots[payload];
-        Check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
-        Check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
+        check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
+        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
         curr = payload;
       }
     }
 
     if (head16 != EmptyMarker) {
       int curr = head16;
-      Check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (16), curr = " + curr.toString());
+      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (16), curr = " + Integer.toString(curr));
       for ( ; ; ) {
-        Check(curr < len, "curr < len");
+        check(curr < len, "curr < len");
         int slot1 = slots[curr + 1];
         int tag = slot1 >> 29;
         int payload = slot1 & PayloadMask;
-        Check(slot1 == End16UpperMarker | (tag == Block16Tag & payload < len), "slot1 == End16UpperMarker | (tag == Block16Tag & payload < len)");
+        check(slot1 == End16UpperMarker | (tag == Block16Tag & payload < len), "slot1 == End16UpperMarker | (tag == Block16Tag & payload < len)");
         for (int i=0 ; i < 16 ; i++) {
-          Check(!slotOK[curr+i], "!slotOK[curr+i]");
+          check(!slotOK[curr+i], "!slotOK[curr+i]");
           slotOK[curr+i] = true;
         }
         if (slot1 == End16UpperMarker)
           break;
         int nextSlot0 = slots[payload];
-        Check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
-        Check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
+        check(nextSlot0 >> 29 == AvailableTag, "nextSlot0 >> 29 == AvailableTag");
+        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
         curr = payload;
       }
     }
@@ -156,7 +156,7 @@ class OverflowTable {
       int tag = content >> 29;
       int payload = content & PayloadMask;
       if (tag == 0) {
-        Check(payload < 1000, "payload < 1000");
+        check(payload < 1000, "payload < 1000");
         actualCount++;
       }
       else {
@@ -164,7 +164,7 @@ class OverflowTable {
       }
     }
 
-    Check(count == actualCount, "count == actualCount");
+    check(count == actualCount, "count == actualCount");
 
     for (int i=0 ; i < slotOK.length ; i++) {
       if (!slotOK[i]) {
@@ -182,13 +182,13 @@ class OverflowTable {
         System.out.println("i = {0}", i);
         System.out.println();
       }
-      Check(slotOK[i], "slotOK[i]");
+      check(slotOK[i], "slotOK[i]");
     }
   }
 
   void checkGroup(int tag, int blockIdx, boolean[] slotOK, int totalCount) {
-    Check(tag >= Block2Tag, "tag >= Block2Tag");
-    Check(tag <= HashedBlockTag, "tag <= HashedBlockTag");
+    check(tag >= Block2Tag, "tag >= Block2Tag");
+    check(tag <= HashedBlockTag, "tag <= HashedBlockTag");
 
     int capacity, minUsage;
     if (tag == Block2Tag) {
@@ -214,7 +214,7 @@ class OverflowTable {
     }
 
     for (int i=0 ; i < capacity ; i++) {
-      Check(!slotOK[blockIdx+i], "!slotOK[blockIdx+i]");
+      check(!slotOK[blockIdx+i], "!slotOK[blockIdx+i]");
       slotOK[blockIdx+i] = true;
     }
 
@@ -222,14 +222,14 @@ class OverflowTable {
       for (int i=0 ; i < capacity ; i++) {
         int slot = slots[blockIdx + i];
         if (i < minUsage)
-          Check(slot != EmptyMarker, "slot != EmptyMarker");
+          check(slot != EmptyMarker, "slot != EmptyMarker");
         if (slot == EmptyMarker) {
           for (int j=i+1 ; j < capacity ; j++)
-            Check(slots[blockIdx+j] == EmptyMarker, "slots[blockIdx+j] == EmptyMarker");
+            check(slots[blockIdx+j] == EmptyMarker, "slots[blockIdx+j] == EmptyMarker");
           break;
         }
-        Check(slot >> 29 == 0, "slot >> 29 == 0");
-        Check((slot & PayloadMask) < 1000, "(slot & PayloadMask) < 1000");
+        check(slot >> 29 == 0, "slot >> 29 == 0");
+        check((slot & PayloadMask) < 1000, "(slot & PayloadMask) < 1000");
         totalCount++;
       }
     }
@@ -242,14 +242,14 @@ class OverflowTable {
           int slotTag = slot >> 29;
           int slotPayload = slot & PayloadMask;
           if (slotTag == 0) {
-            Check(slotPayload < 1000, "slotPayload < 1000");
+            check(slotPayload < 1000, "slotPayload < 1000");
             actualBlockCount++;
           }
           else
             actualBlockCount += checkGroup(slotTag, slotPayload, slotOK, actualBlockCount);
         }
       }
-      Check(blockCount == actualBlockCount, "blockCount == actualBlockCount");
+      check(blockCount == actualBlockCount, "blockCount == actualBlockCount");
       totalCount += blockCount;
     }
 
@@ -1065,12 +1065,12 @@ class OverflowTable {
       Miscellanea._assert(slots[head2+1] == End2UpperMarker || slots[head2+1] >> 29 == Block2Tag);
 
       int blockIdx = head2;
-      removeBlockFromChain(blockIdx, EndLowerMarker, End2UpperMarker, ref head2);
+      head2 = removeBlockFromChain(blockIdx, EndLowerMarker, End2UpperMarker, head2);
       return blockIdx;
     }
     else {
       int block4Idx = alloc4Block();
-      addBlockToChain(block4Idx, Block2Tag, End2UpperMarker, ref head2);
+      head2 = addBlockToChain(block4Idx, Block2Tag, End2UpperMarker, head2);
       return block4Idx + 2;
     }
   }
@@ -1087,13 +1087,13 @@ class OverflowTable {
 
       // The matching block is available, so we release both at once as a 4-slot block
       // But first we have to remove the matching block from the 2-slot block chain
-      removeBlockFromChain(otherBlockIdx, otherBlockSlot0, End2UpperMarker, ref head2);
+      head2 = removeBlockFromChain(otherBlockIdx, otherBlockSlot0, End2UpperMarker, head2);
       release4Block(isFirst ? blockIdx : otherBlockIdx);
     }
     else {
       // The matching block is not available, so we
       // just add the new one to the 2-slot block chain
-      addBlockToChain(blockIdx, Block2Tag, End2UpperMarker, ref head2);
+      head2 = addBlockToChain(blockIdx, Block2Tag, End2UpperMarker, head2);
     }
   }
 
@@ -1103,12 +1103,12 @@ class OverflowTable {
       Miscellanea._assert(slots[head4+1] == End4UpperMarker | slots[head4+1] >> 29 == Block4Tag);
 
       int blockIdx = head4;
-      removeBlockFromChain(blockIdx, EndLowerMarker, End4UpperMarker, ref head4);
+      head4 = removeBlockFromChain(blockIdx, EndLowerMarker, End4UpperMarker, head4);
       return blockIdx;
     }
     else {
       int block8Idx = alloc8Block();
-      addBlockToChain(block8Idx, Block4Tag, End4UpperMarker, ref head4);
+      head4 = addBlockToChain(block8Idx, Block4Tag, End4UpperMarker, head4);
       return block8Idx + 4;
     }
   }
@@ -1122,11 +1122,11 @@ class OverflowTable {
     int otherBlockSlot1 = slots[otherBlockIdx+1];
 
     if (otherBlockSlot0 >> 29 == AvailableTag & otherBlockSlot1 >> 29 == Block4Tag) {
-      removeBlockFromChain(otherBlockIdx, otherBlockSlot0, End4UpperMarker, ref head4);
+      head4 = removeBlockFromChain(otherBlockIdx, otherBlockSlot0, End4UpperMarker, head4);
       release8Block(isFirst ? blockIdx : otherBlockIdx);
     }
     else
-      addBlockToChain(blockIdx, Block4Tag, End4UpperMarker, ref head4);
+      head4 = addBlockToChain(blockIdx, Block4Tag, End4UpperMarker, head4);
   }
 
   int alloc8Block() {
@@ -1135,14 +1135,14 @@ class OverflowTable {
       Miscellanea._assert(slots[head8+1] == End8UpperMarker | slots[head8+1] >> 29 == Block8Tag);
 
       int blockIdx = head8;
-      removeBlockFromChain(blockIdx, EndLowerMarker, End8UpperMarker, ref head8);
+      head8 = removeBlockFromChain(blockIdx, EndLowerMarker, End8UpperMarker, head8);
       return blockIdx;
     }
     else {
       int block16Idx = alloc16Block();
       Miscellanea._assert(slots[block16Idx] == EndLowerMarker);
       Miscellanea._assert(slots[block16Idx+1] == End16UpperMarker | slots[block16Idx+1] >> 29 == Block16Tag);
-      addBlockToChain(block16Idx, Block8Tag, End8UpperMarker, ref head8);
+      head8 = addBlockToChain(block16Idx, Block8Tag, End8UpperMarker, head8);
       return block16Idx + 8;
     }
   }
@@ -1156,15 +1156,15 @@ class OverflowTable {
     int otherBlockSlot1 = slots[otherBlockIdx+1];
 
     if (otherBlockSlot0 >> 29 == AvailableTag & otherBlockSlot1 >> 29 == Block8Tag) {
-      removeBlockFromChain(otherBlockIdx, otherBlockSlot0, End8UpperMarker, ref head8);
+      head8 = removeBlockFromChain(otherBlockIdx, otherBlockSlot0, End8UpperMarker, head8);
       release16Block(isFirst ? blockIdx : otherBlockIdx);
     }
     else
-      addBlockToChain(blockIdx, Block8Tag, End8UpperMarker, ref head8);
+      head8 = addBlockToChain(blockIdx, Block8Tag, End8UpperMarker, head8);
   }
 
   void release8BlockUpperHalf(int blockIdx) {
-    addBlockToChain(blockIdx+4, Block4Tag, End4UpperMarker, ref head4);
+    head4 = addBlockToChain(blockIdx+4, Block4Tag, End4UpperMarker, head4);
   }
 
   int alloc16Block() {
@@ -1186,21 +1186,21 @@ class OverflowTable {
     Miscellanea._assert(slots[head16+1] == End16UpperMarker | slots[head16+1] >> 29 == Block16Tag);
 
     int blockIdx = head16;
-    removeBlockFromChain(blockIdx, EndLowerMarker, End16UpperMarker, ref head16);
+    head16 = removeBlockFromChain(blockIdx, EndLowerMarker, End16UpperMarker, head16);
     return blockIdx;
   }
 
   void release16Block(int blockIdx) {
-    addBlockToChain(blockIdx, Block16Tag, End16UpperMarker, ref head16);
+    head16 = addBlockToChain(blockIdx, Block16Tag, End16UpperMarker, head16);
   }
 
   void release16BlockUpperHalf(int blockIdx) {
-    addBlockToChain(blockIdx+8, Block8Tag, End8UpperMarker, ref head8);
+    head8 = addBlockToChain(blockIdx+8, Block8Tag, End8UpperMarker, head8);
   }
 
   ////////////////////////////////////////////////////////////////////////////
 
-  void removeBlockFromChain(int blockIdx, int slot0, int endUpperMarker, ref int head) {
+  int removeBlockFromChain(int blockIdx, int slot0, int endUpperMarker, int head) {
     int slot1 = slots[blockIdx + 1];
 
     if (slot0 != EndLowerMarker) {
@@ -1238,9 +1238,11 @@ class OverflowTable {
         head = EmptyMarker;
       }
     }
+
+    return head;
   }
 
-  void addBlockToChain(int blockIdx, int sizeTag, int endUpperMarker, ref int head) {
+  int addBlockToChain(int blockIdx, int sizeTag, int endUpperMarker, int head) {
     // The 'previous' field of the newly released block must be cleared
     slots[blockIdx] = EndLowerMarker;
     if (head != EmptyMarker) {
@@ -1253,6 +1255,6 @@ class OverflowTable {
       slots[blockIdx+1] = endUpperMarker;
     }
     // The new block becomes the head one
-    head = blockIdx;
+    return blockIdx;
   }
 }
