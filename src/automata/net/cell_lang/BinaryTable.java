@@ -156,7 +156,7 @@ class BinaryTable {
     return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
   }
 
-  public int[][] RawCopy() {
+  public int[][] rawCopy() {
     return table1.copy();
   }
 }

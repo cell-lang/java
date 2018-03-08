@@ -1,5 +1,8 @@
 package net.cell_lang;
 
+import java.util.ArrayList;
+import java.util.ListIterator;
+
 
 class BinaryTableUpdater {
   static class Tuple {
@@ -11,10 +14,22 @@ class BinaryTableUpdater {
       this.field2 = field2;
     }
 
+    public Tuple(long field1, long field2) {
+      this((int) field1, (int) field2);
+    }
+
     @Override
     public String toString() {
-      return "(" + field1.toString() + ", " + field2.toString() + ")";
+      return "(" + Integer.toString(field1) + ", " + Integer.toString(field2) + ")";
     }
+
+    public static int compareLeftToRigth(Tuple t1, Tuple t2) {
+      return (t1.field1 != t2.field1 ? t1.field1 - t2.field1 : t1.field2 - t2.field2);
+    };
+
+    public static int compareRightToLeft(Tuple t1, Tuple t2) {
+      return (t1.field2 != t2.field2 ? t1.field2 - t2.field2 : t1.field1 - t2.field1);
+    };
   }
 
   ArrayList<Tuple> deleteList = new ArrayList<Tuple>();
@@ -31,16 +46,16 @@ class BinaryTableUpdater {
   }
 
   public void clear() {
-    int[,] columns = table.rawCopy();
-    int len = columns.getLength(0);
+    int[][] columns = table.rawCopy();
+    int len = columns[0].length;
     deleteList.clear();
     for (int i=0 ; i < len ; i++)
-      deleteList.add(new Tuple(columns[i, 0], columns[i, 1]));
+      deleteList.add(new Tuple(columns[0][i], columns[1][i]));
   }
 
   public void set(Obj value, boolean flipped) {
-    Clear();
-    Miscellanea._assert(insertList.Count == 0);
+    clear();
+    Miscellanea._assert(insertList.size() == 0);
     BinRelIter it = value.getBinRelIter();
     while (!it.done()) {
       Obj val1 = flipped ? it.get2() : it.get1();
@@ -62,13 +77,13 @@ class BinaryTableUpdater {
   }
 
   public void delete1(long value) {
-    int[] assocs = table.lookupByCol1(value);
+    int[] assocs = table.lookupByCol1((int) value);
     for (int i=0 ; i < assocs.length ; i++)
       deleteList.add(new Tuple(value, assocs[i]));
   }
 
   public void delete2(long value) {
-    int[] assocs = table.lookupByCol2(value);
+    int[] assocs = table.lookupByCol2((int) value);
     for (int i=0 ; i < assocs.length ; i++)
       deleteList.add(new Tuple(assocs[i], value));
   }
@@ -78,27 +93,23 @@ class BinaryTableUpdater {
   }
 
   public boolean CheckUpdates_1() {
-    Comparison<Tuple> cmp = delegate(Tuple t1, Tuple t2) {
-      return (int) (t1.field1 != t2.field1 ? t1.field1 - t2.field1 : t1.field2 - t2.field2);
-    };
+    deleteList.sort(Tuple::compareLeftToRigth);
+    insertList.sort(Tuple::compareLeftToRigth);
 
-    deleteList.sort(cmp);
-    insertList.sort(cmp);
-
-    int count = insertList.Count;
+    int count = insertList.size();
     if (count == 0)
       return true;
 
-    Tuple prev = insertList[0];
-    if (!ContainsField1(deleteList, prev.field1))
+    Tuple prev = insertList.get(0);
+    if (!containsField1(deleteList, prev.field1))
       if (table.containsField1(prev.field1))
         return false;
 
     for (int i=1 ; i < count ; i++) {
-      Tuple curr = insertList[i];
+      Tuple curr = insertList.get(i);
       if (curr.field1 == prev.field1 & curr.field2 != prev.field2)
         return false;
-      if (!ContainsField1(deleteList, curr.field1))
+      if (!containsField1(deleteList, curr.field1))
         if (table.containsField1(curr.field1))
           return false;
       prev = curr;
@@ -111,27 +122,23 @@ class BinaryTableUpdater {
     if (!CheckUpdates_1())
       return false;
 
-    Comparison<Tuple> cmp = delegate(Tuple t1, Tuple t2) {
-      return (int) (t1.field2 != t2.field2 ? t1.field2 - t2.field2 : t1.field1 - t2.field1);
-    };
+    deleteList.sort(Tuple::compareRightToLeft);
+    insertList.sort(Tuple::compareRightToLeft);
 
-    deleteList.sort(cmp);
-    insertList.sort(cmp);
-
-    int count = insertList.Count;
+    int count = insertList.size();
     if (count == 0)
       return true;
 
-    Tuple prev = insertList[0];
-    if (!ContainsField2(deleteList, prev.field2))
+    Tuple prev = insertList.get(0);
+    if (!containsField2(deleteList, prev.field2))
       if (table.containsField2(prev.field2))
         return false;
 
     for (int i=1 ; i < count ; i++) {
-      Tuple curr = insertList[i];
+      Tuple curr = insertList.get(i);
       if (curr.field2 == prev.field2 & curr.field1 != prev.field1)
         return false;
-      if (!ContainsField2(deleteList, curr.field2))
+      if (!containsField2(deleteList, curr.field2))
         if (table.containsField2(curr.field2))
           return false;
       prev = curr;
@@ -141,18 +148,18 @@ class BinaryTableUpdater {
   }
 
   public void apply() {
-    for (int i=0 ; i < deleteList.Count ; i++) {
-      Tuple tuple = deleteList[i];
+    for (int i=0 ; i < deleteList.size() ; i++) {
+      Tuple tuple = deleteList.get(i);
       if (table.contains(tuple.field1, tuple.field2)) {
         table.delete(tuple.field1, tuple.field2);
       }
       else
-        deleteList[i] = new Tuple(0xFFFFFFFF, 0xFFFFFFFF);
+        deleteList.set(i, new Tuple(0xFFFFFFFF, 0xFFFFFFFF));
     }
 
-    var it = insertList.getEnumerator();
-    while (it.moveNext()) {
-      var curr = it.Current;
+    ListIterator<Tuple> it = insertList.listIterator();
+    while (it.hasNext()) {
+      Tuple curr = it.next();
       if (!table.contains(curr.field1, curr.field2)) {
         table.insert(curr.field1, curr.field2);
         table.store1.addRef(curr.field1);
@@ -162,9 +169,9 @@ class BinaryTableUpdater {
   }
 
   public void finish() {
-    var it = deleteList.getEnumerator();
-    while (it.moveNext()) {
-      var tuple = it.Current;
+    ListIterator<Tuple> it = deleteList.listIterator();
+    while (it.hasNext()) {
+      Tuple tuple = it.next();
       if (tuple.field1 != 0xFFFFFFFF) {
         Miscellanea._assert(table.store1.lookupSurrogate(tuple.field1) != null);
         Miscellanea._assert(table.store2.lookupSurrogate(tuple.field2) != null);
@@ -172,7 +179,7 @@ class BinaryTableUpdater {
         table.store2.release(tuple.field2);
       }
     }
-    Reset();
+    reset();
   }
 
   public void reset() {
@@ -182,32 +189,33 @@ class BinaryTableUpdater {
 
   public void dump() {
     System.out.print("deleteList =");
-    for (int i=0 ; i < deleteList.Count ; i++)
-      System.out.print(" {0}", deleteList[i]);
+    for (int i=0 ; i < deleteList.size() ; i++)
+      System.out.print(" " + deleteList.get(i).toString());
     System.out.println("");
 
     System.out.print("insertList =");
-    for (int i=0 ; i < insertList.Count ; i++)
-      System.out.print(" {0}", insertList[i]);
+    for (int i=0 ; i < insertList.size() ; i++)
+      System.out.print(" " + insertList.get(i).toString());
     System.out.println("\n");
 
     System.out.print("deleteList =");
-    for (int i=0 ; i < deleteList.Count ; i++) {
-      Tuple tuple = deleteList[i];
+    for (int i=0 ; i < deleteList.size() ; i++) {
+      Tuple tuple = deleteList.get(i);
       Obj obj1 = store1.lookupSurrogateEx(tuple.field1);
       Obj obj2 = store2.lookupSurrogateEx(tuple.field2);
-      System.out.print(" ({0}, {1})", obj1, obj2);
+      System.out.printf(" (%s, %s)", obj1.toString(), obj2.toString());
     }
     System.out.println("");
 
     System.out.print("insertList =");
-    for (int i=0 ; i < insertList.Count ; i++) {
-      Tuple tuple = insertList[i];
+    for (int i=0 ; i < insertList.size() ; i++) {
+      Tuple tuple = insertList.get(i);
       Obj obj1 = store1.lookupSurrogateEx(tuple.field1);
       Obj obj2 = store2.lookupSurrogateEx(tuple.field2);
-      System.out.print(" ({0}, {1})", obj1, obj2);
+      System.out.printf(" (%s, %s)", obj1.toString(), obj2.toString());
     }
-    System.out.println("\n\n{0}\n\n", table.copy(true));
+    //## WHY THE ARGUMENT TO BinaryTable.copy(boolean flipped) IS SET TO true?
+    System.out.printf("\n\n%s\n\n", table.copy(true).toString());
 
     store1.dump();
     store2.dump();
@@ -215,11 +223,11 @@ class BinaryTableUpdater {
 
   static boolean containsField1(ArrayList<Tuple> tuples, int field1) {
     int low = 0;
-    int high = tuples.Count - 1;
+    int high = tuples.size() - 1;
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      int midField1 = tuples[mid].field1;
+      int midField1 = tuples.get(mid).field1;
       if (midField1 > field1)
         high = mid - 1;
       else if (midField1 < field1)
@@ -233,11 +241,11 @@ class BinaryTableUpdater {
 
   static boolean containsField2(ArrayList<Tuple> tuples, int field2) {
     int low = 0;
-    int high = tuples.Count - 1;
+    int high = tuples.size() - 1;
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      int midField2 = tuples[mid].field2;
+      int midField2 = tuples.get(mid).field2;
       if (midField2 > field2)
         high = mid - 1;
       else if (midField2 < field2)
