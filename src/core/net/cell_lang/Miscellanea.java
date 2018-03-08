@@ -243,7 +243,7 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static void arrayCopy(Obj[] src, Obj[] dest, int count) {
+  public static <T> void arrayCopy(T[] src, T[] dest, int count) {
     for (int i=0 ; i < count ; i++)
       dest[i] = src[i];
   }
