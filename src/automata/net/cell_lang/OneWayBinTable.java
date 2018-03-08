@@ -15,10 +15,10 @@ class OneWayBinTable {
   }
 
   public void dump() {
-    System.out.println("count = " + count.toString());
+    System.out.println("count = " + Integer.toString(count));
     System.out.print("column = [");
     for (int i=0 ; i < column.length ; i++)
-      System.out.print("{0}{1:X}", (i > 0 ? " " : ""), column[i]);
+      System.out.printf("%s%X", i > 0 ? " " : "", column[i]);
     System.out.println("]");
     overflowTable.dump();
   }
@@ -29,7 +29,7 @@ class OneWayBinTable {
     count = 0;
   }
 
-  public void initReverse(ref OneWayBinTable source) {
+  public void initReverse(OneWayBinTable source) {
     Miscellanea._assert(count == 0);
 
     int[] srcCol = source.column;
@@ -39,12 +39,12 @@ class OneWayBinTable {
       int code = srcCol[i];
       if (code != OverflowTable.EmptyMarker)
         if (code >> 29 == 0) {
-          Insert(code, i);
+          insert(code, i);
         }
         else {
           OverflowTable.Iter it = source.overflowTable.getIter(code);
           while (!it.done()) {
-            Insert(it.get(), i);
+            insert(it.get(), i);
             it.next();
           }
         }
@@ -106,9 +106,9 @@ class OneWayBinTable {
       count++;
     }
     else {
-      boolean inserted;
-      column[surr1] = overflowTable.insert(code, surr2, out inserted);
-      if (inserted)
+      boolean[] inserted = new boolean[0];
+      column[surr1] = overflowTable.insert(code, surr2, inserted);
+      if (inserted[0])
         count++;
     }
   }
@@ -122,28 +122,28 @@ class OneWayBinTable {
       count--;
     }
     else if (code >> 29 != 0) {
-      boolean deleted;
-      column[surr1] = overflowTable.delete(code, surr2, out deleted);
-      if (deleted)
+      boolean[] deleted = new boolean[0];
+      column[surr1] = overflowTable.delete(code, surr2, deleted);
+      if (deleted[0])
         count--;
     }
   }
 
-  public int[,] Copy() {
-    int[,] res = new int[count, 2];
+  public int[][] Copy() {
+    int[][] res = new int[][] {new int[count], new int[count]};
     int next = 0;
     for (int i=0 ; i < column.length ; i++) {
       int code = column[i];
       if (code != OverflowTable.EmptyMarker) {
         if (code >> 29 == 0) {
-          res[next, 0] = i;
-          res[next++, 1] = code;
+          res[0][next] = i;
+          res[1][next++] = code;
         }
         else {
           OverflowTable.Iter it = overflowTable.getIter(code);
           while (!it.done()) {
-            res[next, 0] = i;
-            res[next++, 1] = it.get();
+            res[0][next] = i;
+            res[1][next++] = it.get();
             it.next();
           }
         }

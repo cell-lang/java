@@ -29,26 +29,26 @@ class OverflowTable {
   }
 
 
-  final int MinSize = 32;
+  static final int MinSize = 32;
 
-  public final int EmptyMarker  = 0xFFFFFFFF;
+  public static final int EmptyMarker  = 0xFFFFFFFF;
 
-  final int EndLowerMarker   = 0xDFFFFFFF;
-  final int End2UpperMarker  = 0x3FFFFFFF;
-  final int End4UpperMarker  = 0x5FFFFFFF;
-  final int End8UpperMarker  = 0x7FFFFFFF;
-  final int End16UpperMarker = 0x9FFFFFFF;
+  static final int EndLowerMarker   = 0xDFFFFFFF;
+  static final int End2UpperMarker  = 0x3FFFFFFF;
+  static final int End4UpperMarker  = 0x5FFFFFFF;
+  static final int End8UpperMarker  = 0x7FFFFFFF;
+  static final int End16UpperMarker = 0x9FFFFFFF;
 
-  public final int PayloadMask  = 0x1FFFFFFF;
+  public static final int PayloadMask  = 0x1FFFFFFF;
 
-  final int InlineTag            = 0;
-  final int Block2Tag            = 1;
-  final int Block4Tag            = 2;
-  final int Block8Tag            = 3;
-  final int Block16Tag           = 4;
-  final int HashedBlockTag       = 5;
-  final int AvailableTag         = 6;
-  final int Unused               = 7;
+  static final int InlineTag            = 0;
+  static final int Block2Tag            = 1;
+  static final int Block4Tag            = 2;
+  static final int Block8Tag            = 3;
+  static final int Block16Tag           = 4;
+  static final int HashedBlockTag       = 5;
+  static final int AvailableTag         = 6;
+  static final int Unused               = 7;
 
   int[] slots;
   int head2;
