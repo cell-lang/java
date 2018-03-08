@@ -3,24 +3,26 @@ package net.cell_lang;
 
 class BinaryTable {
   public static class Iter {
+    int[][] entries;
     int next;
-    int[,] entries;
+    int end;
 
-    public Iter(int[,] entries) {
+    public Iter(int[][] entries) {
       this.entries = entries;
       next = 0;
+      end = entries[0].length;
     }
 
     public boolean done() {
-      return next >= entries.getLength(0);
+      return next >= end;
     }
 
     public int getField1() {
-      return entries[next, 0];
+      return entries[0][next];
     }
 
     public int getField2() {
-      return entries[next, 1];
+      return entries[1][next];
     }
 
     public void next() {
@@ -53,7 +55,7 @@ class BinaryTable {
   }
 
   public boolean contains(long surr1, long surr2) {
-    return table1.contains(surr1, surr2);
+    return table1.contains((int) surr1, (int) surr2);
   }
 
   public boolean containsField1(int surr1) {
@@ -62,7 +64,7 @@ class BinaryTable {
 
   public boolean containsField2(int surr2) {
     if (table2.count == 0 & table1.count > 0)
-      table2.initReverse(ref table1);
+      table2.initReverse(table1);
     return table2.containsKey(surr2);
   }
 
@@ -72,7 +74,7 @@ class BinaryTable {
 
   public int[] lookupByCol2(int surr) {
     if (table2.count == 0 & table1.count > 0)
-      table2.initReverse(ref table1);
+      table2.initReverse(table1);
     return table2.lookup(surr);
   }
 
@@ -81,21 +83,21 @@ class BinaryTable {
   }
 
   public Iter getIter1(long surr1) {
-    int[] col2 = lookupByCol1(surr1);
-    int[,] entries = new int[col2.length, 2];
+    int[] col2 = lookupByCol1((int) surr1);
+    int[][] entries = new int[][] {new int[col2.length], new int[col2.length]};
     for (int i=0 ; i < col2.length ; i++) {
-      entries[i, 0] = surr1;
-      entries[i, 1] = col2[i];
+      entries[0][i] = (int) surr1;
+      entries[1][i] = col2[i];
     }
     return new Iter(entries);
   }
 
   public Iter getIter2(long surr2) {
-    int[] col1 = lookupByCol2(surr2);
-    int[,] entries = new int[col1.length, 2];
+    int[] col1 = lookupByCol2((int) surr2);
+    int[][] entries = new int[][] {new int[col1.length], new int[col1.length]};
     for (int i=0 ; i < col1.length ; i++) {
-      entries[i, 0] = col1[i];
-      entries[i, 1] = surr2;
+      entries[0][i] = col1[i];
+      entries[1][i] = (int) surr2;
     }
     return new Iter(entries);
   }
@@ -154,7 +156,7 @@ class BinaryTable {
     return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
   }
 
-  public int[,] RawCopy() {
+  public int[][] RawCopy() {
     return table1.copy();
   }
 }

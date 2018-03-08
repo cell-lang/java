@@ -129,7 +129,7 @@ class OneWayBinTable {
     }
   }
 
-  public int[][] Copy() {
+  public int[][] copy() {
     int[][] res = new int[][] {new int[count], new int[count]};
     int next = 0;
     for (int i=0 ; i < column.length ; i++) {
