@@ -67,10 +67,11 @@ class Miscellanea {
     System.exit(1);
   }
 
-  public static void internalFail() {
+  public static RuntimeException internalFail() {
     System.err.println("Internal error!\n");
     PrintCallStack();
     System.exit(1);
+    return new RuntimeException();
   }
 
   public static void printAssertionFailedMsg(String file, int line, String text) {
