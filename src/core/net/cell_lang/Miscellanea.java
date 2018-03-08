@@ -261,6 +261,32 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
+  public static int[] arrayAppend(int[] array, int count, int newValue) {
+    Miscellanea._assert(count <= array.length);
+
+    if (count == array.length) {
+      int newLen = Math.max(32, (3 * count) / 2);
+      int[] newArray = new int[newLen];
+      arrayCopy(array, newArray, count);
+      array = newArray;
+    }
+
+    array[count] = newValue;
+    return array;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static void arrayReset(long[] array) {
+    int len = array.length;
+    for (int i=0 ; i < len ; i++)
+      array[i] = 0;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
   public static boolean isHexDigit(byte b) {
     char ch = (char) b;
     return ('0' <= ch & ch <= '9') | ('a' <= ch & ch <= 'f') | ('A' <= ch & ch <= 'F');

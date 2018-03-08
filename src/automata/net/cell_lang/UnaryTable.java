@@ -106,6 +106,11 @@ class UnaryTable {
     // Miscellanea._assert(count == LiveCount());
   }
 
+  public void clear() {
+    count = 0;
+    Miscellanea.arrayReset(bitmap);
+  }
+
   public Obj copy() {
     if (count == 0)
       return EmptyRelObj.singleton();

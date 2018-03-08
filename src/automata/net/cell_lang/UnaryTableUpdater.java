@@ -2,11 +2,19 @@ package net.cell_lang;
 
 
 class UnaryTableUpdater {
-  ArrayList<int> deleteList = new ArrayList<int>();
-  ArrayList<int> insertList = new ArrayList<int>();
+  static int[] emptyArray = new int[0];
+
+  boolean clear = false;
+
+  int deleteCount = 0;
+  int[] deleteList = emptyArray;
+
+  int insertCount = 0;
+  int[] insertList = emptyArray;
 
   UnaryTable table;
   ValueStoreUpdater store;
+
 
   public UnaryTableUpdater(UnaryTable table, ValueStoreUpdater store) {
     this.table = table;
@@ -14,49 +22,53 @@ class UnaryTableUpdater {
   }
 
   public void clear() {
-    deleteList.clear();
-    UnaryTable.Iter it = table.getIter();
-    while (!it.done()) {
-      deleteList.add(it.get());
-      it.next();
-    }
+    clear = true;
   }
 
   public void set(Obj value) {
-    Clear();
-    Miscellanea._assert(insertList.Count == 0);
+    Miscellanea._assert(deleteCount == 0 & insertCount == 0);
+    clear();
+    int size = value.getSize();
+    insertCount = size;
+    insertList = new int[size];
     SeqOrSetIter it = value.getSeqOrSetIter();
-    while (!it.done()) {
+    for (int i=0 ; i < size ; i++) {
+      Miscellanea._assert(!it.done());
       Obj val = it.get();
       int surr = store.lookupValueEx(val);
       if (surr == -1)
         surr = store.insert(val);
-      insertList.add(surr);
+      insertList[i] = surr;
       it.next();
     }
+    Miscellanea._assert(it.done());
   }
 
   public void delete(long value) {
-    if (table.contains(value))
-      deleteList.add(value);
+    if (table.contains((int) value))
+      Miscellanea.arrayAppend(deleteList, deleteCount++, (int) value);
   }
 
   public void insert(long value) {
-    insertList.add(value);
+    Miscellanea.arrayAppend(insertList, insertCount++, (int) value);
   }
 
   public void apply() {
-    for (int i=0 ; i < deleteList.Count ; i++) {
-      int surr = deleteList[i];
-      if (table.contains(surr))
-        table.delete(surr);
-      else
-        deleteList[i] = 0xFFFFFFFF;
+    if (clear) {
+      table.clear();
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (table.contains(surr))
+          table.delete(surr);
+        else
+          deleteList[i] = 0xFFFFFFFF;
+      }
     }
 
-    var it = insertList.getEnumerator();
-    while (it.moveNext()) {
-      int surr = it.Current;
+    for (int i=0 ; i < insertCount ; i++) {
+      int surr = insertList[i];
       if (!table.contains(surr)) {
         table.insert(surr);
         table.store.addRef(surr);
@@ -65,16 +77,21 @@ class UnaryTableUpdater {
   }
 
   public void finish() {
-    var it = deleteList.getEnumerator();
-    while (it.moveNext()) {
-      int surr = it.Current;
+    for (int i=0 ; i < deleteCount ; i++) {
+      int surr = deleteList[i];
       if (surr != 0xFFFFFFFF)
         table.store.release(surr);
     }
   }
 
   public void reset() {
-    deleteList.clear();
-    insertList.clear();
+    clear = false;
+    deleteCount = 0;
+    insertCount = 0;
+
+    if (deleteList.length > 1024)
+      deleteList = emptyArray;
+    if (insertList.length > 1024)
+      insertList = emptyArray;
   }
 }
