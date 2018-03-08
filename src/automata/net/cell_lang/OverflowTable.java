@@ -175,18 +175,18 @@ class OverflowTable {
             System.out.println();
           if (j % 16 == 0)
             System.out.print("\n  ");
-          System.out.print("{0} ", slotOK[j] ? 1 : 0);
+          System.out.printf("%d ", slotOK[j] ? 1 : 0);
         }
         System.out.println();
         System.out.println();
-        System.out.println("i = {0}", i);
+        System.out.printf("i = %d\n", i);
         System.out.println();
       }
       check(slotOK[i], "slotOK[i]");
     }
   }
 
-  void checkGroup(int tag, int blockIdx, boolean[] slotOK, int totalCount) {
+  int checkGroup(int tag, int blockIdx, boolean[] slotOK, int totalCount) {
     check(tag >= Block2Tag, "tag >= Block2Tag");
     check(tag <= HashedBlockTag, "tag <= HashedBlockTag");
 
@@ -260,7 +260,7 @@ class OverflowTable {
     if (!cond) {
       System.out.println(msg);
       System.out.println("");
-      Dump();
+      dump();
       System.out.println("");
       Miscellanea._assert(false);
     }
@@ -279,16 +279,16 @@ class OverflowTable {
         System.out.print("  ");
       int slot = slots[i];
       int payload = slot & PayloadMask;
-      System.out.print("  {0}:{1,3}", slot >> 29, payload == 0x1FFFFFFF ? "-" : payload.toString());
+      System.out.printf("  %d:%3s", slot >> 29, payload == 0x1FFFFFFF ? "-" : Integer.toString(payload));
     }
     System.out.println();
     System.out.println();
-    System.out.println(
-      "  heads: 2 = {0}, 4 = {1}, 8 = {2}, 16 = {3}",
-      head2 != EmptyMarker ? head2.toString() : "-",
-      head4 != EmptyMarker ? head4.toString() : "-",
-      head8 != EmptyMarker ? head8.toString() : "-",
-      head16 != EmptyMarker ? head16.toString() : "-"
+    System.out.printf(
+      "  heads: 2 = %d, 4 = %d, 8 = %d, 16 = %d\n",
+      head2  != EmptyMarker ? Integer.toString(head2)  : "-",
+      head4  != EmptyMarker ? Integer.toString(head4)  : "-",
+      head8  != EmptyMarker ? Integer.toString(head8)  : "-",
+      head16 != EmptyMarker ? Integer.toString(head16) : "-"
     );
   }
 
@@ -335,12 +335,11 @@ class OverflowTable {
         return insertWith16Block(payload, value, handle, inserted);
 
       case 5: // Hashed block
-        InsertIntoHashedBlock(payload, value, hashCode(value), inserted);
+        insertIntoHashedBlock(payload, value, hashCode(value), inserted);
         return handle;
 
       default:
-        Miscellanea.internalFail();
-        throw new NotImplementedException(); // Control flow cannot get here
+        throw Miscellanea.internalFail(); // Control flow cannot get here
     }
   }
 
@@ -366,8 +365,7 @@ class OverflowTable {
         return deleteFromHashedBlock(blockIdx, value, handle, hashCode(value), deleted);
 
       default:
-        Miscellanea.internalFail();
-        throw new NotImplementedException(); // Control flow cannot get here
+        throw Miscellanea.internalFail(); // Control flow cannot get here
     }
   }
 
@@ -393,8 +391,7 @@ class OverflowTable {
         return inHashedBlock(value, blockIdx, hashCode(value));
 
       default:
-        Miscellanea.internalFail();
-        throw new NotImplementedException(); // Control flow cannot get here
+        throw Miscellanea.internalFail(); // Control flow cannot get here
     }
   }
 
@@ -411,20 +408,19 @@ class OverflowTable {
         return 2;
 
       case 2: // 4-block slot
-        return 2 + CountFrom(blockIdx + 2, 2);
+        return 2 + countFrom(blockIdx + 2, 2);
 
       case 3: // 8-block slot
-        return 4 + CountFrom(blockIdx + 4, 4);
+        return 4 + countFrom(blockIdx + 4, 4);
 
       case 4: // 16-slot block
-        return 7 + CountFrom(blockIdx + 7, 9);
+        return 7 + countFrom(blockIdx + 7, 9);
 
       case 5: // Hashed block
         return slots[blockIdx];
 
       default:
-        Miscellanea.internalFail();
-        throw new NotImplementedException(); // Control flow cannot get here
+        throw Miscellanea.internalFail(); // Control flow cannot get here
     }
   }
 
@@ -443,14 +439,13 @@ class OverflowTable {
       case 2: // 4-block slot
       case 3: // 8-block slot
       case 4: // 16-slot block
-        return new Iter(slots, blockIdx, Count(handle));
+        return new Iter(slots, blockIdx, count(handle));
 
       case 5: // Hashed block
         return hashedBlockIter(blockIdx);
 
       default:
-        Miscellanea.internalFail();
-        throw new NotImplementedException(); // Control flow cannot get here
+        throw Miscellanea.internalFail(); // Control flow cannot get here
     }
   }
 
@@ -573,7 +568,7 @@ class OverflowTable {
     // Checking first that the new value is not the same as the old one
     if (value0 == value1) {
       // When there's only a single value, the value and the handle are the same
-      inserted = false;
+      inserted[0] = false;
       return value0;
     }
 
@@ -581,7 +576,7 @@ class OverflowTable {
     slots[blockIdx]   = value0;
     slots[blockIdx+1] = value1;
 
-    inserted = true;
+    inserted[0] = true;
     return blockIdx | (Block2Tag << 29);
   }
 
@@ -590,12 +585,12 @@ class OverflowTable {
     int value1 = slots[blockIdx+1];
 
     if (value != value0 & value != value1) {
-      deleted = false;
+      deleted[0] = false;
       return handle;
     }
 
     release2Block(blockIdx);
-    deleted = true;
+    deleted[0] = true;
     return value == value0 ? value1 : value0;
   }
 
@@ -610,7 +605,7 @@ class OverflowTable {
     int value1 = slots[block2Idx+1];
 
     if (value == value0 | value == value1) {
-      inserted = false;
+      inserted[0] = false;
       return handle;
     }
 
@@ -622,7 +617,7 @@ class OverflowTable {
     slots[block4Idx+2] = value;
     slots[block4Idx+3] = EmptyMarker;
 
-    inserted = true;
+    inserted[0] = true;
     return block4Idx | (Block4Tag << 29);
   }
 
@@ -633,11 +628,11 @@ class OverflowTable {
     int value3 = slots[blockIdx+3];
 
     if (value == value3) {
-      deleted = true;
+      deleted[0] = true;
       slots[blockIdx+3] = EmptyMarker;
     }
     else if (value == value2) {
-      deleted = true;
+      deleted[0] = true;
       if (value3 == EmptyMarker) {
         slots[blockIdx+2] = EmptyMarker;
       }
@@ -647,7 +642,7 @@ class OverflowTable {
       }
     }
     else if (value == value1) {
-      deleted = true;
+      deleted[0] = true;
       if (value2 == EmptyMarker) {
         release4Block(blockIdx);
         return value0;
@@ -662,7 +657,7 @@ class OverflowTable {
       }
     }
     else if (value == value0) {
-      deleted = true;
+      deleted[0] = true;
       if (value2 == EmptyMarker) {
         release4Block(blockIdx);
         return value1;
@@ -677,7 +672,7 @@ class OverflowTable {
       }
     }
     else
-      deleted = false;
+      deleted[0] = false;
 
     return handle;
   }
@@ -692,11 +687,11 @@ class OverflowTable {
     int value3 = slots[block4Idx+3];
 
     if (value == value0 | value == value1 | value == value2 | value == value3) {
-      inserted = false;
+      inserted[0] = false;
       return handle;
     }
 
-    inserted = true;
+    inserted[0] = true;
     if (value3 == EmptyMarker) {
       // Easy case: the last slot is available
       // We store the new value there, and return the same handle
@@ -751,7 +746,7 @@ class OverflowTable {
     // of values in the block before the deletion
     Miscellanea._assert(idx >= 4);
 
-    deleted = targetIdx != -1;
+    deleted[0] = targetIdx != -1;
 
     if (targetIdx == -1)
       return handle;
@@ -784,7 +779,7 @@ class OverflowTable {
 
     boolean isDuplicate = (value == value0 | value == value1 | value == value2 | value == value3) ||
                        (value == value4 | value == value5 | value == value6 | value == value7);
-    inserted = !isDuplicate;
+    inserted[0] = !isDuplicate;
 
     if (isDuplicate)
       return handle;
@@ -849,7 +844,7 @@ class OverflowTable {
     // of values in the block before the deletion
     Miscellanea._assert(idx >= 7);
 
-    deleted = targetIdx != -1;
+    deleted[0] = targetIdx != -1;
 
     if (targetIdx == -1)
       return handle;
@@ -875,12 +870,12 @@ class OverflowTable {
       for (int i=0 ; i < 16 ; i++) {
         int valueI = slots[blockIdx+i];
         if (value == valueI) {
-          inserted = false;
+          inserted[0] = false;
           return handle;
         }
         if (valueI == EmptyMarker) {
           slots[blockIdx+i] = value;
-          inserted = true;
+          inserted[0] = true;
           return handle;
         }
       }
@@ -891,7 +886,7 @@ class OverflowTable {
     // we need to turn this block into a hashed one
     for (int i=0 ; i < 16 ; i++)
       if (value == slots[blockIdx+i]) {
-        inserted = false;
+        inserted[0] = false;
         return handle;
       }
 
@@ -904,16 +899,16 @@ class OverflowTable {
     // Transferring the existing values
     for (int i=0 ; i < 16 ; i++) {
       int content = slots[blockIdx+i];
-      InsertIntoHashedBlock(hashedBlockIdx, content, hashCode(content), inserted);
-      Miscellanea._assert(inserted);
+      insertIntoHashedBlock(hashedBlockIdx, content, hashCode(content), inserted);
+      Miscellanea._assert(inserted[0]);
     }
 
     // Releasing the old block
     release16Block(blockIdx);
 
     // Adding the new value
-    InsertIntoHashedBlock(hashedBlockIdx, value, hashCode(value), inserted);
-    Miscellanea._assert(inserted);
+    insertIntoHashedBlock(hashedBlockIdx, value, hashCode(value), inserted);
+    Miscellanea._assert(inserted[0]);
 
     // Returning the tagged index of the block
     return hashedBlockIdx | (HashedBlockTag << 29);
@@ -923,18 +918,18 @@ class OverflowTable {
     int slotIdx = blockIdx + hashcode % 15 + 1;
     int content = slots[slotIdx];
     if (content == EmptyMarker) {
-      deleted = false;
+      deleted[0] = false;
       return handle;
     }
     int tag = content >> 29;
     Miscellanea._assert(tag <= 5);
     if (tag == 0) {
       if (content == value) {
-        deleted = true;
+        deleted[0] = true;
         slots[slotIdx] = EmptyMarker;
       }
       else {
-        deleted = false;
+        deleted[0] = false;
         return handle;
       }
     }
@@ -948,7 +943,7 @@ class OverflowTable {
       slots[slotIdx] = newHandle;
     }
 
-    if (deleted) {
+    if (deleted[0]) {
       int count = slots[blockIdx] - 1;
       Miscellanea._assert(count >= 6);
       if (count == 6)
@@ -1035,7 +1030,7 @@ class OverflowTable {
     if (content == EmptyMarker) {
       slots[slotIdx] = value;
       slots[blockIdx]++;
-      inserted = true;
+      inserted[0] = true;
     }
     else {
       int tag = content >> 29;
@@ -1045,8 +1040,8 @@ class OverflowTable {
         slots[slotIdx] = newHandle;
       }
       else
-        InsertIntoHashedBlock(content & PayloadMask, value, hashcode / 15, inserted);
-      if (inserted)
+        insertIntoHashedBlock(content & PayloadMask, value, hashcode / 15, inserted);
+      if (inserted[0])
         slots[blockIdx]++;
     }
   }

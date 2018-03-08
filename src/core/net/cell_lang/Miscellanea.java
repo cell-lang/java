@@ -71,7 +71,7 @@ class Miscellanea {
     System.err.println("Internal error!\n");
     PrintCallStack();
     System.exit(1);
-    return new RuntimeException();
+    return null;
   }
 
   public static void printAssertionFailedMsg(String file, int line, String text) {
