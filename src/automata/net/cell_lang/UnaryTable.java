@@ -2,7 +2,7 @@ package net.cell_lang;
 
 
 class UnaryTable {
-  public struct Iter {
+  public static class Iter {
     int index;
     UnaryTable table;
 
@@ -13,7 +13,7 @@ class UnaryTable {
       else {
         this.index = index;
         if (!table.contains(0))
-          Next();
+          next();
       }
     }
 
@@ -36,7 +36,7 @@ class UnaryTable {
 
   final int InitSize = 4;
 
-  ulong[] bitmap = new ulong[InitSize];
+  long[] bitmap = new long[InitSize];
   int count = 0;
 
   public ValueStore store;
@@ -61,7 +61,7 @@ class UnaryTable {
   int liveCount() {
     int liveCount = 0;
     for (int i=0 ; i < bitmap.length ; i++) {
-      ulong mask = bitmap[i];
+      long mask = bitmap[i];
       for (int j=0 ; j < 64 ; j++)
         if (((mask >> j) & 1) != 0)
           liveCount++;
@@ -78,14 +78,14 @@ class UnaryTable {
       int newLen = 2 * len;
       while (widx >= newLen)
         newLen *= 2;
-      ulong[] newBitmap = new ulong[newLen];
+      long[] newBitmap = new long[newLen];
       Miscellanea.arrayCopy(bitmap, newBitmap, len);
       bitmap = newBitmap;
     }
 
-    ulong mask = bitmap[widx];
+    long mask = bitmap[widx];
     if (((mask >> bidx) & 1) == 0) {
-      bitmap[widx] = mask | (1UL << bidx);
+      bitmap[widx] = mask | (1L << bidx);
       count++;
     }
     // Miscellanea._assert(count == LiveCount());
@@ -96,10 +96,10 @@ class UnaryTable {
 
     int widx = surr / 64;
     if (widx < bitmap.length) {
-      ulong mask = bitmap[widx];
+      long mask = bitmap[widx];
       int bidx = (int) surr % 64;
       if (((mask >> bidx) & 1) == 1) {
-        bitmap[widx] = mask & ~(1UL << bidx);
+        bitmap[widx] = mask & ~(1L << bidx);
         count--;
       }
     }
@@ -112,7 +112,7 @@ class UnaryTable {
     Obj[] objs = new Obj[count];
     int next = 0;
     for (int i=0 ; i < bitmap.length ; i++) {
-      ulong mask = bitmap[i];
+      long mask = bitmap[i];
       for (int j=0 ; j < 64 ; j++)
         if (((mask >> (int) j) & 1) != 0)
           objs[next++] = store.getValue(j + 64 * i);
@@ -132,7 +132,7 @@ class UnaryTable {
 //      return binStr;
 //    }
 //
-//    public static String IntToBinaryString(ulong number) {
+//    public static String IntToBinaryString(long number) {
 //      String binStr = "";
 //      while (number > 0) {
 //        binStr = (number & 1) + binStr;
