@@ -73,7 +73,7 @@ implicit {
     "try {"
   ) & indent_lines(native_code(body, block_id)) & (
     "}",
-    "catch {",
+    "catch (Exception e) {",
     "  " & native_var_ref_name(var) & " = NullObj.Singleton();",
     "}"
   );

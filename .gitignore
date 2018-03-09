@@ -22,3 +22,5 @@ java.hprof.txt
 bin/compiler.jar
 codegen.jar
 Tests.java
+bin/cellc-java
+bin/cellc-java.jar

@@ -277,7 +277,7 @@ implicit {
 
   // String gen_c_decl(BoolProcDef pd) {
   //   par_list = append(pd.arity * ("Obj"), ", ");
-  //   return "bool " & native_fn_name(pd.name) & "(" & par_list & ");";
+  //   return "boolean " & native_fn_name(pd.name) & "(" & par_list & ");";
   // }
 
 

@@ -115,9 +115,9 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType] {
       "  get {",
       "    Obj obj = automaton." & var_name & ";",
       "    if (obj.IsNullObj())",
-      "      throw new Exception(\"Output is undefined\");",
+      "      throw new RuntimeException(\"Output is undefined\");",
       "    if (obj.IsBlankObj())" if output.discrete,
-      "      throw new Exception(\"Discrete output is not set\");" if output.discrete
+      "      throw new RuntimeException(\"Discrete output is not set\");" if output.discrete
     ) & indent_lines(indent_lines(export_code(inter_type, "obj", "return "))) & (
       "  }",
       "}"
@@ -192,12 +192,12 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType] {
                   (if i == 0 then "public " & l else l : l @ i <- output_enum_docs);
 
     docs = (
-      "class CellLang.Generated." & auto_class_name & " {"
+      "class net.cell_lang.Generated." & auto_class_name & " {"
     ) & indent_lines(enums_docs) & (
       "",
       "  " & auto_class_name & "();",
       "",
-      "  void SetInput(Input input, string value);" if inputs != (),
+      "  void SetInput(Input input, String value);" if inputs != (),
       "  Value ReadOutput(Output output);" if outputs != (),
       "" if is_time_sensitive,
       "  void SetElapsedMillisecs(uint);" if is_time_sensitive,
@@ -205,7 +205,7 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType] {
       "",
       "  " & apply_ret_type & " Apply();",
       "  Value ReadState();",
-      "  void SetState(string);",
+      "  void SetState(String);",
       "",
       "  Output[] ChangedOutputs;" if outputs != ()
     );
@@ -237,12 +237,12 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType] {
       "  return Conversions.ExportAsValue(automaton.CopyState());",
       "}",
       "",
-      "public void SetState(string str) {",
+      "public void SetState(String str) {",
       "  if (automaton.is_new)",
-      "    throw new Exception(\"Cannot set state: automaton instance is not new\");",
+      "    throw new RuntimeException(\"Cannot set state: automaton instance is not new\");",
       "  Obj obj = Conversions.ConvertText(str);",
       "  if (!is_type_0(obj))",
-      "    throw new Exception(\"Invalid state\");",
+      "    throw new RuntimeException(\"Invalid state\");",
       "  automaton.SetState(obj);",
       "}"
     );
@@ -252,7 +252,7 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType] {
         "",
         "public void SetElapsedMillisecs(int time) {",
         "  if (automaton.is_new | automaton.elapsed_time > 0)",
-        "    throw new Exception(\"Cannot set elapsed time now\");",
+        "    throw new RuntimeException(\"Cannot set elapsed time now\");",
         "  automaton.elapsed_time = 1000000L * (uint) time;",
         "}",
         "",
@@ -284,7 +284,7 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType] {
         "  Environment.Exit(1); // Internal error",
         "}",
         "",
-        "public void SetInput(Input input, string value) {",
+        "public void SetInput(Input input, String value) {",
         "  InternalSetInput(input, Conversions.ConvertText(value));",
         "}"
       );
@@ -376,7 +376,7 @@ implicit typedefs : [TypeName -> NeType] {
 
     code = code & (
       "  if (!" & cond & ")",
-      "    throw new Exception(\"Invalid argument type\");"
+      "    throw new RuntimeException(\"Invalid argument type\");"
     ) if cond != "";
 
     code = code & (
@@ -385,9 +385,9 @@ implicit typedefs : [TypeName -> NeType] {
         "(" & append((("objArg" & printed(i) : i < arity) | "env"), ", ") & ");"
       ) & indent_lines(indent_lines(export_code(inter_ret_type, "resObj", "return "))) & (
       "  }",
-      "  catch {",
+      "  catch (Exception e) {",
       "    env = new Env();",
-      "    throw;",
+      "    throw e;",
       "  }",
       "}"
     );

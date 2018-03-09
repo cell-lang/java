@@ -1,6 +1,7 @@
 package net.cell_lang;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 import java.io.Writer;
 import java.io.OutputStreamWriter;
@@ -309,16 +310,18 @@ class Miscellanea {
     return n1 ^ n2 ^ n3;
   }
 
-  // public static int[] CodePoints(String str) {
-  //   int len = str.length();
-  //   List<int> cps = new List<int>(len);
-  //   for (int i=0 ; i < len ; i++) {
-  //     cps.add(Char.convertToUtf32(str, i));
-  //     if (Char.isHighSurrogate(str[i]))
-  //       i++;
-  //   }
-  //   return cps.toArray();
-  // }
+  public static int[] codePoints(String str) {
+    int len = str.length();
+    int[] codePoints = new int[len];
+    int count = 0;
+    for (int i=0 ; i < len ; i++) {
+      int ch = str.codePointAt(i);
+      codePoints[count++] = ch;
+      if (ch > Character.MAX_VALUE)
+        i++;
+    }
+    return count == len ? codePoints : Arrays.copyOf(codePoints, count);
+  }
 
   public static boolean debugFlag = false;
 

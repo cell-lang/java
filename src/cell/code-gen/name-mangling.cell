@@ -277,7 +277,7 @@ String native_table_type(Table table) {
 ////////////////////////////////////////////////////////////////////////////////
 
 String native_const(<blank, undefined> state) =
-  #(if state == :blank then "BlankObj" else "NullObj") & ".Singleton()";
+  #(if state == :blank then "BlankObj" else "NullObj") & ".singleton()";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -304,29 +304,29 @@ String native_name(UpdateId id) =
 
 ## THE PARAMETER SHOULD BE REMOVED...
 
-String copy_state_proc_name         (DBSymbol db_type) = "CopyState";
-String set_state_proc_name          (DBSymbol db_type) = "SetState";
-String set_state_entry_point_name   (DBSymbol db_type) = "SetStateEntryPoint";
-String updater_creation_proc_name   (DBSymbol db_type) = "NewUpdater";
-String updater_reset_proc_name      (DBSymbol db_type) = "ResetUpdater";
-String updates_copy_proc_name       (DBSymbol db_type) = "Copy";
-String updates_apply_proc_name      (DBSymbol db_type) = "Apply";
-String updates_finish_proc_name     (DBSymbol db_type) = "Finish";
-String updates_check_proc_name      (DBSymbol db_type) = "Check";
-String update_entry_point_name      (DBSymbol db_type) = "UpdateEntryPoint";
-String init_method_name             (DBSymbol db_type) = "Init";
-String cleanup_method_name          (DBSymbol db_type) = "Cleanup";
+String copy_state_proc_name         (DBSymbol db_type) = "copyState";
+String set_state_proc_name          (DBSymbol db_type) = "setState";
+String set_state_entry_point_name   (DBSymbol db_type) = "setStateEntryPoint";
+String updater_creation_proc_name   (DBSymbol db_type) = "newUpdater";
+String updater_reset_proc_name      (DBSymbol db_type) = "resetUpdater";
+String updates_copy_proc_name       (DBSymbol db_type) = "copy";
+String updates_apply_proc_name      (DBSymbol db_type) = "apply";
+String updates_finish_proc_name     (DBSymbol db_type) = "finish";
+String updates_check_proc_name      (DBSymbol db_type) = "check";
+String update_entry_point_name      (DBSymbol db_type) = "updateEntryPoint";
+String init_method_name             (DBSymbol db_type) = "init";
+String cleanup_method_name          (DBSymbol db_type) = "cleanup";
 
-String state_is_def_proc_name(AutoSymbol auto_type) = "StateIsDef";
+String state_is_def_proc_name(AutoSymbol auto_type) = "stateIsDef";
 
-String set_state_proc_name(AutoSymbol auto_type) = "SetState";
+String set_state_proc_name(AutoSymbol auto_type) = "setState";
 
-String copy_state_proc_name     (AutoSymbol auto_type) = "CopyState";
-String pre_init_method_name     (AutoSymbol auto_type) = "Preinit";
-String apply_method_name        (AutoSymbol auto_type) = "Apply";
-String cleanup_method_name      (AutoSymbol auto_type) = "Cleanup";
-String insert_timer_method_name (AutoSymbol auto_type) = "InsertTimer";
-String clear_timer_method_name  (AutoSymbol auto_type) = "ClearTimer";
+String copy_state_proc_name     (AutoSymbol auto_type) = "copyState";
+String pre_init_method_name     (AutoSymbol auto_type) = "preinit";
+String apply_method_name        (AutoSymbol auto_type) = "apply";
+String cleanup_method_name      (AutoSymbol auto_type) = "cleanup";
+String insert_timer_method_name (AutoSymbol auto_type) = "insertTimer";
+String clear_timer_method_name  (AutoSymbol auto_type) = "clearTimer";
 
 String update_name(DBSymbol db, UpdateId id) = native_name(id);
 String user_def_method_name(<AutoSymbol, DBSymbol> type, MethodId method) = native_name(method);
@@ -378,4 +378,24 @@ String native_fn_name(ProcSymbol proc_symb) {
   name = upper_camel_case(bare_symb) & "_P";
   name = "Procs." & name if bare_symb :: <file_read, file_write, print, get_char>;
   return name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+String lower_camel_case(Atom a) = lower_camel_case(_str_(a), false);
+
+String lower_camel_case(String s, Bool keep_underscores) {
+  first = false;
+  res = ();
+  for ch @ i <- chars(s):
+    tr_ch = ch;
+    if ch == ascii_underscore:
+      first = true;
+    else
+      tr_ch = nat(ch - ascii_lower_a + ascii_upper_a) if ch >= ascii_lower_a and ch <= ascii_lower_z and first; ## CREATE PRELUDE FUNCTION is_lower()/is_upper() AND to_lower()/to_upper()
+      first = false;
+    ;
+    res = res & (tr_ch if tr_ch != ascii_underscore or keep_underscores);
+  ;
+  return string(res);
 }

@@ -88,7 +88,7 @@ implicit {
     const_data = [gen_const_data(block.name, c) : c <- block.const_data];
 
     return join((
-      ("class " & class_name & " {"),
+      ("static class " & class_name & " {"),
       indent_lines(vars_decls),
       indent_lines(aux_vars_decls),
       indent_lines(join((("", c) : c <- isort(const_data)))),

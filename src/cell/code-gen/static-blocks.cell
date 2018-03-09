@@ -41,7 +41,7 @@ implicit {
 
     return join((
       aux_struct_decl(block),
-      ("", "", "class " & class_name & " {"),
+      ("", "", "static class " & class_name & " {"),
       indent_lines(memb_decls),
       (""), indent_lines(ctor_code),
       (""), indent_lines(copy_state_code),
@@ -133,7 +133,7 @@ implicit {
     updater_reset_call = native_method_call("this", updater_reset_proc_name(block_name), ("updater"));
 
     body = (
-      "bool ok = false;",
+      "boolean ok = false;",
       // "int depth = get_call_stack_depth();",
       "try {",
       "  " & handler_call,
@@ -143,7 +143,7 @@ implicit {
       "    " & updates_finish_code,
       "  }",
       "}",
-      "catch {",
+      "catch (Exception e) {",
       // "  pop_try_mode_call_info(depth);",
       "}",
       updater_reset_call,
@@ -152,7 +152,7 @@ implicit {
 
     name = update_entry_point_name(block_name);
     updater_type = aux_struct_c_name(block_name);
-    sgn = "public bool " & name & "(Obj a0, " & updater_type & " updater, Env env) {";
+    sgn = "public boolean " & name & "(Obj a0, " & updater_type & " updater, Env env) {";
     return (sgn) & indent_lines(body) & ("}");
   }
 
@@ -168,7 +168,7 @@ implicit {
       //aux_var_decl,
       //aux_struct_init_call,
       set_state_call,
-      "bool ok = " & updates_check_call,
+      "boolean ok = " & updates_check_call,
       "if (ok) {",
       //"  " & updates_copy_call,
       "  " & updates_apply_call,
@@ -180,7 +180,7 @@ implicit {
 
     name = set_state_entry_point_name(block_name);
     updater_type = aux_struct_c_name(block_name);
-    sgn = "public bool " & name & "(Obj a0, " & updater_type & " updater) {";
+    sgn = "public boolean " & name & "(Obj a0, " & updater_type & " updater) {";
     return (sgn) & indent_lines(body) & ("}");
   }
 
@@ -196,9 +196,9 @@ implicit {
       : v, t <- block.nested_blocks
     ]);
 
-    body = ("bool ok = true;") & tables_check_code & nested_blocks_check_code & ("return ok;");
+    body = ("boolean ok = true;") & tables_check_code & nested_blocks_check_code & ("return ok;");
 
-    sgn = "public bool " & updates_check_proc_name(block.name) &  "(" & aux_struct_c_name(block.name) & " updater) {";
+    sgn = "public boolean " & updates_check_proc_name(block.name) &  "(" & aux_struct_c_name(block.name) & " updater) {";
     return (sgn) & indent_lines(body) & ("}");
 
 
@@ -206,16 +206,16 @@ implicit {
       // 1 -> [[] -> "unary_table_updates_check"],
       2 -> [
         // []                        -> "binary_table_updates_check",
-        [[0]]                     -> "CheckUpdates_1",
-        [[1]]                     -> "CheckUpdates_2",
-        [[0], [1]]                -> "CheckUpdates_1_2"
+        [[0]]                     -> "checkUpdates_1",
+        [[1]]                     -> "checkUpdates_2",
+        [[0], [1]]                -> "checkUpdates_1_2"
       ],
       3 -> [
         // []                        -> "ternary_table_updates_check",
-        [[0, 1]]                  -> "CheckUpdates_12",
-        [[0, 1], [2]]             -> "CheckUpdates_12_3",
-        [[0, 1], [1, 2]]          -> "CheckUpdates_12_23",
-        [[0, 1], [1, 2], [2, 0]]  -> "CheckUpdates_12_23_31"
+        [[0, 1]]                  -> "checkUpdates_12",
+        [[0, 1], [2]]             -> "checkUpdates_12_3",
+        [[0, 1], [1, 2]]          -> "checkUpdates_12_23",
+        [[0, 1], [1, 2], [2, 0]]  -> "checkUpdates_12_23_31"
       ]
     ];
   }
@@ -246,12 +246,12 @@ implicit {
 
   String* updates_apply_code(StaticBlock block) {
     value_stores_apply_code = (
-      native_method_call(aux_struct_var_ref_name(vs), "Apply", ())
+      native_method_call(aux_struct_var_ref_name(vs), "apply", ())
       : vs <- isort(block.value_stores)
     );
 
     tables_apply_code = [
-      native_method_call(pending_updates_var_ref_name(v), "Apply", ())
+      native_method_call(pending_updates_var_ref_name(v), "apply", ())
       : v, t <- block.tables
     ];
 
@@ -272,7 +272,7 @@ implicit {
     vars_copy_code = join((var_apply_code(id) : id <- var_ids));
 
     tables_finish_code = [
-      native_method_call(pending_updates_var_ref_name(v), "Finish", ()) : v, t <- block.tables
+      native_method_call(pending_updates_var_ref_name(v), "finish", ()) : v, t <- block.tables
     ];
 
     nested_blocks_finish_code = [
@@ -294,7 +294,7 @@ implicit {
     );
 
     aux_bool_vars_decls = (
-      "public bool " & native_var_decl_name(nested_db_spent(v)) & ";"
+      "public boolean " & native_var_decl_name(nested_db_spent(v)) & ";"
       : v, unused_var <- isort(block.nested_blocks)
     );
 
@@ -316,7 +316,7 @@ implicit {
                      aux_tables_decls & nested_aux_blocks_decls;
 
     return join((
-      ("public class " & aux_struct_c_name(block.name) & " {"),
+      ("static class " & aux_struct_c_name(block.name) & " {"),
       indent_lines(aux_memb_decls),
       ("};")
     ));
@@ -325,7 +325,7 @@ implicit {
 
   String* updater_creation_code(StaticBlock block) {
     var_ids = (bare_id(v) : v <- isort(keys(block.state_vars)));
-    init_vars_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.Singleton();" : id <- var_ids);
+    init_vars_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton();" : id <- var_ids);
 
     bool_vars_ids = isort(keys(block.nested_blocks));
     bool_vars_init_code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- bool_vars_ids);
@@ -361,17 +361,17 @@ implicit {
 
   String* updater_reset_code(StaticBlock block) {
     var_ids = (bare_id(v) : v <- isort(keys(block.state_vars)));
-    vars_reset_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.Singleton();" : id <- var_ids);
+    vars_reset_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton();" : id <- var_ids);
 
     bool_vars_ids = isort(keys(block.nested_blocks));
     bool_vars_reset_code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- bool_vars_ids);
 
     value_stores_reset_code = (
-      native_method_call(aux_struct_var_ref_name(vs), "Reset", ()) : vs <- isort(block.value_stores)
+      native_method_call(aux_struct_var_ref_name(vs), "reset", ()) : vs <- isort(block.value_stores)
     );
 
     tables_reset_code = (
-      native_method_call(pending_updates_var_ref_name(v), "Reset", ())
+      native_method_call(pending_updates_var_ref_name(v), "reset", ())
       : v, t <- isort(block.tables)
     );
 
@@ -398,7 +398,7 @@ implicit {
     psv_str = native_var_ref_name(pending_state_var(var_id));
     mv_str = native_var_ref_name(memb_var(var_id));
     return (
-      "if (!" & psv_str & ".IsBlankObj()) {",
+      "if (!" & psv_str & ".isBlankObj()) {",
       "  " & mv_str & " = " & psv_str & ";",
       "}"
     );
