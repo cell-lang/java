@@ -7,8 +7,7 @@ class Index {
   public int[] hashtable;
   public int[] buckets;
 
-  public void init(int size) {
-    Miscellanea._assert(hashtable == null & buckets == null);
+  public Index(int size) {
     hashtable = new int[size];
     buckets   = new int[size];
     for (int i=0 ; i < size ; i++) {
@@ -17,19 +16,19 @@ class Index {
     }
   }
 
-  public void reset() {
-    hashtable = null;
-    buckets = null;
-  }
+  // public void reset() {
+  //   hashtable = null;
+  //   buckets = null;
+  // }
 
   public void clear() {
-    if (hashtable != null) {
-      int size = hashtable.length;
-      for (int i=0 ; i < size ; i++) {
-        hashtable[i] = Empty;
-        buckets[i] = Empty;
-      }
+    // if (hashtable != null) {
+    int size = hashtable.length;
+    for (int i=0 ; i < size ; i++) {
+      hashtable[i] = Empty;
+      buckets[i] = Empty;
     }
+    // }
   }
 
   public void insert(int index, int hashcode) {
@@ -66,9 +65,9 @@ class Index {
     }
   }
 
-  public boolean isBlank() {
-    return hashtable == null;
-  }
+  // public boolean isBlank() {
+  //   return hashtable == null;
+  // }
 
   public int head(int hashcode) {
     return hashtable[hashcode % hashtable.length];

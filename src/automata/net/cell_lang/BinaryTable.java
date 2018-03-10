@@ -31,15 +31,13 @@ class BinaryTable {
   }
 
 
-  OneWayBinTable table1;
-  OneWayBinTable table2;
+  OneWayBinTable table1 = new OneWayBinTable();
+  OneWayBinTable table2 = new OneWayBinTable();
 
   public ValueStore store1;
   public ValueStore store2;
 
   public BinaryTable(ValueStore store1, ValueStore store2) {
-    table1.init();
-    table2.init();
     this.store1 = store1;
     this.store2 = store2;
     // Check();
@@ -110,8 +108,8 @@ class BinaryTable {
   }
 
   public void clear() {
-    table1.init();
-    table2.init();
+    table1 = new OneWayBinTable();
+    table2 = new OneWayBinTable();
     // Check();
   }
 

@@ -176,8 +176,8 @@ class TernaryTable {
       Miscellanea._assert(tuples[i].field2OrEmptyMarker == Tuple.Empty);
     }
 
-    index123.init(MinSize);
-    index12.init(MinSize);
+    index123 = new Index(MinSize);
+    index12  = new Index(MinSize);
   }
 
   public int size() {
@@ -201,12 +201,12 @@ class TernaryTable {
         Miscellanea._assert(newTuples[i].field2OrEmptyMarker == Tuple.Empty);
       }
       tuples = newTuples;
-      index123.reset();
-      index12.reset();
-      index13.reset();
-      index1.reset();
-      index2.reset();
-      index3.reset();
+      index123 = null;
+      index12 = null;
+      index13 = null;
+      index1 = null;
+      index2 = null;
+      index3 = null;
       buildIndex123();
       buildIndex12();
     }
@@ -220,15 +220,15 @@ class TernaryTable {
     // Updating the indexes
     index123.insert(index, Miscellanea.hashcode(field1, field2, field3));
     index12.insert(index, Miscellanea.hashcode(field1, field2));
-    if (!index13.isBlank())
+    if (index13 != null)
       index13.insert(index, Miscellanea.hashcode(field1, field3));
-    if (!index23.isBlank())
+    if (index23 != null)
       index23.insert(index, Miscellanea.hashcode(field2, field3));
-    if (!index1.isBlank())
+    if (index1 != null)
       index1.insert(index, Miscellanea.hashcode(field1));
-    if (!index2.isBlank())
+    if (index2 != null)
       index2.insert(index, Miscellanea.hashcode(field2));
-    if (!index3.isBlank())
+    if (index3 != null)
       index3.insert(index, Miscellanea.hashcode(field3));
 
     // Updating the reference count in the value stores
@@ -288,7 +288,7 @@ class TernaryTable {
   }
 
   public boolean contains13(int field1, int field3) {
-    if (index13.isBlank())
+    if (index13 == null)
       buildIndex13();
     int hashcode = Miscellanea.hashcode(field1, field3);
     for (int idx = index13.head(hashcode) ; idx != Tuple.Empty ; idx = index13.next(idx)) {
@@ -300,7 +300,7 @@ class TernaryTable {
   }
 
   public boolean contains23(int field2, int field3) {
-    if (index23.isBlank())
+    if (index23 == null)
       buildIndex23();
     int hashcode = Miscellanea.hashcode(field2, field3);
     for (int idx = index23.head(hashcode) ; idx != Tuple.Empty ; idx = index23.next(idx)) {
@@ -312,7 +312,7 @@ class TernaryTable {
   }
 
   public boolean contains1(int field1) {
-    if (index1.isBlank())
+    if (index1 == null)
       buildIndex1();
     int hashcode = Miscellanea.hashcode(field1);
     for (int idx = index1.head(hashcode) ; idx != Tuple.Empty ; idx = index1.next(idx)) {
@@ -324,7 +324,7 @@ class TernaryTable {
   }
 
   public boolean contains2(int field2) {
-    if (index2.isBlank())
+    if (index2 == null)
       buildIndex2();
     int hashcode = Miscellanea.hashcode(field2);
     for (int idx = index2.head(hashcode) ; idx != Tuple.Empty ; idx = index2.next(idx)) {
@@ -336,7 +336,7 @@ class TernaryTable {
   }
 
   public boolean contains3(int field3) {
-    if (index3.isBlank())
+    if (index3 == null)
       buildIndex3();
     int hashcode = Miscellanea.hashcode(field3);
     for (int idx = index3.head(hashcode) ; idx != Tuple.Empty ; idx = index3.next(idx)) {
@@ -357,35 +357,35 @@ class TernaryTable {
   }
 
   public Iter getIter13(int field1, int field3) {
-    if (index13.isBlank())
+    if (index13 == null)
       buildIndex13();
     int hashcode = Miscellanea.hashcode(field1, field3);
     return new Iter(field1, Tuple.Empty, field3, index13.head(hashcode), Iter.Type.F13, this);
   }
 
   public Iter getIter23(int field2, int field3) {
-    if (index23.isBlank())
+    if (index23 == null)
       buildIndex23();
     int hashcode = Miscellanea.hashcode(field2, field3);
     return new Iter(Tuple.Empty, field2, field3, index23.head(hashcode), Iter.Type.F23, this);
   }
 
   public Iter getIter1(int field1) {
-    if (index1.isBlank())
+    if (index1 == null)
       buildIndex1();
     int hashcode = Miscellanea.hashcode(field1);
     return new Iter(field1, Tuple.Empty, Tuple.Empty, index1.head(hashcode), Iter.Type.F1, this);
   }
 
   public Iter getIter2(int field2) {
-    if (index2.isBlank())
+    if (index2 == null)
       buildIndex2();
     int hashcode = Miscellanea.hashcode(field2);
     return new Iter(Tuple.Empty, field2, Tuple.Empty, index2.head(hashcode), Iter.Type.F2, this);
   }
 
   public Iter getIter3(int field3) {
-    if (index3.isBlank())
+    if (index3 == null)
       buildIndex3();
     int hashcode = Miscellanea.hashcode(field3);
     return new Iter(Tuple.Empty, Tuple.Empty, field3, index3.head(hashcode), Iter.Type.F3, this);
@@ -437,15 +437,15 @@ class TernaryTable {
     // Updating the indexes
     index123.delete(index, hashcode);
     index12.delete(index, Miscellanea.hashcode(tuple.field1OrNext, tuple.field2OrEmptyMarker));
-    if (!index13.isBlank())
+    if (index13 != null)
       index13.delete(index, Miscellanea.hashcode(tuple.field1OrNext, tuple.field3));
-    if (!index23.isBlank())
+    if (index23 != null)
       index23.delete(index, Miscellanea.hashcode(tuple.field2OrEmptyMarker, tuple.field3));
-    if (!index1.isBlank())
+    if (index1 != null)
       index1.delete(index, Miscellanea.hashcode(tuple.field1OrNext));
-    if (!index2.isBlank())
+    if (index2 != null)
       index2.delete(index, Miscellanea.hashcode(tuple.field2OrEmptyMarker));
-    if (!index3.isBlank())
+    if (index3 != null)
       index3.delete(index, Miscellanea.hashcode(tuple.field3));
 
     // Updating the reference count in the value stores
@@ -456,7 +456,7 @@ class TernaryTable {
 
   void buildIndex123() {
     int len = tuples.length;
-    index123.init(len);
+    index123 = new Index(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
@@ -466,7 +466,7 @@ class TernaryTable {
 
   void buildIndex12() {
     int len = tuples.length;
-    index12.init(len);
+    index12 = new Index(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
@@ -476,7 +476,7 @@ class TernaryTable {
 
   void buildIndex13() {
     int len = tuples.length;
-    index13.init(len);
+    index13 = new Index(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
@@ -486,7 +486,7 @@ class TernaryTable {
 
   void buildIndex23() {
     int len = tuples.length;
-    index23.init(len);
+    index23 = new Index(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty) {
@@ -498,7 +498,7 @@ class TernaryTable {
 
   void buildIndex1() {
     int len = tuples.length;
-    index1.init(len);
+    index1 = new Index(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
@@ -508,7 +508,7 @@ class TernaryTable {
 
   void buildIndex2() {
     int len = tuples.length;
-    index2.init(len);
+    index2 = new Index(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)
@@ -518,7 +518,7 @@ class TernaryTable {
 
   void buildIndex3() {
     int len = tuples.length;
-    index3.init(len);
+    index3 = new Index(len);
     for (int i=0 ; i < len ; i++) {
       Tuple tuple = tuples[i];
       if (tuple.field2OrEmptyMarker != Tuple.Empty)

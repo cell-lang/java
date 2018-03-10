@@ -6,9 +6,10 @@ class OneWayBinTable {
 
   static int[] emptyArray = new int[0];
 
-  public int[] column;
-  public OverflowTable overflowTable;
-  public int count;
+  public int[] column = emptyArray;
+  public OverflowTable overflowTable = new OverflowTable();
+  public int count = 0;
+
 
   public void check() {
     overflowTable.check(column, count);
@@ -21,12 +22,6 @@ class OneWayBinTable {
       System.out.printf("%s%X", i > 0 ? " " : "", column[i]);
     System.out.println("]");
     overflowTable.dump();
-  }
-
-  public void init() {
-    column = emptyArray;
-    overflowTable.init();
-    count = 0;
   }
 
   public void initReverse(OneWayBinTable source) {
