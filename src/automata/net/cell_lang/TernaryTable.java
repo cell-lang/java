@@ -15,9 +15,9 @@ class TernaryTable {
       this.field3 = field3;
     }
 
-    public Tuple(long field1, long field2, long field3) {
-      this((int) field1, (int) field2, (int) field3);
-    }
+    // public Tuple(long field1, long field2, long field3) {
+    //   this((int) field1, (int) field2, (int) field3);
+    // }
 
     @Override
     public String toString() {
@@ -162,22 +162,21 @@ class TernaryTable {
   public ValueStore store1, store2, store3;
 
   public TernaryTable(ValueStore store1, ValueStore store2, ValueStore store3) {
-    this.store1 = store1;
-    this.store2 = store2;
-    this.store3 = store3;
-
-    for (int i=0 ; i < MinSize ; i++) {
-      tuples[i].field1OrNext = i + 1;
-      tuples[i].field2OrEmptyMarker = Tuple.Empty;
-    }
+    for (int i=0 ; i < MinSize ; i++)
+      tuples[i] = new Tuple(i + 1, Tuple.Empty, 0);
 
     for (int i=0 ; i < MinSize ; i++) {
       Miscellanea._assert(tuples[i].field1OrNext == i + 1);
       Miscellanea._assert(tuples[i].field2OrEmptyMarker == Tuple.Empty);
+      Miscellanea._assert(tuples[i].field3 == 0);
     }
 
     index123 = new Index(MinSize);
     index12  = new Index(MinSize);
+
+    this.store1 = store1;
+    this.store2 = store2;
+    this.store3 = store3;
   }
 
   public int size() {
@@ -195,10 +194,10 @@ class TernaryTable {
       Tuple[] newTuples = new Tuple[2*size];
       Miscellanea.arrayCopy(tuples, newTuples, size);
       for (int i=size ; i < 2 * size ; i++) {
-        newTuples[i].field1OrNext = i + 1;
-        newTuples[i].field2OrEmptyMarker = Tuple.Empty;
+        newTuples[i] = new Tuple(i + 1, Tuple.Empty, 0);
         Miscellanea._assert(newTuples[i].field1OrNext == i + 1);
         Miscellanea._assert(newTuples[i].field2OrEmptyMarker == Tuple.Empty);
+        Miscellanea._assert(newTuples[i].field3 == 0);
       }
       tuples = newTuples;
       index123 = null;
@@ -245,6 +244,7 @@ class TernaryTable {
     for (int i=0 ; i < size ; i++) {
       tuples[i].field1OrNext = i + 1;
       tuples[i].field2OrEmptyMarker = Tuple.Empty;
+      tuples[i].field3 = 0; //## NOT ACTUALLY NECESSARY
     }
 
     index123.clear();
