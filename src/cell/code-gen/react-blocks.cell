@@ -122,7 +122,7 @@ implicit {
   String* native_state_is_def_code(AutoSymbol name, Instr* code) {
     vars_decls = gen_vars_decls(code);
     body = vars_decls & ("" if vars_decls != ()) & native_code(code, nothing);
-    sng = "public bool " & state_is_def_proc_name(name) & "()";
+    sng = "public boolean " & state_is_def_proc_name(name) & "()";
     return (sng & " {") & indent_lines(body) & ("}");
   }
 
@@ -146,7 +146,7 @@ implicit {
 
   String gen_const_data(AutoSymbol block_name, ConstBlockData const) =
     "long[] " & time_slots_table_name(block_name, const.expr_id) & " = {" &
-    append((printed(l) & "LL" : l <- const.lengths), ", ") & "}; // CONSTANT";
+    append((printed(l) & "L" : l <- const.lengths), ", ") & "}; // CONSTANT";
 
 
   String* gen_user_def_method(AutoSymbol block_name, MethodId name, Instr* body) {

@@ -528,7 +528,7 @@ implicit {
       ("case " & printed(i) & ":") & indent_lines((native_code(c, block_id) | "break;", ""))
       : c @ i <- cases
     );
-    return ("switch (" & native_expr(value) & ") {") & indent_lines(join(cases_code)) & ("}");
+    return ("switch ((int) (" & native_expr(value) & ")) {") & indent_lines(join(cases_code)) & ("}");
   }
 
 

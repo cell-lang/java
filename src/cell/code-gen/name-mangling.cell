@@ -155,7 +155,7 @@ String native_var_name(IntVar v, Bool add_prefix) {
     last_update_time                    = prefix & "last_update_time",
     elapsed_time                        = prefix & "elapsed_time",
     changed_outputs_count               = prefix & "changed_outputs_count",
-    changed_output()                    = prefix & "changed_outputs[" & native_idx_expr(v.index) & "]",
+    changed_output()                    = prefix & "changed_outputs[(int) (" & native_idx_expr(v.index) & ")]",
     elapsed_time(av?)                   = native_var_name(av, false) & ".elapsed_time",
     nested_auto_int_var()               = native_var_name(v.auto_var, true) & "." & native_var_name(v.memb_var, false);
 }

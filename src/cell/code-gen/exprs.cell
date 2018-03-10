@@ -1,6 +1,6 @@
 String native_expr(InlineObj) =
   object(<+> a?)    = "SymbObj.get(" & symb_idx_name(a) & ")",
-  object(<*..*> n?) = "IntObj.get(" & printed(n) & ")",
+  object(<*..*> n?) = "IntObj.get(" & printed(n) & "L)",
   empty_seq         = "SeqObj.empty()",
   empty_rel         = "EmptyRelObj.singleton()";
 
@@ -144,10 +144,15 @@ String native_inline_is_eq_expr(ObjExpr expr, InlineObj value, Bool parentesised
 String native_expr(IntExpr expr) = native_expr(expr, false);
 
 
-String native_expr(Int expr, Bool parentesised) = printed(expr);
+String native_expr(Int value, Bool parentesised) {
+  str = printed(value);
+  str = str & "L" if value >= 2147483648 or value < -2147483648;
+  return str;
+}
+
 
 String native_expr(IntConst expr, Bool parentesised) =
-  time_slots_table_name(expr.automaton, expr.expr_id) & "[" & native_expr(expr.time_slot) & "]";
+  time_slots_table_name(expr.automaton, expr.expr_id) & "[(int) (" & native_expr(expr.time_slot) & ")]";
 
 String native_expr(IntVar expr, Bool parentesised) = native_var_ref_name(expr);
 

@@ -430,7 +430,7 @@ implicit typedefs : [TypeName -> NeType] {
     ctor_impl_args = (t & " l" & printed(i) : t @ i <- links_types);
 
     class_impl = (
-      "public class " & class_name & " {",
+      "public static class " & class_name & " {",
       "  Env env;",
       "  " & db_name & " automaton;",
       "  " & updater_name & " updater;",
