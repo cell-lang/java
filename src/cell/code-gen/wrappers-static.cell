@@ -219,28 +219,28 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
     ;
 
     phys_idxs = flip_pair_if(("1", "2"), flipped);
-    types_str = append(ret_types, ", ");
-    sgn = "Tuple<" & types_str & ">[] " & get_method_name & "()";
+    types_str = append((t & "[]" : t <- ret_types), ", ");
+    sgn = "Pair<" & types_str & "> " & get_method_name & "()";
     body = (
       "int size = " & relvar_path & ".size();",
-      "Tuple<" & types_str & ">[] copy = new Tuple<" & types_str & ">[size];",
+      ret_types(0) & "[] col1 = new " & ret_types(0) & "[size];",
+      ret_types(1) & "[] col2 = new " & ret_types(1) & "[size];",
       "BinaryTable.Iter it = " & relvar_path & ".getIter();",
       "int next = 0;",
       "while (!it.done()) {"
     ) & indent_lines(export_code(
       output_types(0),
       relvar_path & ".store" & phys_idxs(0) & ".lookupSurrogate(it.getField" & phys_idxs(0) & "())",
-      ret_types(0) & " field1 = "
+      "col1[next] = "
     )) & indent_lines(export_code(
       output_types(1),
       relvar_path & ".store" & phys_idxs(1) & ".lookupSurrogate(it.getField" & phys_idxs(1) & "())",
-      ret_types(1) & " field2 = "
+      " col2[next++] = "
     )) & (
-      "  copy[next++] = new Tuple<" & types_str & ">(field1, field2);",
       "  it.next();",
       "}",
       "Miscellanea._assert(next == size);",
-      "return copy;"
+      "return new Pair<" & types_str & ">(col1, col2);"
     );
 
     code = (code | "", "public " & sgn & " {") & indent_lines(body) & ("}");
@@ -263,7 +263,7 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
     output_types = (output_interface_type(t) : t <- types);
 
     ret_types = (return_value_type(t) : t <- output_types);
-    ret_types_str = append(ret_types, ", ");
+    ret_types_str = append((t & "[]" : t <- ret_types), ", ");
 
     args_types = (input_arg_type(t) : t <- input_types);
     args_import_code = join(
@@ -296,37 +296,38 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
       "  return " & relvar_path & ".contains((int) surr1, (int) surr2, (int) surr3);",
       "}",
       "",
-      "public Tuple<" & ret_types_str & ">[] " & get_method_name & "() {",
+      "public Triplet<" & ret_types_str & "> " & get_method_name & "() {",
       "  int size = " & relvar_path & ".size();",
-      "  Tuple<" & ret_types_str & ">[] copy = new Tuple<" & ret_types_str & ">[size];",
+      "  " & ret_types(0) & "[] col1 = new " & ret_types(0) & "[size];",
+      "  " & ret_types(1) & "[] col2 = new " & ret_types(1) & "[size];",
+      "  " & ret_types(2) & "[] col3 = new " & ret_types(2) & "[size];",
       "  TernaryTable.Iter it = " & relvar_path & ".getIter();",
       "  int next = 0;",
       "  while (!it.done()) {"
       ) & indent_lines(indent_lines(export_code(
         output_types(0),
         relvar_path & ".store" & perm_idxs(0) & ".lookupSurrogate(it.getField" & perm_idxs(0) & "())",
-        ret_types(0) & " field1 = "
+        "col1[next] = "
       ))) & indent_lines(indent_lines(export_code(
         output_types(1),
         relvar_path & ".store" & perm_idxs(1) & ".lookupSurrogate(it.getField" & perm_idxs(1) & "())",
-        ret_types(1) & " field2 = "
+        "col2[next] = "
       ))) & indent_lines(indent_lines(export_code(
         output_types(2),
         relvar_path & ".store" & perm_idxs(2) & ".lookupSurrogate(it.getField" & perm_idxs(2) & "())",
-        ret_types(2) & " field3 = "
+        "col3[next++] = "
       ))) & (
-      "    copy[next++] = new Tuple<" & ret_types_str & ">(field1, field2, field3);",
       "    it.next();",
-      " }",
+      "  }",
       "  Miscellanea._assert(next == size);",
-      "  return copy;",
+      "  return new Triplet<" & ret_types_str & ">(col1, col2, col3);",
       "}"
     );
 
     docs = (
       "",
       "boolean " & in_method_name & "(" & append(args_types, ", ") & ");",
-      "Tuple<" & ret_types_str & ">[] " & get_method_name & "();"
+      "Triplet<" & ret_types_str & "> " & get_method_name & "();"
     );
 
     return (code, docs);

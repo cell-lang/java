@@ -51,64 +51,64 @@ class TernaryTableUpdater {
     }
   }
 
-  public void insert(long value1, long value2, long value3) {
+  public void insert(int value1, int value2, int value3) {
     insertList.add(new TernaryTable.Tuple(value1, value2, value3));
   }
 
-  public void delete(long value1, long value2, long value3) {
-    if (table.contains((int) value1, (int) value2, (int) value3))
+  public void delete(int value1, int value2, int value3) {
+    if (table.contains(value1, value2, value3))
       deleteList.add(new TernaryTable.Tuple(value1, value2, value3));
   }
 
-  public void delete12(long value1, long value2) {
-    TernaryTable.Iter it = table.getIter12((int) value1, (int) value2);
+  public void delete12(int value1, int value2) {
+    TernaryTable.Iter it = table.getIter12(value1, value2);
     while (!it.done()) {
       deleteList.add(it.get());
       it.next();
     }
   }
 
-  public void delete13(long value1, long value3) {
-    TernaryTable.Iter it = table.getIter13((int) value1, (int) value3);
+  public void delete13(int value1, int value3) {
+    TernaryTable.Iter it = table.getIter13(value1, value3);
     while (!it.done()) {
       deleteList.add(it.get());
       it.next();
     }
   }
 
-  public void delete23(long value2, long value3) {
-    TernaryTable.Iter it = table.getIter23((int) value2, (int) value3);
+  public void delete23(int value2, int value3) {
+    TernaryTable.Iter it = table.getIter23(value2, value3);
     while (!it.done()) {
       deleteList.add(it.get());
       it.next();
     }
   }
 
-  public void delete1(long value1) {
-    TernaryTable.Iter it = table.getIter1((int) value1);
+  public void delete1(int value1) {
+    TernaryTable.Iter it = table.getIter1(value1);
     while (!it.done()) {
       deleteList.add(it.get());
       it.next();
     }
   }
 
-  public void delete2(long value2) {
-    TernaryTable.Iter it = table.getIter2((int) value2);
+  public void delete2(int value2) {
+    TernaryTable.Iter it = table.getIter2(value2);
     while (!it.done()) {
       deleteList.add(it.get());
       it.next();
     }
   }
 
-  public void delete3(long value3) {
-    TernaryTable.Iter it = table.getIter3((int) value3);
+  public void delete3(int value3) {
+    TernaryTable.Iter it = table.getIter3(value3);
     while (!it.done()) {
       deleteList.add(it.get());
       it.next();
     }
   }
 
-  public boolean CheckUpdates_12() {
+  public boolean checkUpdates_12() {
     deleteList.sort(TernaryTableUpdater::compare123);
     insertList.sort(TernaryTableUpdater::compare123);
 
@@ -137,8 +137,8 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean CheckUpdates_12_3() {
-    if (!CheckUpdates_12())
+  public boolean checkUpdates_12_3() {
+    if (!checkUpdates_12())
       return false;
 
     deleteList.sort(TernaryTableUpdater::compare312);
@@ -167,8 +167,8 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean CheckUpdates_12_23() {
-    if (!CheckUpdates_12())
+  public boolean checkUpdates_12_23() {
+    if (!checkUpdates_12())
       return false;
 
     deleteList.sort(TernaryTableUpdater::compare231);
@@ -199,8 +199,8 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean CheckUpdates_12_23_31() {
-    if (!CheckUpdates_12_23())
+  public boolean checkUpdates_12_23_31() {
+    if (!checkUpdates_12_23())
       return false;
 
     deleteList.sort(TernaryTableUpdater::compare312);

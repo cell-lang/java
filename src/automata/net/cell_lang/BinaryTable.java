@@ -54,8 +54,8 @@ class BinaryTable {
     return table1.count;
   }
 
-  public boolean contains(long surr1, long surr2) {
-    return table1.contains((int) surr1, (int) surr2);
+  public boolean contains(int surr1, int surr2) {
+    return table1.contains(surr1, surr2);
   }
 
   public boolean containsField1(int surr1) {
@@ -82,22 +82,22 @@ class BinaryTable {
     return new Iter(table1.copy());
   }
 
-  public Iter getIter1(long surr1) {
-    int[] col2 = lookupByCol1((int) surr1);
+  public Iter getIter1(int surr1) {
+    int[] col2 = lookupByCol1(surr1);
     int[][] entries = new int[][] {new int[col2.length], new int[col2.length]};
     for (int i=0 ; i < col2.length ; i++) {
-      entries[0][i] = (int) surr1;
+      entries[0][i] = surr1;
       entries[1][i] = col2[i];
     }
     return new Iter(entries);
   }
 
-  public Iter getIter2(long surr2) {
-    int[] col1 = lookupByCol2((int) surr2);
+  public Iter getIter2(int surr2) {
+    int[] col1 = lookupByCol2(surr2);
     int[][] entries = new int[][] {new int[col1.length], new int[col1.length]};
     for (int i=0 ; i < col1.length ; i++) {
       entries[0][i] = col1[i];
-      entries[1][i] = (int) surr2;
+      entries[1][i] = surr2;
     }
     return new Iter(entries);
   }

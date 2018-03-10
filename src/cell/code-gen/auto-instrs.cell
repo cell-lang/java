@@ -9,7 +9,7 @@ implicit {
     copy_state()              = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
     copy_table()              = native_copy_table_code(var, expr.relvar, expr.table, expr.perm),
     copy_persistent_state()   = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
-    lookup_surrogate()        = native_method_call(var, expr.store, "LookupSurrogate", (expr.surrogate)),
+    lookup_surrogate()        = native_method_call(var, expr.store, "lookupSurrogate", (expr.surrogate)),
     read_pending_var(v?)      = native_var_ref_name(var) & " = " & native_var_ref_name(v) & ";";
 
 
@@ -19,7 +19,7 @@ implicit {
       (0, 1)    = (false),
       (1, 0)    = (true),
       (_, _, _) = perm;
-    return native_method_call(res_var, relvar, "Copy", perm_args);
+    return native_method_call(res_var, relvar, "copy", perm_args);
   }
 
 
@@ -50,16 +50,22 @@ implicit {
     invoke_auto_method()  = (native_method_call(instr.res_var, if instr.auto_var? then instr.auto_var else "this", user_def_method_name(instr.type, instr.method_id), (instr.args | "env"))),
     invoke_db_method()    = (native_method_call(instr.res_var, if instr.db_var? then instr.db_var else "this", user_def_method_name(instr.type, instr.method_id), (instr.args | "env"))),
 
-    init_value_store()    = (), //(native_method_call(instr.store,   "Init",    ())),
-    cleanup_value_store() = (), //(native_method_call(instr.store,   "Cleanup", ())),
-    init_table()          = (), //(native_method_call(instr.rel_var, "Init",    ())),
-    cleanup_table()       = (), //(native_method_call(instr.rel_var, "Cleanup", ())),
+    init_value_store()    = (), //(native_method_call(instr.store,   "init",    ())),
+    cleanup_value_store() = (), //(native_method_call(instr.store,   "cleanup", ())),
+    init_table()          = (), //(native_method_call(instr.rel_var, "init",    ())),
+    cleanup_table()       = (), //(native_method_call(instr.rel_var, "cleanup", ())),
 
     get_table_iter()      = (native_get_table_iter_code(instr.it_var, instr.table, instr.args)),
     set_table()           = (native_set_table_code(instr.relvar, instr.table, instr.state, instr.perm)),
     queue_deletes()       = (native_queue_deletes_code(instr.rel_var, instr.args)),
-    queue_insert_value()  = (native_method_call(instr.res_var, aux_struct_var_ref_name(instr.store), "Insert", (instr.value))),
-    queue_insert_tuple()  = (native_method_call(pending_updates_var_ref_name(instr.rel_var), "Insert", instr.tuple));
+    queue_insert_value()  = (native_method_call(instr.res_var, aux_struct_var_ref_name(instr.store), "insert", (instr.value))),
+    queue_insert_tuple()  = (native_queue_insert_tuple_code(instr.rel_var, instr.tuple));
+
+
+  String native_queue_insert_tuple_code(RelVar rel_var, IntVar+ tuple) {
+    updater = pending_updates_var_ref_name(rel_var);
+    return native_method_call(updater, "insert", ("(int) " & native_expr(v) : v <- tuple));
+  }
 
 
   String* native_init_db_code(AnyDBVar db_var, LocDBVar* links, DBSymbol type) = (
@@ -87,50 +93,50 @@ implicit {
       (_, _, _) = perm;
     // args = (pending_updates_var_ref_name(relvar)) & table.value_stores &
     //        (aux_struct_var_ref_name(vs) : vs <- table.value_stores) & perm_args;
-    return native_method_call(pending_updates_var_ref_name(relvar), "Set", (state) & perm_args);
+    return native_method_call(pending_updates_var_ref_name(relvar), "set", (state) & perm_args);
   }
 
 
   String native_queue_deletes_code(RelVar relvar, Maybe[IntVar]+ args) {
     fn_name = fn_names_by_args[(a != nothing : a <- args)];
     target = pending_updates_var_ref_name(relvar);
-    return native_method_call(target, fn_name, (value(a) : a <- args, a != nothing));
+    return native_method_call(target, fn_name, ("(int) " & native_expr(value(a)) : a <- args, a != nothing));
 
     [Bool+ -> String] fn_names_by_args = [
-      (true)                  -> "Delete",
-      (false)                 -> "Clear",
-      (true,  true)           -> "Delete",
-      (true,  false)          -> "Delete1",
-      (false, true)           -> "Delete2",
-      (false, false)          -> "Clear",
-      (true,  true,  true)    -> "Delete",
-      (true,  true,  false)   -> "Delete12",
-      (true,  false, true)    -> "Delete13",
-      (false, true,  true)    -> "Delete23",
-      (true,  false, false)   -> "Delete1",
-      (false, true,  false)   -> "Delete2",
-      (false, false, true)    -> "Delete3",
-      (false, false, false)   -> "Clear"
+      (true)                  -> "delete",
+      (false)                 -> "clear",
+      (true,  true)           -> "delete",
+      (true,  false)          -> "delete1",
+      (false, true)           -> "delete2",
+      (false, false)          -> "clear",
+      (true,  true,  true)    -> "delete",
+      (true,  true,  false)   -> "delete12",
+      (true,  false, true)    -> "delete13",
+      (false, true,  true)    -> "delete23",
+      (true,  false, false)   -> "delete1",
+      (false, true,  false)   -> "delete2",
+      (false, false, true)    -> "delete3",
+      (false, false, false)   -> "clear"
     ];
   }
 
 
   String native_get_table_iter_code(TableItVar it_var, AnyRelVar table, Maybe[IntVar]+ args) {
     fn_name = fn_names_by_args[(a != nothing : a <- args)];
-    return native_method_call(it_var, table, fn_name, (value(a) : a <- args, a != nothing));
+    return native_method_call(it_var, table, fn_name, ("(int) " & native_expr(value(a)) : a <- args, a != nothing));
 
     [Bool+ -> String] fn_names_by_args = [
-      (false)                 -> "GetIter",
-      (true,  false)          -> "GetIter1",
-      (false, true)           -> "GetIter2",
-      (false, false)          -> "GetIter",
-      (true,  true,  false)   -> "GetIter12",
-      (true,  false, true)    -> "GetIter13",
-      (false, true,  true)    -> "GetIter23",
-      (true,  false, false)   -> "GetIter1",
-      (false, true,  false)   -> "GetIter2",
-      (false, false, true)    -> "GetIter3",
-      (false, false, false)   -> "GetIter"
+      (false)                 -> "getIter",
+      (true,  false)          -> "getIter1",
+      (false, true)           -> "getIter2",
+      (false, false)          -> "getIter",
+      (true,  true,  false)   -> "getIter12",
+      (true,  false, true)    -> "getIter13",
+      (false, true,  true)    -> "getIter23",
+      (true,  false, false)   -> "getIter1",
+      (false, true,  false)   -> "getIter2",
+      (false, false, true)    -> "getIter3",
+      (false, false, false)   -> "getIter"
     ];
   }
 

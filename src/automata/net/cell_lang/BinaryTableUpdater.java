@@ -71,28 +71,28 @@ class BinaryTableUpdater {
     }
   }
 
-  public void delete(long value1, long value2) {
+  public void delete(int value1, int value2) {
     if (table.contains(value1, value2))
       deleteList.add(new Tuple(value1, value2));
   }
 
-  public void delete1(long value) {
+  public void delete1(int value) {
     int[] assocs = table.lookupByCol1((int) value);
     for (int i=0 ; i < assocs.length ; i++)
       deleteList.add(new Tuple(value, assocs[i]));
   }
 
-  public void delete2(long value) {
+  public void delete2(int value) {
     int[] assocs = table.lookupByCol2((int) value);
     for (int i=0 ; i < assocs.length ; i++)
       deleteList.add(new Tuple(assocs[i], value));
   }
 
-  public void insert(long value1, long value2) {
+  public void insert(int value1, int value2) {
     insertList.add(new Tuple(value1, value2));
   }
 
-  public boolean CheckUpdates_1() {
+  public boolean checkUpdates_1() {
     deleteList.sort(Tuple::compareLeftToRigth);
     insertList.sort(Tuple::compareLeftToRigth);
 
@@ -118,8 +118,8 @@ class BinaryTableUpdater {
     return true;
   }
 
-  public boolean CheckUpdates_1_2() {
-    if (!CheckUpdates_1())
+  public boolean checkUpdates_1_2() {
+    if (!checkUpdates_1())
       return false;
 
     deleteList.sort(Tuple::compareRightToLeft);
