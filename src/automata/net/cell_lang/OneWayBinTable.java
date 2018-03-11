@@ -101,7 +101,7 @@ class OneWayBinTable {
       count++;
     }
     else {
-      boolean[] inserted = new boolean[0];
+      boolean[] inserted = new boolean[1];
       column[surr1] = overflowTable.insert(code, surr2, inserted);
       if (inserted[0])
         count++;
@@ -117,7 +117,7 @@ class OneWayBinTable {
       count--;
     }
     else if (code >> 29 != 0) {
-      boolean[] deleted = new boolean[0];
+      boolean[] deleted = new boolean[1];
       column[surr1] = overflowTable.delete(code, surr2, deleted);
       if (deleted[0])
         count--;
