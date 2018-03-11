@@ -51,7 +51,7 @@ class UnaryTable {
 
   public boolean contains(int surr) {
     int widx = surr / 64;
-    return widx < bitmap.length && ((bitmap[widx] >> (int) (surr % 64) & 1) != 0);
+    return widx < bitmap.length && ((bitmap[widx] >>> (int) (surr % 64) & 1) != 0);
   }
 
   public Iter getIter() {
@@ -63,7 +63,7 @@ class UnaryTable {
     for (int i=0 ; i < bitmap.length ; i++) {
       long mask = bitmap[i];
       for (int j=0 ; j < 64 ; j++)
-        if (((mask >> j) & 1) != 0)
+        if (((mask >>> j) & 1) != 0)
           liveCount++;
     }
     return liveCount;
@@ -84,7 +84,7 @@ class UnaryTable {
     }
 
     long mask = bitmap[widx];
-    if (((mask >> bidx) & 1) == 0) {
+    if (((mask >>> bidx) & 1) == 0) {
       bitmap[widx] = mask | (1L << bidx);
       count++;
     }
@@ -98,7 +98,7 @@ class UnaryTable {
     if (widx < bitmap.length) {
       long mask = bitmap[widx];
       int bidx = (int) surr % 64;
-      if (((mask >> bidx) & 1) == 1) {
+      if (((mask >>> bidx) & 1) == 1) {
         bitmap[widx] = mask & ~(1L << bidx);
         count--;
       }
@@ -119,7 +119,7 @@ class UnaryTable {
     for (int i=0 ; i < bitmap.length ; i++) {
       long mask = bitmap[i];
       for (int j=0 ; j < 64 ; j++)
-        if (((mask >> (int) j) & 1) != 0)
+        if (((mask >>> (int) j) & 1) != 0)
           objs[next++] = store.getValue(j + 64 * i);
     }
     Miscellanea._assert(next == count);
@@ -130,7 +130,7 @@ class UnaryTable {
 //      String binStr = "";
 //      while (number != 0) {
 //        binStr = (number & 1) + binStr;
-//        number = number >> 1;
+//        number = number >>> 1;
 //      }
 //      if (binStr == "")
 //        binStr = "0";
@@ -141,7 +141,7 @@ class UnaryTable {
 //      String binStr = "";
 //      while (number > 0) {
 //        binStr = (number & 1) + binStr;
-//        number = number >> 1;
+//        number = number >>> 1;
 //      }
 //      if (binStr == "")
 //        binStr = "0";

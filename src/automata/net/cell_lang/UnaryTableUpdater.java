@@ -46,11 +46,11 @@ class UnaryTableUpdater {
 
   public void delete(long value) {
     if (table.contains((int) value))
-      Miscellanea.arrayAppend(deleteList, deleteCount++, (int) value);
+      deleteList = Miscellanea.arrayAppend(deleteList, deleteCount++, (int) value);
   }
 
   public void insert(long value) {
-    Miscellanea.arrayAppend(insertList, insertCount++, (int) value);
+    insertList = Miscellanea.arrayAppend(insertList, insertCount++, (int) value);
   }
 
   public void apply() {

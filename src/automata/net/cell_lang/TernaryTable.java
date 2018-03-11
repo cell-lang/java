@@ -15,10 +15,6 @@ class TernaryTable {
       this.field3 = field3;
     }
 
-    // public Tuple(long field1, long field2, long field3) {
-    //   this((int) field1, (int) field2, (int) field3);
-    // }
-
     @Override
     public String toString() {
       return String.format("(%d, %d, %d)", field1OrNext, field2OrEmptyMarker, field3);
