@@ -223,8 +223,8 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
     sgn = "Pair<" & types_str & "> " & get_method_name & "()";
     body = (
       "int size = " & relvar_path & ".size();",
-      ret_types(0) & "[] col1 = new " & ret_types(0) & "[size];",
-      ret_types(1) & "[] col2 = new " & ret_types(1) & "[size];",
+      ret_types(0) & "[] col1 = new " & array_new_expr(output_types(0), "size") & ";",
+      ret_types(1) & "[] col2 = new " & array_new_expr(output_types(1), "size") & ";",
       "BinaryTable.Iter it = " & relvar_path & ".getIter();",
       "int next = 0;",
       "while (!it.done()) {"
@@ -235,7 +235,7 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
     )) & indent_lines(export_code(
       output_types(1),
       relvar_path & ".store" & phys_idxs(1) & ".lookupSurrogate(it.getField" & phys_idxs(1) & "())",
-      " col2[next++] = "
+      "col2[next++] = "
     )) & (
       "  it.next();",
       "}",
@@ -298,9 +298,9 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
       "",
       "public Triplet<" & ret_types_str & "> " & get_method_name & "() {",
       "  int size = " & relvar_path & ".size();",
-      "  " & ret_types(0) & "[] col1 = new " & ret_types(0) & "[size];",
-      "  " & ret_types(1) & "[] col2 = new " & ret_types(1) & "[size];",
-      "  " & ret_types(2) & "[] col3 = new " & ret_types(2) & "[size];",
+      "  " & ret_types(0) & "[] col1 = new " & array_new_expr(output_types(0), "size") & ";",
+      "  " & ret_types(1) & "[] col2 = new " & array_new_expr(output_types(1), "size") & ";",
+      "  " & ret_types(2) & "[] col3 = new " & array_new_expr(output_types(2), "size") & ";",
       "  TernaryTable.Iter it = " & relvar_path & ".getIter();",
       "  int next = 0;",
       "  while (!it.done()) {"

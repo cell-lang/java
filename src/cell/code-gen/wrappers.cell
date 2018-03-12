@@ -211,8 +211,7 @@ implicit typedefs : [TypeName -> NeType] {
       tag_type = tag_supertype(type);
       if is_symb_singl_type(tag_type):
         obj_type = untagged_objs_supertype(type);
-        ## WHY IS THERE THE obj_type != empty_type GUARD?
-        assert obj_type != empty_type;
+        assert obj_type != empty_type; ## WHY THIS?
         return :tagged(only_symb(tag_type), output_interface_type(obj_type)) if obj_type != empty_type;
       ;
     ;
