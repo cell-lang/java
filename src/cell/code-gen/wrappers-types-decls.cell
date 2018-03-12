@@ -1,0 +1,54 @@
+implicit typedefs : [TypeName -> NeType] {
+  ([InterType -> String], [String*]) declared_types([NeType] types) {
+    inter_types = [interface_type(t) : t <- types];
+    decl_types = union([types_to_declare(t) : t <- inter_types]);
+    nicely_named_types = [t : t <- decl_types, t :: <tuple(BasicInterType+)>];
+    generically_named_types = isort(decl_types - nicely_named_types);
+
+    type_names = [t -> nice_name(t) : t <- nicely_named_types] &
+                 [t -> "Tuple" & printed(i) : t @ i <~ generically_named_types];
+
+    type_decls = [type_decl(t, s, type_names) : t, s <- type_names];
+
+    return (type_names, type_decls);
+  }
+
+
+  [<tuple(InterType+)>] types_to_declare(InterType inter_type) =
+    bool            |
+    integer         |
+    float           |
+    symbol          |
+    string          |
+    generic         = [],
+    tuple(ts?)      = [inter_type] & union([types_to_declare(t) : t <~ ts]),
+    seq(t?)         |
+    set(t?)         = types_to_declare(t),
+    // tagged(_, t?)   = [inter_type] & types_to_declare(t);
+    tagged(_, t?)   = types_to_declare(t);
+
+
+  String nice_name(<tuple(BasicInterType+)> type) {
+    return append((field_type_name(t) : t <- untag(type)), "_");
+
+    String field_type_name(BasicInterType) =
+      bool      = "Bool",
+      integer   = "Long",
+      float     = "Double",
+      symbol    = "Symbol",
+      string    = "String",
+      generic   = "Value";
+  }
+
+
+  String* type_decl(<tuple(InterType+)> type, String name, [InterType -> String] type_names) {
+    let decl_types = type_names:
+      types = (return_value_type(t) : t @ i <- untag(type));
+    ;
+    max_len = max((length(t) : t <- types));
+    spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
+    body = ("  public " & t & spaces(i) & " item" & printed(i) : t @ i <- types);
+    header = "public static class " & name & " {";
+    return (header) & body & ("}");
+  }
+}

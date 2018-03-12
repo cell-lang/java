@@ -82,10 +82,10 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*,
 
 
 implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol,
-         duplicate_names : [String, Nat], typedefs : [TypeName -> NeType] {
+         duplicate_names : [String, Nat], typedefs : [TypeName -> NeType], decl_types : [InterType -> String] {
 
   (String*, String*) state_var_accessor(MembVar var, NeType var_type) {
-    inter_type = output_interface_type(var_type);
+    inter_type = interface_type(var_type);
     meth_name = get_method_name(var);
     var_name = native_var_decl_name(var);
     ret_type = return_value_type(inter_type);
@@ -105,8 +105,8 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
   //////////////////////////////////////////////////////////////////////////////
 
   (String*, String*) unary_table_accessors(RelVar relvar, ValueStoreId value_store_id, NeType elem_type) {
-    input_type = input_interface_type(elem_type);
-    output_type = output_interface_type(elem_type);
+    input_type = interface_type(elem_type);
+    output_type = interface_type(elem_type);
     in_method_name = in_method_name(relvar, 1);
     get_method_name = get_method_name(relvar);
     rel_name = native_var_decl_name(relvar);
@@ -163,8 +163,8 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
   (String*, String*) binary_table_accessors(RelVar relvar, (ValueStoreId, ValueStoreId) value_store_ids,
     (NeType, NeType) perm_types, Maybe[Nat] maybe_key_col, Bool flipped) {
     types = flip_pair_if(perm_types, flipped);
-    input_types = (input_interface_type(t) : t <- types);
-    output_types = (output_interface_type(t) : t <- types);
+    input_types = (interface_type(t) : t <- types);
+    output_types = (interface_type(t) : t <- types);
     in_method_name = in_method_name(relvar, 2);
     get_method_name = get_method_name(relvar);
     lookup_method_name = lookup_method_name(relvar);
@@ -259,8 +259,8 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
     types = (perm_types(i) : i <- rev_perm);
     assert (types(i) : i <- applied_perm) == perm_types;
 
-    input_types = (input_interface_type(t) : t <- types);
-    output_types = (output_interface_type(t) : t <- types);
+    input_types = (interface_type(t) : t <- types);
+    output_types = (interface_type(t) : t <- types);
 
     ret_types = (return_value_type(t) : t <- output_types);
     ret_types_str = append((t & "[]" : t <- ret_types), ", ");
@@ -413,10 +413,19 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
 
 
 implicit typedefs : [TypeName -> NeType] {
+  [Type] interface_types(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
+    memb_vars_types = [t : v, t <- root_block.state_vars];
+    tables_types = [t : v, tb <- root_block.tables, t <~ tb.col_types];
+    methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- root_block.methods]);
+    nested_autos_types = union([interface_types(blocks(b, !!), blocks) : v, b <- root_block.nested_blocks]);
+    return memb_vars_types & tables_types & methods_types & nested_autos_types;
+  }
+
+
   (String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
     let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name:
       dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];
-      let duplicate_names = dup_names:
+      let duplicate_names = dup_names, decl_types = []:
         accessors_code, accessors_docs = static_auto_accessors(root_block, blocks);
         class_name = db_class_name;
       ;
