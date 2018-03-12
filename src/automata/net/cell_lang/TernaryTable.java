@@ -15,6 +15,12 @@ class TernaryTable {
       this.field3 = field3;
     }
 
+    public Tuple(Tuple original) {
+      field1OrNext = original.field1OrNext;
+      field2OrEmptyMarker = original.field2OrEmptyMarker;
+      field3 = original.field3;
+    }
+
     @Override
     public String toString() {
       return String.format("(%d, %d, %d)", field1OrNext, field2OrEmptyMarker, field3);
@@ -56,7 +62,7 @@ class TernaryTable {
 
     public Tuple get() {
       Miscellanea._assert(index != Tuple.Empty);
-      return table.tuples[index];
+      return new Tuple(table.tuples[index]);
     }
 
     public int getField1() {
@@ -225,11 +231,6 @@ class TernaryTable {
       index2.insert(index, Miscellanea.hashcode(field2));
     if (index3 != null)
       index3.insert(index, Miscellanea.hashcode(field3));
-
-    // Updating the reference count in the value stores
-    store1.addRef(field1);
-    store2.addRef(field2);
-    store3.addRef(field3);
   }
 
   public void clear() {
@@ -420,6 +421,9 @@ class TernaryTable {
 
   void deleteAt(int index, int hashcode) {
     Tuple tuple = tuples[index];
+    int field1 = tuple.field1OrNext;
+    int field2 = tuple.field2OrEmptyMarker;
+    int field3 = tuple.field3;
     Miscellanea._assert(tuple.field2OrEmptyMarker != Tuple.Empty);
 
     // Removing the tuple
@@ -432,22 +436,17 @@ class TernaryTable {
 
     // Updating the indexes
     index123.delete(index, hashcode);
-    index12.delete(index, Miscellanea.hashcode(tuple.field1OrNext, tuple.field2OrEmptyMarker));
+    index12.delete(index, Miscellanea.hashcode(field1, field2));
     if (index13 != null)
-      index13.delete(index, Miscellanea.hashcode(tuple.field1OrNext, tuple.field3));
+      index13.delete(index, Miscellanea.hashcode(field1, field3));
     if (index23 != null)
-      index23.delete(index, Miscellanea.hashcode(tuple.field2OrEmptyMarker, tuple.field3));
+      index23.delete(index, Miscellanea.hashcode(field2, field3));
     if (index1 != null)
-      index1.delete(index, Miscellanea.hashcode(tuple.field1OrNext));
+      index1.delete(index, Miscellanea.hashcode(field1));
     if (index2 != null)
-      index2.delete(index, Miscellanea.hashcode(tuple.field2OrEmptyMarker));
+      index2.delete(index, Miscellanea.hashcode(field2));
     if (index3 != null)
-      index3.delete(index, Miscellanea.hashcode(tuple.field3));
-
-    // Updating the reference count in the value stores
-    store1.release(tuple.field1OrNext);
-    store2.release(tuple.field2OrEmptyMarker);
-    store3.release(tuple.field3);
+      index3.delete(index, Miscellanea.hashcode(field3));
   }
 
   void buildIndex123() {

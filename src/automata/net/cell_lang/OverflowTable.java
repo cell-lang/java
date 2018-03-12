@@ -467,7 +467,7 @@ class OverflowTable {
   }
 
   boolean inHashedBlock(int value, int blockIdx, int hashcode) {
-    int slotIdx = blockIdx + hashcode % 15 + 1;
+    int slotIdx = blockIdx + Integer.remainderUnsigned(hashcode, 15) + 1;
     int content = slots[slotIdx];
     if (content == value)
       return true;
@@ -915,7 +915,7 @@ class OverflowTable {
   }
 
   int deleteFromHashedBlock(int blockIdx, int value, int handle, int hashcode, boolean[] deleted) {
-    int slotIdx = blockIdx + hashcode % 15 + 1;
+    int slotIdx = blockIdx + Integer.remainderUnsigned(hashcode, 15) + 1;
     int content = slots[slotIdx];
     if (content == EmptyMarker) {
       deleted[0] = false;
@@ -1025,7 +1025,7 @@ class OverflowTable {
 
 
   void insertIntoHashedBlock(int blockIdx, int value, int hashcode, boolean[] inserted) {
-    int slotIdx = blockIdx + hashcode % 15 + 1;
+    int slotIdx = blockIdx + Integer.remainderUnsigned(hashcode, 15) + 1;
     int content = slots[slotIdx];
     if (content == EmptyMarker) {
       slots[slotIdx] = value;

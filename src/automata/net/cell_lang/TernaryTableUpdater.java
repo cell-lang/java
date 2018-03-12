@@ -269,7 +269,6 @@ class TernaryTableUpdater {
     insertList.clear();
   }
 
-
   static boolean contains12(ArrayList<TernaryTable.Tuple> tuples, int field1, int field2) {
     int low = 0;
     int high = tuples.size() - 1;

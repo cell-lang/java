@@ -16,33 +16,26 @@ class Index {
     }
   }
 
-  // public void reset() {
-  //   hashtable = null;
-  //   buckets = null;
-  // }
-
   public void clear() {
-    // if (hashtable != null) {
     int size = hashtable.length;
     for (int i=0 ; i < size ; i++) {
       hashtable[i] = Empty;
       buckets[i] = Empty;
     }
-    // }
   }
 
   public void insert(int index, int hashcode) {
     Miscellanea._assert(buckets[index] == Empty);
     Miscellanea._assert(index < hashtable.length);
 
-    int hashIdx = hashcode % hashtable.length;
+    int hashIdx = Integer.remainderUnsigned(hashcode, hashtable.length);
     int head = hashtable[hashIdx];
     hashtable[hashIdx] = index;
     buckets[index] = head;
   }
 
   public void delete(int index, int hashcode) {
-    int hashIdx = hashcode % hashtable.length;
+    int hashIdx = Integer.remainderUnsigned(hashcode, hashtable.length);
     int head = hashtable[hashIdx];
     Miscellanea._assert(head != Empty);
 
@@ -65,12 +58,8 @@ class Index {
     }
   }
 
-  // public boolean isBlank() {
-  //   return hashtable == null;
-  // }
-
   public int head(int hashcode) {
-    return hashtable[hashcode % hashtable.length];
+    return hashtable[Integer.remainderUnsigned(hashcode, hashtable.length)];
   }
 
   public int next(int index) {

@@ -49,7 +49,8 @@ class ValueStoreBase {
     if (count == 0)
       return -1;
     int hashcode = value.hashCode(); //## WAS int
-    int idx = hashtable[hashcode % hashtable.length];
+    int hashIdx = Integer.remainderUnsigned(hashcode, hashtable.length);
+    int idx = hashtable[hashIdx];
     while (idx != -1) {
       Miscellanea._assert(slots[idx] != null);
       if (hashcodes[idx] == hashcode && value.isEq(slots[idx]))
@@ -80,8 +81,7 @@ class ValueStoreBase {
     slots[slotIdx] = value;
     hashcodes[slotIdx] = hashcode;
 
-    //## DOES IT MAKE ANY DIFFERENCE HERE TO USE int INSTEAD OF int?
-    int hashtableIdx = hashcode % slots.length; //## WAS int
+    int hashtableIdx = Integer.remainderUnsigned(hashcode, slots.length);
     int head = hashtable[hashtableIdx];
     hashtable[hashtableIdx] = slotIdx;
     buckets[slotIdx] = head;
@@ -99,7 +99,7 @@ class ValueStoreBase {
     hashcodes[index] = 0; //## NOT STRICTLY NECESSARY...
     count--;
 
-    int hashtableIdx = hashcode % slots.length;
+    int hashtableIdx = Integer.remainderUnsigned(hashcode, slots.length);
     int idx = hashtable[hashtableIdx];
     Miscellanea._assert(idx != -1);
 
@@ -146,7 +146,7 @@ class ValueStoreBase {
 
       for (int i=0 ; i < currCapacity ; i++)
         if (slots[i] != null) {
-          int slotIdx = hashcodes[i] % newCapacity;
+          int slotIdx = Integer.remainderUnsigned(hashcodes[i], newCapacity);
           int head = hashtable[slotIdx];
           hashtable[slotIdx] = i;
           buckets[i] = head;
