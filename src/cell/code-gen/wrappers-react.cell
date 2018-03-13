@@ -145,7 +145,7 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType], decl_types : [Inte
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit typedefs : [TypeName -> NeType] {
-  [Type] interface_types(ReactBlock block) {
+  [NeType] interface_types(ReactBlock block) {
     inputs_types = [info.type : id, info <- block.inputs];
     outputs_types = [info.type : id, info <- block.outputs];
     methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- block.methods]);
@@ -154,6 +154,10 @@ implicit typedefs : [TypeName -> NeType] {
 
 
   (String*, String*) react_auto_wrapper(ReactBlock block) {
+    interf_types = interface_types(block);
+    types_names, types_decls = declared_types(interf_types);
+    types_decls_code = join((("") & d : d <- isort(types_decls)));
+
     // decl_types : [InterType -> String] {
 
     // let block = block, decl_types = decl_types:
@@ -180,14 +184,12 @@ implicit typedefs : [TypeName -> NeType] {
     elapsed_time_var_name = native_var_decl_name(elapsed_time);
     changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
 
-    let block = block, decl_types = []:
+    methods = block.methods;
+    let block = block, decl_types = types_names:
       input_setters, input_setters_docs = (join(ls) : ls <- unzip((input_setter(i) : i <- ord_inputs)));
       output_getters, output_getters_docs = (join(ls) : ls <- unzip((output_getter(o) : o <- ord_outputs)));
-    ;
-
-    let decl_types = []:
       methods_wrappers, methods_wrappers_docs = (
-        join(ls) : ls <- unzip(isort([auto_method_wrapper(id, m, block=block) : id, m <- block.methods]))
+        join(ls) : ls <- unzip(isort([auto_method_wrapper(id, m) : id, m <- methods]))
       );
     ;
 
@@ -235,7 +237,7 @@ implicit typedefs : [TypeName -> NeType] {
     docs = docs & ("", "  // Inputs") & input_setters_docs if input_setters_docs != ();
     docs = docs & ("", "  // Outputs") & output_getters_docs if output_getters_docs != ();
     docs = docs & ("", "  // Methods") & indent_lines(methods_wrappers_docs) if methods_wrappers_docs != ();
-
+    docs = docs & ("", "  // Types") & indent_lines(types_decls_code) if types_decls_code != ();
     docs = docs & (
       "}"
     );
@@ -345,7 +347,7 @@ implicit typedefs : [TypeName -> NeType] {
       );
     ;
 
-    code = code & input_setters & output_getters & methods_wrappers;
+    code = code & input_setters & output_getters & methods_wrappers & types_decls_code;
     code = ("public static class " & auto_class_name & " {") & indent_lines(code) & ("}");
 
     return (code, docs);

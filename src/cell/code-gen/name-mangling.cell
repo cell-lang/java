@@ -146,7 +146,7 @@ String native_var_name(IntVar v, Bool add_prefix) {
     update_source_var(a?)               = prefix & _str_(a) & "_V_update_source",
     null_locks_count_var(a?)            = prefix & _str_(a) & "_V_null_locks_count",
     update_count_var(l?)                = prefix & "update_count_" & printed(l),
-    nodes_to_update_var()               = prefix & "nodes_to_update_" & printed(v.level) & "[" & native_idx_expr(v.index) & "]",
+    nodes_to_update_var()               = prefix & "nodes_to_update_" & printed(v.level) & "[(int) (" & native_idx_expr(v.index) & ")]",
     next_trigger_time_var(a?)           = prefix & _str_(a) & "_V_next_trigger_time",
     curr_time_slot_var(a?)              = prefix & _str_(a) & "_V_curr_time_slot",
     time_triggers_count_var             = prefix & "time_triggers_count",

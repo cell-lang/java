@@ -31,7 +31,7 @@ class Conversions {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  public static boolean[] ToBoolArray(Obj obj) {
+  public static boolean[] toBoolArray(Obj obj) {
     int size = obj.getSize();
     boolean[] array = new boolean[size];
     SeqOrSetIter it = obj.getSeqOrSetIter();

@@ -44,7 +44,7 @@ cellc-java: $(SRC-FILES) $(RUNTIME-FILES)
 
 cellc-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 	# java -jar bin/cellc-java.jar projects/compiler-no-runtime.txt
-	bin/cellc-java projects/compiler-no-runtime.txt
+	bin/cellc-java -d projects/compiler-no-runtime.txt
 	bin/apply-hacks < Generated.java > tmp/cellc-java.java
 	mv Generated.java tmp/
 	# javac -g -d tmp/ tmp/cellc-java.java

@@ -69,8 +69,14 @@ class Miscellanea {
   }
 
   public static RuntimeException internalFail() {
+    return internalFail(null);
+  }
+
+  public static RuntimeException internalFail(Obj obj) {
     System.err.println("Internal error!\n");
     PrintCallStack();
+    if (obj != null)
+      dumpVar("this", obj);
     System.exit(1);
     return null;
   }

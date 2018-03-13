@@ -47,7 +47,7 @@ implicit typedefs : [TypeName -> NeType] {
     ;
     max_len = max((length(t) : t <- types));
     spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
-    body = ("  public " & t & spaces(i) & " item" & printed(i) : t @ i <- types);
+    body = ("  public " & t & spaces(i) & " item" & printed(i) & ";" : t @ i <- types);
     header = "public static class " & name & " {";
     return (header) & body & ("}");
   }

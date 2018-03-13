@@ -47,7 +47,7 @@ implicit decl_types : [InterType -> String] {
     expr_var = "expr" & unique_id;
 
     field_vars = ("field" & printed(i) & "_" & unique_id : t @ i <- types);
-    fields_code = (import_code(t, expr_var & ".item" & printed(i+1), "Obj " & field_vars(i) & " = ") : t @ i <- types);
+    fields_code = (import_code(t, expr_var & ".item" & printed(i), "Obj " & field_vars(i) & " = ") : t @ i <- types);
 
     tuple_instr = action_prefix & "new MasterSeqObj(new Obj[] {" & append(field_vars, ", ") & "});";
 
@@ -117,19 +117,19 @@ implicit decl_types : [InterType -> String] {
 
   String* tuple_export_code(InterType+ types, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
-    expr_var = "expr" & unique_id;
+    // expr_var = "expr" & unique_id;
+    tuple_var = "tuple" & unique_id;
 
-    field_vars = ("field" & printed(i) & "_" & unique_id : t @ i <- types);
-    fields_code = join(({
-        asgnm_text = return_value_type(t) & " " & field_vars(i) & " = ";
+    tuple_type = decl_types(:tuple(types), !!); //## BAD, RECONSTRUCTING TUPLE TYPE
+    tuple_instantiation_instr = tuple_type & " " & tuple_var & " = new " & tuple_type & "();";
+
+    asgnm_code = join(({
+        asgnm_text = tuple_var & ".item" & printed(i) & " = ";
         return export_code(t, expr & ".getItem(" & printed(i) & ")", asgnm_text);
       } : t @ i <- types
     ));
 
-    tuple_instr = action_prefix & "new Tuple<" & append((return_value_type(t) : t <- types), ", ") &
-                  ">(" & append(field_vars, ", ") & ");";
-
-    return (fields_code | tuple_instr);
+    return (tuple_instantiation_instr) & (asgnm_code | action_prefix & tuple_var & ";");
   }
 
 

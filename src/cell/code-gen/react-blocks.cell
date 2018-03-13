@@ -169,7 +169,7 @@ implicit {
       "  else {",
       "    " & pending_input_var_str & " = value;",
       "    long idx = this.update_count_0;" if queue_node,
-      "    this.nodes_to_update_0[idx] = " & printed(node_idx) & ";" if queue_node,
+      "    this.nodes_to_update_0[(int) idx] = " & printed(node_idx) & ";" if queue_node,
       "    this.update_count_0 = idx + 1;" if queue_node,
       "    " & up_to_date_var & " = false;",
       "  }",

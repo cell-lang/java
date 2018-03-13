@@ -31,69 +31,69 @@ abstract class Obj implements Comparable<Obj> {
   public boolean isInt(long n)                          {return false;}
   public boolean isFloat(double x)                      {return false;}
 
-  public boolean hasElem(Obj o)                         {throw new UnsupportedOperationException();}
-  public boolean hasKey(Obj o)                          {throw new UnsupportedOperationException();}
-  public boolean hasField(int id)                       {throw new UnsupportedOperationException();}
-  public boolean hasPair(Obj o1, Obj o2)                {throw new UnsupportedOperationException();}
-  public boolean hasTriple(Obj o1, Obj o2, Obj o3)      {throw new UnsupportedOperationException();}
+  public boolean hasElem(Obj o)                         {throw Miscellanea.internalFail(this);}
+  public boolean hasKey(Obj o)                          {throw Miscellanea.internalFail(this);}
+  public boolean hasField(int id)                       {throw Miscellanea.internalFail(this);}
+  public boolean hasPair(Obj o1, Obj o2)                {throw Miscellanea.internalFail(this);}
+  public boolean hasTriple(Obj o1, Obj o2, Obj o3)      {throw Miscellanea.internalFail(this);}
 
-  public int     getSymbId()                            {throw new UnsupportedOperationException();}
-  public boolean getBool()                              {throw new UnsupportedOperationException();}
-  public long    getLong()                              {throw new UnsupportedOperationException();}
-  public double  getDouble()                            {throw new UnsupportedOperationException();}
-  public int     getSize()                              {throw new UnsupportedOperationException();}
-  public Obj     getItem(long i)                        {throw new UnsupportedOperationException();}
-  public int     getTagId()                             {throw new UnsupportedOperationException();}
-  public Obj     getTag()                               {throw new UnsupportedOperationException();}
-  public Obj     getInnerObj()                          {throw new UnsupportedOperationException();}
+  public int     getSymbId()                            {throw Miscellanea.internalFail(this);}
+  public boolean getBool()                              {throw Miscellanea.internalFail(this);}
+  public long    getLong()                              {throw Miscellanea.internalFail(this);}
+  public double  getDouble()                            {throw Miscellanea.internalFail(this);}
+  public int     getSize()                              {throw Miscellanea.internalFail(this);}
+  public Obj     getItem(long i)                        {throw Miscellanea.internalFail(this);}
+  public int     getTagId()                             {throw Miscellanea.internalFail(this);}
+  public Obj     getTag()                               {throw Miscellanea.internalFail(this);}
+  public Obj     getInnerObj()                          {throw Miscellanea.internalFail(this);}
 
-  public SeqOrSetIter getSeqOrSetIter()                 {throw new UnsupportedOperationException();}
-  public BinRelIter   getBinRelIter()                   {throw new UnsupportedOperationException();}
-  public TernRelIter  getTernRelIter()                  {throw new UnsupportedOperationException();}
+  public SeqOrSetIter getSeqOrSetIter()                 {throw Miscellanea.internalFail(this);}
+  public BinRelIter   getBinRelIter()                   {throw Miscellanea.internalFail(this);}
+  public TernRelIter  getTernRelIter()                  {throw Miscellanea.internalFail(this);}
 
   // Copy-on-write update
-  public Obj updatedAt(long i, Obj v)                   {throw new UnsupportedOperationException();}
+  public Obj updatedAt(long i, Obj v)                   {throw Miscellanea.internalFail(this);}
 
-  public BinRelIter getBinRelIterByCol1(Obj obj)        {throw new UnsupportedOperationException();}
-  public BinRelIter getBinRelIterByCol2(Obj obj)        {throw new UnsupportedOperationException();}
+  public BinRelIter getBinRelIterByCol1(Obj obj)        {throw Miscellanea.internalFail(this);}
+  public BinRelIter getBinRelIterByCol2(Obj obj)        {throw Miscellanea.internalFail(this);}
 
-  public TernRelIter getTernRelIterByCol1(Obj val)      {throw new UnsupportedOperationException();}
-  public TernRelIter getTernRelIterByCol2(Obj val)      {throw new UnsupportedOperationException();}
-  public TernRelIter getTernRelIterByCol3(Obj val)      {throw new UnsupportedOperationException();}
+  public TernRelIter getTernRelIterByCol1(Obj val)      {throw Miscellanea.internalFail(this);}
+  public TernRelIter getTernRelIterByCol2(Obj val)      {throw Miscellanea.internalFail(this);}
+  public TernRelIter getTernRelIterByCol3(Obj val)      {throw Miscellanea.internalFail(this);}
 
-  public TernRelIter getTernRelIterByCol12(Obj val1, Obj val2)  {throw new UnsupportedOperationException();}
-  public TernRelIter getTernRelIterByCol13(Obj val1, Obj val3)  {throw new UnsupportedOperationException();}
-  public TernRelIter getTernRelIterByCol23(Obj val2, Obj val3)  {throw new UnsupportedOperationException();}
+  public TernRelIter getTernRelIterByCol12(Obj val1, Obj val2)  {throw Miscellanea.internalFail(this);}
+  public TernRelIter getTernRelIterByCol13(Obj val1, Obj val3)  {throw Miscellanea.internalFail(this);}
+  public TernRelIter getTernRelIterByCol23(Obj val2, Obj val3)  {throw Miscellanea.internalFail(this);}
 
-  public long mantissa()                                {throw new UnsupportedOperationException();}
-  public long decExp()                                  {throw new UnsupportedOperationException();}
+  public long mantissa()                                {throw Miscellanea.internalFail(this);}
+  public long decExp()                                  {throw Miscellanea.internalFail(this);}
 
-  public Obj negate()                                   {throw new UnsupportedOperationException();}
-  public Obj reverse()                                  {throw new UnsupportedOperationException();}
-  public void initAt(long i, Obj v)                     {throw new UnsupportedOperationException();}
+  public Obj negate()                                   {throw Miscellanea.internalFail(this);}
+  public Obj reverse()                                  {throw Miscellanea.internalFail(this);}
+  public void initAt(long i, Obj v)                     {throw Miscellanea.internalFail(this);}
 
-  public Obj internalSort()                             {throw new UnsupportedOperationException();}
-  public Obj getSlice(long first, long len)             {throw new UnsupportedOperationException();}
+  public Obj internalSort()                             {throw Miscellanea.internalFail(this);}
+  public Obj getSlice(long first, long len)             {throw Miscellanea.internalFail(this);}
 
-  public long[] getLongArray()                          {throw new UnsupportedOperationException();}
-  public byte[] getByteArray()                          {throw new UnsupportedOperationException();}
-  public String getString()                             {throw new UnsupportedOperationException();}
+  public long[] getLongArray()                          {throw Miscellanea.internalFail(this);}
+  public byte[] getByteArray()                          {throw Miscellanea.internalFail(this);}
+  public String getString()                             {throw Miscellanea.internalFail(this);}
 
-  public Obj lookup(Obj key)                            {throw new UnsupportedOperationException();}
-  public Obj lookupField(int id)                        {throw new UnsupportedOperationException();}
+  public Obj lookup(Obj key)                            {throw Miscellanea.internalFail(this);}
+  public Obj lookupField(int id)                        {throw Miscellanea.internalFail(this);}
 
-  public Obj append(Obj obj)                            {throw new UnsupportedOperationException();}
-  public Obj concat(Obj seq)                            {throw new UnsupportedOperationException();}
+  public Obj append(Obj obj)                            {throw Miscellanea.internalFail(this);}
+  public Obj concat(Obj seq)                            {throw Miscellanea.internalFail(this);}
 
-  public void copyItems(Obj[] items, int offset)        {throw new UnsupportedOperationException();}
+  public void copyItems(Obj[] items, int offset)        {throw Miscellanea.internalFail(this);}
 
-  public int cmpSeq(Obj[] es, int o, int l)             {throw new UnsupportedOperationException();}
-  public int cmpNeSet(Obj[] es)                         {throw new UnsupportedOperationException();}
-  public int cmpNeBinRel(Obj[] c1, Obj[] c2)            {throw new UnsupportedOperationException();}
-  public int cmpNeTernRel(Obj[] c1, Obj[] c2, Obj[] c3) {throw new UnsupportedOperationException();}
-  public int cmpTaggedObj(int tag, Obj obj)             {throw new UnsupportedOperationException();}
+  public int cmpSeq(Obj[] es, int o, int l)             {throw Miscellanea.internalFail(this);}
+  public int cmpNeSet(Obj[] es)                         {throw Miscellanea.internalFail(this);}
+  public int cmpNeBinRel(Obj[] c1, Obj[] c2)            {throw Miscellanea.internalFail(this);}
+  public int cmpNeTernRel(Obj[] c1, Obj[] c2, Obj[] c3) {throw Miscellanea.internalFail(this);}
+  public int cmpTaggedObj(int tag, Obj obj)             {throw Miscellanea.internalFail(this);}
 
-  public ValueBase getValue()                           {throw new UnsupportedOperationException();}
+  public ValueBase getValue()                           {throw Miscellanea.internalFail(this);}
 
   public void dump() {
     System.out.println("ERROR: NO DUMP AVAILABLE");
@@ -112,7 +112,7 @@ abstract class Obj implements Comparable<Obj> {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public Obj randElem() {throw new UnsupportedOperationException();}
+  public Obj randElem() {throw Miscellanea.internalFail(this);}
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
