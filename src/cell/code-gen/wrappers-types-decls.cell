@@ -1,8 +1,11 @@
+type SimplyNamedInterType = BasicInterType, tagged(SymbObj, generic);
+
+
 implicit typedefs : [TypeName -> NeType] {
   ([InterType -> String], [String*]) declared_types([NeType] types) {
     inter_types = [interface_type(t) : t <- types];
     decl_types = union([types_to_declare(t) : t <- inter_types]);
-    nicely_named_types = [t : t <- decl_types, t :: <tuple(BasicInterType+)>];
+    nicely_named_types = [t : t <- decl_types, t :: <tuple(SimplyNamedInterType+)>];
     generically_named_types = isort(decl_types - nicely_named_types);
 
     type_names = [t -> nice_name(t) : t <- nicely_named_types] &
@@ -28,16 +31,17 @@ implicit typedefs : [TypeName -> NeType] {
     tagged(_, t?)   = types_to_declare(t);
 
 
-  String nice_name(<tuple(BasicInterType+)> type) {
+  String nice_name(<tuple(SimplyNamedInterType+)> type) {
     return append((field_type_name(t) : t <- untag(type)), "_");
 
-    String field_type_name(BasicInterType) =
-      bool      = "Bool",
-      integer   = "Long",
-      float     = "Double",
-      symbol    = "Symbol",
-      string    = "String",
-      generic   = "Value";
+    String field_type_name(SimplyNamedInterType) =
+      bool                = "Bool",
+      integer             = "Long",
+      float               = "Double",
+      symbol              = "Symbol",
+      string              = "String",
+      generic             = "Value",
+      tagged(_, generic)  = "Value";
   }
 
 
