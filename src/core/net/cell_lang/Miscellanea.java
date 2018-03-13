@@ -50,9 +50,22 @@ class Miscellanea {
     throw new UnsupportedOperationException();
   }
 
-  public static Obj softFail(String msg) {
+  public static RuntimeException softFail(String msg) {
     System.err.println(msg);
-    throw softFail();
+    return softFail();
+  }
+
+  public static RuntimeException softFail(String msg, String varName, Obj obj) {
+    System.err.println(msg);
+    dumpVar(varName, obj);
+    return softFail();
+  }
+
+  public static RuntimeException softFail(String msg, String var1Name, Obj obj1, String var2Name, Obj obj2) {
+    System.err.println(msg);
+    dumpVar(var1Name, obj1);
+    dumpVar(var2Name, obj2);
+    return softFail();
   }
 
   public static Obj hardFail() {
@@ -162,6 +175,8 @@ class Miscellanea {
   }
 
   static void PrintCallStack() {
+    if (stackDepth == 0)
+      return;
     System.err.println("Call stack:\n");
     int size = stackDepth <= fnNamesStack.length ? stackDepth : fnNamesStack.length;
     for (int i=0 ; i < size ; i++)

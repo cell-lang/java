@@ -88,10 +88,10 @@ class NeBinRelObj extends Obj {
   public Obj lookup(Obj key) {
     int idx = Algs.binSearch(col1, key);
     if (idx == -1)
-      throw new RuntimeException();
+      throw Miscellanea.softFail("Key not found:", "collection", this, "key", key);
     if (!isMap)
       if ((idx > 0 && col1[idx-1].isEq(key)) || (idx+1 < col1.length && col1[idx+1].isEq(key)))
-        throw new RuntimeException();
+        throw Miscellanea.softFail("Key not found:", "collection", this, "key", key);
     return col2[idx];
   }
 
@@ -101,7 +101,7 @@ class NeBinRelObj extends Obj {
       if (col1[i].isSymb(symbId))
         return col2[i];
     // We should never get here. The typechecker should prevent it.
-    throw new UnsupportedOperationException();
+    throw Miscellanea.internalFail(this);
   }
 
   public int hashCode() {

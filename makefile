@@ -44,16 +44,24 @@ cellc-java: $(SRC-FILES) $(RUNTIME-FILES)
 
 cellc-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 	# java -jar bin/cellc-java.jar projects/compiler-no-runtime.txt
-	bin/cellc-java -d projects/compiler-no-runtime.txt
+	bin/cellc-java projects/compiler-no-runtime.txt
 	bin/apply-hacks < Generated.java > tmp/cellc-java.java
 	mv Generated.java tmp/
-	# javac -g -d tmp/ tmp/cellc-java.java
 	javac -d tmp/ tmp/cellc-java.java
 	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
 
 bin/cellc-java.jar: cellc-java.jar
 	rm -f bin/cellc-java.jar
 	mv cellc-java.jar bin/
+
+bin/cellcd-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
+	bin/cellc-java -d projects/compiler-no-runtime.txt
+	bin/apply-hacks < Generated.java > tmp/cellcd-java.java
+	mv Generated.java tmp/
+	javac -g -d tmp/ tmp/cellcd-java.java
+	jar cfe cellcd-java.jar net.cell_lang.Generated -C tmp net/
+	rm -f bin/cellcd-java.jar
+	mv cellcd-java.jar bin/
 
 inputs/tests.txt: tests.cell
 	cellc-cs.exe -p projects/tests.txt
@@ -78,7 +86,7 @@ soft-clean:
 	@rm -f src/core/net/cell_lang/*.class
 	@rm -f src/automata/net/cell_lang/*.class
 	@rm -f src/misc/net/cell_lang/*.class
-	@rm -f cellc-java cellcd-java
+	@rm -f cellc-java cellcd-java cellc-java.jar cellcd-java.jar
 	@rm -rf tmp
 	@mkdir tmp
 	@mkdir tmp/codegen

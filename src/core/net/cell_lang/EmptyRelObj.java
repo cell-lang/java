@@ -101,6 +101,10 @@ class EmptyRelObj extends Obj {
     return SeqObj.empty();
   }
 
+  public Obj lookup(Obj key) {
+    throw Miscellanea.softFail("Key not found:", "collection", this, "key", key);
+  }
+
   public int hashCode() {
     return 0; //## FIND BETTER VALUE
   }

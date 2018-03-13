@@ -24,3 +24,4 @@ codegen.jar
 Tests.java
 bin/cellc-java
 bin/cellc-java.jar
+bin/cellcd-java.jar
