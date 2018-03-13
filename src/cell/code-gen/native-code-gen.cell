@@ -108,7 +108,7 @@
 
     indent_lines(code & proc_code & int_seqs_code & ("", "") & wrappers),
 
-    indent_lines(c_main_fn) if (p <- prg.procs : p.name == proc_symbol(:main)),
+    indent_lines(c_main_fn(debug_mode)) if (p <- prg.procs : p.name == proc_symbol(:main)),
 
     ("}", ""),
 
@@ -681,7 +681,7 @@ String native_assignment_code(AnyVar var, Encodable value) =
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-String* c_main_fn = (
+String* c_main_fn(Bool exit_on_soft_fail) = (
   "",
   "",
   "public static void main(String[] args) {",
@@ -689,6 +689,7 @@ String* c_main_fn = (
   "  for (int i=0 ; i < args.length ; i++)",
   "    cellArgs[i] = Miscellanea.strToObj(args[i]);",
   "  Env env = new Env();",
+  "  Miscellanea.exitOnSoftFail = true;" if exit_on_soft_fail,
   "  Obj res = Main_P(new MasterSeqObj(cellArgs), env);",
   "  System.exit(res.isInt() ? (int) res.getLong() : 0);",
   "}"

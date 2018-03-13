@@ -45,8 +45,12 @@ class Miscellanea {
     return null;
   }
 
+  public static boolean exitOnSoftFail = false;
+
   public static RuntimeException softFail() {
     PrintCallStack();
+    if (exitOnSoftFail)
+      System.exit(1);
     throw new UnsupportedOperationException();
   }
 
