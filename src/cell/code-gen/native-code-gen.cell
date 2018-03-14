@@ -103,7 +103,7 @@
       "import java.util.Random;",
       "",
       "",
-      "class Generated {"
+      "public class Generated {"
     ),
 
     indent_lines(code & proc_code & int_seqs_code & ("", "") & wrappers),

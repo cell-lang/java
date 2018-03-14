@@ -3,7 +3,7 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-interface Value {
+public interface Value {
   boolean isSymb();
   boolean isInt();
   boolean isFloat();

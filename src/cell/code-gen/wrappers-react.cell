@@ -5,12 +5,12 @@ implicit block : ReactBlock {
   [String] duplicate_names {
     inputs = keys(block.inputs);
     outputs = keys(block.outputs) - inputs;
-    names = (upper_camel_case(id) : id <- isort(inputs) & isort(outputs));
+    names = (lower_camel_case(id) : id <- isort(inputs) & isort(outputs));
     return duplicates(names);
   }
 
   String safe_name(Symbol signal) {
-    name = upper_camel_case(signal);
+    name = lower_camel_case(signal);
     name = capitalize(_str_(signal), true) if in(name, duplicate_names); ## MOVE THIS TO A NEW FUNCTION utils IN.cell
     name = "_" & name if has_conflicts(name);
     return name;
@@ -22,13 +22,13 @@ implicit block : ReactBlock {
 
   [String, Nat] duplicate_method_names {
     method_ids = [id.symbol, id.arity : id, unused_var <- block.methods, not id.id?];
-    native_ids = ((upper_camel_case(bare_id(s)), a) : s, a <- isort(method_ids));
+    native_ids = ((lower_camel_case(bare_id(s)), a) : s, a <- isort(method_ids));
     return [nid(0), nid(1) : nid <- duplicates(native_ids)];
   }
 
   String safe_name(MethodSymbol method_symb, Nat arity) {
     symbol = bare_id(method_symb);
-    name = upper_camel_case(symbol);
+    name = lower_camel_case(symbol);
     // We first check if this conflicts with other method names
     duplicate_method_names = duplicate_method_names; //## BAD
     name = capitalize(_str_(symbol), true) if duplicate_method_names(name, arity);
@@ -227,7 +227,7 @@ implicit typedefs : [TypeName -> NeType] {
       "  void setElapsedMillisecs(int);" if is_time_sensitive,
       "  void setElapsedSecs(int);" if is_time_sensitive,
       "",
-      "  " & apply_ret_type & " Apply();",
+      "  " & apply_ret_type & " apply();",
       "  Value readState();",
       "  void setState(String);",
       "",
@@ -319,7 +319,7 @@ implicit typedefs : [TypeName -> NeType] {
     if outputs != ():
       code = code & (
         "",
-        "public Output[] ChangedOutputs() {",
+        "public Output[] changedOutputs() {",
         "  int count = (int) automaton.changed_outputs_count;",
         "  Output[] outputs = new Output[count];",
         "  Output[] values = Output.values();", ## THIS SHOULD BE MADE MORE EFFICIENT
