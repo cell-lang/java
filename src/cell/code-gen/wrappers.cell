@@ -1,10 +1,19 @@
 type AtomicInterType  = bool, integer, float, symbol, string;
 type BasicInterType   = AtomicInterType, generic;
+
+type TupleInterType   = tuple(InterType+);
+type RecordInterType  = record([+Symbol -> InterType]);
+type TaggedInterType  = tagged(SymbObj, InterType);
+
+type NamedInterType   = named(type_symbol(Atom), <TupleInterType, RecordInterType, TaggedInterType>);
+
 type InterType        = BasicInterType,
-                        tuple(InterType+),
+                        TupleInterType,
+                        RecordInterType,
                         seq(InterType),
                         set(InterType),
-                        tagged(SymbObj, InterType);
+                        TaggedInterType,
+                        NamedInterType;
 
 
 NeType internal_type(AtomicInterType) =
@@ -19,7 +28,9 @@ implicit decl_types : [InterType -> String] {
     bool            = "boolean",
     integer         = "long",
     float           = "double",
-    tuple(ts?)      = decl_types(it, !!),
+    tuple()         |
+    record()        = decl_types(it, !!),
+    named(n?, t?)   = if decl_types(t, *) then decl_types(t, !!) else return_value_type(t),
     seq(t?)         |
     set(t?)         = input_arg_type(t) & "[]",
     tagged(_, t?)   = input_arg_type(t),
@@ -35,11 +46,19 @@ implicit decl_types : [InterType -> String] {
     symbol              = (action_prefix & "Conversions.convertText(" & expr & ");"),
     string              = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
     tuple(ts?)          = tuple_import_code(ts, expr, action_prefix),
+    record(fs?)         = record_import_code(fs, expr, action_prefix),
+    named()             = (), ## IMPLEMENT IMPLEMENT IMPLEMENT
     seq(t?)             = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
     set(t?)             = array_import_code(t, expr, action_prefix, "Builder.createSet"),
     tagged(_, generic)  = import_code(:generic, expr, action_prefix),
     tagged(s?, t?)      = tagged_value_import_code(s, t, expr, action_prefix),
     generic             = (action_prefix & "Conversions.convertText(" & expr & ");");
+
+
+  String* record_import_code([+Symbol -> InterType] fields, String expr, String action_prefix) {
+    ## IMPLEMENT IMPLEMENT IMPLEMENT
+    return ();
+  }
 
 
   String* tuple_import_code(InterType+ types, String expr, String action_prefix) {
@@ -94,7 +113,9 @@ implicit decl_types : [InterType -> String] {
     float         = "double",
     symbol        = "String",
     string        = "String",
-    tuple(ts?)    = decl_types(it, !!),
+    tuple()       |
+    record()      = decl_types(it, !!),
+    named(n?, t?) = if decl_types(t, *) then decl_types(t, !!) else return_value_type(t),
     seq(t?)       |
     set(t?)       = return_value_type(t) & "[]",
     tagged(_, t?) = if t != :generic then return_value_type(t) else return_value_type(:generic),
@@ -108,11 +129,19 @@ implicit decl_types : [InterType -> String] {
     symbol              = (action_prefix & expr & ".toString();"),
     string              = (action_prefix & expr & ".getString();"),
     tuple(ts?)          = tuple_export_code(ts, expr, action_prefix),
+    record(fs?)         = record_export_code(fs, expr, action_prefix),
+    named()             = (), ## IMPLEMENT IMPLEMENT IMPLEMENT
     seq(t?)             |
     set(t?)             = array_export_code(t, expr, action_prefix),
     tagged(_, generic)  = export_code(:generic, expr, action_prefix),
     tagged(_, t?)       = export_code(t, expr & ".getInnerObj()", action_prefix),
     generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
+
+
+  String* record_export_code([+Symbol -> InterType] fields, String expr, String action_prefix) {
+    ## IMPLEMENT IMPLEMENT IMPLEMENT
+    return ();
+  }
 
 
   String* tuple_export_code(InterType+ types, String expr, String action_prefix) {
@@ -143,6 +172,7 @@ implicit decl_types : [InterType -> String] {
       generic             = (action_prefix & "Conversions.toValueArray(" & expr & ");"),
       tagged(_, generic)  = array_export_code(:generic, expr, action_prefix),
       tuple()             |
+      record()            |
       seq()               |
       set()               |
       tagged()            = generic_array_export_code(elem_type, expr, action_prefix);
@@ -204,15 +234,34 @@ implicit typedefs : [TypeName -> NeType] {
       return :set(interface_type(elem_type)) if elem_type != empty_type;
     ;
 
+    maybe_type_name = if type :: <type_ref(type_symbol(Symbol))> then just(untag(type)) else nothing;
+
+    maybe_fields = maybe_record_type_fields(type);
+    if maybe_fields != nothing:
+      types = value(maybe_fields);
+      if not (l, info <- types : info.optional):
+        inter_type = :record([untag(l) -> interface_type(info.type) : l, info <- types]);
+        inter_type = :named(value(maybe_type_name), inter_type) if maybe_type_name != nothing;
+        return inter_type;
+      ;
+    ;
+
     if is_subset(type, type_tagged_obj):
       tag_type = tag_supertype(type);
       if is_symb_singl_type(tag_type):
         obj_type = untagged_objs_supertype(type);
         assert obj_type != empty_type; ## WHY THIS?
-        return :tagged(only_symb(tag_type), interface_type(obj_type)) if obj_type != empty_type;
+        if obj_type != empty_type:
+          inter_type = :tagged(only_symb(tag_type), interface_type(obj_type));
+          inter_type = :named(value(maybe_type_name), inter_type) if maybe_type_name != nothing;
+          return inter_type;
+        ;
       ;
     ;
 
     return :generic;
+
+
   }
+
 }

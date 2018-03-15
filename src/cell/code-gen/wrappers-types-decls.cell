@@ -1,15 +1,34 @@
 type SimplyNamedInterType = BasicInterType, tagged(SymbObj, generic);
 
+type DeclInterType   = TupleInterType, RecordInterType, NamedInterType;
+
+// type NamedInterType   = named(type_symbol(Atom), InterType);
+
+[InterType -> String] java_type_names([NamedInterType] types) = [
+  ## THIS SHOULD ALSO RESOLVE CONFLICTS WITH OTHER UPPER CAMEL CASE NAMES
+  t -> upper_camel_case(s) : type <- types, named(type_symbol(s?), t?) ?= type
+];
+
 
 implicit typedefs : [TypeName -> NeType] {
   ([InterType -> String], [String*]) declared_types([NeType] types) {
     inter_types = [interface_type(t) : t <- types];
     decl_types = union([types_to_declare(t) : t <- inter_types]);
-    nicely_named_types = [t : t <- decl_types, t :: <tuple(SimplyNamedInterType+)>];
-    generically_named_types = isort(decl_types - nicely_named_types);
+    tuple_types = [t : t <- decl_types, t :: TupleInterType];
+    record_types = [t : t <- decl_types, t :: RecordInterType];
+    named_types = [t : t <- decl_types, t :: NamedInterType];
+    nicely_named_tuple_types = [t : t <- tuple_types, t :: <tuple(SimplyNamedInterType+)>];
+    generically_named_tuple_types = isort(tuple_types - nicely_named_tuple_types);
 
-    type_names = [t -> nice_name(t) : t <- nicely_named_types] &
-                 [t -> "Tuple" & printed(i) : t @ i <~ generically_named_types];
+    user_def_type_names = [
+      ## THIS SHOULD ALSO RESOLVE CONFLICTS WITH OTHER UPPER CAMEL CASE NAMES
+      t -> upper_camel_case(s) : type <- named_types, named(type_symbol(s?), t?) ?= type
+    ];
+
+    type_names = [t -> nice_name(t) : t <- nicely_named_tuple_types] &
+                 [t -> "Tuple" & printed(i) : t @ i <~ generically_named_tuple_types] &
+                 [t -> "Record" & printed(i) : t @ i <~ isort(record_types)] &
+                 user_def_type_names;
 
     type_decls = [type_decl(t, s, type_names) : t, s <- type_names];
 
@@ -17,7 +36,13 @@ implicit typedefs : [TypeName -> NeType] {
   }
 
 
-  [<tuple(InterType+)>] types_to_declare(InterType inter_type) =
+
+  // type TypeName         = type_name(symbol: BasicTypeSymbol, arity: Nat);
+
+
+
+
+  [DeclInterType] types_to_declare(InterType inter_type) =
     bool            |
     integer         |
     float           |
@@ -25,10 +50,17 @@ implicit typedefs : [TypeName -> NeType] {
     string          |
     generic         = [],
     tuple(ts?)      = [inter_type] & union([types_to_declare(t) : t <~ ts]),
+    record(fs?)     = [inter_type] & union([types_to_declare(t) : l, t <- fs]),
     seq(t?)         |
     set(t?)         = types_to_declare(t),
+    ## REMOVE ALSO TAGGED GENERICS HERE
+    ## BUT ARE GENERICS EVEN EVER ALLOWED IN A TAGGED TYPE?
     // tagged(_, t?)   = [inter_type] & types_to_declare(t);
-    tagged(_, t?)   = types_to_declare(t);
+    tagged(_, t?)   = types_to_declare(t),
+    named(n?, t?)   = [inter_type] & types_to_declare(t);
+
+
+
 
 
   String nice_name(<tuple(SimplyNamedInterType+)> type) {
@@ -45,7 +77,7 @@ implicit typedefs : [TypeName -> NeType] {
   }
 
 
-  String* type_decl(<tuple(InterType+)> type, String name, [InterType -> String] type_names) {
+  String* type_decl(TupleInterType type, String name, [InterType -> String] type_names) {
     let decl_types = type_names:
       types = (return_value_type(t) : t @ i <- untag(type));
     ;
@@ -55,4 +87,54 @@ implicit typedefs : [TypeName -> NeType] {
     header = "public static class " & name & " {";
     return (header) & body & ("}");
   }
+
+
+  String* type_decl(RecordInterType type, String name, [InterType -> String] type_names) {
+    fields = untag(type);
+    let decl_types = type_names:
+      fields = [l -> return_value_type(t) : l, t <- fields];
+    ;
+    field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
+    max_len = max([length(t) : unused_var, t <- fields]);
+    body = ({
+        spaces = string((ascii_space : unused_var < max_len - length(t)));
+        return "  public " & t & spaces & " " & field_names(l, !!) & ";";
+      } : l, t <- isort(fields)
+    );
+    header = "public static class " & name & " {";
+    return (header) & body & ("}");
+  }
+
+
+  // type TaggedInterType  = tagged(SymbObj, InterType);
+  String* type_decl(TaggedInterType type, String name, [InterType -> String] type_names) {
+    untagged_type = match (type) tagged(_, t?) = t;
+    if not untagged_type :: <TupleInterType, RecordInterType>:
+      print untagged_type;
+      return ();
+    ;
+    return type_decl(untagged_type, name, type_names);
+  }
+}
+
+
+[Symbol -> String] java_adjusted_unambiguous_lower_camel_case_names([Symbol] symbols) {
+  nice_field_names = [s -> java_adjusted_lower_camel_case(s, false) : s <- symbols];
+  conflicting_names = duplicate_values(nice_field_names);
+  return [
+    l -> if conflicting_names(n) then java_adjusted_lower_camel_case(l, true) else n
+    : l, n <- nice_field_names
+  ];
+}
+
+
+String java_adjusted_lower_camel_case(Symbol symb, Bool keep_underscore) {
+  ## IMPLEMENT IMPLEMENT IMPLEMENT
+  return lower_camel_case(symb);
+}
+
+
+[V] duplicate_values([K -> V] map) {
+  values = (e(1) : e <- isort(map));
+  return duplicates(values);
 }
