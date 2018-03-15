@@ -4,6 +4,38 @@ type DeclInterType   = TupleInterType, RecordInterType, NamedInterType;
 
 // type NamedInterType   = named(type_symbol(Atom), InterType);
 
+// type AtomicInterType  = bool, integer, float, symbol, string;
+// type BasicInterType   = AtomicInterType, generic;
+
+// type TupleInterType   = tuple(InterType+);
+// type RecordInterType  = record([+Symbol -> InterType]);
+// type TaggedInterType  = tagged(SymbObj, InterType);
+
+// type NamedInterType   = named(type_symbol(Atom), <TupleInterType, RecordInterType, TaggedInterType>);
+
+// type InterType        = BasicInterType,
+//                         TupleInterType,
+//                         RecordInterType,
+//                         seq(InterType),
+//                         set(InterType),
+//                         TaggedInterType,
+//                         NamedInterType;
+
+False root_type_needs_decl(<BasicInterType, seq(InterType), set(InterType)>) = false;
+
+True  root_type_needs_decl(<TupleInterType, RecordInterType>) = true;
+
+Bool root_type_needs_decl(TaggedInterType type) = root_type_needs_decl(strip_tags(type));
+
+Bool  root_type_needs_decl(NamedInterType) =
+  named(_, t?)  = root_type_needs_decl(t);
+
+
+InterType strip_tags(InterType type) =
+  tagged(_, t?) = strip_tags(t),
+  _             = type;
+
+
 [InterType -> String] java_type_names([NamedInterType] types) = [
   ## THIS SHOULD ALSO RESOLVE CONFLICTS WITH OTHER UPPER CAMEL CASE NAMES
   t -> upper_camel_case(s) : type <- types, named(type_symbol(s?), t?) ?= type
@@ -26,7 +58,7 @@ implicit typedefs : [TypeName -> NeType] {
     ];
 
     type_names = [t -> nice_name(t) : t <- nicely_named_tuple_types] &
-                 [t -> "Tuple" & printed(i) : t @ i <~ generically_named_tuple_types] &
+               [t -> "Tuple" & printed(i) : t @ i <~ generically_named_tuple_types] &
                  [t -> "Record" & printed(i) : t @ i <~ isort(record_types)] &
                  user_def_type_names;
 
@@ -34,12 +66,6 @@ implicit typedefs : [TypeName -> NeType] {
 
     return (type_names, type_decls);
   }
-
-
-
-  // type TypeName         = type_name(symbol: BasicTypeSymbol, arity: Nat);
-
-
 
 
   [DeclInterType] types_to_declare(InterType inter_type) =
@@ -53,14 +79,11 @@ implicit typedefs : [TypeName -> NeType] {
     record(fs?)     = [inter_type] & union([types_to_declare(t) : l, t <- fs]),
     seq(t?)         |
     set(t?)         = types_to_declare(t),
-    ## REMOVE ALSO TAGGED GENERICS HERE
-    ## BUT ARE GENERICS EVEN EVER ALLOWED IN A TAGGED TYPE?
-    // tagged(_, t?)   = [inter_type] & types_to_declare(t);
     tagged(_, t?)   = types_to_declare(t),
-    named(n?, t?)   = [inter_type] & types_to_declare(t);
-
-
-
+    named(n?, t?)   = { stripped_root_type = strip_tags(t);
+                        return [:named(n, t) if root_type_needs_decl(t)] &
+                               [t2 : t2 <- types_to_declare(t), t2 != stripped_root_type];
+                      };
 
 
   String nice_name(<tuple(SimplyNamedInterType+)> type) {
@@ -106,7 +129,6 @@ implicit typedefs : [TypeName -> NeType] {
   }
 
 
-  // type TaggedInterType  = tagged(SymbObj, InterType);
   String* type_decl(TaggedInterType type, String name, [InterType -> String] type_names) {
     untagged_type = match (type) tagged(_, t?) = t;
     if not untagged_type :: <TupleInterType, RecordInterType>:

@@ -23,6 +23,7 @@ NeType internal_type(AtomicInterType) =
   symbol      = atom_type,
   string      = type_string;
 
+
 implicit decl_types : [InterType -> String] {
   String input_arg_type(InterType it) =
     bool            = "boolean",
@@ -47,7 +48,7 @@ implicit decl_types : [InterType -> String] {
     string              = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
     tuple(ts?)          = tuple_import_code(ts, expr, action_prefix),
     record(fs?)         = record_import_code(fs, expr, action_prefix),
-    named()             = (), ## IMPLEMENT IMPLEMENT IMPLEMENT
+    named(_, t?)        = import_code(t, expr, action_prefix),
     seq(t?)             = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
     set(t?)             = array_import_code(t, expr, action_prefix, "Builder.createSet"),
     tagged(_, generic)  = import_code(:generic, expr, action_prefix),
@@ -56,8 +57,27 @@ implicit decl_types : [InterType -> String] {
 
 
   String* record_import_code([+Symbol -> InterType] fields, String expr, String action_prefix) {
-    ## IMPLEMENT IMPLEMENT IMPLEMENT
-    return ();
+    unique_id = printed(_counter_(:any_value_will_do));
+    keys_var = "keys_" & unique_id;
+    values_var = "values_" & unique_id;
+
+    count = |fields|;
+
+    code = (
+      "Obj[] " & keys_var   & " = new Obj[" & printed(count) & "];",
+      "Obj[] " & values_var & " = new Obj[" & printed(count) & "];"
+    );
+
+    field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
+    for l, n @ i <- isort(field_names):
+      code = (code | keys_var & "[" & printed(i) & "] = " & native_expr(object(l)) & ";");
+      field_expr = expr & "." & field_names(l, !!);
+      asgnm_prefix = values_var & "[" & printed(i) & "] = ";
+      code = code & import_code(fields(l, !!), field_expr, asgnm_prefix);
+    ;
+
+    map_creation_expr = "Builder.createMap(" & keys_var & ", " & values_var & ", " & printed(count) & ")";
+    return (code | action_prefix & map_creation_expr & ";");
   }
 
 
@@ -128,9 +148,9 @@ implicit decl_types : [InterType -> String] {
     float               = (action_prefix & expr & ".getDouble();"),
     symbol              = (action_prefix & expr & ".toString();"),
     string              = (action_prefix & expr & ".getString();"),
-    tuple(ts?)          = tuple_export_code(ts, expr, action_prefix),
-    record(fs?)         = record_export_code(fs, expr, action_prefix),
-    named()             = (), ## IMPLEMENT IMPLEMENT IMPLEMENT
+    tuple(ts?)          = tuple_export_code(ts, decl_types(it, !!), expr, action_prefix),
+    record(fs?)         = record_export_code(fs, decl_types(it, !!), expr, action_prefix),
+    named()             = named_type_export_code(it, expr, action_prefix),
     seq(t?)             |
     set(t?)             = array_export_code(t, expr, action_prefix),
     tagged(_, generic)  = export_code(:generic, expr, action_prefix),
@@ -138,19 +158,46 @@ implicit decl_types : [InterType -> String] {
     generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
 
 
-  String* record_export_code([+Symbol -> InterType] fields, String expr, String action_prefix) {
-    ## IMPLEMENT IMPLEMENT IMPLEMENT
-    return ();
+  String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) =
+    named(id?, tuple(ts?) t?)   = tuple_export_code(ts, decl_types(t, !!), expr, action_prefix),
+    named(id?, record(fs?) t?)  = record_export_code(fs, decl_types(t, !!), expr, action_prefix),
+    named(id?, tagged() t?)     = if decl_types(t, *)
+                                    then tagged_value_export_code(t, decl_types(t, !!), expr, action_prefix)
+                                    else export_code(t, expr, action_prefix);
+
+
+  String* tagged_value_export_code(TaggedInterType tagged_type, String type_name, String expr, String action_prefix) {
+    untagged_expr = expr & ".getInnerObj()";
+    inner_type = match (tagged_type) tagged(_, t?) = t;
+    return match (inner_type)
+      tuple(ts?)      = tuple_export_code(ts, type_name, untagged_expr, action_prefix),
+      record(fs?)     = record_export_code(fs, type_name, untagged_expr, action_prefix),
+      tagged(_, t?)   = tagged_value_export_code(inner_type, type_name, untagged_expr, action_prefix);
   }
 
 
-  String* tuple_export_code(InterType+ types, String expr, String action_prefix) {
+  String* record_export_code([+Symbol -> InterType] fields, String type_name, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
-    // expr_var = "expr" & unique_id;
-    tuple_var = "tuple" & unique_id;
+    record_var = "record_" & unique_id;
 
-    tuple_type = decl_types(:tuple(types), !!); //## BAD, RECONSTRUCTING TUPLE TYPE
-    tuple_instantiation_instr = tuple_type & " " & tuple_var & " = new " & tuple_type & "();";
+    field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
+
+    record_inst_instr = type_name & " " & record_var & " = new " & type_name & "();";
+    asgnm_code = join(({
+        asgnm_text = record_var & "." & field_names(l, !!) & " = ";
+        return export_code(t, expr & ".lookupField(" & symb_idx_name(l) & ")", asgnm_text);
+      } : l, t <- isort(fields)
+    ));
+
+    return (record_inst_instr) & (asgnm_code | action_prefix & record_var & ";");
+  }
+
+
+  String* tuple_export_code(InterType+ types, String type_name, String expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    tuple_var = "tuple_" & unique_id;
+
+    tuple_instantiation_instr = type_name & " " & tuple_var & " = new " & type_name & "();";
 
     asgnm_code = join(({
         asgnm_text = tuple_var & ".item" & printed(i) & " = ";
@@ -260,8 +307,5 @@ implicit typedefs : [TypeName -> NeType] {
     ;
 
     return :generic;
-
-
   }
-
 }
