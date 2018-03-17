@@ -24,14 +24,14 @@ NeType internal_type(AtomicInterType) =
   string      = type_string;
 
 
-implicit decl_types : [InterType -> String] {
+implicit input_types_names : [InterType -> String] {
   String input_arg_type(InterType it) =
     bool            = "boolean",
     integer         = "long",
     float           = "double",
     tuple()         |
-    record()        = decl_types(it, !!),
-    named(n?, t?)   = if decl_types(t, *) then decl_types(t, !!) else return_value_type(t),
+    record()        = input_types_names(it, !!),
+    named(n?, t?)   = if input_types_names(it, *) then input_types_names(it, !!) else input_arg_type(t),
     seq(t?)         |
     set(t?)         = input_arg_type(t) & "[]",
     tagged(_, t?)   = input_arg_type(t),
@@ -125,8 +125,10 @@ implicit decl_types : [InterType -> String] {
 
     return (inner_code | creation_instr);
   }
+}
 
 
+implicit output_types_names : [InterType -> String] {
   String return_value_type(InterType it) =
     bool          = "boolean",
     integer       = "long",
@@ -134,8 +136,8 @@ implicit decl_types : [InterType -> String] {
     symbol        = "String",
     string        = "String",
     tuple()       |
-    record()      = decl_types(it, !!),
-    named(n?, t?) = if decl_types(t, *) then decl_types(t, !!) else return_value_type(t),
+    record()      = output_types_names(it, !!),
+    named(n?, t?) = if output_types_names(it, *) then output_types_names(it, !!) else return_value_type(t),
     seq(t?)       |
     set(t?)       = return_value_type(t) & "[]",
     tagged(_, t?) = if t != :generic then return_value_type(t) else return_value_type(:generic),
@@ -148,8 +150,8 @@ implicit decl_types : [InterType -> String] {
     float               = (action_prefix & expr & ".getDouble();"),
     symbol              = (action_prefix & expr & ".toString();"),
     string              = (action_prefix & expr & ".getString();"),
-    tuple(ts?)          = tuple_export_code(ts, decl_types(it, !!), expr, action_prefix),
-    record(fs?)         = record_export_code(fs, decl_types(it, !!), expr, action_prefix),
+    tuple(ts?)          = tuple_export_code(ts, output_types_names(it, !!), expr, action_prefix),
+    record(fs?)         = record_export_code(fs, output_types_names(it, !!), expr, action_prefix),
     named()             = named_type_export_code(it, expr, action_prefix),
     seq(t?)             |
     set(t?)             = array_export_code(t, expr, action_prefix),
@@ -159,10 +161,10 @@ implicit decl_types : [InterType -> String] {
 
 
   String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) =
-    named(id?, tuple(ts?) t?)   = tuple_export_code(ts, decl_types(t, !!), expr, action_prefix),
-    named(id?, record(fs?) t?)  = record_export_code(fs, decl_types(t, !!), expr, action_prefix),
-    named(id?, tagged() t?)     = if decl_types(t, *)
-                                    then tagged_value_export_code(t, decl_types(t, !!), expr, action_prefix)
+    named(id?, tuple(ts?) t?)   = tuple_export_code(ts, output_types_names(t, !!), expr, action_prefix),
+    named(id?, record(fs?) t?)  = record_export_code(fs, output_types_names(t, !!), expr, action_prefix),
+    named(id?, tagged() t?)     = if output_types_names(inter_type, *)
+                                    then tagged_value_export_code(t, output_types_names(inter_type, !!), expr, action_prefix)
                                     else export_code(t, expr, action_prefix);
 
 

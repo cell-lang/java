@@ -1,4 +1,4 @@
-type SimplyNamedInterType = BasicInterType, tagged(SymbObj, generic);
+type SimplyNamedInterType = BasicInterType, tagged(SymbObj, generic), NamedInterType;
 
 type DeclInterType   = TupleInterType, RecordInterType, NamedInterType;
 
@@ -21,50 +21,46 @@ type DeclInterType   = TupleInterType, RecordInterType, NamedInterType;
 //                         TaggedInterType,
 //                         NamedInterType;
 
-False root_type_needs_decl(<BasicInterType, seq(InterType), set(InterType)>) = false;
-
-True  root_type_needs_decl(<TupleInterType, RecordInterType>) = true;
-
-Bool root_type_needs_decl(TaggedInterType type) = root_type_needs_decl(strip_tags(type));
-
-Bool  root_type_needs_decl(NamedInterType) =
-  named(_, t?)  = root_type_needs_decl(t);
-
-
-InterType strip_tags(InterType type) =
-  tagged(_, t?) = strip_tags(t),
-  _             = type;
-
-
-[InterType -> String] java_type_names([NamedInterType] types) = [
-  ## THIS SHOULD ALSO RESOLVE CONFLICTS WITH OTHER UPPER CAMEL CASE NAMES
-  t -> upper_camel_case(s) : type <- types, named(type_symbol(s?), t?) ?= type
-];
-
 
 implicit typedefs : [TypeName -> NeType] {
-  ([InterType -> String], [String*]) declared_types([NeType] types) {
+  ([InterType -> String], [InterType -> String], [String*]) declared_types([NeType] types) {
     inter_types = [interface_type(t) : t <- types];
     decl_types = union([types_to_declare(t) : t <- inter_types]);
-    tuple_types = [t : t <- decl_types, t :: TupleInterType];
-    record_types = [t : t <- decl_types, t :: RecordInterType];
-    named_types = [t : t <- decl_types, t :: NamedInterType];
-    nicely_named_tuple_types = [t : t <- tuple_types, t :: <tuple(SimplyNamedInterType+)>];
-    generically_named_tuple_types = isort(tuple_types - nicely_named_tuple_types);
-
-    user_def_type_names = [
-      ## THIS SHOULD ALSO RESOLVE CONFLICTS WITH OTHER UPPER CAMEL CASE NAMES
-      t -> upper_camel_case(s) : type <- named_types, named(type_symbol(s?), t?) ?= type
-    ];
-
-    type_names = [t -> nice_name(t) : t <- nicely_named_tuple_types] &
-               [t -> "Tuple" & printed(i) : t @ i <~ generically_named_tuple_types] &
-                 [t -> "Record" & printed(i) : t @ i <~ isort(record_types)] &
-                 user_def_type_names;
-
-    type_decls = [type_decl(t, s, type_names) : t, s <- type_names];
-
-    return (type_names, type_decls);
+    let reserved_names = []: ## IMPLEMENT
+      types_names_input  = interface_type_names(decl_types, host_to_cell = true);
+      types_names_output = interface_type_names(decl_types, host_to_cell = false);
+    ;
+    let input_types_names = types_names_input, output_types_names = types_names_output:
+      input_types_decls  = [t -> type_decl(t, s, host_to_cell = true)  : t, s <- types_names_input];
+      output_types_decls = [t -> type_decl(t, s, host_to_cell = false) : t, s <- types_names_output];
+    ;
+    conflicts = union([{
+        in_name  = types_names_input(t, !!);
+        out_name = types_names_output(t, !!);
+        in_decl  = input_types_decls(t, !!);
+        out_decl = output_types_decls(t, !!);
+        return [t if in_name == out_name and in_decl != out_decl];
+      } : t <- decl_types
+    ]);
+    if conflicts != []:
+      new_reserved_names = [types_names_input(t, !!) : t <- conflicts];
+      let reserved_names = [] & new_reserved_names: ## IMPLEMENT
+        types_names_output = interface_type_names(decl_types, host_to_cell = false);
+      ;
+      let input_types_names = types_names_input, output_types_names = types_names_output, host_to_cell = false:
+        output_types_decls = [t -> type_decl(t, s) : t, s <- types_names_output];
+      ;
+      assert union([{
+          in_name  = types_names_input(t, !!);
+          out_name = types_names_output(t, !!);
+          in_decl  = input_types_decls(t, !!);
+          out_decl = output_types_decls(t, !!);
+          return [t if in_name == out_name and in_decl != out_decl];
+        } : t <- decl_types
+      ]) == [];
+    ;
+    type_decls = values(input_types_decls) & values(output_types_decls);
+    return (types_names_input, types_names_output, type_decls);
   }
 
 
@@ -84,26 +80,70 @@ implicit typedefs : [TypeName -> NeType] {
                         return [:named(n, t) if root_type_needs_decl(t)] &
                                [t2 : t2 <- types_to_declare(t), t2 != stripped_root_type];
                       };
+}
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  String nice_name(<tuple(SimplyNamedInterType+)> type) {
-    return append((field_type_name(t) : t <- untag(type)), "_");
-
-    String field_type_name(SimplyNamedInterType) =
-      bool                = "Bool",
-      integer             = "Long",
-      float               = "Double",
-      symbol              = "Symbol",
-      string              = "String",
-      generic             = "Value",
-      tagged(_, generic)  = "Value";
+implicit host_to_cell : Bool, reserved_names : [String] {
+  [DeclInterType -> String] interface_type_names([DeclInterType] decl_types) {
+    default_type_names = [t -> safe_name(t, nothing) : t <- decl_types];
+    conflicting_types = values(group_by(keys_with_non_unique_values(default_type_names), default_type_names($, !!)));
+    renamed_types = [t -> safe_name(t, just(i)) : ts <- conflicting_types, t @ i <~ isort(ts)];
+    return [t -> lookup(renamed_types, t, default_type_names(t, !!)) : t <- decl_types];
   }
 
 
-  String* type_decl(TupleInterType type, String name, [InterType -> String] type_names) {
-    let decl_types = type_names:
-      types = (return_value_type(t) : t @ i <- untag(type));
+  String safe_name(TupleInterType type, Maybe[Nat] unique_id) {
+    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
+    field_types = untag(type);
+    name = if field_types :: SimplyNamedInterType+
+      then append((field_type_name(t) : t <- field_types), "_")
+      else "Tuple";
+    return non_reserved_name(name & suffix);
+
+    String field_type_name(SimplyNamedInterType) =
+      bool                        = "Bool",
+      integer                     = "Long",
+      float                       = "Double",
+      symbol                      = "Symbol",
+      string                      = "String",
+      generic                     |
+      tagged(_, generic)          = if host_to_cell then "String" else "Value",
+      named(type_symbol(n?), _)   = upper_camel_case(n);
+  }
+
+
+  String safe_name(RecordInterType type, Maybe[Nat] unique_id) {
+    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
+    field_labels = isort(keys(untag(type)));
+    base_name = append((upper_camel_case(l) : l <- field_labels), "_");
+    return non_reserved_name(base_name & suffix);
+  }
+
+
+  String safe_name(NamedInterType type, Maybe[Nat] unique_id) {
+    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
+    type_symb = match (type) named(type_symbol(s?), _) = s;
+    return non_reserved_name(upper_camel_case(type_symb) & suffix);
+  }
+
+
+  String non_reserved_name(String unsafe_name) {
+    name = unsafe_name;
+    while reserved_names(name):
+      name = "_" & name;
     ;
+    return name;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+implicit host_to_cell : Bool, input_types_names : [InterType -> String], output_types_names : [InterType -> String] {
+  String* type_decl(TupleInterType type, String name) {
+    types = (if host_to_cell then input_arg_type(t) else return_value_type(t) : t @ i <- untag(type));
     max_len = max((length(t) : t <- types));
     spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
     body = ("  public " & t & spaces(i) & " item" & printed(i) & ";" : t @ i <- types);
@@ -112,11 +152,8 @@ implicit typedefs : [TypeName -> NeType] {
   }
 
 
-  String* type_decl(RecordInterType type, String name, [InterType -> String] type_names) {
-    fields = untag(type);
-    let decl_types = type_names:
-      fields = [l -> return_value_type(t) : l, t <- fields];
-    ;
+  String* type_decl(RecordInterType type, String name) {
+    fields = [l -> if host_to_cell then input_arg_type(t) else return_value_type(t) : l, t <- untag(type)];
     field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
     max_len = max([length(t) : unused_var, t <- fields]);
     body = ({
@@ -129,14 +166,26 @@ implicit typedefs : [TypeName -> NeType] {
   }
 
 
-  String* type_decl(TaggedInterType type, String name, [InterType -> String] type_names) {
-    untagged_type = match (type) tagged(_, t?) = t;
-    if not untagged_type :: <TupleInterType, RecordInterType>:
-      print untagged_type;
-      return ();
-    ;
-    return type_decl(untagged_type, name, type_names);
+  String* type_decl(NamedInterType type, String name) {
+    actual_type = match (type) named(_, t?) = t;
+    fail if not actual_type :: <TupleInterType, RecordInterType, TaggedInterType, NamedInterType>;
+    return type_decl(actual_type, name);
   }
+
+// type NamedInterType   = named(type_symbol(Atom), InterType);
+
+
+  String* type_decl(TaggedInterType type, String name) {
+    inner_type = match (type) tagged(_, t?) = t;
+    fail if not inner_type :: <TupleInterType, RecordInterType, TaggedInterType, NamedInterType>;
+    return type_decl(inner_type, name);
+  }
+  //   untagged_type = match (type) tagged(_, t?) = t;
+  //   if not untagged_type :: <TupleInterType, RecordInterType>:
+  //     print untagged_type;
+  //     return ();
+  //   ;
+  // }
 }
 
 
@@ -149,14 +198,162 @@ implicit typedefs : [TypeName -> NeType] {
   ];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+[InterType -> String] java_type_names([NamedInterType] types) = [
+  ## THIS SHOULD ALSO RESOLVE CONFLICTS WITH OTHER UPPER CAMEL CASE NAMES
+  t -> upper_camel_case(s) : type <- types, named(type_symbol(s?), t?) ?= type
+];
 
 String java_adjusted_lower_camel_case(Symbol symb, Bool keep_underscore) {
   ## IMPLEMENT IMPLEMENT IMPLEMENT
   return lower_camel_case(symb);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-[V] duplicate_values([K -> V] map) {
-  values = (e(1) : e <- isort(map));
-  return duplicates(values);
+False root_type_needs_decl(<BasicInterType, seq(InterType), set(InterType)>) = false;
+
+True  root_type_needs_decl(<TupleInterType, RecordInterType>) = true;
+
+Bool  root_type_needs_decl(TaggedInterType type) = root_type_needs_decl(strip_tags(type));
+
+Bool  root_type_needs_decl(NamedInterType) = named(_, t?) = root_type_needs_decl(t);
+
+
+InterType strip_tags(InterType type) =
+  tagged(_, t?) = strip_tags(t),
+  _             = type;
+
+////////////////////////////////////////////////////////////////////////////////
+
+[V] duplicate_values([K -> V] map) = duplicates((v : unused_var, v <- isort(map)));
+
+[K] keys_with_non_unique_values([K -> V] map) {
+  dup_vals = duplicate_values(map);
+  return [k : k, v <- map, dup_vals(v)];
 }
+
+[K -> V] remove_keys_with_non_unique_values([K -> V] map) {
+  keys_to_remove = keys_with_non_unique_values(map);
+  return [k -> v : k, v <- map, not keys_to_remove(k)];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+[String] java_reserved_identifiers = [
+  "abstract",
+  "assert",
+  "boolean",
+  "break",
+  "byte",
+  "case",
+  "catch",
+  "char",
+  "class",
+  "const",
+  "continue",
+  "default",
+  "do",
+  "double",
+  "else",
+  "enum",
+  "extends",
+  "false",
+  "final",
+  "finally",
+  "float",
+  "for",
+  "goto",
+  "if",
+  "implements",
+  "import",
+  "instanceof",
+  "int",
+  "interface",
+  "long",
+  "native",
+  "new",
+  "null",
+  "package",
+  "private",
+  "protected",
+  "public",
+  "return",
+  "short",
+  "static",
+  "strictfp",
+  "super",
+  "switch",
+  "synchronized",
+  "this",
+  "throw",
+  "throws",
+  "transient",
+  "true",
+  "try",
+  "void",
+  "volatile",
+  "while"
+];
+
+
+[String] runtime_classes = [
+  "Algs",
+  "BinaryTable",
+  "BinaryTableUpdater",
+  "BinRelIter",
+  "BlankObj",
+  "Builder",
+  "ByteStream",
+  "Conversions",
+  "EmptyRelObj",
+  "EmptyRelValue",
+  "FloatObj",
+  "FloatValue",
+  "Hacks",
+  "Index",
+  "IntObj",
+  "IntValue",
+  "Iter",
+  "Lexer",
+  "MasterSeqObj",
+  "Miscellanea",
+  "NeBinRelObj",
+  "NeBinRelValue",
+  "NeSetObj",
+  "NeSetValue",
+  "NeTernRelObj",
+  "NeTernRelValue",
+  "NullObj",
+  "Obj",
+  "OneWayBinTable",
+  "OverflowTable",
+  "Pair",
+  "Parser",
+  "Parsing",
+  "ParsingException",
+  "Procs",
+  "SeqObj",
+  "SeqOrSetIter",
+  "SeqValue",
+  "SliceObj",
+  "SymbObj",
+  "SymbTable",
+  "SymbValue",
+  "TaggedObj",
+  "TaggedValue",
+  "TernaryTable",
+  "TernaryTableUpdater",
+  "TernRelIter",
+  "Token",
+  "TokenStream",
+  "Triplet",
+  "UnaryTable",
+  "UnaryTableUpdater",
+  "ValueBase",
+  "ValueStore",
+  "ValueStoreBase",
+  "ValueStoreUpdater",
+  "WrappingUtils"
+];

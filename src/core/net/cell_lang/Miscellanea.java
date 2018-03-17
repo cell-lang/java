@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.io.IOException;
 
 
 class Miscellanea {
@@ -40,7 +41,7 @@ class Miscellanea {
   }
 
   public static Obj fail() {
-    PrintCallStack();
+    printCallStack();
     System.exit(1);
     return null;
   }
@@ -48,7 +49,7 @@ class Miscellanea {
   public static boolean exitOnSoftFail = false;
 
   public static RuntimeException softFail() {
-    PrintCallStack();
+    printCallStack();
     if (exitOnSoftFail)
       System.exit(1);
     throw new UnsupportedOperationException();
@@ -73,7 +74,7 @@ class Miscellanea {
   }
 
   public static Obj hardFail() {
-    PrintCallStack();
+    printCallStack();
     System.exit(1);
     return null;
   }
@@ -81,7 +82,7 @@ class Miscellanea {
   public static void implFail(String msg) {
     if (msg != null)
       System.err.println(msg + "\n");
-    PrintCallStack();
+    printCallStack();
     System.exit(1);
   }
 
@@ -91,7 +92,7 @@ class Miscellanea {
 
   public static RuntimeException internalFail(Obj obj) {
     System.err.println("Internal error!\n");
-    PrintCallStack();
+    printCallStack();
     if (obj != null)
       dumpVar("this", obj);
     System.exit(1);
@@ -141,7 +142,7 @@ class Miscellanea {
     if (!cond) {
       System.out.println("Assertion failed" + (message != null ? ": " + message : ""));
       if (stackDepth > 0) {
-        PrintCallStack();
+        printCallStack();
       }
       else {
         Exception e = new Exception();
@@ -178,7 +179,7 @@ class Miscellanea {
     stackDepth--;
   }
 
-  static void PrintCallStack() {
+  static void printCallStack() {
     if (stackDepth == 0)
       return;
     System.err.println("Call stack:\n");
@@ -192,47 +193,38 @@ class Miscellanea {
       FileOutputStream file = new FileOutputStream(outFnName);
       OutputStreamWriter writer = new OutputStreamWriter(file);
       for (int i=0 ; i < size ; i++)
-        PrintStackFrame(i, writer);
-      file.close();
-      System.err.println("");
+        printStackFrame(i, writer);
+      writer.write("\n");
+      writer.flush();
     }
     catch (Exception e) {
       System.err.printf("Could not write a dump of the stack to %s. Did you create the \"debug\" directory?\n", outFnName);
     }
   }
 
-  static void PrintStackFrame(int frameIdx, Writer writer) {
-    try {
-      Obj[] args = argsStack[frameIdx];
-      writer.write(fnNamesStack[frameIdx] + "(");
-      if (args != null) {
-        writer.write("\n");
-        for (int i=0 ; i < args.length ; i++)
-          PrintIndentedArg(args[i], i == args.length - 1, writer);
-      }
-      writer.write(")\n\n");
+  static void printStackFrame(int frameIdx, Writer writer) throws IOException {
+    Obj[] args = argsStack[frameIdx];
+    writer.write(fnNamesStack[frameIdx] + "(");
+    if (args != null) {
+      writer.write("\n");
+      for (int i=0 ; i < args.length ; i++)
+        printIndentedArg(args[i], i == args.length - 1, writer);
     }
-    catch (Exception e) {
-
-    }
+    writer.write(")\n\n");
+    writer.flush();
   }
 
-  static void PrintIndentedArg(Obj arg, boolean isLast, Writer writer) {
-    try {
-      String str = arg.isBlankObj() ? "<closure>" : printedObjOrFilename(arg, false);
-      for (int i=0 ; i < str.length() ; i++) {
-        if (i == 0 || str.charAt(i) == '\n')
-          writer.write("  ");
-        writer.write(str.charAt(i));
-      }
-      if (!isLast)
-        writer.write(',');
-      writer.write("\n");
-      writer.flush();
+  static void printIndentedArg(Obj arg, boolean isLast, Writer writer) throws IOException {
+    String str = arg.isBlankObj() ? "<closure>" : printedObjOrFilename(arg, false);
+    for (int i=0 ; i < str.length() ; i++) {
+      if (i == 0 || str.charAt(i) == '\n')
+        writer.write("  ");
+      writer.write(str.charAt(i));
     }
-    catch (Exception e) {
-
-    }
+    if (!isLast)
+      writer.write(',');
+    writer.write("\n");
+    writer.flush();
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -248,7 +240,7 @@ class Miscellanea {
         return String.format("<%sobj-%d.txt>", path, i);
 
     String str = obj.toString();
-    if (str.length() <= 50)
+    if (str.length() <= 100)
       return str;
 
     String outFnName = String.format("debug%sobj-%d.txt", File.separator, filedObjs.size());

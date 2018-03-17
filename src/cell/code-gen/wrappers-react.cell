@@ -79,7 +79,8 @@ implicit block : ReactBlock {
 }
 
 
-implicit block : ReactBlock, typedefs : [TypeName -> NeType], decl_types : [InterType -> String] {
+implicit block : ReactBlock, typedefs : [TypeName -> NeType],
+         input_types_names : [InterType -> String], output_types_names : [InterType -> String] {
   (String*, String*) input_setter(Atom id) {
     type = block.inputs[id].type;
     inter_type = interface_type(type);
@@ -130,10 +131,13 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType], decl_types : [Inte
 
     return (code, (docs));
   }
+}
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
+implicit block : ReactBlock, typedefs : [TypeName -> NeType],
+         input_types_names : [InterType -> String], output_types_names : [InterType -> String] {
   (String*, String*) auto_method_wrapper(MethodId method_id, CompiledMethod method) {
     return ((), ()) if method_id.id?;
     name = safe_name(method_id.symbol, method_id.arity);
@@ -155,12 +159,9 @@ implicit typedefs : [TypeName -> NeType] {
 
   (String*, String*) react_auto_wrapper(ReactBlock block) {
     interf_types = interface_types(block);
-    types_names, types_decls = declared_types(interf_types);
+    input_types_names, output_types_names, types_decls = declared_types(interf_types);
     types_decls_code = join((("") & d : d <- isort(types_decls)));
 
-    // decl_types : [InterType -> String] {
-
-    // let block = block, decl_types = decl_types:
     ord_inputs = block.ord_inputs;
     ord_outputs = (o : o <- block.ord_outputs, not block.inputs(o, *));
 
@@ -185,7 +186,7 @@ implicit typedefs : [TypeName -> NeType] {
     changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
 
     methods = block.methods;
-    let block = block, decl_types = types_names:
+    let block = block, input_types_names = input_types_names, output_types_names = output_types_names:
       input_setters, input_setters_docs = (join(ls) : ls <- unzip((input_setter(i) : i <- ord_inputs)));
       output_getters, output_getters_docs = (join(ls) : ls <- unzip((output_getter(o) : o <- ord_outputs)));
       methods_wrappers, methods_wrappers_docs = (
@@ -358,14 +359,17 @@ implicit typedefs : [TypeName -> NeType] {
 /////////////// Code shared between static and reactive automata ///////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit typedefs : [TypeName -> NeType], decl_types : [InterType -> String] {
+implicit typedefs : [TypeName -> NeType], input_types_names : [InterType -> String], output_types_names : [InterType -> String] {
   (String*, String*) method_wrapper(MethodId method_id, CompiledMethod method,
     <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name, String method_path) {
     args_inter_types = (interface_type(t) : t <- method.args_types);
     inter_ret_type = interface_type(method.ret_type);
-    args_types_str = append((input_arg_type(it) : it <- args_inter_types), ", ");
+
+    input_args_types = (input_arg_type(it) : it <- args_inter_types);
+    args_types_str = append(input_args_types, ", ");
+    args_decls = append((it & " arg" & printed(i) : it @ i <- input_args_types), ", ");
+
     ret_val_str = return_value_type(inter_ret_type);
-    args_decls = append((input_arg_type(it) & " arg" & printed(i) : it @ i <- args_inter_types), ", ");
 
     arity = |method.args_types|;
     memb_preds = method.args_memb_preds;
@@ -408,7 +412,9 @@ implicit typedefs : [TypeName -> NeType], decl_types : [InterType -> String] {
       "  try {",
       "    Obj resObj = " & method_path & user_def_method_name(block_name, method_id) &
         "(" & append((("objArg" & printed(i) : i < arity) | "env"), ", ") & ");"
-      ) & indent_lines(indent_lines(export_code(inter_ret_type, "resObj", "return "))) & (
+      ) & indent_lines(indent_lines(
+        export_code(inter_ret_type, "resObj", "return ")
+      )) & (
       "  }",
       "  catch (Exception e) {",
       "    env = new Env();",
