@@ -5,12 +5,12 @@ implicit block : ReactBlock {
   [String] duplicate_names {
     inputs = keys(block.inputs);
     outputs = keys(block.outputs) - inputs;
-    names = (lower_camel_case(id) : id <- isort(inputs) & isort(outputs));
+    names = (safe_lower_camel_case(id) : id <- isort(inputs) & isort(outputs));
     return duplicates(names);
   }
 
   String safe_name(Symbol signal) {
-    name = lower_camel_case(signal);
+    name = safe_lower_camel_case(signal);
     name = capitalize(_str_(signal), true) if in(name, duplicate_names); ## MOVE THIS TO A NEW FUNCTION utils IN.cell
     name = "_" & name if has_conflicts(name);
     return name;
@@ -22,13 +22,13 @@ implicit block : ReactBlock {
 
   [String, Nat] duplicate_method_names {
     method_ids = [id.symbol, id.arity : id, unused_var <- block.methods, not id.id?];
-    native_ids = ((lower_camel_case(bare_id(s)), a) : s, a <- isort(method_ids));
+    native_ids = ((safe_lower_camel_case(bare_id(s)), a) : s, a <- isort(method_ids));
     return [nid(0), nid(1) : nid <- duplicates(native_ids)];
   }
 
   String safe_name(MethodSymbol method_symb, Nat arity) {
     symbol = bare_id(method_symb);
-    name = lower_camel_case(symbol);
+    name = safe_lower_camel_case(symbol);
     // We first check if this conflicts with other method names
     duplicate_method_names = duplicate_method_names; //## BAD
     name = capitalize(_str_(symbol), true) if duplicate_method_names(name, arity);

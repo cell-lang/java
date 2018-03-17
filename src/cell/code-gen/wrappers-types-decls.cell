@@ -190,10 +190,10 @@ implicit host_to_cell : Bool, input_types_names : [InterType -> String], output_
 
 
 [Symbol -> String] java_adjusted_unambiguous_lower_camel_case_names([Symbol] symbols) {
-  nice_field_names = [s -> java_adjusted_lower_camel_case(s, false) : s <- symbols];
+  nice_field_names = [s -> safe_lower_camel_case(s, false) : s <- symbols];
   conflicting_names = duplicate_values(nice_field_names);
   return [
-    l -> if conflicting_names(n) then java_adjusted_lower_camel_case(l, true) else n
+    l -> if conflicting_names(n) then safe_lower_camel_case(l, true) else n
     : l, n <- nice_field_names
   ];
 }
@@ -205,9 +205,20 @@ implicit host_to_cell : Bool, input_types_names : [InterType -> String], output_
   t -> upper_camel_case(s) : type <- types, named(type_symbol(s?), t?) ?= type
 ];
 
-String java_adjusted_lower_camel_case(Symbol symb, Bool keep_underscore) {
-  ## IMPLEMENT IMPLEMENT IMPLEMENT
-  return lower_camel_case(symb);
+
+String safe_lower_camel_case(Symbol symb) = safe_lower_camel_case(symb, false);
+
+
+String safe_lower_camel_case(Symbol symb, Bool keep_underscore) {
+  name = lower_camel_case(symb);
+  name = "_" & name if in(name, java_reserved_identifiers);
+  return name;
+}
+
+String safe_lower_camel_case_chain(Symbol+ symbs) {
+  name = append((lower_camel_case(s) : s <- symbs), "_");
+  name = "_" & name if in(name, java_reserved_identifiers);
+  return name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

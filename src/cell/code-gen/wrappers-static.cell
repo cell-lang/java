@@ -3,7 +3,7 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
     append((sentence_case(bare_id(x)) : x <- (db_var_chain | member)), "_");
 
   String pretty_name(<MembVar, RelVar, MethodSymbol> member) =
-    append((lower_camel_case(bare_id(x)) : x <- (db_var_chain | member)), "_");
+    safe_lower_camel_case_chain((bare_id(x) : x <- (db_var_chain | member)));
 
   String path_prefix = "automaton." & append((native_var_decl_name(v) & "." : v <- db_var_chain));
 

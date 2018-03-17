@@ -226,6 +226,7 @@ implicit output_types_names : [InterType -> String] {
       record()            |
       seq()               |
       set()               |
+      named()             |
       tagged()            = generic_array_export_code(elem_type, expr, action_prefix);
 
 
