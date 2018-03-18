@@ -73,6 +73,8 @@ implicit typedefs : [TypeName -> NeType] {
     record(fs?)     = [inter_type] & union([types_to_declare(t) : l, t <- fs]),
     seq(t?)         |
     set(t?)         = types_to_declare(t),
+    bin_rel(ts?)    |
+    tern_rel(ts?)   = union([types_to_declare(t) : t <~ ts]),
     tagged(_, t?)   = types_to_declare(t),
     named(n?, t?)   = { stripped_root_type = strip_tags(t);
                         return [:named(n, t) if root_type_needs_decl(t)] &
@@ -221,7 +223,7 @@ String safe_lower_camel_case_chain(Symbol+ symbs) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-False root_type_needs_decl(<BasicInterType, seq(InterType), set(InterType)>) = false;
+False root_type_needs_decl(<BasicInterType, CollInterType>) = false;
 
 True  root_type_needs_decl(<TupleInterType, RecordInterType>) = true;
 

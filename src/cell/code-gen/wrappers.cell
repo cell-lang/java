@@ -7,11 +7,15 @@ type TaggedInterType  = tagged(SymbObj, InterType);
 
 type NamedInterType   = named(type_symbol(Atom), <TupleInterType, RecordInterType, TaggedInterType>);
 
+type CollInterType    = seq(InterType),
+                        set(InterType),
+                        bin_rel(InterType, InterType),
+                        tern_rel(InterType, InterType, InterType);
+
 type InterType        = BasicInterType,
                         TupleInterType,
                         RecordInterType,
-                        seq(InterType),
-                        set(InterType),
+                        CollInterType,
                         TaggedInterType,
                         NamedInterType;
 
@@ -26,34 +30,38 @@ NeType internal_type(AtomicInterType) =
 
 implicit input_types_names : [InterType -> String] {
   String input_arg_type(InterType it) =
-    bool            = "boolean",
-    integer         = "long",
-    float           = "double",
-    tuple()         |
-    record()        = input_types_names(it, !!),
-    named(n?, t?)   = if input_types_names(it, *) then input_types_names(it, !!) else input_arg_type(t),
-    seq(t?)         |
-    set(t?)         = input_arg_type(t) & "[]",
-    tagged(_, t?)   = input_arg_type(t),
-    symbol          |
-    string          |
-    generic         = "String";
+    bool              = "boolean",
+    integer           = "long",
+    float             = "double",
+    tuple()           |
+    record()          = input_types_names(it, !!),
+    named(n?, t?)     = if input_types_names(it, *) then input_types_names(it, !!) else input_arg_type(t),
+    seq(t?)           |
+    set(t?)           = input_arg_type(t) & "[]",
+    bin_rel(t1?, t2?) = "Pair<" & input_arg_type(t1) & "[], " & input_arg_type(t2) & "[]>",
+    tern_rel(ts?)     = "Triplet<" & append((input_arg_type(t) & "[]" : t <- ts), ", ") & ">",
+    tagged(_, t?)     = input_arg_type(t),
+    symbol            |
+    string            |
+    generic           = "String";
 
 
   String* import_code(InterType it, String expr, String action_prefix) =
-    bool                = (action_prefix & "SymbObj.get(" & expr & ");"),
-    integer             = (action_prefix & "IntObj.get(" & expr & ");"),
-    float               = (action_prefix & "new FloatObj(" & expr & ");"),
-    symbol              = (action_prefix & "Conversions.convertText(" & expr & ");"),
-    string              = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
-    tuple(ts?)          = tuple_import_code(ts, expr, action_prefix),
-    record(fs?)         = record_import_code(fs, expr, action_prefix),
-    named(_, t?)        = import_code(t, expr, action_prefix),
-    seq(t?)             = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
-    set(t?)             = array_import_code(t, expr, action_prefix, "Builder.createSet"),
-    tagged(_, generic)  = import_code(:generic, expr, action_prefix),
-    tagged(s?, t?)      = tagged_value_import_code(s, t, expr, action_prefix),
-    generic             = (action_prefix & "Conversions.convertText(" & expr & ");");
+    bool                    = (action_prefix & "SymbObj.get(" & expr & ");"),
+    integer                 = (action_prefix & "IntObj.get(" & expr & ");"),
+    float                   = (action_prefix & "new FloatObj(" & expr & ");"),
+    symbol                  = (action_prefix & "Conversions.convertText(" & expr & ");"),
+    string                  = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
+    tuple(ts?)              = tuple_import_code(ts, expr, action_prefix),
+    record(fs?)             = record_import_code(fs, expr, action_prefix),
+    named(_, t?)            = import_code(t, expr, action_prefix),
+    seq(t?)                 = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
+    set(t?)                 = array_import_code(t, expr, action_prefix, "Builder.createSet"),
+    bin_rel(t1?, t2?)       = bin_rel_import_code(t1, t2, expr, action_prefix),
+    tern_rel(t1?, t2?, t3?) = tern_rel_import_code(t1, t2, t3, expr, action_prefix),
+    tagged(_, generic)      = import_code(:generic, expr, action_prefix),
+    tagged(s?, t?)          = tagged_value_import_code(s, t, expr, action_prefix),
+    generic                 = (action_prefix & "Conversions.convertText(" & expr & ");");
 
 
   String* record_import_code([+Symbol -> InterType] fields, String expr, String action_prefix) {
@@ -118,6 +126,63 @@ implicit input_types_names : [InterType -> String] {
   }
 
 
+  String* bin_rel_import_code(InterType arg1_type, InterType arg2_type, String expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    expr_var  = "expr" & unique_id;
+    len_var   = "len" & unique_id;
+    idx_var   = "idx" & unique_id;
+    col1_var  = "col1_" & unique_id;
+    col2_var  = "col2_" & unique_id;
+
+    arg1_code = import_code(arg1_type, expr_var & ".item1[" & idx_var & "]", col1_var & "[" & idx_var & "] = ");
+    arg2_code = import_code(arg2_type, expr_var & ".item2[" & idx_var & "]", col2_var & "[" & idx_var & "] = ");
+
+    rel_type = :bin_rel(arg1_type, arg2_type); ## BAD, RECONSTRUCTING PREVIOUSLY DESTRUCTED VALUE
+
+    return indent_lines((
+        input_arg_type(rel_type) & " " & expr_var & " = " & expr & ";",
+        "int " & len_var & " = " & expr_var & ".length;",
+        "Obj[] " & col1_var & " = new Obj[" & len_var & "];",
+        "Obj[] " & col2_var & " = new Obj[" & len_var & "];",
+        "for (int " & idx_var & " = 0 ; " & idx_var & " < " & len_var & " ; " & idx_var & "++) {"
+      ) & indent_lines(arg1_code & arg2_code) & (
+        "}",
+        action_prefix & "Builder.createBinRel(" & col1_var & ", " & col2_var & ");"
+      )
+    );
+  }
+
+
+  String* tern_rel_import_code(InterType arg1_type, InterType arg2_type, InterType arg3_type, String expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    expr_var  = "expr" & unique_id;
+    len_var   = "len" & unique_id;
+    idx_var   = "idx" & unique_id;
+    col1_var  = "col1_" & unique_id;
+    col2_var  = "col2_" & unique_id;
+    col3_var  = "col3_" & unique_id;
+
+    arg1_code = import_code(arg1_type, expr_var & ".item1[" & idx_var & "]", col1_var & "[" & idx_var & "] = ");
+    arg2_code = import_code(arg2_type, expr_var & ".item2[" & idx_var & "]", col2_var & "[" & idx_var & "] = ");
+    arg3_code = import_code(arg3_type, expr_var & ".item3[" & idx_var & "]", col3_var & "[" & idx_var & "] = ");
+
+    rel_type = :tern_rel(arg1_type, arg2_type, arg3_type); ## BAD, RECONSTRUCTING PREVIOUSLY DESTRUCTED VALUE
+
+    return indent_lines((
+        input_arg_type(rel_type) & " " & expr_var & " = " & expr & ";",
+        "int " & len_var & " = " & expr_var & ".length;",
+        "Obj[] " & col1_var & " = new Obj[" & len_var & "];",
+        "Obj[] " & col2_var & " = new Obj[" & len_var & "];",
+        "Obj[] " & col3_var & " = new Obj[" & len_var & "];",
+        "for (int " & idx_var & " = 0 ; " & idx_var & " < " & len_var & " ; " & idx_var & "++) {"
+      ) & indent_lines(arg1_code & arg2_code & arg3_code) & (
+        "}",
+        action_prefix & "Builder.createBinRel(" & col1_var & ", " & col2_var & ", " & col3_var & ");"
+      )
+    );
+  }
+
+
   String* tagged_value_import_code(SymbObj tag, InterType inner_type, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     inner_var = "inner" & unique_id;
@@ -142,6 +207,8 @@ implicit output_types_names : [InterType -> String] {
     named(n?, t?) = if output_types_names(it, *) then output_types_names(it, !!) else return_value_type(t),
     seq(t?)       |
     set(t?)       = return_value_type(t) & "[]",
+    bin_rel(ts?)  = "Pair<" & append((return_value_type(t) & "[]" : t <- ts), ", ") & ">",
+    tern_rel(ts?) = "Triplet<" & append((return_value_type(t) & "[]" : t <- ts), ", ") & ">",
     tagged(_, t?) = if t != :generic then return_value_type(t) else return_value_type(:generic),
     generic       = "Value";
 
@@ -157,6 +224,8 @@ implicit output_types_names : [InterType -> String] {
     named()             = named_type_export_code(it, expr, action_prefix),
     seq(t?)             |
     set(t?)             = array_export_code(t, expr, action_prefix),
+    bin_rel(t1?, t2?)   = bin_rel_export_code(t1, t2, expr, action_prefix),
+    tern_rel(t1?, t2?, t3?) = tern_rel_export_code(t1, t2, t3, expr, action_prefix),
     tagged(_, generic)  = export_code(:generic, expr, action_prefix),
     tagged(_, t?)       = export_code(t, expr & ".getInnerObj()", action_prefix),
     generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
@@ -256,6 +325,68 @@ implicit output_types_names : [InterType -> String] {
   }
 
 
+  String* bin_rel_export_code(InterType arg1_type, InterType arg2_type, String src_expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    expr_var, size_var, col1_var, col2_var, iter_var, idx_var = (
+      s & "_" & unique_id : s <- ("expr", "size", "col1", "col2", "iter", "idx")
+    );
+    out_col1_type = return_value_type(arg1_type);
+    out_col2_type = return_value_type(arg2_type);
+
+    arg1_export_code = export_code(arg1_type, iter_var & ".get1()", col1_var & "[" & idx_var & "] = ");
+    arg2_export_code = export_code(arg2_type, iter_var & ".get2()", col2_var & "[" & idx_var & "++] = ");
+
+    return (
+      "Obj " & expr_var & " = " & src_expr & ";",
+      "int " & size_var & " = " & expr_var & ".getSize();",
+      out_col1_type & "[] " & col1_var & " = new " & array_new_expr(arg1_type, size_var) & ";",
+      out_col2_type & "[] " & col2_var & " = new " & array_new_expr(arg2_type, size_var) & ";",
+      "BinRelIter " & iter_var & " = " & expr_var & ".getBinRelIter();",
+      "int " & idx_var & " = 0;",
+      "while (!" & iter_var & ".done()) {"
+    ) & indent_lines(arg1_export_code & arg2_export_code) & (
+      "  " & iter_var & ".next();",
+      "}",
+      "Miscellanea._assert(" & idx_var & " == " & size_var & ");",
+      action_prefix & "new Pair<" & out_col1_type & "[], " & out_col2_type & "[]>(" &
+        col1_var & ", " & col2_var & ");"
+    );
+  }
+
+
+  String* tern_rel_export_code(InterType arg1_type, InterType arg2_type, InterType arg3_type, String src_expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    expr_var, size_var, col1_var, col2_var, col3_var, iter_var, idx_var = (
+      s & "_" & unique_id : s <- ("expr", "size", "col1", "col2", "col3", "iter", "idx")
+    );
+
+    out_arg1_type = return_value_type(arg1_type);
+    out_arg2_type = return_value_type(arg2_type);
+    out_arg3_type = return_value_type(arg3_type);
+
+    arg1_export_code = export_code(arg1_type, iter_var & ".get1()", col1_var & "[" & idx_var & "] = ");
+    arg2_export_code = export_code(arg2_type, iter_var & ".get2()", col2_var & "[" & idx_var & "] = ");
+    arg3_export_code = export_code(arg3_type, iter_var & ".get3()", col3_var & "[" & idx_var & "++] = ");
+
+    return (
+      "Obj " & expr_var & " = " & src_expr & ";",
+      "int " & size_var & " = " & expr_var & ".getSize();",
+      out_arg1_type & "[] " & col1_var & " = new " & array_new_expr(arg1_type, size_var) & ";",
+      out_arg2_type & "[] " & col2_var & " = new " & array_new_expr(arg2_type, size_var) & ";",
+      out_arg3_type & "[] " & col3_var & " = new " & array_new_expr(arg3_type, size_var) & ";",
+      "TernRelIter " & iter_var & " = " & expr_var & ".getTernRelIter();",
+      "int " & idx_var & " = 0;",
+      "while (!" & iter_var & ".done()) {"
+    ) & indent_lines(arg1_export_code & arg2_export_code & arg3_export_code) & (
+      "  " & iter_var & ".next();",
+      "}",
+      "Miscellanea._assert(" & idx_var & " == " & size_var & ");",
+      action_prefix & "new Triplet<" & out_arg1_type & "[], " & out_arg2_type & "[], " & out_arg3_type & "[]>(" &
+        col1_var & ", " & col2_var & ", " & col3_var & ");"
+    );
+  }
+
+
   String array_new_expr(InterType elem_type, String size_expr) =
     seq(t?) | set(t?) = array_new_expr(t, size_expr) & "[]",
     _                 = return_value_type(elem_type) & "[" & size_expr & "]";
@@ -300,6 +431,16 @@ implicit typedefs : [TypeName -> NeType] {
         inter_type = :named(value(maybe_type_name), inter_type) if maybe_type_name != nothing;
         return inter_type;
       ;
+    ;
+
+    if is_subset(type, type_bin_rel):
+      args_types = bin_rel_args_supertypes(type);
+      return :bin_rel((interface_type(t) : t <- args_types)) if args_types :: (NeType, NeType);
+    ;
+
+    if is_subset(type, type_tern_rel):
+      args_types = tern_rel_args_supertypes(type);
+      return :tern_rel((interface_type(t) : t <- args_types)) if args_types :: (NeType, NeType, NeType);
     ;
 
     if is_subset(type, type_tagged_obj):
