@@ -100,7 +100,7 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
       code = ("", sgn_line) & indent_lines(body) & ("}");
     ;
 
-    return (code, (ret_type & " " & meth_name & ";"));
+    return (code, (ret_type & " " & meth_name & "();"));
   }
 
   //////////////////////////////////////////////////////////////////////////////

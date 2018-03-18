@@ -26,7 +26,8 @@ implicit typedefs : [TypeName -> NeType] {
   ([InterType -> String], [InterType -> String], [String*]) declared_types([NeType] types) {
     inter_types = [interface_type(t) : t <- types];
     decl_types = union([types_to_declare(t) : t <- inter_types]);
-    let reserved_names = []: ## IMPLEMENT
+    reserved_names = []; ## IMPLEMENT
+    let reserved_names = reserved_names:
       types_names_input  = interface_type_names(decl_types, host_to_cell = true);
       types_names_output = interface_type_names(decl_types, host_to_cell = false);
     ;
@@ -34,31 +35,28 @@ implicit typedefs : [TypeName -> NeType] {
       input_types_decls  = [t -> type_decl(t, s, host_to_cell = true)  : t, s <- types_names_input];
       output_types_decls = [t -> type_decl(t, s, host_to_cell = false) : t, s <- types_names_output];
     ;
-    conflicts = union([{
-        in_name  = types_names_input(t, !!);
-        out_name = types_names_output(t, !!);
-        in_decl  = input_types_decls(t, !!);
-        out_decl = output_types_decls(t, !!);
-        return [t if in_name == out_name and in_decl != out_decl];
-      } : t <- decl_types
-    ]);
-    if conflicts != []:
-      new_reserved_names = [types_names_input(t, !!) : t <- conflicts];
-      let reserved_names = [] & new_reserved_names: ## IMPLEMENT
-        types_names_output = interface_type_names(decl_types, host_to_cell = false);
-      ;
-      let input_types_names = types_names_input, output_types_names = types_names_output, host_to_cell = false:
-        output_types_decls = [t -> type_decl(t, s) : t, s <- types_names_output];
-      ;
-      assert union([{
+
+    loop
+      conflicts = union([{
           in_name  = types_names_input(t, !!);
           out_name = types_names_output(t, !!);
           in_decl  = input_types_decls(t, !!);
           out_decl = output_types_decls(t, !!);
           return [t if in_name == out_name and in_decl != out_decl];
         } : t <- decl_types
-      ]) == [];
+      ]);
+
+      break if conflicts == [];
+
+      reserved_names = reserved_names & [types_names_input(t, !!) : t <- conflicts];
+      let reserved_names = reserved_names:
+        types_names_output = interface_type_names(decl_types, host_to_cell = false);
+      ;
+      let input_types_names = types_names_input, output_types_names = types_names_output, host_to_cell = false:
+        output_types_decls = [t -> type_decl(t, s) : t, s <- types_names_output];
+      ;
     ;
+
     type_decls = values(input_types_decls) & values(output_types_decls);
     return (types_names_input, types_names_output, type_decls);
   }
