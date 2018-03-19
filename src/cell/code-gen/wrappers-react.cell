@@ -159,8 +159,9 @@ implicit typedefs : [TypeName -> NeType] {
 
   (String*, String*) react_auto_wrapper(ReactBlock block) {
     interf_types = interface_types(block);
-    input_types_names, output_types_names, types_decls = declared_types(interf_types);
+    input_types_names, output_types_names, types_decls, types_docs = declared_types(interf_types);
     types_decls_code = join((("") & d : d <- isort(types_decls)));
+    types_docs = join((("") & d : d <- isort(types_docs)));
 
     ord_inputs = block.ord_inputs;
     ord_outputs = (o : o <- block.ord_outputs, not block.inputs(o, *));
@@ -238,10 +239,8 @@ implicit typedefs : [TypeName -> NeType] {
     docs = docs & ("", "  // Inputs") & input_setters_docs if input_setters_docs != ();
     docs = docs & ("", "  // Outputs") & output_getters_docs if output_getters_docs != ();
     docs = docs & ("", "  // Methods") & indent_lines(methods_wrappers_docs) if methods_wrappers_docs != ();
-    docs = docs & ("", "  // Types") & indent_lines(types_decls_code) if types_decls_code != ();
-    docs = docs & (
-      "}"
-    );
+    docs = docs & ("", "  // Types") & indent_lines(types_docs) if types_docs != ();
+    docs = (docs | "}");
 
     code = enums_decls & (
       "" if enums_decls != (),

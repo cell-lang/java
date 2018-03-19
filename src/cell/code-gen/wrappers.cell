@@ -1,23 +1,24 @@
-type AtomicInterType  = bool, integer, float, symbol, string;
-type BasicInterType   = AtomicInterType, generic;
+type AtomicInterType    = bool, integer, float, symbol, string;
+type BasicInterType     = AtomicInterType, generic;
 
-type TupleInterType   = tuple(InterType+);
-type RecordInterType  = record([+Symbol -> InterType]);
-type TaggedInterType  = tagged(SymbObj, InterType);
+type TupleInterType     = tuple(InterType+);
+type RecordInterType    = record([+Symbol -> InterType]);
+type TaggedInterType    = tagged(SymbObj, InterType);
 
-type NamedInterType   = named(type_symbol(Atom), <TupleInterType, RecordInterType, TaggedInterType>);
+type NameableInterType  = TupleInterType, RecordInterType, tagged(SymbObj, NameableInterType);
+type NamedInterType     = named(type_symbol(Atom), NameableInterType);
 
-type CollInterType    = seq(InterType),
-                        set(InterType),
-                        bin_rel(InterType, InterType),
-                        tern_rel(InterType, InterType, InterType);
+type CollInterType      = seq(InterType),
+                          set(InterType),
+                          bin_rel(InterType, InterType),
+                          tern_rel(InterType, InterType, InterType);
 
-type InterType        = BasicInterType,
-                        TupleInterType,
-                        RecordInterType,
-                        CollInterType,
-                        TaggedInterType,
-                        NamedInterType;
+type InterType          = BasicInterType,
+                          TupleInterType,
+                          RecordInterType,
+                          CollInterType,
+                          TaggedInterType,
+                          NamedInterType;
 
 
 NeType internal_type(AtomicInterType) =
@@ -450,7 +451,9 @@ implicit typedefs : [TypeName -> NeType] {
         assert obj_type != empty_type; ## WHY THIS?
         if obj_type != empty_type:
           inter_type = :tagged(only_symb(tag_type), interface_type(obj_type));
-          inter_type = :named(value(maybe_type_name), inter_type) if maybe_type_name != nothing;
+          if maybe_type_name != nothing and inter_type :: NameableInterType:
+            inter_type = :named(value(maybe_type_name), inter_type);
+          ;
           return inter_type;
         ;
       ;

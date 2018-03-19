@@ -2,28 +2,10 @@ type SimplyNamedInterType = BasicInterType, tagged(SymbObj, generic), NamedInter
 
 type DeclInterType   = TupleInterType, RecordInterType, NamedInterType;
 
-// type NamedInterType   = named(type_symbol(Atom), InterType);
-
-// type AtomicInterType  = bool, integer, float, symbol, string;
-// type BasicInterType   = AtomicInterType, generic;
-
-// type TupleInterType   = tuple(InterType+);
-// type RecordInterType  = record([+Symbol -> InterType]);
-// type TaggedInterType  = tagged(SymbObj, InterType);
-
-// type NamedInterType   = named(type_symbol(Atom), <TupleInterType, RecordInterType, TaggedInterType>);
-
-// type InterType        = BasicInterType,
-//                         TupleInterType,
-//                         RecordInterType,
-//                         seq(InterType),
-//                         set(InterType),
-//                         TaggedInterType,
-//                         NamedInterType;
 
 
 implicit typedefs : [TypeName -> NeType] {
-  ([InterType -> String], [InterType -> String], [String*]) declared_types([NeType] types) {
+  ([InterType -> String], [InterType -> String], [String*], [String*]) declared_types([NeType] types) {
     inter_types = [interface_type(t) : t <- types];
     decl_types = union([types_to_declare(t) : t <- inter_types]);
     reserved_names = []; ## IMPLEMENT
@@ -32,8 +14,8 @@ implicit typedefs : [TypeName -> NeType] {
       types_names_output = interface_type_names(decl_types, host_to_cell = false);
     ;
     let input_types_names = types_names_input, output_types_names = types_names_output:
-      input_types_decls  = [t -> type_decl(t, s, host_to_cell = true)  : t, s <- types_names_input];
-      output_types_decls = [t -> type_decl(t, s, host_to_cell = false) : t, s <- types_names_output];
+      input_types_decls  = [t -> type_decl(t, s, false, host_to_cell = true)  : t, s <- types_names_input];
+      output_types_decls = [t -> type_decl(t, s, false, host_to_cell = false) : t, s <- types_names_output];
     ;
 
     loop
@@ -53,12 +35,18 @@ implicit typedefs : [TypeName -> NeType] {
         types_names_output = interface_type_names(decl_types, host_to_cell = false);
       ;
       let input_types_names = types_names_input, output_types_names = types_names_output, host_to_cell = false:
-        output_types_decls = [t -> type_decl(t, s) : t, s <- types_names_output];
+        output_types_decls = [t -> type_decl(t, s, false) : t, s <- types_names_output];
       ;
     ;
 
+    let input_types_names = types_names_input, output_types_names = types_names_output:
+      input_types_docs  = [t -> type_decl(t, s, true, host_to_cell = true)  : t, s <- types_names_input];
+      output_types_docs = [t -> type_decl(t, s, true, host_to_cell = false) : t, s <- types_names_output];
+    ;
+
     type_decls = values(input_types_decls) & values(output_types_decls);
-    return (types_names_input, types_names_output, type_decls);
+    type_docs  = values(input_types_docs)  & values(output_types_docs);
+    return (types_names_input, types_names_output, type_decls, type_docs);
   }
 
 
@@ -76,9 +64,9 @@ implicit typedefs : [TypeName -> NeType] {
     bin_rel(ts?)    |
     tern_rel(ts?)   = union([types_to_declare(t) : t <~ ts]),
     tagged(_, t?)   = types_to_declare(t),
-    named(n?, t?)   = { stripped_root_type = strip_tags(t);
-                        return [:named(n, t) if root_type_needs_decl(t)] &
-                               [t2 : t2 <- types_to_declare(t), t2 != stripped_root_type];
+    named(n?, rt?)  = { stripped_type = strip_tags(rt);
+                        return [inter_type if root_type_needs_decl(rt)] &
+                               [t : t <- types_to_declare(rt), t != stripped_type];
                       };
 }
 
@@ -142,17 +130,17 @@ implicit host_to_cell : Bool, reserved_names : [String] {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit host_to_cell : Bool, input_types_names : [InterType -> String], output_types_names : [InterType -> String] {
-  String* type_decl(TupleInterType type, String name) {
+  String* type_decl(TupleInterType type, String name, Bool doc_only) {
     types = (if host_to_cell then input_arg_type(t) else return_value_type(t) : t @ i <- untag(type));
     max_len = max((length(t) : t <- types));
     spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
     body = ("  public " & t & spaces(i) & " item" & printed(i) & ";" : t @ i <- types);
-    header = "public static class " & name & " {";
+    header = #(if doc_only then "" else "public static ") & "class " & name & " {";
     return (header) & body & ("}");
   }
 
 
-  String* type_decl(RecordInterType type, String name) {
+  String* type_decl(RecordInterType type, String name, Bool doc_only) {
     fields = [l -> if host_to_cell then input_arg_type(t) else return_value_type(t) : l, t <- untag(type)];
     field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
     max_len = max([length(t) : unused_var, t <- fields]);
@@ -161,31 +149,21 @@ implicit host_to_cell : Bool, input_types_names : [InterType -> String], output_
         return "  public " & t & spaces & " " & field_names(l, !!) & ";";
       } : l, t <- isort(fields)
     );
-    header = "public static class " & name & " {";
+    header = #(if doc_only then "" else "public static ") & "class " & name & " {";
     return (header) & body & ("}");
   }
 
 
-  String* type_decl(NamedInterType type, String name) {
-    actual_type = match (type) named(_, t?) = t;
-    fail if not actual_type :: <TupleInterType, RecordInterType, TaggedInterType, NamedInterType>;
-    return type_decl(actual_type, name);
+  String* type_decl(NamedInterType type, String name, Bool doc_only) {
+    return match (type)
+      named(_, t?) = nameable_type_decl(t, name, doc_only);
+
+    String* nameable_type_decl(<TupleInterType, RecordInterType> type, String name, Bool doc_only) =
+      type_decl(type, name, doc_only);
+
+    String* nameable_type_decl(<tagged(SymbObj, NameableInterType)> type, String name, Bool doc_only) =
+      tagged(_, t?) = nameable_type_decl(t, name, doc_only);
   }
-
-// type NamedInterType   = named(type_symbol(Atom), InterType);
-
-
-  String* type_decl(TaggedInterType type, String name) {
-    inner_type = match (type) tagged(_, t?) = t;
-    fail if not inner_type :: <TupleInterType, RecordInterType, TaggedInterType, NamedInterType>;
-    return type_decl(inner_type, name);
-  }
-  //   untagged_type = match (type) tagged(_, t?) = t;
-  //   if not untagged_type :: <TupleInterType, RecordInterType>:
-  //     print untagged_type;
-  //     return ();
-  //   ;
-  // }
 }
 
 

@@ -425,8 +425,9 @@ implicit typedefs : [TypeName -> NeType] {
 
   (String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
     interf_types = interface_types(root_block, blocks);
-    input_types_names, output_types_names, types_decls = declared_types(interf_types);
+    input_types_names, output_types_names, types_decls, types_docs = declared_types(interf_types);
     types_decls_code = join((("") & d : d <- isort(types_decls)));
+    types_docs = join((("") & d : d <- isort(types_docs)));
 
     let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name:
       dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];
@@ -498,7 +499,7 @@ implicit typedefs : [TypeName -> NeType] {
       "  void execute(String);" if has_any_updates
     );
     class_docs = class_docs & accessors_docs if accessors_docs != ();
-    class_docs = class_docs & indent_lines(types_decls_code) if types_decls != [];
+    class_docs = class_docs & indent_lines(types_docs) if types_docs != [];
     class_docs = (class_docs | "}");
 
     return (class_impl, class_docs);
