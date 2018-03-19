@@ -1,4 +1,4 @@
-type SimplyNamedInterType = BasicInterType, tagged(SymbObj, generic), NamedInterType;
+type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], NamedInterType;
 
 type DeclInterType   = TupleInterType, RecordInterType, NamedInterType;
 
@@ -64,10 +64,7 @@ implicit typedefs : [TypeName -> NeType] {
     bin_rel(ts?)    |
     tern_rel(ts?)   = union([types_to_declare(t) : t <~ ts]),
     tagged(_, t?)   = types_to_declare(t),
-    named(n?, rt?)  = { stripped_type = strip_tags(rt);
-                        return [inter_type if root_type_needs_decl(rt)] &
-                               [t : t <- types_to_declare(rt), t != stripped_type];
-                      };
+    named(_, rt?)   = [inter_type] & #([t : t <- types_to_declare(rt)] - [strip_tags(rt)]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,14 +88,14 @@ implicit host_to_cell : Bool, reserved_names : [String] {
     return non_reserved_name(name & suffix);
 
     String field_type_name(SimplyNamedInterType) =
-      bool                        = "Bool",
-      integer                     = "Long",
-      float                       = "Double",
-      symbol                      = "Symbol",
-      string                      = "String",
-      generic                     |
-      tagged(_, generic)          = if host_to_cell then "String" else "Value",
-      named(type_symbol(n?), _)   = upper_camel_case(n);
+      bool                = "Bool",
+      integer             = "Long",
+      float               = "Double",
+      symbol              = "Symbol",
+      string              = "String",
+      generic             |
+      tagged(_, generic)  = if host_to_cell then "String" else "Value",
+      named(s?, _)        = upper_camel_case(s);
   }
 
 
@@ -112,7 +109,7 @@ implicit host_to_cell : Bool, reserved_names : [String] {
 
   String safe_name(NamedInterType type, Maybe[Nat] unique_id) {
     suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    type_symb = match (type) named(type_symbol(s?), _) = s;
+    type_symb = match (type) named(s?, _) = s;
     return non_reserved_name(upper_camel_case(type_symb) & suffix);
   }
 
@@ -161,7 +158,7 @@ implicit host_to_cell : Bool, input_types_names : [InterType -> String], output_
     String* nameable_type_decl(<TupleInterType, RecordInterType> type, String name, Bool doc_only) =
       type_decl(type, name, doc_only);
 
-    String* nameable_type_decl(<tagged(SymbObj, NameableInterType)> type, String name, Bool doc_only) =
+    String* nameable_type_decl(TaggedInterType[NameableInterType] type, String name, Bool doc_only) =
       tagged(_, t?) = nameable_type_decl(t, name, doc_only);
   }
 }
@@ -180,7 +177,7 @@ implicit host_to_cell : Bool, input_types_names : [InterType -> String], output_
 
 [InterType -> String] java_type_names([NamedInterType] types) = [
   ## THIS SHOULD ALSO RESOLVE CONFLICTS WITH OTHER UPPER CAMEL CASE NAMES
-  t -> upper_camel_case(s) : type <- types, named(type_symbol(s?), t?) ?= type
+  t -> upper_camel_case(s) : type <- types, named(s?, t?) ?= type
 ];
 
 
@@ -200,15 +197,6 @@ String safe_lower_camel_case_chain(Symbol+ symbs) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-False root_type_needs_decl(<BasicInterType, CollInterType>) = false;
-
-True  root_type_needs_decl(<TupleInterType, RecordInterType>) = true;
-
-Bool  root_type_needs_decl(TaggedInterType type) = root_type_needs_decl(strip_tags(type));
-
-Bool  root_type_needs_decl(NamedInterType) = named(_, t?) = root_type_needs_decl(t);
-
 
 InterType strip_tags(InterType type) =
   tagged(_, t?) = strip_tags(t),

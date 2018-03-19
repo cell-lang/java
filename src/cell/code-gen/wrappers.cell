@@ -3,22 +3,34 @@ type BasicInterType     = AtomicInterType, generic;
 
 type TupleInterType     = tuple(InterType+);
 type RecordInterType    = record([+Symbol -> InterType]);
-type TaggedInterType    = tagged(SymbObj, InterType);
 
-type NameableInterType  = TupleInterType, RecordInterType, tagged(SymbObj, NameableInterType);
-type NamedInterType     = named(type_symbol(Atom), NameableInterType);
+type TaggedInterType[T] = tagged(Symbol, T);
+type TaggedInterType    = TaggedInterType[InterType];
+
+type NameableInterType  = TupleInterType, RecordInterType, TaggedInterType[NameableInterType];
+type NamedInterType     = named(Symbol, NameableInterType);
 
 type CollInterType      = seq(InterType),
                           set(InterType),
                           bin_rel(InterType, InterType),
                           tern_rel(InterType, InterType, InterType);
 
+type SymbolInterType    = symbol(Symbol);
+
+type UnionableInterType = SymbolInterType,
+                          TupleInterType,
+                          RecordInterType,
+                          TaggedInterType[UnionableInterType];
+
+type UnionInterType     = union([+UnionableInterType]);
+
 type InterType          = BasicInterType,
                           TupleInterType,
                           RecordInterType,
                           CollInterType,
                           TaggedInterType,
-                          NamedInterType;
+                          NamedInterType,
+                          UnionInterType;
 
 
 NeType internal_type(AtomicInterType) =
@@ -184,12 +196,12 @@ implicit input_types_names : [InterType -> String] {
   }
 
 
-  String* tagged_value_import_code(SymbObj tag, InterType inner_type, String expr, String action_prefix) {
+  String* tagged_value_import_code(Symbol tag, InterType inner_type, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     inner_var = "inner" & unique_id;
 
     inner_code = import_code(inner_type, expr, "Obj " & inner_var & " = ");
-    creation_instr = action_prefix & "new TaggedObj(" & symb_idx_name(tag) & ", " & inner_var & ");";
+    creation_instr = action_prefix & "new TaggedObj(" & symb_idx_name(object(tag)) & ", " & inner_var & ");";
 
     return (inner_code | creation_instr);
   }
@@ -401,7 +413,9 @@ implicit typedefs : [TypeName -> NeType] {
       return it if is_subset(type, internal_type(it));
     ;
 
-    maybe_type_name = if type :: <type_ref(type_symbol(Symbol))> then just(untag(type)) else nothing;
+    maybe_type_name = match (type)
+      type_ref(type_symbol(s?))   = just(s),
+      _                           = nothing;
 
     maybe_types = maybe_tuple_type_fields(type);
     if maybe_types != nothing:
@@ -450,7 +464,7 @@ implicit typedefs : [TypeName -> NeType] {
         obj_type = untagged_objs_supertype(type);
         assert obj_type != empty_type; ## WHY THIS?
         if obj_type != empty_type:
-          inter_type = :tagged(only_symb(tag_type), interface_type(obj_type));
+          inter_type = :tagged(untag(only_symb(tag_type)), interface_type(obj_type));
           if maybe_type_name != nothing and inter_type :: NameableInterType:
             inter_type = :named(value(maybe_type_name), inter_type);
           ;
