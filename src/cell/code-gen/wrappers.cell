@@ -81,30 +81,19 @@ implicit input_types_names : [InterType -> String] {
   String* type_union_import_code([+TaggedInterType[UnionableInterType]] types, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     tmp_var = "var_" & unique_id;
+    res_var = "res_var_" & unique_id;
 
-    code = ();
+    code = ("Obj " & res_var & ";");
     for t @ i <- isort(types):
-
-if not input_types_names(t, *):
-  print "-----------------------------------------------";
-  print input_types_names;
-  print t;
-  fail;
-;
-
       type_name = input_types_names(t, !!);
       header = (
         #(if i > 0 then "else " else "") & "if (" & expr & " instanceof " & type_name & ") {",
         "  " & type_name & " " & tmp_var & " = (" & type_name & ") " & expr & ";"
       );
-      code = code & header & indent_lines(import_code(t, tmp_var, action_prefix)) & ("}");
+      code = code & header & indent_lines(import_code(t, tmp_var, res_var & " = ")) & ("}");
     ;
 
-    code = (code | "else", "  throw Miscellanea.internalFail();");
-
-print code;
-
-    return code;
+    return (code | "else", "  throw Miscellanea.internalFail();", action_prefix & res_var & ";");
   }
 
 
@@ -143,10 +132,6 @@ print code;
     tuple_instr = action_prefix & "new MasterSeqObj(new Obj[] {" & append(field_vars, ", ") & "});";
 
     return (join(fields_code) | tuple_instr);
-
-    // ## BAD, I'M RECONSTRUCTING THE InterType VALUE AFTER DESTROYING IT
-    // return (input_arg_type(:tuple(types)) & " " & expr_var & " = " & expr & ";") &
-    //        (join(fields_code) | tuple_instr);
   }
 
 
@@ -292,8 +277,6 @@ implicit output_types_names : [InterType -> String] {
       case_code = ("case " & symb_idx_name(object(tag)) & ":") & indent_lines(case_code) & ("  break;", "");
       code = code & indent_lines(case_code);
     ;
-
-print (code | "  default:", "    throw Miscellanea.internalFail();", "}");
 
     return (code | "  default:", "    throw Miscellanea.internalFail();", "}");
   }

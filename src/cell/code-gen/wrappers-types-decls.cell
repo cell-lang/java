@@ -17,14 +17,6 @@ implicit typedefs : [TypeName -> NeType] {
     child_parent = [c, t : t <- decl_types, c <- children(t)];
     parents = [c -> [p : p <- child_parent(c, ?)] : c, unused_var <- child_parent];
 
-print "*******************************************************";
-print types;
-print inter_types;
-print decl_types;
-print child_parent;
-print parents;
-print "* * * * *";
-
     let input_types_names = types_names_input, output_types_names = types_names_output, parents = parents:
       input_types_decls  = [t -> type_decl(t, host_to_cell = true)  : t, s <- types_names_input];
       output_types_decls = [t -> type_decl(t, host_to_cell = false) : t, s <- types_names_output];
@@ -59,8 +51,6 @@ print "* * * * *";
 
     type_decls = values(input_types_decls) & values(output_types_decls);
     type_docs  = values(input_types_docs)  & values(output_types_docs);
-
-print (types_names_input, types_names_output, type_decls, type_docs);
 
     return (types_names_input, types_names_output, type_decls, type_docs);
   }
