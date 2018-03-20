@@ -7,7 +7,7 @@ type RecordInterType    = record([+Symbol -> InterType]);
 type TaggedInterType[T] = tagged(Symbol, T);
 type TaggedInterType    = TaggedInterType[InterType];
 
-type NameableInterType  = TupleInterType, RecordInterType, TaggedInterType[NameableInterType];
+type NameableInterType  = TupleInterType, RecordInterType, UnionInterType, TaggedInterType[NameableInterType];
 type NamedInterType     = named(Symbol, NameableInterType);
 
 type CollInterType      = seq(InterType),
@@ -299,12 +299,16 @@ print (code | "  default:", "    throw Miscellanea.internalFail();", "}");
   }
 
 
-  String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) =
-    named(id?, tuple(ts?))  = tuple_export_code(ts, output_types_names(inter_type, !!), expr, action_prefix),
-    named(id?, record(fs?)) = record_export_code(fs, output_types_names(inter_type, !!), expr, action_prefix),
-    named(id?, tagged() t?) = if output_types_names(inter_type, *)
-                              then tagged_value_export_code(t, output_types_names(inter_type, !!), expr, action_prefix)
-                              else export_code(t, expr, action_prefix);
+  String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) {
+    actual_type = match (inter_type) named(_, t?) = t;
+    return match (actual_type)
+      tuple(ts?)  = tuple_export_code(ts, output_types_names(inter_type, !!), expr, action_prefix),
+      record(fs?) = record_export_code(fs, output_types_names(inter_type, !!), expr, action_prefix),
+      union(ts?)  = type_union_export_code(ts, expr, action_prefix),
+      tagged()    = if output_types_names(inter_type, *)
+        then tagged_value_export_code(actual_type, output_types_names(inter_type, !!), expr, action_prefix)
+        else export_code(actual_type, expr, action_prefix);
+  }
 
 
   String* tagged_value_export_code(TaggedInterType tagged_type, String type_name, String expr, String action_prefix) {
@@ -529,19 +533,25 @@ implicit typedefs : [TypeName -> NeType] {
     ;
 
     maybe_union_type = union_intertype(type);
-    return value(maybe_union_type) if maybe_union_type != nothing;
+    if maybe_union_type != nothing:
+      inter_type = value(maybe_union_type);
+      if maybe_type_name != nothing:
+        inter_type = :named(value(maybe_type_name), inter_type);
+      ;
+      return inter_type;
+    ;
 
     return :generic;
   }
 
 
-  Maybe[InterType] union_intertype(Type type) =
+  Maybe[UnionInterType] union_intertype(Type type) =
     union_type(ts?) = union_intertype(ts),
     type_ref(ts?)   = union_intertype(expand_type_ref(ts, typedefs)),
     _               = nothing;
 
 
-  Maybe[InterType] union_intertype([+NeType] types) {
+  Maybe[UnionInterType] union_intertype([+NeType] types) {
     inter_types = [interface_type(t) : t <- types];
     return if inter_types :: [+TaggedInterType[UnionableInterType]]
       then just(:union(inter_types))
