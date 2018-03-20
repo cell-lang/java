@@ -15,14 +15,13 @@ type CollInterType      = seq(InterType),
                           bin_rel(InterType, InterType),
                           tern_rel(InterType, InterType, InterType);
 
-type SymbolInterType    = symbol(Symbol);
+// type SymbolInterType    = symbol(Symbol);
 
-type UnionableInterType = SymbolInterType,
-                          TupleInterType,
+type UnionableInterType = TupleInterType,
                           RecordInterType,
                           TaggedInterType[UnionableInterType];
 
-type UnionInterType     = union([+UnionableInterType]);
+type UnionInterType     = union([+TaggedInterType[UnionableInterType]]);
 
 type InterType          = BasicInterType,
                           TupleInterType,
@@ -47,7 +46,8 @@ implicit input_types_names : [InterType -> String] {
     integer           = "long",
     float             = "double",
     tuple()           |
-    record()          = input_types_names(it, !!),
+    record()          |
+    union()           = input_types_names(it, !!),
     named(n?, t?)     = if input_types_names(it, *) then input_types_names(it, !!) else input_arg_type(t),
     seq(t?)           |
     set(t?)           = input_arg_type(t) & "[]",
@@ -68,6 +68,7 @@ implicit input_types_names : [InterType -> String] {
     tuple(ts?)              = tuple_import_code(ts, expr, action_prefix),
     record(fs?)             = record_import_code(fs, expr, action_prefix),
     named(_, t?)            = import_code(t, expr, action_prefix),
+    union(ts?)              = type_union_import_code(ts, expr, action_prefix),
     seq(t?)                 = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
     set(t?)                 = array_import_code(t, expr, action_prefix, "Builder.createSet"),
     bin_rel(t1?, t2?)       = bin_rel_import_code(t1, t2, expr, action_prefix),
@@ -75,6 +76,36 @@ implicit input_types_names : [InterType -> String] {
     tagged(_, generic)      = import_code(:generic, expr, action_prefix),
     tagged(s?, t?)          = tagged_value_import_code(s, t, expr, action_prefix),
     generic                 = (action_prefix & "Conversions.convertText(" & expr & ");");
+
+
+  String* type_union_import_code([+TaggedInterType[UnionableInterType]] types, String expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    tmp_var = "var_" & unique_id;
+
+    code = ();
+    for t @ i <- isort(types):
+
+if not input_types_names(t, *):
+  print "-----------------------------------------------";
+  print input_types_names;
+  print t;
+  fail;
+;
+
+      type_name = input_types_names(t, !!);
+      header = (
+        #(if i > 0 then "else " else "") & "if (" & expr & " instanceof " & type_name & ") {",
+        "  " & type_name & " " & tmp_var & " = (" & type_name & ") " & expr & ";"
+      );
+      code = code & header & indent_lines(import_code(t, tmp_var, action_prefix)) & ("}");
+    ;
+
+    code = (code | "else", "  throw Miscellanea.internalFail();");
+
+print code;
+
+    return code;
+  }
 
 
   String* record_import_code([+Symbol -> InterType] fields, String expr, String action_prefix) {
@@ -216,7 +247,8 @@ implicit output_types_names : [InterType -> String] {
     symbol        = "String",
     string        = "String",
     tuple()       |
-    record()      = output_types_names(it, !!),
+    record()      |
+    union()       = output_types_names(it, !!),
     named(n?, t?) = if output_types_names(it, *) then output_types_names(it, !!) else return_value_type(t),
     seq(t?)       |
     set(t?)       = return_value_type(t) & "[]",
@@ -235,6 +267,7 @@ implicit output_types_names : [InterType -> String] {
     tuple(ts?)          = tuple_export_code(ts, output_types_names(it, !!), expr, action_prefix),
     record(fs?)         = record_export_code(fs, output_types_names(it, !!), expr, action_prefix),
     named()             = named_type_export_code(it, expr, action_prefix),
+    union(ts?)          = type_union_export_code(ts, expr, action_prefix),
     seq(t?)             |
     set(t?)             = array_export_code(t, expr, action_prefix),
     bin_rel(t1?, t2?)   = bin_rel_export_code(t1, t2, expr, action_prefix),
@@ -242,6 +275,28 @@ implicit output_types_names : [InterType -> String] {
     tagged(_, generic)  = export_code(:generic, expr, action_prefix),
     tagged(_, t?)       = export_code(t, expr & ".getInnerObj()", action_prefix),
     generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
+
+
+  String* type_union_export_code([+TaggedInterType[UnionableInterType]] types, String expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    expr_var = "expr_" & unique_id;
+
+    code = (
+      "Obj " & expr_var & " = " & expr & ";",
+      "switch (" & expr_var & ".getTagId()) {"
+    );
+
+    for t @ i <- isort(types):
+      tag = match (t) tagged(s?, _) = s;
+      case_code = tagged_value_export_code(t, output_types_names(t, !!), expr, action_prefix);
+      case_code = ("case " & symb_idx_name(object(tag)) & ":") & indent_lines(case_code) & ("  break;", "");
+      code = code & indent_lines(case_code);
+    ;
+
+print (code | "  default:", "    throw Miscellanea.internalFail();", "}");
+
+    return (code | "  default:", "    throw Miscellanea.internalFail();", "}");
+  }
 
 
   String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) =
@@ -473,6 +528,23 @@ implicit typedefs : [TypeName -> NeType] {
       ;
     ;
 
+    maybe_union_type = union_intertype(type);
+    return value(maybe_union_type) if maybe_union_type != nothing;
+
     return :generic;
+  }
+
+
+  Maybe[InterType] union_intertype(Type type) =
+    union_type(ts?) = union_intertype(ts),
+    type_ref(ts?)   = union_intertype(expand_type_ref(ts, typedefs)),
+    _               = nothing;
+
+
+  Maybe[InterType] union_intertype([+NeType] types) {
+    inter_types = [interface_type(t) : t <- types];
+    return if inter_types :: [+TaggedInterType[UnionableInterType]]
+      then just(:union(inter_types))
+      else nothing;
   }
 }
