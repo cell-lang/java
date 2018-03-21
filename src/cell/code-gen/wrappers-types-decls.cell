@@ -220,11 +220,27 @@ implicit input_types_names : [InterType -> String], output_types_names : [InterT
   );
 
 
-  String* type_decl(SymbolInterType type, Bool doc_only) = (
-    #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {",
-    "",
-    "}"
-  );
+  String* type_decl(SymbolInterType type, Bool doc_only) {
+    first_line = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {";
+    body = (
+      type_name & "() {",
+      "",
+      "}",
+      "",
+      "static " & type_name & " singleton = new " & type_name & "();",
+      "",
+      "public static " & type_name & " singleton() {",
+      "  return singleton;",
+      "}"
+    );
+    return (first_line) & #(if doc_only then ("") else indent_lines(body)) & ("}");
+  }
+
+
+  String type_name {
+    types_names = if host_to_cell then input_types_names else output_types_names;
+    return types_names(root_type, !!);
+  }
 
 
   String name_and_parents_decl {

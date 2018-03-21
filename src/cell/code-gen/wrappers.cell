@@ -252,7 +252,7 @@ implicit output_types_names : [InterType -> String] {
     float               = (action_prefix & expr & ".getDouble();"),
     symbol              = (action_prefix & expr & ".toString();"),
     string              = (action_prefix & expr & ".getString();"),
-    symbol()            = (action_prefix & "new " & output_types_names(it, !!) & "();"),
+    symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton();"),
     tuple(ts?)          = tuple_export_code(ts, output_types_names(it, !!), expr, action_prefix),
     record(fs?)         = record_export_code(fs, output_types_names(it, !!), expr, action_prefix),
     named()             = named_type_export_code(it, expr, action_prefix),
@@ -262,8 +262,16 @@ implicit output_types_names : [InterType -> String] {
     bin_rel(t1?, t2?)   = bin_rel_export_code(t1, t2, expr, action_prefix),
     tern_rel(t1?, t2?, t3?) = tern_rel_export_code(t1, t2, t3, expr, action_prefix),
     tagged(_, generic)  = export_code(:generic, expr, action_prefix),
-    tagged(_, t?)       = export_code(t, expr & ".getInnerObj()", action_prefix),
+    tagged(_, t?)       = tagged_type_export_code(t, expr, action_prefix),
     generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
+
+
+  String* tagged_type_export_code(InterType inner_type, String expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    tmp_var = "tmp_var_" & unique_id;
+    get_inner_obj_instr = "Obj " & tmp_var & " = " & expr & ".getInnerObj();";
+    return (get_inner_obj_instr) & export_code(inner_type, tmp_var, action_prefix);
+  }
 
 
   String* type_union_export_code([+UnionAltInterType] types, String expr, String action_prefix) {
