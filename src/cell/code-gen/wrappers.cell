@@ -15,15 +15,17 @@ type CollInterType      = seq(InterType),
                           bin_rel(InterType, InterType),
                           tern_rel(InterType, InterType, InterType);
 
-// type SymbolInterType    = symbol(Symbol);
+type SymbolInterType    = symbol(Symbol);
 
 type UnionableInterType = TupleInterType,
                           RecordInterType,
                           TaggedInterType[UnionableInterType];
 
-type UnionInterType     = union([+TaggedInterType[UnionableInterType]]);
+type UnionAltInterType  = SymbolInterType, TaggedInterType[UnionableInterType];
+type UnionInterType     = union([+UnionAltInterType]);
 
 type InterType          = BasicInterType,
+                          SymbolInterType,
                           TupleInterType,
                           RecordInterType,
                           CollInterType,
@@ -65,6 +67,7 @@ implicit input_types_names : [InterType -> String] {
     float                   = (action_prefix & "new FloatObj(" & expr & ");"),
     symbol                  = (action_prefix & "Conversions.convertText(" & expr & ");"),
     string                  = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
+    symbol(s?)              = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
     tuple(ts?)              = tuple_import_code(ts, expr, action_prefix),
     record(fs?)             = record_import_code(fs, expr, action_prefix),
     named(_, t?)            = import_code(t, expr, action_prefix),
@@ -78,7 +81,7 @@ implicit input_types_names : [InterType -> String] {
     generic                 = (action_prefix & "Conversions.convertText(" & expr & ");");
 
 
-  String* type_union_import_code([+TaggedInterType[UnionableInterType]] types, String expr, String action_prefix) {
+  String* type_union_import_code([+UnionAltInterType] types, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     tmp_var = "var_" & unique_id;
     res_var = "res_var_" & unique_id;
@@ -249,6 +252,7 @@ implicit output_types_names : [InterType -> String] {
     float               = (action_prefix & expr & ".getDouble();"),
     symbol              = (action_prefix & expr & ".toString();"),
     string              = (action_prefix & expr & ".getString();"),
+    symbol()            = (action_prefix & "new " & output_types_names(it, !!) & "();"),
     tuple(ts?)          = tuple_export_code(ts, output_types_names(it, !!), expr, action_prefix),
     record(fs?)         = record_export_code(fs, output_types_names(it, !!), expr, action_prefix),
     named()             = named_type_export_code(it, expr, action_prefix),
@@ -262,23 +266,53 @@ implicit output_types_names : [InterType -> String] {
     generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
 
 
-  String* type_union_export_code([+TaggedInterType[UnionableInterType]] types, String expr, String action_prefix) {
+  String* type_union_export_code([+UnionAltInterType] types, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
-    expr_var = "expr_" & unique_id;
 
-    code = (
-      "Obj " & expr_var & " = " & expr & ";",
-      "switch (" & expr_var & ".getTagId()) {"
-    );
+    symb_types = [t : t <- types, t :: SymbolInterType];
+    tagged_types = [t : t <- types, t :: TaggedInterType[UnionableInterType]];
+    assert symb_types & tagged_types == types;
 
-    for t @ i <- isort(types):
-      tag = match (t) tagged(s?, _) = s;
-      case_code = tagged_value_export_code(t, output_types_names(t, !!), expr, action_prefix);
-      case_code = ("case " & symb_idx_name(object(tag)) & ":") & indent_lines(case_code) & ("  break;", "");
-      code = code & indent_lines(case_code);
+    code = ();
+
+    if symb_types != []:
+      if |symb_types| > 1:
+        symbs_code = ("switch (" & expr & ".getSymbId()) {");
+        for t @ i <- isort(symb_types):
+          symbs_code = (symbs_code | "case " & symb_idx_name(untag(t)) & ":");
+          symbs_code = symbs_code & indent_lines(export_code(t, expr, action_prefix));
+          symbs_code = (symbs_code | "  break;", "");
+        ;
+        symbs_code = (symbs_code | "  default:", "    throw Miscellanea.internalFail();", "}");
+
+      else
+        symbs_code = export_code(only(symb_types), expr, action_prefix);
+      ;
+      symbs_code = ("if (" & expr & ".isSymb()) {") & indent_lines(symbs_code) & ("}") if tagged_types != [];
+      code = code & symbs_code;
     ;
 
-    return (code | "  default:", "    throw Miscellanea.internalFail();", "}");
+    if tagged_types != []:
+      if |tagged_types| > 1:
+        tagged_values_code = ("switch (" & expr & ".getTagId()) {");
+        for t @ i <- isort(tagged_types):
+          tag = match (t) tagged(s?, _) = s;
+          case_code = tagged_value_export_code(t, output_types_names(t, !!), expr, action_prefix);
+          case_code = ("case " & symb_idx_name(object(tag)) & ":") & indent_lines(case_code) & ("  break;", "");
+          tagged_values_code = tagged_values_code & indent_lines(case_code);
+        ;
+        tagged_values_code = (tagged_values_code | "  default:", "    throw Miscellanea.internalFail();", "}");
+
+      else
+        tagged_values_code = export_code(only(tagged_types), expr, action_prefix);
+      ;
+      if symb_types != []:
+        tagged_values_code = ("else {") & indent_lines(tagged_values_code) & ("}");
+      ;
+      code = code & tagged_values_code;
+    ;
+
+    return code;
   }
 
 
@@ -451,7 +485,7 @@ implicit output_types_names : [InterType -> String] {
 
 implicit typedefs : [TypeName -> NeType] {
   InterType interface_type(NeType type) {
-    for it <- (:bool, :integer, :float, :symbol, :string):
+    for it <- (:bool, :integer, :float, :string):
       return it if is_subset(type, internal_type(it));
     ;
 
@@ -524,6 +558,8 @@ implicit typedefs : [TypeName -> NeType] {
       return inter_type;
     ;
 
+    return :symbol if is_subset(type, internal_type(:symbol));
+
     return :generic;
   }
 
@@ -535,8 +571,14 @@ implicit typedefs : [TypeName -> NeType] {
 
 
   Maybe[UnionInterType] union_intertype([+NeType] types) {
-    inter_types = [interface_type(t) : t <- types];
-    return if inter_types :: [+TaggedInterType[UnionableInterType]]
+    inter_types = [
+        if is_symb_singl_type(t)
+          then :symbol(untag(only_symb(t)))
+          else interface_type(t)
+      : t <- types
+    ];
+
+    return if inter_types :: [+UnionAltInterType]
       then just(:union(inter_types))
       else nothing;
   }

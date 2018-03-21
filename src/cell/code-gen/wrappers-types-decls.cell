@@ -1,6 +1,6 @@
 type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], NamedInterType;
 
-type DeclInterType  = TupleInterType, RecordInterType, NamedInterType, UnionInterType,
+type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType, UnionInterType,
                       TaggedInterType[UnionableInterType];
 
 
@@ -56,7 +56,7 @@ implicit typedefs : [TypeName -> NeType] {
   }
 
 
-  [TaggedInterType[UnionableInterType]] children(<DeclInterType, NameableInterType> type) =
+  [UnionAltInterType] children(<DeclInterType, NameableInterType> type) =
     union(ts?)    = ts,
     named(_, t?)  = children(t),
     _             = [];
@@ -69,6 +69,7 @@ implicit typedefs : [TypeName -> NeType] {
     symbol          |
     string          |
     generic         = [],
+    symbol()        = [inter_type],
     tuple(ts?)      = [inter_type] & union([types_to_declare(t) : t <~ ts]),
     record(fs?)     = [inter_type] & union([types_to_declare(t) : l, t <- fs]),
     seq(t?)         |
@@ -77,7 +78,7 @@ implicit typedefs : [TypeName -> NeType] {
     tern_rel(ts?)   = union([types_to_declare(t) : t <~ ts]),
     tagged(_, t?)   = types_to_declare(t),
     named(_, rt?)   = [inter_type] & #([t : t <- types_to_declare(rt)] - [strip_tags(rt)]),
-    union(ts?)      = [inter_type] & ts & union([types_to_declare(t) : t <- ts]) - [strip_tags(t) : t <- ts];
+    union(ts?)      = [inter_type] & ts & #(union([types_to_declare(t) : t <- ts]) - [strip_tags(t) : t <- ts]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,6 +110,13 @@ implicit host_to_cell : Bool, reserved_names : [String] {
       generic             |
       tagged(_, generic)  = if host_to_cell then "String" else "Value",
       named(s?, _)        = upper_camel_case(s);
+  }
+
+
+  String safe_name(SymbolInterType type, Maybe[Nat] unique_id) {
+    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
+    base_name = upper_camel_case(untag(type));
+    return non_reserved_name(base_name & suffix);
   }
 
 
@@ -207,6 +215,13 @@ implicit input_types_names : [InterType -> String], output_types_names : [InterT
 
   String* type_decl(UnionInterType type, Bool doc_only) = (
     "interface " & name_and_parents_decl & " {",
+    "",
+    "}"
+  );
+
+
+  String* type_decl(SymbolInterType type, Bool doc_only) = (
+    #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {",
     "",
     "}"
   );
