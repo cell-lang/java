@@ -412,26 +412,28 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-implicit typedefs : [TypeName -> NeType] {
-  [NeType] interface_types(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
-    memb_vars_types = [t : v, t <- root_block.state_vars];
-    tables_types = [t : v, tb <- root_block.tables, t <~ tb.col_types];
-    methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- root_block.methods]);
-    nested_autos_types = union([interface_types(blocks(b, !!), blocks) : v, b <- root_block.nested_blocks]);
-    return memb_vars_types & tables_types & methods_types & nested_autos_types;
-  }
+[NeType] interface_types(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
+  memb_vars_types = [t : v, t <- root_block.state_vars];
+  tables_types = [t : v, tb <- root_block.tables, t <~ tb.col_types];
+  methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- root_block.methods]);
+  nested_autos_types = union([interface_types(blocks(b, !!), blocks) : v, b <- root_block.nested_blocks]);
+  return memb_vars_types & tables_types & methods_types & nested_autos_types;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
+implicit typedefs           : [TypeName -> NeType],
+         input_types_names  : [InterType -> String],
+         output_types_names : [InterType -> String]
+{
   (String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
-    interf_types = interface_types(root_block, blocks);
-    input_types_names, output_types_names, types_decls, types_docs = declared_types(interf_types);
-    types_decls_code = join((("") & d : d <- isort(types_decls)));
-    types_docs = join((("") & d : d <- isort(types_docs)));
-
     let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name:
       dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];
-      let duplicate_names = dup_names, input_types_names = input_types_names, output_types_names = output_types_names:
+      let duplicate_names = dup_names:
         accessors_code, accessors_docs = static_auto_accessors(root_block, blocks);
         class_name = db_class_name;
       ;
@@ -488,7 +490,7 @@ implicit typedefs : [TypeName -> NeType] {
       );
     ;
 
-    class_impl = class_impl & indent_lines(accessors_code) & indent_lines(types_decls_code) & ("}") ;
+    class_impl = class_impl & indent_lines(accessors_code) & ("}") ;
 
     class_docs = (
       "class net.cell_lang.Generated." & class_name & " {",
@@ -499,7 +501,6 @@ implicit typedefs : [TypeName -> NeType] {
       "  void execute(String);" if has_any_updates
     );
     class_docs = class_docs & accessors_docs if accessors_docs != ();
-    class_docs = class_docs & indent_lines(types_docs) if types_docs != [];
     class_docs = (class_docs | "}");
 
     return (class_impl, class_docs);

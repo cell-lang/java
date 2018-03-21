@@ -133,11 +133,14 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType],
   }
 }
 
-  //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-implicit block : ReactBlock, typedefs : [TypeName -> NeType],
-         input_types_names : [InterType -> String], output_types_names : [InterType -> String] {
+implicit block              : ReactBlock,
+         typedefs           : [TypeName -> NeType],
+         input_types_names  : [InterType -> String],
+         output_types_names : [InterType -> String]
+{
   (String*, String*) auto_method_wrapper(MethodId method_id, CompiledMethod method) {
     return ((), ()) if method_id.id?;
     name = safe_name(method_id.symbol, method_id.arity);
@@ -148,21 +151,22 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType],
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit typedefs : [TypeName -> NeType] {
-  [NeType] interface_types(ReactBlock block) {
-    inputs_types = [info.type : id, info <- block.inputs];
-    outputs_types = [info.type : id, info <- block.outputs];
-    methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- block.methods]);
-    return inputs_types & outputs_types & methods_types;
-  }
+[NeType] interface_types(ReactBlock block) {
+  inputs_types = [info.type : id, info <- block.inputs];
+  outputs_types = [info.type : id, info <- block.outputs];
+  methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- block.methods]);
+  return inputs_types & outputs_types & methods_types;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
+implicit
+  typedefs            : [TypeName -> NeType],
+  input_types_names   : [InterType -> String],
+  output_types_names  : [InterType -> String]
+{
   (String*, String*) react_auto_wrapper(ReactBlock block) {
-    interf_types = interface_types(block);
-    input_types_names, output_types_names, types_decls, types_docs = declared_types(interf_types);
-    types_decls_code = join((("") & d : d <- isort(types_decls)));
-    types_docs = join((("") & d : d <- isort(types_docs)));
-
     ord_inputs = block.ord_inputs;
     ord_outputs = (o : o <- block.ord_outputs, not block.inputs(o, *));
 
@@ -187,7 +191,7 @@ implicit typedefs : [TypeName -> NeType] {
     changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
 
     methods = block.methods;
-    let block = block, input_types_names = input_types_names, output_types_names = output_types_names:
+    let block = block:
       input_setters, input_setters_docs = (join(ls) : ls <- unzip((input_setter(i) : i <- ord_inputs)));
       output_getters, output_getters_docs = (join(ls) : ls <- unzip((output_getter(o) : o <- ord_outputs)));
       methods_wrappers, methods_wrappers_docs = (
@@ -239,7 +243,6 @@ implicit typedefs : [TypeName -> NeType] {
     docs = docs & ("", "  // Inputs") & input_setters_docs if input_setters_docs != ();
     docs = docs & ("", "  // Outputs") & output_getters_docs if output_getters_docs != ();
     docs = docs & ("", "  // Methods") & indent_lines(methods_wrappers_docs) if methods_wrappers_docs != ();
-    docs = docs & ("", "  // Types") & indent_lines(types_docs) if types_docs != ();
     docs = (docs | "}");
 
     code = enums_decls & (
@@ -347,7 +350,7 @@ implicit typedefs : [TypeName -> NeType] {
       );
     ;
 
-    code = code & input_setters & output_getters & methods_wrappers & types_decls_code;
+    code = code & input_setters & output_getters & methods_wrappers;
     code = ("public static class " & auto_class_name & " {") & indent_lines(code) & ("}");
 
     return (code, docs);
