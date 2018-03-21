@@ -115,6 +115,7 @@ src/cell/code-gen/name-mangling.cell
 src/cell/code-gen/native-code-gen.cell
 src/cell/code-gen/react-blocks.cell
 src/cell/code-gen/static-blocks.cell
+src/cell/code-gen/reserved-names.cell
 src/cell/code-gen/wrappers.cell
 src/cell/code-gen/wrappers-types-decls.cell
 src/cell/code-gen/wrappers-react.cell
