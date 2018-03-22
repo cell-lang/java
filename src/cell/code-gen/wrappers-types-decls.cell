@@ -8,14 +8,15 @@ implicit typedefs : [TypeName -> NeType] {
   ([InterType -> String], [InterType -> String], [String*], [String*]) declared_types([NeType] types) {
     inter_types = [interface_type(t) : t <- types];
     decl_types = union([types_to_declare(t) : t <- inter_types]);
+
+    child_parent = [c, t : t <- decl_types, c <- children(t)];
+    parents = [c -> [p : p <- child_parent(c, ?)] : c, unused_var <- child_parent];
+
     reserved_names = []; ## IMPLEMENT
     let reserved_names = reserved_names:
       types_names_input  = interface_type_names(decl_types, host_to_cell = true);
       types_names_output = interface_type_names(decl_types, host_to_cell = false);
     ;
-
-    child_parent = [c, t : t <- decl_types, c <- children(t)];
-    parents = [c -> [p : p <- child_parent(c, ?)] : c, unused_var <- child_parent];
 
     let input_types_names = types_names_input, output_types_names = types_names_output, parents = parents:
       input_types_decls  = [t -> type_decl(t, host_to_cell = true)  : t, s <- types_names_input];
@@ -86,10 +87,24 @@ implicit typedefs : [TypeName -> NeType] {
 
 implicit host_to_cell : Bool, reserved_names : [String] {
   [DeclInterType -> String] interface_type_names([DeclInterType] decl_types) {
-    default_type_names = [t -> safe_name(t, nothing) : t <- decl_types];
-    conflicting_types = values(group_by(keys_with_non_unique_values(default_type_names), default_type_names($, !!)));
-    renamed_types = [t -> safe_name(t, just(i)) : ts <- conflicting_types, t @ i <~ isort(ts)];
-    return [t -> lookup(renamed_types, t, default_type_names(t, !!)) : t <- decl_types];
+    type_names = [t -> safe_name(t, nothing) : t <- decl_types];
+    loop
+      conflicts = non_injective_keys_by_value(type_names);
+      break if conflicts == [];
+      renamed_types = [t -> safe_name(t, just(i)) : ts <- conflicts, t @ i <~ isort(ts)];
+      type_names = [t -> lookup(renamed_types, t, type_names(t, !!)) : t <- decl_types];
+
+      ## THIS IS JUST A CHECK THAT HAS TO BE REMOVED
+      assert {
+        rem_conflicts = non_injective_keys_by_value(type_names);
+        if rem_conflicts != []:
+          print "Found conflict after first iteraction of renaming:";
+          print rem_conflicts;
+        ;
+        return true;
+      };
+    ;
+    return type_names;
   }
 
 
@@ -296,12 +311,15 @@ InterType strip_tags(InterType type) =
 
 [V] duplicate_values([K -> V] map) = duplicates((v : unused_var, v <- isort(map)));
 
-[K] keys_with_non_unique_values([K -> V] map) {
+[K] non_injective_keys([K -> V] map) {
   dup_vals = duplicate_values(map);
   return [k : k, v <- map, dup_vals(v)];
 }
 
-[K -> V] remove_keys_with_non_unique_values([K -> V] map) {
-  keys_to_remove = keys_with_non_unique_values(map);
+[K -> V] remove_non_injective_keys([K -> V] map) {
+  keys_to_remove = non_injective_keys(map);
   return [k -> v : k, v <- map, not keys_to_remove(k)];
 }
+
+[[+K]] non_injective_keys_by_value([K -> V] map) =
+  values(group_by(non_injective_keys(map), map($, !!)));
