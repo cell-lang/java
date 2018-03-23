@@ -6,7 +6,7 @@ type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInt
 
 implicit typedefs : [TypeName -> NeType] {
   ([InterType -> String], [InterType -> String], [String*], [String*]) declared_types([NeType] types) {
-    inter_types = [interface_type(t) : t <- types];
+    inter_types = interface_types(types);
     decl_types = union([types_to_declare(t) : t <- inter_types]);
 
     child_parent = [c, t : t <- decl_types, c <- children(t)];
