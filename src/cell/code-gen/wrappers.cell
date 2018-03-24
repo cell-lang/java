@@ -33,6 +33,7 @@ type InterType          = BasicInterType,
                           NamedInterType,
                           UnionInterType;
 
+////////////////////////////////////////////////////////////////////////////////
 
 NeType internal_type(AtomicInterType) =
   bool        = type_bool,
@@ -42,7 +43,7 @@ NeType internal_type(AtomicInterType) =
   string      = type_string;
 
 
-implicit input_types_names : [InterType -> String] {
+implicit input_types_names : [InterType -> String], named_type_import_function : [NamedInterType -> String] {
   String input_arg_type(InterType it) =
     bool              = "boolean",
     integer           = "long",
@@ -50,7 +51,7 @@ implicit input_types_names : [InterType -> String] {
     tuple()           |
     record()          |
     union()           = input_types_names(it, !!),
-    named(n?, t?)     = if input_types_names(it, *) then input_types_names(it, !!) else input_arg_type(t),
+    named(n?)         = lookup(input_types_names, it, "String"),
     seq(t?)           |
     set(t?)           = input_arg_type(t) & "[]",
     bin_rel(t1?, t2?) = "Pair<" & input_arg_type(t1) & "[], " & input_arg_type(t2) & "[]>",
@@ -70,7 +71,7 @@ implicit input_types_names : [InterType -> String] {
     symbol(s?)              = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
     tuple(ts?)              = tuple_import_code(ts, expr, action_prefix),
     record(fs?)             = record_import_code(fs, expr, action_prefix),
-    named(_, t?)            = import_code(t, expr, action_prefix),
+    named()                 = named_type_import_code(it, expr, action_prefix),
     union(ts?)              = type_union_import_code(ts, expr, action_prefix),
     seq(t?)                 = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
     set(t?)                 = array_import_code(t, expr, action_prefix, "Builder.createSet"),
@@ -79,6 +80,12 @@ implicit input_types_names : [InterType -> String] {
     tagged(_, generic)      = import_code(:generic, expr, action_prefix),
     tagged(s?, t?)          = tagged_value_import_code(s, t, expr, action_prefix),
     generic                 = (action_prefix & "Conversions.convertText(" & expr & ");");
+
+
+  String* named_type_import_code(NamedInterType inter_type, String expr, String action_prefix) =
+    if named_type_import_function(inter_type, *)
+      then (action_prefix & named_type_import_function(inter_type, !!) & "(" & expr & ");")
+      else import_code(:generic, expr, action_prefix);
 
 
   String* type_union_import_code([+UnionAltInterType] types, String expr, String action_prefix) {
@@ -227,7 +234,7 @@ implicit input_types_names : [InterType -> String] {
 }
 
 
-implicit output_types_names : [InterType -> String] {
+implicit output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String] {
   String return_value_type(InterType it) =
     bool          = "boolean",
     integer       = "long",
@@ -237,7 +244,7 @@ implicit output_types_names : [InterType -> String] {
     tuple()       |
     record()      |
     union()       = output_types_names(it, !!),
-    named(n?, t?) = if output_types_names(it, *) then output_types_names(it, !!) else return_value_type(t),
+    named()       = lookup(output_types_names, it, "Value"),
     seq(t?)       |
     set(t?)       = return_value_type(t) & "[]",
     bin_rel(ts?)  = "Pair<" & append((return_value_type(t) & "[]" : t <- ts), ", ") & ">",
@@ -324,16 +331,10 @@ implicit output_types_names : [InterType -> String] {
   }
 
 
-  String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) {
-    actual_type = match (inter_type) named(_, t?) = t;
-    return match (actual_type)
-      tuple(ts?)  = tuple_export_code(ts, output_types_names(inter_type, !!), expr, action_prefix),
-      record(fs?) = record_export_code(fs, output_types_names(inter_type, !!), expr, action_prefix),
-      union(ts?)  = type_union_export_code(ts, expr, action_prefix),
-      tagged()    = if output_types_names(inter_type, *)
-        then tagged_value_export_code(actual_type, output_types_names(inter_type, !!), expr, action_prefix)
-        else export_code(actual_type, expr, action_prefix);
-  }
+  String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) =
+    if named_type_export_function(inter_type, *)
+      then (action_prefix & named_type_export_function(inter_type, !!) & "(" & expr & ");")
+      else export_code(:generic, expr, action_prefix);
 
 
   String* tagged_value_export_code(TaggedInterType tagged_type, String type_name, String expr, String action_prefix) {
@@ -491,54 +492,63 @@ implicit output_types_names : [InterType -> String] {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-[TypeSymbol] reachable_type_symbols([NeType] types) {
-  type_symbs = [ts : t <- types, ts <- retrieve_type_symbs(t), type_symbol(_) ?= ts];
-  loop
-    nested_type_symbs = [
-      nts : ts <- type_symbs,
-            t = expand_type_ref(ts, typedefs),
-            nts <- retrieve_type_symbs(t),
-            type_symbol(_) ?= nts
-    ];
-
-    new_type_symbs = nested_type_symbs - type_symbs;
-    return type_symbs if new_type_symbs == [];
-    type_symbs = type_symbs & new_type_symbs;
-  ;
-}
-
-
 implicit typedefs : [TypeName -> NeType] {
-  ([InterType], [TypeSymbol -> NamebleInterType]) interface_types([NeType] types) {
-    type_symbs = reachable_type_symbols(types);
+  [NamedInterType -> NameableInterType] named_interface_types([NeType] types) {
+    // Creating all the required interface types
+    inter_types = [interface_type(t) : t <- types];
 
-    inter_types = [
-      match (t)
-        type_ref(type_symbol() ts?) = type_ref_interface_type(ts),
-        _                           = interface_type(t)
-      : t <- types
+    // Retrieving all type symbols that are referenced either directly or indirectly
+    type_symbs = reachable_type_symbols(inter_types);
+
+    // Mapping each type name to its corresponding interface type
+    inter_type_defs = [
+      ts -> interface_type(expand_top_level_type_refs(cast_ne_type(expand_type_ref(ts, typedefs))))
+      : ts <- type_symbs
     ];
 
-    loop
-      accounted_for_type_names = [ts : t <- inter_types, named(ts?, _) ?= t];
-      nested_type_names = [nt : t <- inter_types, nt <- nested_named_type_symbols(t)];
-      missing_type_names = nested_type_names - accounted_for_type_names;
-      break if missing_type_names == [];
-      missing_inter_types = [type_ref_interface_type(t) : t <- missing_type_names];
-      inter_types = inter_types & missing_inter_types;
-    ;
-
-    return inter_types;
-
-
-    InterType type_ref_interface_type(<type_symbol(Symbol)> type_symb) {
-      exp_type = expand_type_ref(type_symb, typedefs);
-      return :generic if exp_type == empty_type; ## NOT SURE ABOUT THIS...
-      inter_type = interface_type(exp_type);
-      inter_type = :named(type_symb, inter_type) if inter_type :: NameableInterType;
-      return inter_type;
-    }
+    // Filtering out the type symbols that do not correspond to a nameable type
+    return [:named(ts) -> t : ts, t <- inter_type_defs, t :: NameableInterType];
   }
+
+
+  [TypeSymbol] reachable_type_symbols([InterType] inter_types) {
+    type_symbs = [ts : t <- inter_types, ts <- nested_type_symbols(t)];
+    loop
+      nested_type_symbs = [
+        nts : ts <- type_symbs,
+              t = cast_ne_type(expand_type_ref(ts, typedefs)),
+              it = interface_type(t),
+              nts <- nested_type_symbols(it)
+      ];
+
+      new_type_symbs = nested_type_symbs - type_symbs;
+      return type_symbs if new_type_symbs == [];
+      type_symbs = type_symbs & new_type_symbs;
+    ;
+  }
+
+
+  NeType expand_top_level_type_refs(NeType type) =
+    symb_type()         |
+    atom_type           |
+    integer             |
+    low_ints()          |
+    high_ints()         |
+    int_range()         |
+    float_type          |
+    empty_seq_type      |
+    empty_rel_type      |
+    type_var()          |
+    ne_seq_type()       |
+    ne_set_type()       |
+    ne_map_type()       |
+    ne_bin_rel_type()   |
+    ne_tern_rel_type()  |
+    ne_record_type()    |
+    tuple_type()        |
+    tag_obj_type()      = type,
+    type_ref(ts?)       = expand_top_level_type_refs(cast_ne_type(expand_type_ref(ts, typedefs))),
+    union_type(ts?)     = ne_union_type([expand_top_level_type_refs(t) : t <- ts]);
 
 
   InterType interface_type(NeType type) {
@@ -546,18 +556,14 @@ implicit typedefs : [TypeName -> NeType] {
       return it if is_subset(type, internal_type(it));
     ;
 
-    // maybe_type_name = match (type)
-    //   type_ref(type_symbol(s?))   = just(s),
-    //   _                           = nothing;
-
     maybe_types = maybe_tuple_type_fields(type);
     if maybe_types != nothing:
       types = value(maybe_types);
       size = |types|;
       if size >= 2 and size <= 8:
-        inter_type = :tuple((interface_type(t) : t <- types));
-        // inter_type = :named(value(maybe_type_name), inter_type) if maybe_type_name != nothing;
-        return inter_type;
+        return if type :: TypeRef
+          then :named(match (type) type_ref(ts?) = ts)
+          else :tuple((interface_type(t) : t <- types));
       ;
     ;
 
@@ -575,9 +581,9 @@ implicit typedefs : [TypeName -> NeType] {
     if maybe_fields != nothing:
       types = value(maybe_fields);
       if not (l, info <- types : info.optional):
-        inter_type = :record([untag(l) -> interface_type(info.type) : l, info <- types]);
-        // inter_type = :named(value(maybe_type_name), inter_type) if maybe_type_name != nothing;
-        return inter_type;
+        return if type :: TypeRef
+          then :named(match (type) type_ref(ts?) = ts)
+          else :record([untag(l) -> interface_type(info.type) : l, info <- types]);
       ;
     ;
 
@@ -597,21 +603,21 @@ implicit typedefs : [TypeName -> NeType] {
         obj_type = untagged_objs_supertype(type);
         assert obj_type != empty_type; ## WHY THIS?
         if obj_type != empty_type:
-          inter_type = :tagged(untag(only_symb(tag_type)), interface_type(obj_type));
-          // if maybe_type_name != nothing and inter_type :: NameableInterType:
-          //   inter_type = :named(value(maybe_type_name), inter_type);
-          // ;
-          return inter_type;
+          return if type :: TypeRef
+            then :named(match (type) type_ref(ts?) = ts)
+            else :tagged(untag(only_symb(tag_type)), interface_type(obj_type));
         ;
       ;
     ;
 
-    maybe_union_type = match (type)
-      union_type(ts?) = union_intertype(ts),
-      _               = nothing;
-    return value(maybe_union_type) if maybe_union_type != nothing;
+    if type :: UnionType:
+      maybe_union_inter_type = union_intertype(match (type) union_type(ts?) = ts);
+      return value(maybe_union_inter_type) if maybe_union_inter_type != nothing;
+    ;
 
     return :symbol if is_subset(type, internal_type(:symbol));
+
+    return :named(match (type) type_ref(ts?) = ts) if type :: TypeRef;
 
     return :generic;
   }
@@ -619,9 +625,9 @@ implicit typedefs : [TypeName -> NeType] {
 
   Maybe[UnionInterType] union_intertype([+NeType] types) {
     inter_types = [
-        if is_symb_singl_type(t)
-          then :symbol(untag(only_symb(t)))
-          else interface_type(t)
+      if is_symb_singl_type(t)
+        then :symbol(untag(only_symb(t)))
+        else interface_type(t)
       : t <- types
     ];
 
@@ -634,7 +640,7 @@ implicit typedefs : [TypeName -> NeType] {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-[Symbol] nested_named_type_symbols(InterType inter_type) =
+[TypeSymbol] nested_type_symbols(InterType inter_type) =
   bool            |
   integer         |
   float           |
@@ -642,11 +648,11 @@ implicit typedefs : [TypeName -> NeType] {
   string          |
   generic         |
   symbol()        = [],
-  tuple(ts?)      = [s : t <~ ts, s <- nested_named_type_symbols(t)],
-  record(fs?)     = [s : unused_var, t <- fs, s <- nested_named_type_symbols(t)],
-  named(s?, t?)   = [s] & nested_named_type_symbols(t),
+  tuple(ts?)      = [s : t <~ ts, s <- nested_type_symbols(t)],
+  record(fs?)     = [s : unused_var, t <- fs, s <- nested_type_symbols(t)],
+  named(s?)       = [s],
   tagged(_, t?)   |
   seq(t?)         |
-  set(t?)         = nested_named_type_symbols(t),
+  set(t?)         = nested_type_symbols(t),
   bin_rel(ts?)    |
-  tern_rel(ts?)   = [s : t <~ ts, s <- nested_named_type_symbols(t)];
+  tern_rel(ts?)   = [s : t <~ ts, s <- nested_type_symbols(t)];

@@ -1,15 +1,19 @@
-type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], NamedInterType;
+type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], named(type_symbol(Symbol));
 
 type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType, UnionInterType,
                       TaggedInterType[UnionableInterType];
 
 
 implicit typedefs : [TypeName -> NeType] {
-  ([InterType -> String], [InterType -> String], [String*], [String*]) declared_types([NeType] types) {
-    inter_types = interface_types(types);
+  ( [InterType -> String], [InterType -> String],
+    [NamedInterType -> String], [NamedInterType -> String],
+    [String*], [String*]
+  ) declared_types([NeType] types) {
+    named_types = named_interface_types(types);
+    inter_types = [interface_type(t) : t <- types] & values(named_types);
     decl_types = union([types_to_declare(t) : t <- inter_types]);
 
-    child_parent = [c, t : t <- decl_types, c <- children(t)];
+    child_parent = [c, t : t <- decl_types, c <- children(t, named_types)];
     parents = [c -> [p : p <- child_parent(c, ?)] : c, unused_var <- child_parent];
 
     reserved_names = []; ## IMPLEMENT
@@ -18,7 +22,12 @@ implicit typedefs : [TypeName -> NeType] {
       types_names_output = interface_type_names(decl_types, host_to_cell = false);
     ;
 
-    let input_types_names = types_names_input, output_types_names = types_names_output, parents = parents:
+    named_type_import_function = [n -> "import" & types_names_input(n, !!)  : n, unused_var <- named_types];
+    named_type_export_function = [n -> "export" & types_names_output(n, !!) : n, unused_var <- named_types];
+
+    let input_types_names = types_names_input, named_type_import_function = named_type_import_function,
+        output_types_names = types_names_output, named_type_export_function = named_type_export_function,
+        parents = parents:
       input_types_decls  = [t -> type_decl(t, host_to_cell = true)  : t, s <- types_names_input];
       output_types_decls = [t -> type_decl(t, host_to_cell = false) : t, s <- types_names_output];
     ;
@@ -39,13 +48,18 @@ implicit typedefs : [TypeName -> NeType] {
       let reserved_names = reserved_names:
         types_names_output = interface_type_names(decl_types, host_to_cell = false);
       ;
-      let input_types_names = types_names_input, output_types_names = types_names_output,
+      named_type_export_function = [n -> types_names_output(n, !!) : n, unused_var <- named_types];
+
+      let input_types_names = types_names_input, named_type_import_function = named_type_import_function,
+          output_types_names = types_names_output, named_type_export_function = named_type_export_function,
           parents = parents, host_to_cell = false:
         output_types_decls = [t -> type_decl(t) : t, s <- types_names_output];
       ;
     ;
 
-    let input_types_names = types_names_input, output_types_names = types_names_output, parents = parents:
+    let input_types_names = types_names_input, named_type_import_function = named_type_import_function,
+        output_types_names = types_names_output, named_type_export_function = named_type_export_function,
+        parents = parents:
       input_types_docs  = [t -> type_docs(t, host_to_cell = true)  : t, s <- types_names_input];
       output_types_docs = [t -> type_docs(t, host_to_cell = false) : t, s <- types_names_output];
     ;
@@ -53,14 +67,19 @@ implicit typedefs : [TypeName -> NeType] {
     type_decls = values(input_types_decls) & values(output_types_decls);
     type_docs  = values(input_types_docs)  & values(output_types_docs);
 
-    return (types_names_input, types_names_output, type_decls, type_docs);
+    return (
+      types_names_input, types_names_output,
+      named_type_import_function, named_type_export_function,
+      type_decls, type_docs
+    );
   }
 
 
-  [UnionAltInterType] children(<DeclInterType, NameableInterType> type) =
-    union(ts?)    = ts,
-    named(_, t?)  = children(t),
-    _             = [];
+  [UnionAltInterType] children(<DeclInterType, NameableInterType> type,
+      [NamedInterType -> NameableInterType] named_types) =
+    union(ts?)  = ts,
+    named(_)    = if named_types(type, *) then children(named_types(type, !!), named_types) else [],
+    _           = [];
 
 
   [DeclInterType] types_to_declare(InterType inter_type) =
@@ -78,7 +97,7 @@ implicit typedefs : [TypeName -> NeType] {
     bin_rel(ts?)    |
     tern_rel(ts?)   = union([types_to_declare(t) : t <~ ts]),
     tagged(_, t?)   = types_to_declare(t),
-    named(_, rt?)   = [inter_type] & #([t : t <- types_to_declare(rt)] - [strip_tags(rt)]),
+    named()         = [inter_type],
     union(ts?)      = [inter_type] & ts & #(union([types_to_declare(t) : t <- ts]) - [strip_tags(t) : t <- ts]);
 }
 
@@ -124,7 +143,7 @@ implicit host_to_cell : Bool, reserved_names : [String] {
       string              = "String",
       generic             |
       tagged(_, generic)  = if host_to_cell then "String" else "Value",
-      named(s?, _)        = upper_camel_case(s);
+      named(ts?)          = upper_camel_case(match(ts) type_symbol(s?) = s);
   }
 
 
@@ -145,7 +164,7 @@ implicit host_to_cell : Bool, reserved_names : [String] {
 
   String safe_name(NamedInterType type, Maybe[Nat] unique_id) {
     suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    type_symb = match (type) named(s?, _) = s;
+    type_symb = match (type) named(s?) = s;
     return non_reserved_name(upper_camel_case(type_symb) & suffix);
   }
 
@@ -176,7 +195,10 @@ implicit host_to_cell : Bool, reserved_names : [String] {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit input_types_names : [InterType -> String], output_types_names : [InterType -> String],
-         host_to_cell : Bool, parents : [InterType -> [InterType]] {
+         named_type_import_function : [NamedInterType -> String],
+         named_type_export_function : [NamedInterType -> String],
+         host_to_cell : Bool, parents : [InterType -> [InterType]]
+{
   String* type_decl(DeclInterType type) = type_decl(type, false, root_type = type);
 
   String* type_docs(DeclInterType type) = type_decl(type, true, root_type = type);
@@ -184,6 +206,8 @@ implicit input_types_names : [InterType -> String], output_types_names : [InterT
 
 
 implicit input_types_names : [InterType -> String], output_types_names : [InterType -> String],
+         named_type_import_function : [NamedInterType -> String],
+         named_type_export_function : [NamedInterType -> String],
          host_to_cell : Bool, parents : [InterType -> [InterType]], root_type : DeclInterType
 {
   String* type_decl(TupleInterType type, Bool doc_only) {
