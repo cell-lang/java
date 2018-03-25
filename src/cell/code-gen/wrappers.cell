@@ -43,7 +43,7 @@ NeType internal_type(AtomicInterType) =
   string      = type_string;
 
 
-implicit input_types_names : [InterType -> String], named_type_import_function : [NamedInterType -> String] {
+implicit input_types_names : [InterType -> String] {
   String input_arg_type(InterType it) =
     bool              = "boolean",
     integer           = "long",
@@ -60,8 +60,10 @@ implicit input_types_names : [InterType -> String], named_type_import_function :
     symbol            |
     string            |
     generic           = "String";
+}
 
 
+implicit input_types_names : [InterType -> String], named_type_import_function : [NamedInterType -> String] {
   String* import_code(InterType it, String expr, String action_prefix) =
     bool                    = (action_prefix & "SymbObj.get(" & expr & ");"),
     integer                 = (action_prefix & "IntObj.get(" & expr & ");"),
@@ -234,7 +236,7 @@ implicit input_types_names : [InterType -> String], named_type_import_function :
 }
 
 
-implicit output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String] {
+implicit output_types_names : [InterType -> String] {
   String return_value_type(InterType it) =
     bool          = "boolean",
     integer       = "long",
@@ -251,8 +253,10 @@ implicit output_types_names : [InterType -> String], named_type_export_function 
     tern_rel(ts?) = "Triplet<" & append((return_value_type(t) & "[]" : t <- ts), ", ") & ">",
     tagged(_, t?) = if t != :generic then return_value_type(t) else return_value_type(:generic),
     generic       = "Value";
+}
 
 
+implicit output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String] {
   String* export_code(InterType it, String expr, String action_prefix) =
     bool                = (action_prefix & expr & ".getBool();"),
     integer             = (action_prefix & expr & ".getLong();"),
@@ -493,24 +497,6 @@ implicit output_types_names : [InterType -> String], named_type_export_function 
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit typedefs : [TypeName -> NeType] {
-  [NamedInterType -> NameableInterType] named_interface_types([NeType] types) {
-    // Creating all the required interface types
-    inter_types = [interface_type(t) : t <- types];
-
-    // Retrieving all type symbols that are referenced either directly or indirectly
-    type_symbs = reachable_type_symbols(inter_types);
-
-    // Mapping each type name to its corresponding interface type
-    inter_type_defs = [
-      ts -> interface_type(expand_top_level_type_refs(cast_ne_type(expand_type_ref(ts, typedefs))))
-      : ts <- type_symbs
-    ];
-
-    // Filtering out the type symbols that do not correspond to a nameable type
-    return [:named(ts) -> t : ts, t <- inter_type_defs, t :: NameableInterType];
-  }
-
-
   [TypeSymbol] reachable_type_symbols([InterType] inter_types) {
     type_symbs = [ts : t <- inter_types, ts <- nested_type_symbols(t)];
     loop

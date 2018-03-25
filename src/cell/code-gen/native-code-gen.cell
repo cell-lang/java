@@ -79,15 +79,15 @@
   inter_types = [t : b <- prg.react_blocks, t <- interface_types(b)] &
                 [t : b <- prg.static_blocks, t <- interface_types(b, static_blocks_map)];
 
-  input_types_names, output_types_names,
-  named_type_import_function, named_type_export_function,
-  inter_types_decls, inter_types_docs =
-    declared_types(inter_types, typedefs = prg.typedefs);
+  // input_types_names, output_types_names,
+  // named_type_import_function, named_type_export_function,
+  //   declared_types(inter_types, typedefs = prg.typedefs);
+
+  inter_types_decls = undefined;
+  inter_types_docs = undefined;
 
   let typedefs = prg.typedefs,
-      input_types_names = input_types_names, output_types_names = output_types_names,
-      named_type_import_function = named_type_import_function,
-      named_type_export_function = named_type_export_function:
+      input_types_names = [], output_types_names = [], named_type_import_function = [], named_type_export_function = []:
     auto_wrappers, auto_wrappers_docs = unzip(isort([react_auto_wrapper(b) : b <- prg.react_blocks]));
     db_wrappers, db_wrappers_docs = unzip((static_auto_wrapper(b, static_blocks_map) : b <- ord_static_blocks));
   ;
