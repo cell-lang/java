@@ -43,27 +43,51 @@ NeType internal_type(AtomicInterType) =
   string      = type_string;
 
 
-implicit input_types_names : [InterType -> String] {
+
+
+String return_value_type(InterType it, [InterType -> String] types_names) =
+  bool            = "boolean",
+  integer         = "long",
+  float           = "double",
+  symbol          = "String",
+  string          = "String",
+  tuple()         |
+  record()        |
+  union()         = types_names(it, !!),
+  named()         = lookup(types_names, it, "Value"),
+  seq(t?)         |
+  set(t?)         = return_value_type(t, types_names) & "[]",
+  bin_rel(ts?)    = "Pair<" & append((return_value_type(t, types_names) & "[]" : t <- ts), ", ") & ">",
+  tern_rel(ts?)   = "Triplet<" & append((return_value_type(t, types_names) & "[]" : t <- ts), ", ") & ">",
+  tagged(_, t?)   = return_value_type(t, types_names),
+  generic         = "Value";
+
+
+implicit prg : CompiledPrg {
   String input_arg_type(InterType it) =
-    bool              = "boolean",
-    integer           = "long",
-    float             = "double",
-    tuple()           |
-    record()          |
-    union()           = input_types_names(it, !!),
-    named(n?)         = lookup(input_types_names, it, "String"),
-    seq(t?)           |
-    set(t?)           = input_arg_type(t) & "[]",
-    bin_rel(t1?, t2?) = "Pair<" & input_arg_type(t1) & "[], " & input_arg_type(t2) & "[]>",
-    tern_rel(ts?)     = "Triplet<" & append((input_arg_type(t) & "[]" : t <- ts), ", ") & ">",
-    tagged(_, t?)     = input_arg_type(t),
-    symbol            |
-    string            |
-    generic           = "String";
+    bool            = "boolean",
+    integer         = "long",
+    float           = "double",
+    tuple()         |
+    record()        |
+    union()         = input_types_names(it, !!),
+    named(n?)       = lookup(input_types_names, it, "String"),
+    seq(t?)         |
+    set(t?)         = input_arg_type(t) & "[]",
+    bin_rel(ts?)    = "Pair<" & append((input_arg_type(t) & "[]" : t <- ts), ", ") & ">",
+    tern_rel(ts?)   = "Triplet<" & append((input_arg_type(t) & "[]" : t <- ts), ", ") & ">",
+    tagged(_, t?)   = input_arg_type(t),
+    symbol          |
+    string          |
+    generic         = "String";
+
+
+  String return_value_type(InterType it) = return_value_type(it, output_types_names);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-implicit input_types_names : [InterType -> String], named_type_import_function : [NamedInterType -> String] {
+implicit prg : CompiledPrg {
   String* import_code(InterType it, String expr, String action_prefix) =
     bool                    = (action_prefix & "SymbObj.get(" & expr & ");"),
     integer                 = (action_prefix & "IntObj.get(" & expr & ");"),
@@ -85,8 +109,8 @@ implicit input_types_names : [InterType -> String], named_type_import_function :
 
 
   String* named_type_import_code(NamedInterType inter_type, String expr, String action_prefix) =
-    if named_type_import_function(inter_type, *)
-      then (action_prefix & named_type_import_function(inter_type, !!) & "(" & expr & ");")
+    if in(inter_type, declared_types)
+      then (action_prefix & decl_type_import_function(inter_type) & "(" & expr & ");")
       else import_code(:generic, expr, action_prefix);
 
 
@@ -236,27 +260,7 @@ implicit input_types_names : [InterType -> String], named_type_import_function :
 }
 
 
-implicit output_types_names : [InterType -> String] {
-  String return_value_type(InterType it) =
-    bool          = "boolean",
-    integer       = "long",
-    float         = "double",
-    symbol        = "String",
-    string        = "String",
-    tuple()       |
-    record()      |
-    union()       = output_types_names(it, !!),
-    named()       = lookup(output_types_names, it, "Value"),
-    seq(t?)       |
-    set(t?)       = return_value_type(t) & "[]",
-    bin_rel(ts?)  = "Pair<" & append((return_value_type(t) & "[]" : t <- ts), ", ") & ">",
-    tern_rel(ts?) = "Triplet<" & append((return_value_type(t) & "[]" : t <- ts), ", ") & ">",
-    tagged(_, t?) = if t != :generic then return_value_type(t) else return_value_type(:generic),
-    generic       = "Value";
-}
-
-
-implicit output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String] {
+implicit prg : CompiledPrg {
   String* export_code(InterType it, String expr, String action_prefix) =
     bool                = (action_prefix & expr & ".getBool();"),
     integer             = (action_prefix & expr & ".getLong();"),
@@ -336,8 +340,8 @@ implicit output_types_names : [InterType -> String], named_type_export_function 
 
 
   String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) =
-    if named_type_export_function(inter_type, *)
-      then (action_prefix & named_type_export_function(inter_type, !!) & "(" & expr & ");")
+    if in(inter_type, declared_types)
+      then (action_prefix & decl_type_export_function(inter_type) & "(" & expr & ");")
       else export_code(:generic, expr, action_prefix);
 
 
@@ -636,6 +640,7 @@ implicit typedefs : [TypeName -> NeType] {
   symbol()        = [],
   tuple(ts?)      = [s : t <~ ts, s <- nested_type_symbols(t)],
   record(fs?)     = [s : unused_var, t <- fs, s <- nested_type_symbols(t)],
+  union(ts?)      = [s : t <- ts, s <- nested_type_symbols(t)],
   named(s?)       = [s],
   tagged(_, t?)   |
   seq(t?)         |

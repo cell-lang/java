@@ -81,10 +81,13 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*,
 }
 
 
-implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol,
-         duplicate_names : [String, Nat], typedefs : [TypeName -> NeType],
-         input_types_names  : [InterType -> String], named_type_import_function : [NamedInterType -> String],
-         output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String] {
+implicit
+  prg             : CompiledPrg,
+  typedefs        : [TypeName -> NeType], ## REMOVE IT IF POSSIBLE. IT'S REDUNDANT
+  block_name      : DBSymbol,
+  db_var_chain    : NestedDBVar*,
+  root_block_name : DBSymbol,
+  duplicate_names : [String, Nat] {
 
   (String*, String*) state_var_accessor(MembVar var, NeType var_type) {
     inter_type = interface_type(var_type);
@@ -427,10 +430,7 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit typedefs           : [TypeName -> NeType],
-         input_types_names  : [InterType -> String], named_type_import_function : [NamedInterType -> String],
-         output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String]
-{
+implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   (String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
     let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name:
       dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];

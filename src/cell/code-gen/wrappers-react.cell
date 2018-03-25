@@ -79,10 +79,7 @@ implicit block : ReactBlock {
 }
 
 
-implicit block : ReactBlock, typedefs : [TypeName -> NeType],
-         input_types_names  : [InterType -> String], named_type_import_function : [NamedInterType -> String],
-         output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String] {
-
+implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] {
   (String*, String*) input_setter(Atom id) {
     type = block.inputs[id].type;
     inter_type = interface_type(type);
@@ -138,10 +135,7 @@ implicit block : ReactBlock, typedefs : [TypeName -> NeType],
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit block              : ReactBlock,
-         typedefs           : [TypeName -> NeType],
-         input_types_names  : [InterType -> String], named_type_import_function : [NamedInterType -> String],
-         output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String] {
+implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] {
   (String*, String*) auto_method_wrapper(MethodId method_id, CompiledMethod method) {
     return ((), ()) if method_id.id?;
     name = safe_name(method_id.symbol, method_id.arity);
@@ -162,11 +156,7 @@ implicit block              : ReactBlock,
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit
-  typedefs            : [TypeName -> NeType],
-  input_types_names  : [InterType -> String], named_type_import_function : [NamedInterType -> String],
-  output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String]
-{
+implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   (String*, String*) react_auto_wrapper(ReactBlock block) {
     ord_inputs = block.ord_inputs;
     ord_outputs = (o : o <- block.ord_outputs, not block.inputs(o, *));
@@ -362,9 +352,7 @@ implicit
 /////////////// Code shared between static and reactive automata ///////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit typedefs : [TypeName -> NeType],
-         input_types_names  : [InterType -> String], named_type_import_function : [NamedInterType -> String],
-         output_types_names : [InterType -> String], named_type_export_function : [NamedInterType -> String] {
+implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   (String*, String*) method_wrapper(MethodId method_id, CompiledMethod method,
     <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name, String method_path) {
     args_inter_types = (interface_type(t) : t <- method.args_types);

@@ -1,5 +1,7 @@
 type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], named(type_symbol(Symbol));
 
+## AT THE MOMENT DeclInterType DOESN'T SEEM TO BE A SUPERSET OF NameableInterType,
+## BUT EVERYTHING COMPILES JUST FINE. ISN'T THAT WEIRD?
 type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType, UnionInterType,
                       TaggedInterType[UnionableInterType];
 
@@ -349,8 +351,8 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
   String* type_decl_or_doc(TupleInterType type) {
     types = match (direction)
-      in  = (input_arg_type(t, input_types_names = types_names) : t @ i <- untag(type)),
-      out = (return_value_type(t, output_types_names = types_names) : t @ i <- untag(type));
+      in  = (input_arg_type(t) : t @ i <- untag(type)),
+      out = (return_value_type(t, types_names) : t @ i <- untag(type));
     max_len = max((length(t) : t <- types));
     spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
     body = ("  public " & t & spaces(i) & " item" & printed(i) & ";" : t @ i <- types);
@@ -361,8 +363,8 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
   String* type_decl_or_doc(RecordInterType type) {
     fields = match (direction)
-      in  = [l -> input_arg_type(t, input_types_names = types_names) : l, t <- untag(type)];
-      out = [l -> return_value_type(t, output_types_names = types_names) : l, t <- untag(type)];
+      in  = [l -> input_arg_type(t) : l, t <- untag(type)];
+      out = [l -> return_value_type(t, types_names) : l, t <- untag(type)];
     field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
     max_len = max([length(t) : unused_var, t <- fields]);
     body = ({

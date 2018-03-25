@@ -75,24 +75,15 @@
   );
 
   static_blocks_map = [b.name -> b : b <- prg.static_blocks];
-
-  inter_types = [t : b <- prg.react_blocks, t <- interface_types(b)] &
-                [t : b <- prg.static_blocks, t <- interface_types(b, static_blocks_map)];
-
-  // input_types_names, output_types_names,
-  // named_type_import_function, named_type_export_function,
-  //   declared_types(inter_types, typedefs = prg.typedefs);
-
-  inter_types_decls = undefined;
-  inter_types_docs = undefined;
-
-  let typedefs = prg.typedefs,
-      input_types_names = [], output_types_names = [], named_type_import_function = [], named_type_export_function = []:
-    auto_wrappers, auto_wrappers_docs = unzip(isort([react_auto_wrapper(b) : b <- prg.react_blocks]));
+  let prg = prg, typedefs = prg.typedefs:
+    auto_wrappers, auto_wrappers_docs = unzip((react_auto_wrapper(b) : b <- ord_react_blocks));
     db_wrappers, db_wrappers_docs = unzip((static_auto_wrapper(b, static_blocks_map) : b <- ord_static_blocks));
+    inter_types_decls = interface_types_decls;
+    inter_types_docs = interface_types_docs;
   ;
-  wrappers_docs = join(intermix(auto_wrappers_docs & db_wrappers_docs & isort(inter_types_docs), ("", "")));
+
   wrappers = join(intermix(auto_wrappers & db_wrappers & isort(inter_types_decls), ("", "")));
+  wrappers_docs = join(intermix(auto_wrappers_docs & db_wrappers_docs & isort(inter_types_docs), ("", "")));
 
   has_automata = prg.react_blocks != [] or prg.static_blocks != [];
 
