@@ -593,9 +593,12 @@ implicit typedefs : [TypeName -> NeType] {
         obj_type = untagged_objs_supertype(type);
         assert obj_type != empty_type; ## WHY THIS?
         if obj_type != empty_type:
-          return if type :: TypeRef
+          inter_obj_type = interface_type(obj_type);
+          ## CREATE A FUNCTION THAT DECIDES WHETHER A NAMED TYPE SHOULD BE
+          ## DECLARED OR NOT, AND USE IT BOTH HERE AND IN named_interface_types
+          return if type :: TypeRef and inter_obj_type :: NameableInterType
             then :named(match (type) type_ref(ts?) = ts)
-            else :tagged(untag(only_symb(tag_type)), interface_type(obj_type));
+            else :tagged(untag(only_symb(tag_type)), inter_obj_type);
         ;
       ;
     ;

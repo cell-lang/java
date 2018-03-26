@@ -43,7 +43,31 @@ implicit prg : CompiledPrg {
       direct_inter_types = [interface_type(t) : t <- boundary_types];
     ;
     indirect_inter_types = values(named_interface_types);
-    return [t2 : t1 <- direct_inter_types | t1 <- indirect_inter_types, t2 <- types_to_declare(t1)];
+    redundant_types = [t2 : t1 <- direct_inter_types | t1 <- indirect_inter_types, t2 <- types_to_declare(t1)];
+    ## BAD BAD BAD: IS THIS LINE OF CODE ACTUALLY SAFE?
+
+print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- --";
+print "boundary_types";
+print boundary_types;
+print "named_interface_types";
+print named_interface_types;
+print "direct_inter_types";
+print direct_inter_types;
+print "indirect_inter_types";
+print indirect_inter_types;
+print "redundant_types";
+print redundant_types;
+print "[t : t <- redundant_types, t :: NamedInterType]";
+print [t : t <- redundant_types, t :: NamedInterType];
+print "[n : n, d <- named_interface_types]";
+print [n : n, d <- named_interface_types];
+
+    named_types_synonyms = [named_interface_types(t, !!) : t <- redundant_types, t :: NamedInterType];
+
+print "named_types_synonyms";
+print named_types_synonyms;
+
+    return redundant_types - named_types_synonyms;
   }
 
 
@@ -363,7 +387,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
   String* type_decl_or_doc(RecordInterType type) {
     fields = match (direction)
-      in  = [l -> input_arg_type(t) : l, t <- untag(type)];
+      in  = [l -> input_arg_type(t) : l, t <- untag(type)],
       out = [l -> return_value_type(t, types_names) : l, t <- untag(type)];
     field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
     max_len = max([length(t) : unused_var, t <- fields]);

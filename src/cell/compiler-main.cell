@@ -152,24 +152,24 @@ Maybe[(String*, String*)] Compile(
 
   cs_code  = native_code(opt_code, include_runtime, debug_mode);
   t8 = _ticks_(:any_value_will_do);
-  Print("C# code generated\n");
+  Print("Java code generated\n");
   if wait_for_key:
     unused_var = GetChar();
   ;
 
   if print_times:
     Print("\n");
-    Print("Parsing:             " & printed(t1-t0) & "ms\n");
-    Print("Error checking:      " & printed(t2-t1) & "ms\n");
-    Print("Syntax removal:      " & printed(t3-t2) & "ms\n");
-    Print("Additional checks:   " & printed(t4-t3) & "ms\n");
+    Print("Parsing:               " & printed(t1-t0) & "ms\n");
+    Print("Error checking:        " & printed(t2-t1) & "ms\n");
+    Print("Syntax removal:        " & printed(t3-t2) & "ms\n");
+    Print("Additional checks:     " & printed(t4-t3) & "ms\n");
     if run_typechecking:
-      Print("Type checking:       " & printed(t5-t4) & "ms\n");
+      Print("Type checking:         " & printed(t5-t4) & "ms\n");
     ;
-    Print("Code generation:     " & printed(t6-t5) & "ms\n");
-    Print("Code optimization:   " & printed(t7-t6) & "ms\n");
-    Print("C# code generation:  " & printed(t8-t7) & "ms\n");
-    Print("Total time elapsed:  " & printed(t8-t0) & "ms\n");
+    Print("Code generation:       " & printed(t6-t5) & "ms\n");
+    Print("Code optimization:     " & printed(t7-t6) & "ms\n");
+    Print("Java code generation:  " & printed(t8-t7) & "ms\n");
+    Print("Total time elapsed:    " & printed(t8-t0) & "ms\n");
   ;
 
   return just(cs_code);

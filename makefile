@@ -42,6 +42,15 @@ cellc-java: $(SRC-FILES) $(RUNTIME-FILES)
 	cat ../build/src/hacks.cpp >> tmp/cellc-java.cpp
 	g++ -O3 -DNDEBUG tmp/cellc-java.cpp -o cellc-java
 
+cellcd-java: $(SRC-FILES) $(RUNTIME-FILES)
+	cellc projects/compiler-no-runtime.txt
+	../build/bin/ren-fns < generated.cpp > tmp/cellc-java.cpp
+	mv generated.cpp tmp/
+	echo >> tmp/cellc-java.cpp
+	echo >> tmp/cellc-java.cpp
+	cat ../build/src/hacks.cpp >> tmp/cellc-java.cpp
+	g++ -ggdb -DNDEBUG tmp/cellc-java.cpp -o cellcd-java
+
 cellc-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 	# java -jar bin/cellc-java.jar projects/compiler-no-runtime.txt
 	bin/cellc-java projects/compiler-no-runtime.txt
