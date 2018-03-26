@@ -91,24 +91,32 @@ print declared_types;
 // print "[DeclInterType] decl_types_parents(DeclInterType child)";
 print "input_types_names : [DeclInterType -> String]";
 print input_types_names;
-print "input_types_decls : [DeclInterType -> String*]";
-print input_types_decls;
+// print "input_types_decls : [DeclInterType -> String*]";
+// print input_types_decls;
 print "output_types_names : [DeclInterType -> String]";
 print output_types_names;
-print "output_types_decls : [DeclInterType -> String*]";
-print output_types_decls;
-print "input_types_docs : [DeclInterType -> String*]";
-print input_types_docs;
-print "output_types_docs : [DeclInterType -> String*]";
-print output_types_docs;
-print "interface_types_decls : [String*]";
-print interface_types_decls;
-print "interface_types_docs : [String*]";
-print interface_types_docs;
+// print "output_types_decls : [DeclInterType -> String*]";
+// print output_types_decls;
+// print "input_types_docs : [DeclInterType -> String*]";
+// print input_types_docs;
+// print "output_types_docs : [DeclInterType -> String*]";
+// print output_types_docs;
+// print "interface_types_decls : [String*]";
+// print interface_types_decls;
+// print "interface_types_docs : [String*]";
+// print interface_types_docs;
+
+    decl_types_conv_functs = [
+      ("") & decl_type_import_function(t) & ("") & decl_type_export_function(t)
+      : t <- declared_types
+    ];
 
   ;
 
-  wrappers = join(intermix(auto_wrappers & db_wrappers & isort(inter_types_decls), ("", "")));
+  wrappers = join(intermix(
+    auto_wrappers & db_wrappers & isort(inter_types_decls) & isort(decl_types_conv_functs),
+    ("", "")
+  ));
   wrappers_docs = join(intermix(auto_wrappers_docs & db_wrappers_docs & isort(inter_types_docs), ("", "")));
 
   has_automata = prg.react_blocks != [] or prg.static_blocks != [];

@@ -155,88 +155,9 @@ print named_types_synonyms;
 
 
   // Names of the conversion functions for both input and output types
-  String decl_type_import_function(DeclInterType it) = "import" & input_types_names(it, !!);
-  String decl_type_export_function(DeclInterType it) = "export" & output_types_names(it, !!);
+  String decl_type_import_funct_name(DeclInterType it) = "import" & input_types_names(it, !!);
+  String decl_type_export_funct_name(DeclInterType it) = "export" & output_types_names(it, !!);
 }
-
-
-// implicit host_to_cell : Bool, reserved_names : [String] {
-//   ( [InterType -> String], [InterType -> String],
-//     [NamedInterType -> String], [NamedInterType -> String],
-//     [String*], [String*]
-//   ) declared_types([NeType] types) {
-//     named_types = named_interface_types(types);
-//     inter_types = [interface_type(t) : t <- types] & values(named_types);
-//     decl_types = union([types_to_declare(t) : t <- inter_types]);
-
-//     child_parent = [c, t : t <- decl_types, c <- children(t, named_types)];
-//     parents = [c -> [p : p <- child_parent(c, ?)] : c, unused_var <- child_parent];
-
-//     reserved_names = []; ## IMPLEMENT
-//     let reserved_names = reserved_names:
-//       types_names_input  = interface_type_names(decl_types, direction = :in);
-//       types_names_output = interface_type_names(decl_types, direction = :out);
-//     ;
-
-//     named_type_import_function = [n -> "import" & types_names_input(n, !!)  : n, unused_var <- named_types];
-//     named_type_export_function = [n -> "export" & types_names_output(n, !!) : n, unused_var <- named_types];
-
-//     let input_types_names = types_names_input, named_type_import_function = named_type_import_function,
-//         output_types_names = types_names_output, named_type_export_function = named_type_export_function,
-//         parents = parents:
-//       input_types_decls  = [t -> type_decl(t, direction = :in)  : t, s <- types_names_input];
-//       output_types_decls = [t -> type_decl(t, direction = :out) : t, s <- types_names_output];
-//     ;
-
-//     loop
-//       conflicts = union([{
-//           in_name  = types_names_input(t, !!);
-//           out_name = types_names_output(t, !!);
-//           in_decl  = input_types_decls(t, !!);
-//           out_decl = output_types_decls(t, !!);
-//           return [t if in_name == out_name and in_decl != out_decl];
-//         } : t <- decl_types
-//       ]);
-
-//       break if conflicts == [];
-
-//       reserved_names = reserved_names & [types_names_input(t, !!) : t <- conflicts];
-//       let reserved_names = reserved_names:
-//         types_names_output = interface_type_names(decl_types, direction = :out);
-//       ;
-//       named_type_export_function = [n -> types_names_output(n, !!) : n, unused_var <- named_types];
-
-//       let input_types_names = types_names_input, named_type_import_function = named_type_import_function,
-//           output_types_names = types_names_output, named_type_export_function = named_type_export_function,
-//           parents = parents, direction = :out:
-//         output_types_decls = [t -> type_decl(t) : t, s <- types_names_output];
-//       ;
-//     ;
-
-//     let input_types_names = types_names_input, named_type_import_function = named_type_import_function,
-//         output_types_names = types_names_output, named_type_export_function = named_type_export_function,
-//         parents = parents:
-//       input_types_docs  = [t -> type_docs(t, direction = :in)  : t, s <- types_names_input];
-//       output_types_docs = [t -> type_docs(t, direction = :out) : t, s <- types_names_output];
-//     ;
-
-//     type_decls = values(input_types_decls) & values(output_types_decls);
-//     type_docs  = values(input_types_docs)  & values(output_types_docs);
-
-//     return (
-//       types_names_input, types_names_output,
-//       named_type_import_function, named_type_export_function,
-//       type_decls, type_docs
-//     );
-//   }
-
-
-//   [UnionAltInterType] children(<DeclInterType, NameableInterType> type,
-//       [NamedInterType -> NameableInterType] named_types) =
-//     union(ts?)  = ts,
-//     named(_)    = if named_types(type, *) then children(named_types(type, !!), named_types) else [],
-//     _           = [];
-// }
 
 
 [DeclInterType] types_to_declare(InterType inter_type) =
@@ -451,6 +372,31 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+implicit prg : CompiledPrg {
+  String* decl_type_import_function(DeclInterType inter_type) {
+    name = decl_type_import_funct_name(inter_type);
+    native_type = input_types_names(inter_type, !!);
+    // code = import_code(inter_type, "obj", "return ");
+    code = ("throw new RuntimeException();");
+    sign_line = "static Obj " & name & "(" & native_type & " obj) {";
+    return (sign_line) & indent_lines(code) & ("}");
+  }
+
+
+  String* decl_type_export_function(DeclInterType inter_type) {
+    name = decl_type_export_funct_name(inter_type);
+    native_type = output_types_names(inter_type, !!);
+    // code = export_code(inter_type, "obj", "return ");
+    code = ("throw new RuntimeException();");
+    sign_line = "static " & native_type & " " & name & "(Obj obj) {";
+    return (sign_line) & indent_lines(code) & ("}");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 [Symbol -> String] java_adjusted_unambiguous_lower_camel_case_names([Symbol] symbols) {
   nice_field_names = [s -> safe_lower_camel_case(s, false) : s <- symbols];

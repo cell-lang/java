@@ -110,7 +110,7 @@ implicit prg : CompiledPrg {
 
   String* named_type_import_code(NamedInterType inter_type, String expr, String action_prefix) =
     if in(inter_type, declared_types)
-      then (action_prefix & decl_type_import_function(inter_type) & "(" & expr & ");")
+      then (action_prefix & decl_type_import_funct_name(inter_type) & "(" & expr & ");")
       else import_code(:generic, expr, action_prefix);
 
 
@@ -341,7 +341,7 @@ implicit prg : CompiledPrg {
 
   String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) =
     if in(inter_type, declared_types)
-      then (action_prefix & decl_type_export_function(inter_type) & "(" & expr & ");")
+      then (action_prefix & decl_type_export_funct_name(inter_type) & "(" & expr & ");")
       else export_code(:generic, expr, action_prefix);
 
 
@@ -608,9 +608,9 @@ implicit typedefs : [TypeName -> NeType] {
       return value(maybe_union_inter_type) if maybe_union_inter_type != nothing;
     ;
 
-    return :symbol if is_subset(type, internal_type(:symbol));
-
     return :named(match (type) type_ref(ts?) = ts) if type :: TypeRef;
+
+    // return :symbol if is_subset(type, internal_type(:symbol));
 
     return :generic;
   }
