@@ -17,23 +17,32 @@ implicit prg : CompiledPrg {
 
 
   // Types with a user-defined name that need to be declared, and their corresponding definitions
-  [NamedInterType -> NameableInterType] named_interface_types {
+  [TypeSymbol] named_interface_types {
     let typedefs = prg.typedefs:
-      // Creating all the required interface types
-      inter_types = [interface_type(t) : t <- boundary_types];
-
       // Retrieving all type symbols that are referenced either directly or indirectly
-      type_symbs = reachable_type_symbols(inter_types);
+      type_symbs = reachable_type_symbols(boundary_types);
+      // Filtering out the type symbols that do not correspond to a nameable type
+      type_symbs = [ts : ts <- type_symbs, is_nameable(cast_ne_type(expand_type_ref(ts, typedefs)))];
+    ;
+    return type_symbs;
+  }
 
+
+  // Types with a user-defined name that need to be declared, and their corresponding definitions
+  [NamedInterType -> NameableInterType] named_interface_types_defs {
+    let typedefs = prg.typedefs:
       // Mapping each type name to its corresponding interface type
       inter_type_defs = [
-        ts -> interface_type(expand_top_level_type_refs(cast_ne_type(expand_type_ref(ts, typedefs))))
-        : ts <- type_symbs
+        :named(ts) -> {
+          exp_type = expand_top_level_type_refs(cast_ne_type(expand_type_ref(ts, typedefs)));
+          inter_type = interface_type(exp_type);
+          assert inter_type :: NameableInterType;
+          fail if not inter_type :: NameableInterType;
+          return inter_type;
+        } : ts <- named_interface_types
       ];
     ;
-
-    // Filtering out the type symbols that do not correspond to a nameable type
-    return [:named(ts) -> t : ts, t <- inter_type_defs, t :: NameableInterType];
+    return inter_type_defs;
   }
 
 
@@ -42,9 +51,8 @@ implicit prg : CompiledPrg {
     let typedefs = prg.typedefs:
       direct_inter_types = [interface_type(t) : t <- boundary_types];
     ;
-    indirect_inter_types = values(named_interface_types);
+    indirect_inter_types = [:named(ts) : ts <- named_interface_types];
     redundant_types = [t2 : t1 <- direct_inter_types | t1 <- indirect_inter_types, t2 <- types_to_declare(t1)];
-    ## BAD BAD BAD: IS THIS LINE OF CODE ACTUALLY SAFE?
 
 print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- --";
 print "boundary_types";
@@ -59,10 +67,14 @@ print "redundant_types";
 print redundant_types;
 print "[t : t <- redundant_types, t :: NamedInterType]";
 print [t : t <- redundant_types, t :: NamedInterType];
-print "[n : n, d <- named_interface_types]";
-print [n : n, d <- named_interface_types];
+print "[n : n <- named_interface_types]";
+print [n : n <- named_interface_types];
 
-    named_types_synonyms = [named_interface_types(t, !!) : t <- redundant_types, t :: NamedInterType];
+    ## BAD BAD BAD: IS THIS LINE OF CODE ACTUALLY SAFE?
+    named_types_synonyms = [
+      named_interface_types_defs(t, !!)
+      : t <- redundant_types, t :: NamedInterType ##, named_interface_types_defs(t, *)
+    ];
 
 print "named_types_synonyms";
 print named_types_synonyms;
@@ -79,7 +91,9 @@ print named_types_synonyms;
 
     [UnionAltInterType] children(<DeclInterType, TaggedInterType[NameableInterType]> type) =
       union(ts?)  = ts,
-      named(_)    = if named_interface_types(type, *) then children(named_interface_types(type, !!)) else [],
+      named(_)    = if named_interface_types_defs(type, *)
+                      then children(named_interface_types_defs(type, !!))
+                      else [],
       _           = [];
   }
 
@@ -323,7 +337,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
 
   String* type_decl_or_doc(NamedInterType type) {
-    return nameable_type_decl(named_interface_types(type, !!));
+    return nameable_type_decl(named_interface_types_defs(type, !!));
 
     String* nameable_type_decl(<TupleInterType, RecordInterType, UnionInterType> type) =
       type_decl_or_doc(type);

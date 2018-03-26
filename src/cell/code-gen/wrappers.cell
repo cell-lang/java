@@ -514,14 +514,30 @@ implicit prg : CompiledPrg {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit typedefs : [TypeName -> NeType] {
-  [TypeSymbol] reachable_type_symbols([InterType] inter_types) {
-    type_symbs = [ts : t <- inter_types, ts <- nested_type_symbols(t)];
+  // [TypeSymbol] reachable_type_symbols([InterType] inter_types) {
+  //   type_symbs = [ts : t <- inter_types, ts <- nested_type_symbols(t)];
+  //   loop
+  //     nested_type_symbs = [
+  //       nts : ts <- type_symbs,
+  //             t = cast_ne_type(expand_type_ref(ts, typedefs)),
+  //             it = interface_type(t),
+  //             nts <- nested_type_symbols(it)
+  //     ];
+
+  //     new_type_symbs = nested_type_symbs - type_symbs;
+  //     return type_symbs if new_type_symbs == [];
+  //     type_symbs = type_symbs & new_type_symbs;
+  //   ;
+  // }
+
+
+  [TypeSymbol] reachable_type_symbols([NeType] types) {
+    type_symbs = [ts : t <- types, ts <- retrieve_type_symbs(t)];
     loop
       nested_type_symbs = [
         nts : ts <- type_symbs,
               t = cast_ne_type(expand_type_ref(ts, typedefs)),
-              it = interface_type(t),
-              nts <- nested_type_symbols(it)
+              nts <- retrieve_type_symbs(t)
       ];
 
       new_type_symbs = nested_type_symbs - type_symbs;
@@ -554,7 +570,76 @@ implicit typedefs : [TypeName -> NeType] {
     union_type(ts?)     = ne_union_type([expand_top_level_type_refs(t) : t <- ts]);
 
 
+  Bool is_nameable(NeType type) {
+    return false if is_subset(type, type_bool) or is_subset(type, type_string);
+    return is_tuple(type) or is_record(type) or is_union(type) or is_tagged(type, is_nameable($));
+
+
+    Bool is_tuple(NeType type) {
+      maybe_types = maybe_tuple_type_fields(type);
+      if maybe_types != nothing:
+        types = value(maybe_types);
+        size = |types|;
+        return true if size >= 2 and size <= 8;
+      ;
+      return false;
+    }
+
+
+    Bool is_record(NeType type) {
+      maybe_fields = maybe_record_type_fields(type);
+      if maybe_fields != nothing:
+        types = value(maybe_fields);
+        return true if not (l, info <- types : info.optional);
+      ;
+      return false;
+    }
+
+
+    Bool is_tagged(NeType type, (NeType -> Bool) is_valid_inner) {
+      if is_subset(type, type_tagged_obj):
+        tag_type = tag_supertype(type);
+        if is_symb_singl_type(tag_type):
+          obj_type = cast_ne_type(untagged_objs_supertype(type));
+          return true if is_valid_inner(obj_type);
+        ;
+      ;
+      return false;
+    }
+
+
+    Bool is_union(NeType type) =
+      union_type(ts?)   = not (t <- ts : not is_union_alt(t)),
+      type_ref(ts?)     = is_union(cast_ne_type(expand_type_ref(ts, typedefs))),
+      _                 = false;
+
+
+    Bool is_union_alt(NeType type) {
+      return true if is_symb_singl_type(type);
+      if is_subset(type, type_tagged_obj):
+        tag_type = tag_supertype(type);
+        if is_symb_singl_type(tag_type):
+          obj_type = cast_ne_type(untagged_objs_supertype(type));
+          return true if is_unionable(obj_type);
+        ;
+      ;
+      return false;
+    }
+
+
+    Bool is_unionable(NeType type) = is_tuple(type) or is_record(type) or is_tagged(type, is_unionable($));
+  }
+}
+
+
+
+implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   InterType interface_type(NeType type) {
+    if type :: TypeRef:
+      type_symb = match (type) type_ref(ts?) = ts;
+      return :named(type_symb) if in(type_symb, named_interface_types);
+    ;
+
     for it <- (:bool, :integer, :float, :string):
       return it if is_subset(type, internal_type(it));
     ;
@@ -563,11 +648,7 @@ implicit typedefs : [TypeName -> NeType] {
     if maybe_types != nothing:
       types = value(maybe_types);
       size = |types|;
-      if size >= 2 and size <= 8:
-        return if type :: TypeRef
-          then :named(match (type) type_ref(ts?) = ts)
-          else :tuple((interface_type(t) : t <- types));
-      ;
+      return :tuple((interface_type(t) : t <- types)) if size >= 2 and size <= 8;
     ;
 
     if is_subset(type, type_seq):
@@ -584,9 +665,7 @@ implicit typedefs : [TypeName -> NeType] {
     if maybe_fields != nothing:
       types = value(maybe_fields);
       if not (l, info <- types : info.optional):
-        return if type :: TypeRef
-          then :named(match (type) type_ref(ts?) = ts)
-          else :record([untag(l) -> interface_type(info.type) : l, info <- types]);
+        return :record([untag(l) -> interface_type(info.type) : l, info <- types]);
       ;
     ;
 
@@ -607,11 +686,7 @@ implicit typedefs : [TypeName -> NeType] {
         assert obj_type != empty_type; ## WHY THIS?
         if obj_type != empty_type:
           inter_obj_type = interface_type(obj_type);
-          ## CREATE A FUNCTION THAT DECIDES WHETHER A NAMED TYPE SHOULD BE
-          ## DECLARED OR NOT, AND USE IT BOTH HERE AND IN named_interface_types
-          return if type :: TypeRef and inter_obj_type :: NameableInterType
-            then :named(match (type) type_ref(ts?) = ts)
-            else :tagged(untag(only_symb(tag_type)), inter_obj_type);
+          return :tagged(untag(only_symb(tag_type)), inter_obj_type);
         ;
       ;
     ;
@@ -621,25 +696,23 @@ implicit typedefs : [TypeName -> NeType] {
       return value(maybe_union_inter_type) if maybe_union_inter_type != nothing;
     ;
 
-    return :named(match (type) type_ref(ts?) = ts) if type :: TypeRef;
-
     // return :symbol if is_subset(type, internal_type(:symbol));
 
     return :generic;
-  }
 
 
-  Maybe[UnionInterType] union_intertype([+NeType] types) {
-    inter_types = [
-      if is_symb_singl_type(t)
-        then :symbol(untag(only_symb(t)))
-        else interface_type(t)
-      : t <- types
-    ];
+    Maybe[UnionInterType] union_intertype([+NeType] types) {
+      inter_types = [
+        if is_symb_singl_type(t)
+          then :symbol(untag(only_symb(t)))
+          else interface_type(t)
+        : t <- types
+      ];
 
-    return if inter_types :: [+UnionAltInterType]
-      then just(:union(inter_types))
-      else nothing;
+      return if inter_types :: [+UnionAltInterType]
+        then just(:union(inter_types))
+        else nothing;
+    }
   }
 }
 
