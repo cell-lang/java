@@ -131,7 +131,7 @@ print named_types_synonyms;
   // Input types documentation
   [DeclInterType -> String*] input_types_docs {
     let direction = :in:
-      docs = [t -> type_decl(t, input_types_names, :in) : t, unused_var <- input_types_names];
+      docs = [t -> type_docs(t, input_types_names, :in) : t, unused_var <- input_types_names];
     ;
     return docs;
   }
@@ -140,7 +140,7 @@ print named_types_synonyms;
   // Output types documentation
   [DeclInterType -> String*] output_types_docs {
     let direction = :out:
-      docs = [t -> type_decl(t, output_types_names, :out) : t, unused_var <- output_types_names];
+      docs = [t -> type_docs(t, output_types_names, :out) : t, unused_var <- output_types_names];
     ;
     return docs;
   }
@@ -379,8 +379,8 @@ implicit prg : CompiledPrg {
   String* decl_type_import_function(DeclInterType inter_type) {
     name = decl_type_import_funct_name(inter_type);
     native_type = input_types_names(inter_type, !!);
-    // code = import_code(inter_type, "obj", "return ");
-    code = ("throw new RuntimeException();");
+    code = import_code(inter_type, "obj", "return ");
+    // code = ("throw new RuntimeException();");
     sign_line = "static Obj " & name & "(" & native_type & " obj) {";
     return (sign_line) & indent_lines(code) & ("}");
   }
@@ -389,8 +389,8 @@ implicit prg : CompiledPrg {
   String* decl_type_export_function(DeclInterType inter_type) {
     name = decl_type_export_funct_name(inter_type);
     native_type = output_types_names(inter_type, !!);
-    // code = export_code(inter_type, "obj", "return ");
-    code = ("throw new RuntimeException();");
+    code = export_code(inter_type, "obj", "return ");
+    // code = ("throw new RuntimeException();");
     sign_line = "static " & native_type & " " & name & "(Obj obj) {";
     return (sign_line) & indent_lines(code) & ("}");
   }
