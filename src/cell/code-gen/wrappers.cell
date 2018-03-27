@@ -719,20 +719,44 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-[TypeSymbol] nested_type_symbols(InterType inter_type) =
+// [TypeSymbol] nested_type_symbols(InterType inter_type) =
+//   bool            |
+//   integer         |
+//   float           |
+//   symbol          |
+//   string          |
+//   generic         |
+//   symbol()        = [],
+//   tuple(ts?)      = [s : t <~ ts, s <- nested_type_symbols(t)],
+//   record(fs?)     = [s : unused_var, t <- fs, s <- nested_type_symbols(t)],
+//   union(ts?)      = [s : t <- ts, s <- nested_type_symbols(t)],
+//   named(s?)       = [s],
+//   tagged(_, t?)   |
+//   seq(t?)         |
+//   set(t?)         = nested_type_symbols(t),
+//   bin_rel(ts?)    |
+//   tern_rel(ts?)   = [s : t <~ ts, s <- nested_type_symbols(t)];
+
+
+[NamedInterType] nested_named_types(InterType inter_type) =
+  named() = [inter_type],
+  _       = search_nested(inter_type, nested_named_types);
+
+
+[X] search_nested(InterType inter_type, (InterType -> [X]) nested) =
   bool            |
   integer         |
   float           |
   symbol          |
   string          |
   generic         |
-  symbol()        = [],
-  tuple(ts?)      = [s : t <~ ts, s <- nested_type_symbols(t)],
-  record(fs?)     = [s : unused_var, t <- fs, s <- nested_type_symbols(t)],
-  union(ts?)      = [s : t <- ts, s <- nested_type_symbols(t)],
-  named(s?)       = [s],
+  symbol()        |
+  named()         = [],
+  tuple(ts?)      = [x : t <~ ts, x <- nested(t)],
+  record(fs?)     = [x : unused_var, t <- fs, x <- nested(t)],
+  union(ts?)      = [x : t <- ts, x <- nested(t)],
   tagged(_, t?)   |
   seq(t?)         |
-  set(t?)         = nested_type_symbols(t),
+  set(t?)         = nested(t),
   bin_rel(ts?)    |
-  tern_rel(ts?)   = [s : t <~ ts, s <- nested_type_symbols(t)];
+  tern_rel(ts?)   = [x : t <~ ts, x <- nested(t)];
