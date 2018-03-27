@@ -282,34 +282,63 @@ implicit prg : CompiledPrg {
 
 
   String* tagged_type_export_code(TaggedInterType tagged_type, String expr, String action_prefix) {
-    ## BAD BAD BAD: ANY WAY TO GET RID OF THE RUN-TIME TYPE CHECK HERE?
-    if tagged_type :: DeclInterType and in(tagged_type, declared_types):
-      type_name = output_types_names(tagged_type, !!);
-      ## BAD BAD BAD: CASTING BACK AND FORTH BETWEEN THE TWO TYPES
-      fail if not tagged_type :: TaggedInterType;
-      return tagged_value_export_code(tagged_type, type_name, expr, action_prefix);
-    else
-      unique_id = printed(_counter_(:any_value_will_do));
-      tmp_var = "tmp_var_" & unique_id;
-      get_inner_obj_instr = "Obj " & tmp_var & " = " & expr & ".getInnerObj();";
-      inner_type = match (tagged_type) tagged(_, t?) = t;
-      return (get_inner_obj_instr) & export_code(inner_type, tmp_var, action_prefix);
-    ;
-  }
-
-
-  String* tagged_value_export_code(TaggedInterType tagged_type, String type_name, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     tmp_var = "tmp_var_" & unique_id;
     get_inner_obj_instr = "Obj " & tmp_var & " = " & expr & ".getInnerObj();";
-    // untagged_expr = expr & ".getInnerObj()";
-    inner_type = match (tagged_type) tagged(_, t?) = t;
-    export_code = match (inner_type)
-      tuple(ts?)      = tuple_export_code(ts, type_name, tmp_var, action_prefix),
-      record(fs?)     = record_export_code(fs, type_name, tmp_var, action_prefix),
-      tagged(_, t?)   = tagged_value_export_code(inner_type, type_name, tmp_var, action_prefix);
-    return (get_inner_obj_instr) & export_code;
+    ## THIS HAD TO BE MOVED INSIDE BOTH BRANCHES BECAUSE THE TYPECHECKER IS TOO DUMB
+    // untagged_type = match (tagged_type) tagged(_, t?) = t;
+    if in(tagged_type, declared_types):
+      ## BAD BAD BAD: ANY WAY TO GET RID OF THE RUN-TIME TYPE CHECK HERE?
+      fail if not tagged_type :: DeclInterType;
+      type_name = output_types_names(tagged_type, !!);
+      untagged_type = match (tagged_type) tagged(_, t?) = t;
+      code = export_code(tagged_type, type_name, tmp_var, action_prefix);
+    else
+      untagged_type = match (tagged_type) tagged(_, t?) = t;
+      code = (get_inner_obj_instr) & export_code(untagged_type, tmp_var, action_prefix);
+    ;
+    return (get_inner_obj_instr) & code;
+
+
+    String* export_code(SymbolInterType inter_type, String type_name, String expr, String action_prefix) {
+      return (action_prefix & " new " & type_name & "();"); ## USE A SINGLETON HERE
+    }
+
+    String* export_code(TupleInterType inter_type, String type_name, String expr, String action_prefix) {
+      return tuple_export_code(untag(inter_type), type_name, expr, action_prefix);
+    }
+
+    String* export_code(RecordInterType inter_type, String type_name, String expr, String action_prefix) {
+      return record_export_code(untag(inter_type), type_name, expr, action_prefix);
+    }
+
+    String* export_code(NamedInterType inter_type, String type_name, String expr, String action_prefix) {
+      return export_code(inter_type, expr, action_prefix);
+    }
+
+    String* export_code(UnionInterType inter_type, String type_name, String expr, String action_prefix) {
+      return export_code(inter_type, expr, action_prefix);
+    }
+
+    String* export_code(TaggedInterType[DeclInterType] inter_type, String type_name, String expr, String action_prefix) {
+      untagged_type = match (inter_type) tagged(_, t?) = t;
+      return export_code(untagged_type, type_name, expr, action_prefix);
+    }
   }
+
+
+  // String* tagged_value_export_code(TaggedInterType tagged_type, String type_name, String expr, String action_prefix) {
+  //   unique_id = printed(_counter_(:any_value_will_do));
+  //   tmp_var = "tmp_var_" & unique_id;
+  //   get_inner_obj_instr = "Obj " & tmp_var & " = " & expr & ".getInnerObj();";
+  //   // untagged_expr = expr & ".getInnerObj()";
+  //   inner_type = match (tagged_type) tagged(_, t?) = t;
+  //   export_code = match (inner_type)
+  //     tuple(ts?)      = tuple_export_code(ts, type_name, tmp_var, action_prefix),
+  //     record(fs?)     = record_export_code(fs, type_name, tmp_var, action_prefix),
+  //     tagged(_, t?)   = tagged_value_export_code(inner_type, type_name, tmp_var, action_prefix);
+  //   return (get_inner_obj_instr) & export_code;
+  // }
 
 
   String* type_union_export_code([+UnionAltInterType] types, String expr, String action_prefix) {
@@ -325,9 +354,10 @@ implicit prg : CompiledPrg {
       if |symb_types| > 1:
         symbs_code = ("switch (" & expr & ".getSymbId()) {");
         for t @ i <- isort(symb_types):
-          symbs_code = (symbs_code | "case " & symb_idx_name(untag(t)) & ":");
-          symbs_code = symbs_code & indent_lines(export_code(t, expr, action_prefix));
-          symbs_code = (symbs_code | "  break;", "");
+          symbs_code = (symbs_code | "  case " & symb_idx_name(untag(t)) & ":");
+          symbs_code = symbs_code & indent_lines(indent_lines(export_code(t, expr, action_prefix)));
+          ## BAD BAD BAD: THIS IS REALLY NASTY HACK
+          symbs_code = symbs_code & ("    break;" if action_prefix != "return ", "");
         ;
         symbs_code = (symbs_code | "  default:", "    throw Miscellanea.internalFail();", "}");
 
@@ -343,8 +373,11 @@ implicit prg : CompiledPrg {
         tagged_values_code = ("switch (" & expr & ".getTagId()) {");
         for t @ i <- isort(tagged_types):
           tag = match (t) tagged(s?, _) = s;
-          case_code = tagged_value_export_code(t, output_types_names(t, !!), expr, action_prefix);
-          case_code = ("case " & symb_idx_name(object(tag)) & ":") & indent_lines(case_code) & ("  break;", "");
+          case_code = tagged_type_export_code(t, expr, action_prefix);
+          case_code = (case_code | "  case " & symb_idx_name(object(tag)) & ":");
+          case_code = case_code & indent_lines(indent_lines(case_code));
+          ## BAD BAD BAD: THIS IS REALLY NASTY HACK
+          case_code = case_code & ("    break;" if action_prefix != "return ", "");
           tagged_values_code = tagged_values_code & indent_lines(case_code);
         ;
         tagged_values_code = (tagged_values_code | "  default:", "    throw Miscellanea.internalFail();", "}");
