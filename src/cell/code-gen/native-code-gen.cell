@@ -128,6 +128,8 @@ print output_types_names;
 
   has_automata = prg.react_blocks != [] or prg.static_blocks != [];
 
+  has_main = (p <- prg.procs : p.name == proc_symbol(:main));
+
   gen_code = join((
     ( "package net.cell_lang;",
       "",
@@ -147,12 +149,13 @@ print output_types_names;
       "import java.util.Random;",
       "",
       "",
-      "public class Generated {"
+      "class Generated {" if has_main,
+      "public class Generated {" if not has_main
     ),
 
     indent_lines(code & proc_code & int_seqs_code & ("", "") & wrappers),
 
-    indent_lines(c_main_fn(debug_mode)) if (p <- prg.procs : p.name == proc_symbol(:main)),
+    indent_lines(c_main_fn(debug_mode)) if has_main,
 
     ("}", ""),
 
