@@ -1,9 +1,9 @@
 type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], named(type_symbol(Symbol));
 
 ## AT THE MOMENT DeclInterType DOESN'T SEEM TO BE A SUPERSET OF NameableInterType,
-## BUT EVERYTHING COMPILES JUST FINE. ISN'T THAT WEIRD?
-type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType, UnionInterType,
-                      TaggedInterType[UnionableInterType];
+## BUT EVERYTHING COMPILES JUST FINE. ISN'T THAT WEIRD? (IS THIS STILL TRUE?)
+type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType,
+                      UnionInterType, TaggedInterType[DeclInterType];
 
 
 implicit prg : CompiledPrg {
@@ -51,38 +51,35 @@ implicit prg : CompiledPrg {
     let typedefs = prg.typedefs:
       inter_types = [interface_type(t) : t <- boundary_types];
     ;
-    new_inter_types = inter_types;
+    named_types = [n : t <- inter_types, n <- nested_named_types(t)];
     loop
-      named_types = [n : t <- new_inter_types, n <- nested_named_types(t)];
-      break if named_types == [];
       new_inter_types = [named_interface_types_defs(t, !!) : t <- named_types];
-      inter_types = inter_types & new_inter_types;
+      new_named_types = [n : t <- new_inter_types, n <- nested_named_types(t)] - named_types;
+      break if new_named_types == [];
+      named_types = named_types & new_named_types;
     ;
-    redundant_types = [t2 : t1 <- inter_types, t2 <- declareable_types(t1)];
+    direct_decl_types = [d : t <- inter_types, d <- declarable_types(t)];
+    indirect_decl_types  = [
+      d : n <- named_types,
+          t = named_interface_types_defs(n, !!),
+          d <- declarable_types(t),
+          d != t
+    ];
 
 print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- --";
 print "boundary_types";
 print boundary_types;
 print "inter_types";
 print inter_types;
-print "redundant_types";
-print redundant_types;
-print "[t : t <- redundant_types, t :: NamedInterType]";
-print [t : t <- redundant_types, t :: NamedInterType];
-print "[n : n <- named_interface_types]";
-print [n : n <- named_interface_types];
-
-    ## BAD BAD BAD: IS THIS LINE OF CODE ACTUALLY SAFE?
-    named_types_synonyms = [
-      named_interface_types_defs(t, !!)
-      : t <- redundant_types, t :: NamedInterType ##, named_interface_types_defs(t, *)
-    ];
-
-print "named_types_synonyms";
-print named_types_synonyms;
+print "named_types";
+print named_types;
+print "direct_decl_types";
+print direct_decl_types;
+print "indirect_decl_types";
+print indirect_decl_types;
 print "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -";
 
-    return redundant_types - named_types_synonyms;
+    return direct_decl_types & indirect_decl_types;
   }
 
 
@@ -177,7 +174,7 @@ print "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -";
 }
 
 
-[DeclInterType] declareable_types(InterType inter_type) =
+[DeclInterType] declarable_types(InterType inter_type) =
   bool            |
   integer         |
   float           |
@@ -185,15 +182,26 @@ print "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -";
   string          |
   generic         = [],
   symbol()        = [inter_type],
-  tuple(ts?)      = [inter_type] & union([declareable_types(t) : t <~ ts]),
-  record(fs?)     = [inter_type] & union([declareable_types(t) : l, t <- fs]),
+  tuple(ts?)      = [inter_type] & union([declarable_types(t) : t <~ ts]),
+  record(fs?)     = [inter_type] & union([declarable_types(t) : l, t <- fs]),
   seq(t?)         |
-  set(t?)         = declareable_types(t),
+  set(t?)         = declarable_types(t),
   bin_rel(ts?)    |
-  tern_rel(ts?)   = union([declareable_types(t) : t <~ ts]),
-  tagged(_, t?)   = declareable_types(t),
+  tern_rel(ts?)   = union([declarable_types(t) : t <~ ts]),
+  tagged()        = tagged_type_declarables(inter_type),
   named()         = [inter_type],
-  union(ts?)      = [inter_type] & ts & #(union([declareable_types(t) : t <- ts]) - [strip_tags(t) : t <- ts]);
+  union(ts?)      = [inter_type] & ts & [d : t <- ts, d <- declarable_types(t)];
+
+
+[DeclInterType] tagged_type_declarables(TaggedInterType tagged_type) {
+  stripped_type = strip_tags(tagged_type);
+
+  decls = declarable_types(stripped_type);
+  return decls if not decls(stripped_type);
+
+  fail if not tagged_type :: DeclInterType;
+  return [tagged_type] & #(decls - [stripped_type]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -274,7 +282,7 @@ implicit reserved_names : [String], direction : <in, out> {
   }
 
 
-  String safe_name(TaggedInterType[UnionableInterType] type, Maybe[Nat] unique_id) {
+  String safe_name(TaggedInterType[DeclInterType] type, Maybe[Nat] unique_id) {
     suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
     tag = match (type) tagged(s?, _) = s;
     return non_reserved_name(upper_camel_case(tag) & suffix);
@@ -350,7 +358,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   }
 
 
-  String* type_decl_or_doc(TaggedInterType[UnionableInterType] type) {
+  String* type_decl_or_doc(TaggedInterType[DeclInterType] type) {
     return match (type)
       tagged(_, t?) = type_decl_or_doc(t);
   }

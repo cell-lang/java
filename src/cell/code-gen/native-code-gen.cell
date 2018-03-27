@@ -81,7 +81,7 @@ boundary_types = boundary_types;
 named_interface_types = named_interface_types;
 declared_types = declared_types;
 input_types_names = input_types_names;
-output_types_names = output_types_names;
+// output_types_names = output_types_names;
 
 print "---------------------------------------------------------------------------------";
 print "boundary_types : [NeType]";
