@@ -77,36 +77,24 @@
   static_blocks_map = [b.name -> b : b <- prg.static_blocks];
   let prg = prg, typedefs = prg.typedefs:
 
-boundary_types = boundary_types;
-named_interface_types = named_interface_types;
-declared_types = declared_types;
-input_types_names = input_types_names;
-// output_types_names = output_types_names;
-
 print "---------------------------------------------------------------------------------";
 print "boundary_types : [NeType]";
 print boundary_types;
-print "named_interface_types : [NamedInterType -> NameableInterType]";
+print "named_interface_types : [TypeSymbol]";
 print named_interface_types;
+print "named_interface_types_defs : [NamedInterType -> NameableInterType]";
+print named_interface_types_defs;
 print "declared_types : [DeclInterType]";
 print declared_types;
-// print "[DeclInterType] decl_types_parents(DeclInterType child)";
 print "input_types_names : [DeclInterType -> String]";
 print input_types_names;
-// print "input_types_decls : [DeclInterType -> String*]";
-// print input_types_decls;
 print "output_types_names : [DeclInterType -> String]";
 print output_types_names;
-// print "output_types_decls : [DeclInterType -> String*]";
-// print output_types_decls;
-// print "input_types_docs : [DeclInterType -> String*]";
-// print input_types_docs;
-// print "output_types_docs : [DeclInterType -> String*]";
-// print output_types_docs;
-// print "interface_types_decls : [String*]";
-// print interface_types_decls;
-// print "interface_types_docs : [String*]";
-// print interface_types_docs;
+
+print "decl_types_parents : DeclInterType -> [DeclInterType]";
+for t <- isort(declared_types):
+  print (t, decl_types_parents(t));
+;
 
     auto_wrappers, auto_wrappers_docs = unzip((react_auto_wrapper(b) : b <- ord_react_blocks));
     db_wrappers, db_wrappers_docs = unzip((static_auto_wrapper(b, static_blocks_map) : b <- ord_static_blocks));

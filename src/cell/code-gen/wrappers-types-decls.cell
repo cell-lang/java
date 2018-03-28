@@ -188,20 +188,9 @@ print "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -";
   set(t?)         = declarable_types(t),
   bin_rel(ts?)    |
   tern_rel(ts?)   = union([declarable_types(t) : t <~ ts]),
-  tagged()        = tagged_type_declarables(inter_type),
+  tagged()        = declarable_types(strip_tags(inter_type)),
   named()         = [inter_type],
-  union(ts?)      = [inter_type] & ts & [d : t <- ts, d <- declarable_types(t)];
-
-
-[DeclInterType] tagged_type_declarables(TaggedInterType tagged_type) {
-  stripped_type = strip_tags(tagged_type);
-
-  decls = declarable_types(stripped_type);
-  return decls if not decls(stripped_type);
-
-  fail if not tagged_type :: DeclInterType;
-  return [tagged_type] & #(decls - [stripped_type]);
-}
+  union(ts?)      = [inter_type] & ts & [d : t <- ts, d <- declarable_types(t), d != strip_tags(t)];
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -357,7 +346,17 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
 
   String* type_decl_or_doc(TaggedInterType[DeclInterType] type) {
-    return type_decl_or_doc(untagged_type(type));
+    untagged = untagged_type(type);
+    if in(untagged, declared_types):
+      // name = type_name(root_type, !!);
+      return (
+        #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {",
+        "  " & #(if doc_only then "" else "public ") & types_names(untagged, !!) & " inner;",
+        "}"
+      );
+    else
+      return type_decl_or_doc(untagged);
+    ;
   }
 
 
