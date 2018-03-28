@@ -35,6 +35,13 @@ type InterType          = BasicInterType,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+Symbol type_tag(TaggedInterType)          = tagged(s?, _) = s;
+T      untagged_type(TaggedInterType[T])  = tagged(_, t?) = t;
+
+TypeSymbol type_symb(NamedInterType)  = named(ts?) = ts;
+
+////////////////////////////////////////////////////////////////////////////////
+
 NeType internal_type(AtomicInterType) =
   bool        = type_bool,
   integer     = integer,
@@ -285,17 +292,13 @@ implicit prg : CompiledPrg {
     unique_id = printed(_counter_(:any_value_will_do));
     tmp_var = "tmp_var_" & unique_id;
     get_inner_obj_instr = "Obj " & tmp_var & " = " & expr & ".getInnerObj();";
-    ## THIS HAD TO BE MOVED INSIDE BOTH BRANCHES BECAUSE THE TYPECHECKER IS TOO DUMB
-    // untagged_type = match (tagged_type) tagged(_, t?) = t;
     if in(tagged_type, declared_types):
       ## BAD BAD BAD: ANY WAY TO GET RID OF THE RUN-TIME TYPE CHECK HERE?
       fail if not tagged_type :: DeclInterType;
       type_name = output_types_names(tagged_type, !!);
-      untagged_type = match (tagged_type) tagged(_, t?) = t;
       code = export_code(tagged_type, type_name, tmp_var, action_prefix);
     else
-      untagged_type = match (tagged_type) tagged(_, t?) = t;
-      code = (get_inner_obj_instr) & export_code(untagged_type, tmp_var, action_prefix);
+      code = export_code(untagged_type(tagged_type), tmp_var, action_prefix);
     ;
     return (get_inner_obj_instr) & code;
 
@@ -321,24 +324,9 @@ implicit prg : CompiledPrg {
     }
 
     String* export_code(TaggedInterType[DeclInterType] inter_type, String type_name, String expr, String action_prefix) {
-      untagged_type = match (inter_type) tagged(_, t?) = t;
-      return export_code(untagged_type, type_name, expr, action_prefix);
+      return export_code(untagged_type(inter_type), type_name, expr, action_prefix);
     }
   }
-
-
-  // String* tagged_value_export_code(TaggedInterType tagged_type, String type_name, String expr, String action_prefix) {
-  //   unique_id = printed(_counter_(:any_value_will_do));
-  //   tmp_var = "tmp_var_" & unique_id;
-  //   get_inner_obj_instr = "Obj " & tmp_var & " = " & expr & ".getInnerObj();";
-  //   // untagged_expr = expr & ".getInnerObj()";
-  //   inner_type = match (tagged_type) tagged(_, t?) = t;
-  //   export_code = match (inner_type)
-  //     tuple(ts?)      = tuple_export_code(ts, type_name, tmp_var, action_prefix),
-  //     record(fs?)     = record_export_code(fs, type_name, tmp_var, action_prefix),
-  //     tagged(_, t?)   = tagged_value_export_code(inner_type, type_name, tmp_var, action_prefix);
-  //   return (get_inner_obj_instr) & export_code;
-  // }
 
 
   String* type_union_export_code([+UnionAltInterType] types, String expr, String action_prefix) {
@@ -372,9 +360,8 @@ implicit prg : CompiledPrg {
       if |tagged_types| > 1:
         tagged_values_code = ("switch (" & expr & ".getTagId()) {");
         for t @ i <- isort(tagged_types):
-          tag = match (t) tagged(s?, _) = s;
           case_code = tagged_type_export_code(t, expr, action_prefix);
-          case_code = (case_code | "  case " & symb_idx_name(object(tag)) & ":");
+          case_code = (case_code | "  case " & symb_idx_name(object(type_tag(t))) & ":");
           case_code = case_code & indent_lines(indent_lines(case_code));
           ## BAD BAD BAD: THIS IS REALLY NASTY HACK
           case_code = case_code & ("    break;" if action_prefix != "return ", "");
@@ -669,7 +656,7 @@ implicit typedefs : [TypeName -> NeType] {
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   InterType interface_type(NeType type) {
     if type :: TypeRef:
-      type_symb = match (type) type_ref(ts?) = ts;
+      type_symb = type_symb(type);
       return :named(type_symb) if in(type_symb, named_interface_types);
     ;
 
@@ -725,7 +712,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     ;
 
     if type :: UnionType:
-      maybe_union_inter_type = union_intertype(match (type) union_type(ts?) = ts);
+      maybe_union_inter_type = union_intertype(types(type));
       return value(maybe_union_inter_type) if maybe_union_inter_type != nothing;
     ;
 

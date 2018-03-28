@@ -266,8 +266,7 @@ implicit reserved_names : [String], direction : <in, out> {
 
   String safe_name(NamedInterType type, Maybe[Nat] unique_id) {
     suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    type_symb = match (type) named(ts?) = ts;
-    return non_reserved_name(base_name(type_symb) & suffix);
+    return non_reserved_name(base_name(type_symb(type)) & suffix);
 
 
     String base_name(BasicTypeSymbol) =
@@ -284,8 +283,7 @@ implicit reserved_names : [String], direction : <in, out> {
 
   String safe_name(TaggedInterType[DeclInterType] type, Maybe[Nat] unique_id) {
     suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    tag = match (type) tagged(s?, _) = s;
-    return non_reserved_name(upper_camel_case(tag) & suffix);
+    return non_reserved_name(upper_camel_case(type_tag(type)) & suffix);
   }
 
 
@@ -359,8 +357,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
 
   String* type_decl_or_doc(TaggedInterType[DeclInterType] type) {
-    return match (type)
-      tagged(_, t?) = type_decl_or_doc(t);
+    return type_decl_or_doc(untagged_type(type));
   }
 
 
