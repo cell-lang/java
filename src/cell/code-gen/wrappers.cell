@@ -283,7 +283,9 @@ implicit prg : CompiledPrg {
   }
 
   String* export_code(NamedInterType inter_type, String type_name, String expr, String action_prefix) {
-    return named_type_export_code(inter_type, expr, action_prefix);
+    assert in(inter_type, declared_types);
+    return export_code(inter_type, expr, action_prefix);
+    // return (action_prefix & decl_type_export_funct_name(inter_type) & "(" & expr & ");")
   }
 
   String* export_code(UnionInterType inter_type, String type_name, String expr, String action_prefix) {
@@ -315,8 +317,7 @@ implicit prg : CompiledPrg {
   String* export_code(InterType it, String expr, String action_prefix) {
     if in(it, declared_types):
       fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
-      type_name = output_types_names(it, !!);
-      return export_code(it, type_name, expr, action_prefix);
+      return (action_prefix & decl_type_export_funct_name(it) & "(" & expr & ");");
     ;
 
     return match (it)
@@ -326,10 +327,6 @@ implicit prg : CompiledPrg {
       symbol              = (action_prefix & expr & ".toString();"),
       string              = (action_prefix & expr & ".getString();"),
       symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton();"),
-      // tuple(ts?)          = tuple_export_code(ts, output_types_names(it, !!), expr, action_prefix),
-      // record(fs?)         = record_export_code(fs, output_types_names(it, !!), expr, action_prefix),
-      // named()             = named_type_export_code(it, expr, action_prefix),
-      // union(ts?)          = type_union_export_code(ts, expr, action_prefix),
       tuple()             |
       record()            |
       named()             |
@@ -404,12 +401,6 @@ implicit prg : CompiledPrg {
 
     return code;
   }
-
-
-  String* named_type_export_code(NamedInterType inter_type, String expr, String action_prefix) =
-    if in(inter_type, declared_types)
-      then (action_prefix & decl_type_export_funct_name(inter_type) & "(" & expr & ");")
-      else export_code(:generic, expr, action_prefix);
 
 
   String* record_export_code([+Symbol -> InterType] fields, String type_name, String expr, String action_prefix) {
