@@ -7,7 +7,7 @@ type RecordInterType    = record([+Symbol -> InterType]);
 type TaggedInterType[T] = tagged(Symbol, T);
 type TaggedInterType    = TaggedInterType[InterType];
 
-type NameableInterType  = TupleInterType, RecordInterType, UnionInterType, TaggedInterType[NameableInterType];
+// type NameableInterType  = TupleInterType, RecordInterType, UnionInterType, TaggedInterType[NameableInterType];
 type NamedInterType     = named(TypeSymbol);
 
 type CollInterType      = seq(InterType),
@@ -40,6 +40,8 @@ T      untagged_type(TaggedInterType[T])  = tagged(_, t?) = t;
 
 TypeSymbol type_symb(NamedInterType)  = named(ts?) = ts;
 
+[+UnionAltInterType] inter_types(UnionInterType) = union(ts?) = ts;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NeType internal_type(AtomicInterType) =
@@ -48,8 +50,6 @@ NeType internal_type(AtomicInterType) =
   float       = float_type,
   symbol      = atom_type,
   string      = type_string;
-
-
 
 
 String return_value_type(InterType it, [InterType -> String] types_names) =
@@ -255,77 +255,110 @@ implicit prg : CompiledPrg {
   }
 
 
-  String* tagged_value_import_code(Symbol tag, InterType inner_type, String expr, String action_prefix) {
+  String* tagged_value_import_code(Symbol tag, InterType untagged_type, String expr, String action_prefix) {
+    if in(untagged_type, declared_types):
+      fail if not untagged_type :: DeclInterType;
+      unique_id = printed(_counter_(:any_value_will_do));
+      in_var = "var_" & unique_id;
+      type_name = input_types_names(untagged_type, !!);
+      code = (type_name & " " & in_var & " = " & expr & ".inner;");
+      in_expr = in_var;
+    else
+      code = ();
+      in_expr = expr;
+    ;
+
     unique_id = printed(_counter_(:any_value_will_do));
-    inner_var = "inner" & unique_id;
-
-    inner_code = import_code(inner_type, expr, "Obj " & inner_var & " = ");
-    creation_instr = action_prefix & "new TaggedObj(" & symb_idx_name(object(tag)) & ", " & inner_var & ");";
-
-    return (inner_code | creation_instr);
+    out_var = "var_" & unique_id;
+    code = code & import_code(untagged_type, in_expr, "Obj " & out_var & " = ");
+    instr = action_prefix & "new TaggedObj(" & symb_idx_name(object(tag)) & ", " & out_var & ");";
+    return (code | instr);
   }
 }
 
 
 implicit prg : CompiledPrg {
-  String* export_code(InterType it, String expr, String action_prefix) =
-    bool                = (action_prefix & expr & ".getBool();"),
-    integer             = (action_prefix & expr & ".getLong();"),
-    float               = (action_prefix & expr & ".getDouble();"),
-    symbol              = (action_prefix & expr & ".toString();"),
-    string              = (action_prefix & expr & ".getString();"),
-    symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton();"),
-    tuple(ts?)          = tuple_export_code(ts, output_types_names(it, !!), expr, action_prefix),
-    record(fs?)         = record_export_code(fs, output_types_names(it, !!), expr, action_prefix),
-    named()             = named_type_export_code(it, expr, action_prefix),
-    union(ts?)          = type_union_export_code(ts, expr, action_prefix),
-    seq(t?)             |
-    set(t?)             = array_export_code(t, expr, action_prefix),
-    bin_rel(t1?, t2?)   = bin_rel_export_code(t1, t2, expr, action_prefix),
-    tern_rel(t1?, t2?, t3?) = tern_rel_export_code(t1, t2, t3, expr, action_prefix),
-    tagged(_, generic)  = export_code(:generic, expr, action_prefix),
-    tagged()            = tagged_type_export_code(it, expr, action_prefix),
-    generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
+
+  String* export_code(SymbolInterType inter_type, String type_name, String expr, String action_prefix) {
+    return (action_prefix & type_name & ".singleton();");
+  }
+
+  String* export_code(TupleInterType inter_type, String type_name, String expr, String action_prefix) {
+    return tuple_export_code(untag(inter_type), type_name, expr, action_prefix);
+  }
+
+  String* export_code(RecordInterType inter_type, String type_name, String expr, String action_prefix) {
+    return record_export_code(untag(inter_type), type_name, expr, action_prefix);
+  }
+
+  String* export_code(NamedInterType inter_type, String type_name, String expr, String action_prefix) {
+    return named_type_export_code(inter_type, expr, action_prefix);
+  }
+
+  String* export_code(UnionInterType inter_type, String type_name, String expr, String action_prefix) {
+    return type_union_export_code(inter_types(inter_type), expr, action_prefix);
+  }
+
+  String* export_code(TaggedInterType[DeclInterType] tagged_type, String type_name, String expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    in_var = "var_" & unique_id;
+    code = ("Obj " & in_var & " = " & expr & ".getInnerObj();");
+    untagged_type = untagged_type(tagged_type);
+    if in(untagged_type, declared_types):
+      unique_id = printed(_counter_(:any_value_will_do));
+      out_var = "var_" & unique_id;
+      code = (code | type_name & " " & out_var & " = new " & type_name & "();");
+      code = code & export_code(untagged_type, in_var, out_var & ".inner = ");
+      code = (code | action_prefix & out_var & ";");
+    else
+      ## WHICH ONE? I'M NOT SURE HERE...
+      // code = code & export_code(untagged_type, in_var, action_prefix);
+      code = code & export_code(untagged_type, type_name, in_var, action_prefix);
+    ;
+    return code;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  String* export_code(InterType it, String expr, String action_prefix) {
+    if in(it, declared_types):
+      fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
+      type_name = output_types_names(it, !!);
+      return export_code(it, type_name, expr, action_prefix);
+    ;
+
+    return match (it)
+      bool                = (action_prefix & expr & ".getBool();"),
+      integer             = (action_prefix & expr & ".getLong();"),
+      float               = (action_prefix & expr & ".getDouble();"),
+      symbol              = (action_prefix & expr & ".toString();"),
+      string              = (action_prefix & expr & ".getString();"),
+      symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton();"),
+      // tuple(ts?)          = tuple_export_code(ts, output_types_names(it, !!), expr, action_prefix),
+      // record(fs?)         = record_export_code(fs, output_types_names(it, !!), expr, action_prefix),
+      // named()             = named_type_export_code(it, expr, action_prefix),
+      // union(ts?)          = type_union_export_code(ts, expr, action_prefix),
+      tuple()             |
+      record()            |
+      named()             |
+      union()             = undefined, // They are supposed to always be declared
+      seq(t?)             |
+      set(t?)             = array_export_code(t, expr, action_prefix),
+      bin_rel(t1?, t2?)   = bin_rel_export_code(t1, t2, expr, action_prefix),
+      tern_rel(t1?, t2?, t3?) = tern_rel_export_code(t1, t2, t3, expr, action_prefix),
+      tagged(_, generic)  = export_code(:generic, expr, action_prefix),
+      tagged()            = tagged_type_export_code(it, expr, action_prefix),
+      generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
+  }
 
 
   String* tagged_type_export_code(TaggedInterType tagged_type, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
-    tmp_var = "tmp_var_" & unique_id;
-    get_inner_obj_instr = "Obj " & tmp_var & " = " & expr & ".getInnerObj();";
-    if in(tagged_type, declared_types):
-      ## BAD BAD BAD: ANY WAY TO GET RID OF THE RUN-TIME TYPE CHECK HERE?
-      fail if not tagged_type :: DeclInterType;
-      type_name = output_types_names(tagged_type, !!);
-      code = export_code(tagged_type, type_name, tmp_var, action_prefix);
-    else
-      code = export_code(untagged_type(tagged_type), tmp_var, action_prefix);
-    ;
-    return (get_inner_obj_instr) & code;
-
-
-    String* export_code(SymbolInterType inter_type, String type_name, String expr, String action_prefix) {
-      return (action_prefix & " new " & type_name & "();"); ## USE A SINGLETON HERE
-    }
-
-    String* export_code(TupleInterType inter_type, String type_name, String expr, String action_prefix) {
-      return tuple_export_code(untag(inter_type), type_name, expr, action_prefix);
-    }
-
-    String* export_code(RecordInterType inter_type, String type_name, String expr, String action_prefix) {
-      return record_export_code(untag(inter_type), type_name, expr, action_prefix);
-    }
-
-    String* export_code(NamedInterType inter_type, String type_name, String expr, String action_prefix) {
-      return export_code(inter_type, expr, action_prefix);
-    }
-
-    String* export_code(UnionInterType inter_type, String type_name, String expr, String action_prefix) {
-      return export_code(inter_type, expr, action_prefix);
-    }
-
-    String* export_code(TaggedInterType[DeclInterType] inter_type, String type_name, String expr, String action_prefix) {
-      return export_code(untagged_type(inter_type), type_name, expr, action_prefix);
-    }
+    in_var = "var_" & unique_id;
+    instr = "Obj " & in_var & " = " & expr & ".getInnerObj();";
+    untagged_type = untagged_type(tagged_type);
+    return (instr) & export_code(untagged_type, in_var, action_prefix);
   }
 
 

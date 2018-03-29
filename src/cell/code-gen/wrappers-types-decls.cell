@@ -1,7 +1,5 @@
 type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], named(type_symbol(Symbol));
 
-## AT THE MOMENT DeclInterType DOESN'T SEEM TO BE A SUPERSET OF NameableInterType,
-## BUT EVERYTHING COMPILES JUST FINE. ISN'T THAT WEIRD? (IS THIS STILL TRUE?)
 type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType,
                       UnionInterType, TaggedInterType[DeclInterType];
 
@@ -29,15 +27,15 @@ implicit prg : CompiledPrg {
 
 
   // Types with a user-defined name that need to be declared, and their corresponding definitions
-  [NamedInterType -> NameableInterType] named_interface_types_defs {
+  [NamedInterType -> DeclInterType] named_interface_types_defs {
     let typedefs = prg.typedefs:
       // Mapping each type name to its corresponding interface type
       inter_type_defs = [
         :named(ts) -> {
           exp_type = expand_top_level_type_refs(cast_ne_type(expand_type_ref(ts, typedefs)));
           inter_type = interface_type(exp_type);
-          assert inter_type :: NameableInterType;
-          fail if not inter_type :: NameableInterType;
+          assert inter_type :: DeclInterType;
+          fail if not inter_type :: DeclInterType;
           return inter_type;
         } : ts <- named_interface_types
       ];
@@ -62,8 +60,9 @@ implicit prg : CompiledPrg {
     indirect_decl_types  = [
       d : n <- named_types,
           t = named_interface_types_defs(n, !!),
+          u = strip_tags(t),
           d <- declarable_types(t),
-          d != t
+          d != u
     ];
 
 print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- --";
@@ -79,7 +78,7 @@ print "indirect_decl_types";
 print indirect_decl_types;
 print "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -";
 
-    return direct_decl_types & indirect_decl_types;
+    return named_types & direct_decl_types & indirect_decl_types;
   }
 
 
@@ -89,12 +88,13 @@ print "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -";
 
     [DeclInterType, DeclInterType] child_parent = [c, t : t <- declared_types, c <- children(t)];
 
-    [UnionAltInterType] children(<DeclInterType, TaggedInterType[NameableInterType]> type) =
-      union(ts?)  = ts,
-      named(_)    = if named_interface_types_defs(type, *)
-                      then children(named_interface_types_defs(type, !!))
-                      else [],
-      _           = [];
+    [UnionAltInterType] children(DeclInterType type) =
+      union(ts?)    = ts,
+      named(_)      = if named_interface_types_defs(type, *)
+                        then children(named_interface_types_defs(type, !!))
+                        else [],
+      tagged(_, t?) = if in(t, declared_types) then [] else children(t),
+      _             = [];
   }
 
 
@@ -334,21 +334,12 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   }
 
 
-  String* type_decl_or_doc(NamedInterType type) {
-    return nameable_type_decl(named_interface_types_defs(type, !!));
-
-    String* nameable_type_decl(<TupleInterType, RecordInterType, UnionInterType> type) =
-      type_decl_or_doc(type);
-
-    String* nameable_type_decl(TaggedInterType[NameableInterType] type) =
-      tagged(_, t?) = nameable_type_decl(t);
-  }
+  String* type_decl_or_doc(NamedInterType type) = type_decl_or_doc(named_interface_types_defs(type, !!));
 
 
   String* type_decl_or_doc(TaggedInterType[DeclInterType] type) {
     untagged = untagged_type(type);
     if in(untagged, declared_types):
-      // name = type_name(root_type, !!);
       return (
         #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {",
         "  " & #(if doc_only then "" else "public ") & types_names(untagged, !!) & " inner;",
@@ -399,20 +390,26 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 implicit prg : CompiledPrg {
   String* decl_type_import_function(DeclInterType inter_type) {
     name = decl_type_import_funct_name(inter_type);
-    native_type = input_types_names(inter_type, !!);
-    code = import_code(inter_type, "obj", "return ");
+    type_name = input_types_names(inter_type, !!);
+    type_def = match (inter_type)
+      named()   = named_interface_types_defs(inter_type, !!),
+      _         = inter_type;
+    code = import_code(type_def, "obj", "return ");
     // code = ("throw new RuntimeException();");
-    sign_line = "static Obj " & name & "(" & native_type & " obj) {";
+    sign_line = "static Obj " & name & "(" & type_name & " obj) {";
     return (sign_line) & indent_lines(code) & ("}");
   }
 
 
   String* decl_type_export_function(DeclInterType inter_type) {
     name = decl_type_export_funct_name(inter_type);
-    native_type = output_types_names(inter_type, !!);
-    code = export_code(inter_type, "obj", "return ");
+    type_name = output_types_names(inter_type, !!);
+    type_def = match (inter_type)
+      named()   = named_interface_types_defs(inter_type, !!),
+      _         = inter_type;
+    code = export_code(type_def, type_name, "obj", "return ");
     // code = ("throw new RuntimeException();");
-    sign_line = "static " & native_type & " " & name & "(Obj obj) {";
+    sign_line = "static " & type_name & " " & name & "(Obj obj) {";
     return (sign_line) & indent_lines(code) & ("}");
   }
 }
