@@ -7,7 +7,6 @@ type RecordInterType    = record([+Symbol -> InterType]);
 type TaggedInterType[T] = tagged(Symbol, T);
 type TaggedInterType    = TaggedInterType[InterType];
 
-// type NameableInterType  = TupleInterType, RecordInterType, UnionInterType, TaggedInterType[NameableInterType];
 type NamedInterType     = named(TypeSymbol);
 
 type CollInterType      = seq(InterType),
@@ -223,7 +222,6 @@ implicit prg : CompiledPrg {
 
   String* tuple_import_code(InterType+ types, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
-    // expr_var = "expr" & unique_id;
 
     field_vars = ("field" & printed(i) & "_" & unique_id : t @ i <- types);
     fields_code = (import_code(t, expr & ".item" & printed(i), "Obj " & field_vars(i) & " = ") : t @ i <- types);
@@ -603,23 +601,6 @@ implicit prg : CompiledPrg {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit typedefs : [TypeName -> NeType] {
-  // [TypeSymbol] reachable_type_symbols([InterType] inter_types) {
-  //   type_symbs = [ts : t <- inter_types, ts <- nested_type_symbols(t)];
-  //   loop
-  //     nested_type_symbs = [
-  //       nts : ts <- type_symbs,
-  //             t = cast_ne_type(expand_type_ref(ts, typedefs)),
-  //             it = interface_type(t),
-  //             nts <- nested_type_symbols(it)
-  //     ];
-
-  //     new_type_symbs = nested_type_symbs - type_symbs;
-  //     return type_symbs if new_type_symbs == [];
-  //     type_symbs = type_symbs & new_type_symbs;
-  //   ;
-  // }
-
-
   [TypeSymbol] reachable_type_symbols([NeType] types) {
     type_symbs = [ts : t <- types, ts <- retrieve_type_symbs(t)];
     loop
@@ -721,7 +702,6 @@ implicit typedefs : [TypeName -> NeType] {
 }
 
 
-
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   InterType interface_type(NeType type) {
     if type :: TypeRef:
@@ -807,25 +787,6 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
-// [TypeSymbol] nested_type_symbols(InterType inter_type) =
-//   bool            |
-//   integer         |
-//   float           |
-//   symbol          |
-//   string          |
-//   generic         |
-//   symbol()        = [],
-//   tuple(ts?)      = [s : t <~ ts, s <- nested_type_symbols(t)],
-//   record(fs?)     = [s : unused_var, t <- fs, s <- nested_type_symbols(t)],
-//   union(ts?)      = [s : t <- ts, s <- nested_type_symbols(t)],
-//   named(s?)       = [s],
-//   tagged(_, t?)   |
-//   seq(t?)         |
-//   set(t?)         = nested_type_symbols(t),
-//   bin_rel(ts?)    |
-//   tern_rel(ts?)   = [s : t <~ ts, s <- nested_type_symbols(t)];
-
 
 [NamedInterType] nested_named_types(InterType inter_type) =
   named() = [inter_type],

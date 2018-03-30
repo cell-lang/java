@@ -412,14 +412,7 @@ implicit prg : CompiledPrg {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// [InterType -> String] java_type_names([NamedInterType] types) = [
-//   ## THIS SHOULD ALSO RESOLVE CONFLICTS WITH OTHER UPPER CAMEL CASE NAMES
-//   t -> upper_camel_case(s) : type <- types, named(s?, t?) ?= type
-// ];
-
-
 String safe_lower_camel_case(Symbol symb) = safe_lower_camel_case(symb, false);
-
 
 String safe_lower_camel_case(Symbol symb, Bool keep_underscore) {
   name = lower_camel_case(symb);
