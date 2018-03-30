@@ -101,39 +101,29 @@ implicit prg : CompiledPrg {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg {
-  String* decl_type_import_code(DeclInterType inter_type, String expr, String action_prefix) {
-    res = decl_type_import_code_impl(inter_type, expr, action_prefix);
-    print "--  --  --  --  --  --  --  --  --  --  --  --  --  --";
-    print inter_type;
-    print expr;
-    print action_prefix;
-    print res;
-    return res;
-  }
-
-  String* decl_type_import_code_impl(SymbolInterType inter_type, String expr, String action_prefix) {
+  String* decl_type_import_code(SymbolInterType inter_type, String expr, String action_prefix) {
     return (action_prefix & "SymbObj.get(" & symb_idx_name(symbol(inter_type)) & ");");
 
   }
 
-  String* decl_type_import_code_impl(TupleInterType inter_type, String expr, String action_prefix) {
+  String* decl_type_import_code(TupleInterType inter_type, String expr, String action_prefix) {
     return tuple_import_code(field_types(inter_type), expr, action_prefix);
   }
 
-  String* decl_type_import_code_impl(RecordInterType inter_type, String expr, String action_prefix) {
+  String* decl_type_import_code(RecordInterType inter_type, String expr, String action_prefix) {
     return record_import_code(fields(inter_type), expr, action_prefix);
 
   }
 
-  String* decl_type_import_code_impl(NamedInterType inter_type, String expr, String action_prefix) {
+  String* decl_type_import_code(NamedInterType inter_type, String expr, String action_prefix) {
     return named_type_import_code(inter_type, expr, action_prefix);
   }
 
-  String* decl_type_import_code_impl(UnionInterType inter_type, String expr, String action_prefix) {
+  String* decl_type_import_code(UnionInterType inter_type, String expr, String action_prefix) {
     return type_union_import_code(inter_types(inter_type), expr, action_prefix);
   }
 
-  String* decl_type_import_code_impl(TaggedInterType[DeclInterType] inter_type, String expr, String action_prefix) {
+  String* decl_type_import_code(TaggedInterType[DeclInterType] inter_type, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     out_var = "var_" & unique_id;
     next_action_prefix = "Obj " & out_var & " = ";
@@ -155,17 +145,6 @@ implicit prg : CompiledPrg {
   //////////////////////////////////////////////////////////////////////////////
 
   String* import_code(InterType it, String expr, String action_prefix) {
-    res = import_code_impl(it, expr, action_prefix);
-    print "--------------------------------";
-    print it;
-    print expr;
-    print action_prefix;
-    print res;
-    return res;
-  }
-
-
-  String* import_code_impl(InterType it, String expr, String action_prefix) {
     if in(it, declared_types):
       fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
       return (action_prefix & decl_type_import_funct_name(it) & "(" & expr & ");");

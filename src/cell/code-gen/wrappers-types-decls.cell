@@ -64,21 +64,8 @@ implicit prg : CompiledPrg {
           d <- declarable_types(t),
           d != u
     ];
-
-print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- --";
-print "boundary_types";
-print boundary_types;
-print "inter_types";
-print inter_types;
-print "named_types";
-print named_types;
-print "direct_decl_types";
-print direct_decl_types;
-print "indirect_decl_types";
-print indirect_decl_types;
-print "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -";
-
-    return named_types & direct_decl_types & indirect_decl_types;
+    assert subset(named_types, direct_decl_types & indirect_decl_types);
+    return direct_decl_types & indirect_decl_types;
   }
 
 
