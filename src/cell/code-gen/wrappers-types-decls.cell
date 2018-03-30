@@ -394,8 +394,7 @@ implicit prg : CompiledPrg {
     type_def = match (inter_type)
       named()   = named_interface_types_defs(inter_type, !!),
       _         = inter_type;
-    code = import_code(type_def, "obj", "return ");
-    // code = ("throw new RuntimeException();");
+    code = decl_type_import_code(type_def, "obj", "return ");
     sign_line = "static Obj " & name & "(" & type_name & " obj) {";
     return (sign_line) & indent_lines(code) & ("}");
   }
@@ -408,7 +407,6 @@ implicit prg : CompiledPrg {
       named()   = named_interface_types_defs(inter_type, !!),
       _         = inter_type;
     code = export_code(type_def, type_name, "obj", "return ");
-    // code = ("throw new RuntimeException();");
     sign_line = "static " & type_name & " " & name & "(Obj obj) {";
     return (sign_line) & indent_lines(code) & ("}");
   }

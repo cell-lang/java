@@ -35,6 +35,12 @@ type InterType          = BasicInterType,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+Symbol symbol(SymbolInterType)  = symbol(s?) = s;
+
+InterType+ field_types(TupleInterType)  = tuple(ts?) = ts;
+
+[+Symbol -> InterType] fields(RecordInterType) = record(fs?) = fs;
+
 Symbol type_tag(TaggedInterType)          = tagged(s?, _) = s;
 T      untagged_type(TaggedInterType[T])  = tagged(_, t?) = t;
 
@@ -95,24 +101,68 @@ implicit prg : CompiledPrg {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg {
-  String* import_code(InterType it, String expr, String action_prefix) =
-    bool                    = (action_prefix & "SymbObj.get(" & expr & ");"),
-    integer                 = (action_prefix & "IntObj.get(" & expr & ");"),
-    float                   = (action_prefix & "new FloatObj(" & expr & ");"),
-    symbol                  = (action_prefix & "Conversions.convertText(" & expr & ");"),
-    string                  = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
-    symbol(s?)              = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
-    tuple(ts?)              = tuple_import_code(ts, expr, action_prefix),
-    record(fs?)             = record_import_code(fs, expr, action_prefix),
-    named()                 = named_type_import_code(it, expr, action_prefix),
-    union(ts?)              = type_union_import_code(ts, expr, action_prefix),
-    seq(t?)                 = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
-    set(t?)                 = array_import_code(t, expr, action_prefix, "Builder.createSet"),
-    bin_rel(t1?, t2?)       = bin_rel_import_code(t1, t2, expr, action_prefix),
-    tern_rel(t1?, t2?, t3?) = tern_rel_import_code(t1, t2, t3, expr, action_prefix),
-    tagged(_, generic)      = import_code(:generic, expr, action_prefix),
-    tagged()                = tagged_value_import_code(it, expr, action_prefix),
-    generic                 = (action_prefix & "Conversions.convertText(" & expr & ");");
+  String* decl_type_import_code(SymbolInterType inter_type, String expr, String action_prefix) {
+    return (action_prefix & "SymbObj.get(" & symb_idx_name(symbol(inter_type)) & ");");
+
+  }
+
+  String* decl_type_import_code(TupleInterType inter_type, String expr, String action_prefix) {
+    return tuple_import_code(field_types(inter_type), expr, action_prefix);
+  }
+
+  String* decl_type_import_code(RecordInterType inter_type, String expr, String action_prefix) {
+    return record_import_code(fields(inter_type), expr, action_prefix);
+
+  }
+
+  String* decl_type_import_code(NamedInterType inter_type, String expr, String action_prefix) {
+    return named_type_import_code(inter_type, expr, action_prefix);
+  }
+
+  String* decl_type_import_code(UnionInterType inter_type, String expr, String action_prefix) {
+    return type_union_import_code(inter_types(inter_type), expr, action_prefix);
+  }
+
+  String* decl_type_import_code(TaggedInterType[DeclInterType] inter_type, String expr, String action_prefix) {
+    untagged_type = untagged_type(inter_type);
+    if in(untagged_type, declared_types):
+      unique_id = printed(_counter_(:any_value_will_do));
+      var = "var_" & unique_id;
+      type_name = input_types_names(untagged_type, !!);
+      pre_code = (type_name & " " & var & " = " & expr & ".inner;");
+      return pre_code & import_code(untagged_type, var, action_prefix);
+    else
+      return tagged_value_import_code(inter_type, expr, action_prefix);
+    ;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  String* import_code(InterType it, String expr, String action_prefix) {
+    if in(it, declared_types):
+      fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
+      return (action_prefix & decl_type_import_funct_name(it) & "(" & expr & ");");
+    ;
+
+    return match (it)
+      bool                    = (action_prefix & "SymbObj.get(" & expr & ");"),
+      integer                 = (action_prefix & "IntObj.get(" & expr & ");"),
+      float                   = (action_prefix & "new FloatObj(" & expr & ");"),
+      symbol                  = (action_prefix & "Conversions.convertText(" & expr & ");"),
+      string                  = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
+      symbol(s?)              = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
+      tuple(ts?)              = tuple_import_code(ts, expr, action_prefix),
+      record(fs?)             = record_import_code(fs, expr, action_prefix),
+      named()                 = named_type_import_code(it, expr, action_prefix),
+      union(ts?)              = type_union_import_code(ts, expr, action_prefix),
+      seq(t?)                 = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
+      set(t?)                 = array_import_code(t, expr, action_prefix, "Builder.createSet"),
+      bin_rel(t1?, t2?)       = bin_rel_import_code(t1, t2, expr, action_prefix),
+      tern_rel(t1?, t2?, t3?) = tern_rel_import_code(t1, t2, t3, expr, action_prefix),
+      tagged(_, generic)      = import_code(:generic, expr, action_prefix),
+      tagged()                = tagged_value_import_code(it, expr, action_prefix),
+      generic                 = (action_prefix & "Conversions.convertText(" & expr & ");");
+  }
 
 
   String* named_type_import_code(NamedInterType inter_type, String expr, String action_prefix) =
@@ -211,16 +261,15 @@ implicit prg : CompiledPrg {
 
     rel_type = :bin_rel(arg1_type, arg2_type); ## BAD, RECONSTRUCTING PREVIOUSLY DESTRUCTED VALUE
 
-    return indent_lines((
-        input_arg_type(rel_type) & " " & expr_var & " = " & expr & ";",
-        "int " & len_var & " = " & expr_var & ".length;",
-        "Obj[] " & col1_var & " = new Obj[" & len_var & "];",
-        "Obj[] " & col2_var & " = new Obj[" & len_var & "];",
-        "for (int " & idx_var & " = 0 ; " & idx_var & " < " & len_var & " ; " & idx_var & "++) {"
-      ) & indent_lines(arg1_code & arg2_code) & (
-        "}",
-        action_prefix & "Builder.createBinRel(" & col1_var & ", " & col2_var & ");"
-      )
+    return (
+      input_arg_type(rel_type) & " " & expr_var & " = " & expr & ";",
+      "int " & len_var & " = " & expr_var & ".item1.length;",
+      "Obj[] " & col1_var & " = new Obj[" & len_var & "];",
+      "Obj[] " & col2_var & " = new Obj[" & len_var & "];",
+      "for (int " & idx_var & " = 0 ; " & idx_var & " < " & len_var & " ; " & idx_var & "++) {"
+    ) & indent_lines(arg1_code & arg2_code) & (
+      "}",
+      action_prefix & "Builder.createBinRel(" & append((col1_var, col2_var, len_var), ", ") & ");"
     );
   }
 
@@ -240,17 +289,16 @@ implicit prg : CompiledPrg {
 
     rel_type = :tern_rel(arg1_type, arg2_type, arg3_type); ## BAD, RECONSTRUCTING PREVIOUSLY DESTRUCTED VALUE
 
-    return indent_lines((
-        input_arg_type(rel_type) & " " & expr_var & " = " & expr & ";",
-        "int " & len_var & " = " & expr_var & ".length;",
-        "Obj[] " & col1_var & " = new Obj[" & len_var & "];",
-        "Obj[] " & col2_var & " = new Obj[" & len_var & "];",
-        "Obj[] " & col3_var & " = new Obj[" & len_var & "];",
-        "for (int " & idx_var & " = 0 ; " & idx_var & " < " & len_var & " ; " & idx_var & "++) {"
-      ) & indent_lines(arg1_code & arg2_code & arg3_code) & (
-        "}",
-        action_prefix & "Builder.createBinRel(" & col1_var & ", " & col2_var & ", " & col3_var & ");"
-      )
+    return (
+      input_arg_type(rel_type) & " " & expr_var & " = " & expr & ";",
+      "int " & len_var & " = " & expr_var & ".item1.length;",
+      "Obj[] " & col1_var & " = new Obj[" & len_var & "];",
+      "Obj[] " & col2_var & " = new Obj[" & len_var & "];",
+      "Obj[] " & col3_var & " = new Obj[" & len_var & "];",
+      "for (int " & idx_var & " = 0 ; " & idx_var & " < " & len_var & " ; " & idx_var & "++) {"
+    ) & indent_lines(arg1_code & arg2_code & arg3_code) & (
+      "}",
+      action_prefix & "Builder.createBinRel(" & append((col1_var, col2_var, col3_var, len_var), ", ") & ");"
     );
   }
 
