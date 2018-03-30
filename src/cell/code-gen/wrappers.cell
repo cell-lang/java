@@ -322,7 +322,7 @@ implicit prg : CompiledPrg {
 
 implicit prg : CompiledPrg {
   String* export_code(SymbolInterType inter_type, String type_name, String expr, String action_prefix) {
-    return (action_prefix & type_name & ".singleton();");
+    return (action_prefix & type_name & ".singleton;");
   }
 
   String* export_code(TupleInterType inter_type, String type_name, String expr, String action_prefix) {
@@ -375,7 +375,7 @@ implicit prg : CompiledPrg {
       float               = (action_prefix & expr & ".getDouble();"),
       symbol              = (action_prefix & expr & ".toString();"),
       string              = (action_prefix & expr & ".getString();"),
-      symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton();"),
+      symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton;"),
       tuple()             |
       record()            |
       named()             |
