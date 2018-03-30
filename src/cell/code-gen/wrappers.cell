@@ -323,7 +323,6 @@ implicit prg : CompiledPrg {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg {
-
   String* export_code(SymbolInterType inter_type, String type_name, String expr, String action_prefix) {
     return (action_prefix & type_name & ".singleton();");
   }
@@ -358,8 +357,6 @@ implicit prg : CompiledPrg {
       code = code & export_code(untagged_type, in_var, out_var & ".inner = ");
       code = (code | action_prefix & out_var & ";");
     else
-      ## WHICH ONE? I'M NOT SURE HERE...
-      // code = code & export_code(untagged_type, in_var, action_prefix);
       code = code & export_code(untagged_type, type_name, in_var, action_prefix);
     ;
     return code;
