@@ -82,7 +82,7 @@
     inter_types_docs = interface_types_docs;
 
     decl_types_conv_functs = [
-      ("") & decl_type_import_function(t) & ("") & decl_type_export_function(t)
+      ("") & decl_type_import_functions(t) & ("") & decl_type_export_function(t)
       : t <- declared_types
     ];
 

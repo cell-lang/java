@@ -152,12 +152,12 @@ implicit prg : CompiledPrg {
 
   // Documentation for the generated types, for both input and output
   [String*] interface_types_docs = values(input_types_docs) & values(output_types_docs);
-
-
-  // Names of the conversion functions for both input and output types
-  String decl_type_import_funct_name(DeclInterType it) = "import" & input_types_names(it, !!);
-  String decl_type_export_funct_name(DeclInterType it) = "export" & output_types_names(it, !!);
 }
+
+
+// Names of the conversion functions for both input and output types
+String decl_type_import_funct_name(String name) = "import" & name;
+String decl_type_export_funct_name(String name) = "export" & name;
 
 
 [DeclInterType] declarable_types(InterType inter_type) =
@@ -380,7 +380,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   String* to_string_method = (
     "",
     "public String toString() {",
-    "  return import" & types_names(root_type, !!) & "(this).toString();", ## BAD BAD BAD: NON-DRY CODE: "import" IS DUPLICATED
+    "  return " & decl_type_import_funct_name(types_names(root_type, !!)) & "(this).toString();",
     "}"
   );
 }
@@ -389,26 +389,33 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg {
-  String* decl_type_import_function(DeclInterType inter_type) {
-    name = decl_type_import_funct_name(inter_type);
+  String* decl_type_import_functions(DeclInterType inter_type) {
     type_name = input_types_names(inter_type, !!);
     type_def = match (inter_type)
       named()   = named_interface_types_defs(inter_type, !!),
       _         = inter_type;
-    code = decl_type_import_code(type_def, "obj", "return ");
-    sign_line = "static Obj " & name & "(" & type_name & " obj) {";
-    return (sign_line) & indent_lines(code) & ("}");
+    body = decl_type_import_code(type_def, "obj", "return ", treat_generic_as_value = false);
+    sign_line = "static Obj " & decl_type_import_funct_name(type_name) & "(" & type_name & " obj) {";
+    code = (sign_line) & indent_lines(body) & ("}");
+    out_type_name = output_types_names(inter_type, !!);
+    if out_type_name != type_name:
+      out_body = decl_type_import_code(type_def, "obj", "return ", treat_generic_as_value = true);
+      out_fn_name = decl_type_import_funct_name(out_type_name);
+      out_sign_line = "static Obj " & out_fn_name & "(" & out_type_name & " obj) {";
+      code = code & ("", out_sign_line) & indent_lines(out_body) & ("}");
+    ;
+    return code;
   }
 
 
   String* decl_type_export_function(DeclInterType inter_type) {
-    name = decl_type_export_funct_name(inter_type);
     type_name = output_types_names(inter_type, !!);
+    fn_name = decl_type_export_funct_name(type_name);
     type_def = match (inter_type)
       named()   = named_interface_types_defs(inter_type, !!),
       _         = inter_type;
     code = export_code(type_def, type_name, "obj", "return ");
-    sign_line = "static " & type_name & " " & name & "(Obj obj) {";
+    sign_line = "static " & type_name & " " & fn_name & "(Obj obj) {";
     return (sign_line) & indent_lines(code) & ("}");
   }
 }

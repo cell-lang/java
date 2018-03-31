@@ -100,6 +100,12 @@ implicit prg : CompiledPrg {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg {
+  String* import_code(InterType it, String expr, String action_prefix) =
+    import_code_ex(it, expr, action_prefix, treat_generic_as_value = false);
+}
+
+
+implicit prg : CompiledPrg, treat_generic_as_value : Bool {
   String* decl_type_import_code(SymbolInterType inter_type, String expr, String action_prefix) {
     return (action_prefix & "SymbObj.get(" & symb_idx_name(symbol(inter_type)) & ");");
 
@@ -132,7 +138,7 @@ implicit prg : CompiledPrg {
       unique_id = printed(_counter_(:any_value_will_do));
       in_var = "var_" & unique_id;
       code = (type_name & " " & in_var & " = " & expr & ".inner;");
-      code = code & import_code(untagged_type, in_var, next_action_prefix);
+      code = code & import_code_ex(untagged_type, in_var, next_action_prefix);
     else
       code = decl_type_import_code(untagged_type, expr, next_action_prefix);
     ;
@@ -143,10 +149,11 @@ implicit prg : CompiledPrg {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  String* import_code(InterType it, String expr, String action_prefix) {
+  String* import_code_ex(InterType it, String expr, String action_prefix) {
     if in(it, declared_types):
       fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
-      return (action_prefix & decl_type_import_funct_name(it) & "(" & expr & ");");
+      type_name = input_types_names(it, !!);
+      return (action_prefix & decl_type_import_funct_name(type_name) & "(" & expr & ");");
     ;
 
     return match (it)
@@ -164,16 +171,18 @@ implicit prg : CompiledPrg {
       set(t?)                 = array_import_code(t, expr, action_prefix, "Builder.createSet"),
       bin_rel(t1?, t2?)       = bin_rel_import_code(t1, t2, expr, action_prefix),
       tern_rel(t1?, t2?, t3?) = tern_rel_import_code(t1, t2, t3, expr, action_prefix),
-      tagged(_, generic)      = import_code(:generic, expr, action_prefix),
+      tagged(_, generic)      = import_code_ex(:generic, expr, action_prefix),
       tagged()                = tagged_value_import_code(it, expr, action_prefix),
-      generic                 = (action_prefix & "Conversions.convertText(" & expr & ");");
+      generic                 = if treat_generic_as_value
+                                  then (action_prefix & "((ValueBase) " & expr & ").asObj();")
+                                  else (action_prefix & "Conversions.convertText(" & expr & ");");
   }
 
 
   String* named_type_import_code(NamedInterType inter_type, String expr, String action_prefix) =
     if in(inter_type, declared_types)
-      then (action_prefix & decl_type_import_funct_name(inter_type) & "(" & expr & ");")
-      else import_code(:generic, expr, action_prefix);
+      then (action_prefix & decl_type_import_funct_name(input_types_names(inter_type, !!)) & "(" & expr & ");")
+      else import_code_ex(:generic, expr, action_prefix);
 
 
   String* type_union_import_code([+UnionAltInterType] types, String expr, String action_prefix) {
@@ -188,7 +197,7 @@ implicit prg : CompiledPrg {
         #(if i > 0 then "else " else "") & "if (" & expr & " instanceof " & type_name & ") {",
         "  " & type_name & " " & tmp_var & " = (" & type_name & ") " & expr & ";"
       );
-      code = code & header & indent_lines(import_code(t, tmp_var, res_var & " = ")) & ("}");
+      code = code & header & indent_lines(import_code_ex(t, tmp_var, res_var & " = ")) & ("}");
     ;
 
     return (code | "else", "  throw Miscellanea.internalFail();", action_prefix & res_var & ";");
@@ -212,7 +221,7 @@ implicit prg : CompiledPrg {
       code = (code | keys_var & "[" & printed(i) & "] = " & native_expr(object(l)) & ";");
       field_expr = expr & "." & field_names(l, !!);
       asgnm_prefix = values_var & "[" & printed(i) & "] = ";
-      code = code & import_code(fields(l, !!), field_expr, asgnm_prefix);
+      code = code & import_code_ex(fields(l, !!), field_expr, asgnm_prefix);
     ;
 
     map_creation_expr = "Builder.createMap(" & keys_var & ", " & values_var & ", " & printed(count) & ")";
@@ -224,7 +233,7 @@ implicit prg : CompiledPrg {
     unique_id = printed(_counter_(:any_value_will_do));
 
     field_vars = ("field" & printed(i) & "_" & unique_id : t @ i <- types);
-    fields_code = (import_code(t, expr & ".item" & printed(i), "Obj " & field_vars(i) & " = ") : t @ i <- types);
+    fields_code = (import_code_ex(t, expr & ".item" & printed(i), "Obj " & field_vars(i) & " = ") : t @ i <- types);
 
     tuple_instr = action_prefix & "new MasterSeqObj(new Obj[] {" & append(field_vars, ", ") & "});";
 
@@ -238,7 +247,7 @@ implicit prg : CompiledPrg {
     idx_var = "idx" & unique_id;
     array_var = "array" & unique_id;
 
-    elem_code = import_code(elem_type, expr_var & "[" & idx_var & "]", array_var & "[" & idx_var & "] = ");
+    elem_code = import_code_ex(elem_type, expr_var & "[" & idx_var & "]", array_var & "[" & idx_var & "] = ");
 
     return indent_lines((
         input_arg_type(elem_type) & "[] " & expr_var & " = " & expr & ";",
@@ -260,8 +269,8 @@ implicit prg : CompiledPrg {
     col1_var  = "col1_" & unique_id;
     col2_var  = "col2_" & unique_id;
 
-    arg1_code = import_code(arg1_type, expr_var & ".item1[" & idx_var & "]", col1_var & "[" & idx_var & "] = ");
-    arg2_code = import_code(arg2_type, expr_var & ".item2[" & idx_var & "]", col2_var & "[" & idx_var & "] = ");
+    arg1_code = import_code_ex(arg1_type, expr_var & ".item1[" & idx_var & "]", col1_var & "[" & idx_var & "] = ");
+    arg2_code = import_code_ex(arg2_type, expr_var & ".item2[" & idx_var & "]", col2_var & "[" & idx_var & "] = ");
 
     rel_type = :bin_rel(arg1_type, arg2_type); ## BAD, RECONSTRUCTING PREVIOUSLY DESTRUCTED VALUE
 
@@ -287,9 +296,9 @@ implicit prg : CompiledPrg {
     col2_var  = "col2_" & unique_id;
     col3_var  = "col3_" & unique_id;
 
-    arg1_code = import_code(arg1_type, expr_var & ".item1[" & idx_var & "]", col1_var & "[" & idx_var & "] = ");
-    arg2_code = import_code(arg2_type, expr_var & ".item2[" & idx_var & "]", col2_var & "[" & idx_var & "] = ");
-    arg3_code = import_code(arg3_type, expr_var & ".item3[" & idx_var & "]", col3_var & "[" & idx_var & "] = ");
+    arg1_code = import_code_ex(arg1_type, expr_var & ".item1[" & idx_var & "]", col1_var & "[" & idx_var & "] = ");
+    arg2_code = import_code_ex(arg2_type, expr_var & ".item2[" & idx_var & "]", col2_var & "[" & idx_var & "] = ");
+    arg3_code = import_code_ex(arg3_type, expr_var & ".item3[" & idx_var & "]", col3_var & "[" & idx_var & "] = ");
 
     rel_type = :tern_rel(arg1_type, arg2_type, arg3_type); ## BAD, RECONSTRUCTING PREVIOUSLY DESTRUCTED VALUE
 
@@ -310,7 +319,7 @@ implicit prg : CompiledPrg {
   String* tagged_value_import_code(TaggedInterType tagged_type, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     out_var = "var_" & unique_id;
-    code = import_code(untagged_type(tagged_type), expr, "Obj " & out_var & " = ");
+    code = import_code_ex(untagged_type(tagged_type), expr, "Obj " & out_var & " = ");
     tag = object(type_tag(tagged_type));
     instr = action_prefix & "new TaggedObj(" & symb_idx_name(tag) & ", " & out_var & ");";
     return (code | instr);
@@ -336,7 +345,8 @@ implicit prg : CompiledPrg {
   String* export_code(NamedInterType inter_type, String type_name, String expr, String action_prefix) {
     assert in(inter_type, declared_types);
     return export_code(inter_type, expr, action_prefix);
-    // return (action_prefix & decl_type_export_funct_name(inter_type) & "(" & expr & ");")
+    // type_name = output_types_names(inter_type, !!);
+    // return (action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");")
   }
 
   String* export_code(UnionInterType inter_type, String type_name, String expr, String action_prefix) {
@@ -366,7 +376,8 @@ implicit prg : CompiledPrg {
   String* export_code(InterType it, String expr, String action_prefix) {
     if in(it, declared_types):
       fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
-      return (action_prefix & decl_type_export_funct_name(it) & "(" & expr & ");");
+      type_name = output_types_names(it, !!);
+      return (action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");");
     ;
 
     return match (it)
@@ -703,34 +714,41 @@ implicit typedefs : [TypeName -> NeType] {
 
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
-  InterType interface_type(NeType type) {
-    if type :: TypeRef:
-      type_symb = type_symb(type);
+  InterType interface_type(NeType raw_type) {
+    if raw_type :: TypeRef:
+      type_symb = type_symb(raw_type);
       return :named(type_symb) if in(type_symb, named_interface_types);
     ;
 
     for it <- (:bool, :integer, :float, :string):
-      return it if is_subset(type, internal_type(it));
+      return it if is_subset(raw_type, internal_type(it));
     ;
 
-    maybe_types = maybe_tuple_type_fields(type);
+    norm_type = expand_top_level_type_refs(raw_type);
+
+    if norm_type :: UnionType:
+      maybe_union_inter_type = union_intertype(types(norm_type));
+      return if maybe_union_inter_type != nothing then value(maybe_union_inter_type) else :generic;
+    ;
+
+    maybe_types = maybe_tuple_type_fields(norm_type);
     if maybe_types != nothing:
       types = value(maybe_types);
       size = |types|;
       return :tuple((interface_type(t) : t <- types)) if size >= 2 and size <= 8;
     ;
 
-    if is_subset(type, type_seq):
-      elem_type = seq_elem_supertype(type);
+    if is_subset(norm_type, type_seq):
+      elem_type = seq_elem_supertype(norm_type);
       return :seq(interface_type(elem_type)) if elem_type != empty_type;
     ;
 
-    if is_subset(type, type_set):
-      elem_type = set_elem_supertype(type);
+    if is_subset(norm_type, type_set):
+      elem_type = set_elem_supertype(norm_type);
       return :set(interface_type(elem_type)) if elem_type != empty_type;
     ;
 
-    maybe_fields = maybe_record_type_fields(type);
+    maybe_fields = maybe_record_type_fields(norm_type);
     if maybe_fields != nothing:
       types = value(maybe_fields);
       if not (l, info <- types : info.optional):
@@ -738,20 +756,20 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       ;
     ;
 
-    if is_subset(type, type_bin_rel):
-      args_types = bin_rel_args_supertypes(type);
+    if is_subset(norm_type, type_bin_rel):
+      args_types = bin_rel_args_supertypes(norm_type);
       return :bin_rel((interface_type(t) : t <- args_types)) if args_types :: (NeType, NeType);
     ;
 
-    if is_subset(type, type_tern_rel):
-      args_types = tern_rel_args_supertypes(type);
+    if is_subset(norm_type, type_tern_rel):
+      args_types = tern_rel_args_supertypes(norm_type);
       return :tern_rel((interface_type(t) : t <- args_types)) if args_types :: (NeType, NeType, NeType);
     ;
 
-    if is_subset(type, type_tagged_obj):
-      tag_type = tag_supertype(type);
+    if is_subset(norm_type, type_tagged_obj):
+      tag_type = tag_supertype(norm_type);
       if is_symb_singl_type(tag_type):
-        obj_type = untagged_objs_supertype(type);
+        obj_type = untagged_objs_supertype(norm_type);
         assert obj_type != empty_type; ## WHY THIS?
         if obj_type != empty_type:
           inter_obj_type = interface_type(obj_type);
@@ -760,27 +778,33 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       ;
     ;
 
-    if type :: UnionType:
-      maybe_union_inter_type = union_intertype(types(type));
-      return value(maybe_union_inter_type) if maybe_union_inter_type != nothing;
-    ;
-
-    // return :symbol if is_subset(type, internal_type(:symbol));
+    // return :symbol if is_subset(norm_type, internal_type(:symbol));
 
     return :generic;
 
 
     Maybe[UnionInterType] union_intertype([+NeType] types) {
+      are_unionable = not (t <- types : not {
+        // Returns whether this type maps to a unionable interface type
+        return true if is_symb_singl_type(t);
+        if is_subset(t, type_tagged_obj):
+          tag_type = tag_supertype(t);
+          return true if is_symb_singl_type(tag_type);
+        ;
+        return false;
+      });
+      return nothing if not are_unionable;
+
       inter_types = [
         if is_symb_singl_type(t)
           then :symbol(untag(only_symb(t)))
           else interface_type(t)
         : t <- types
       ];
+      assert inter_types :: [+UnionAltInterType];
+      fail if not inter_types :: [+UnionAltInterType];
 
-      return if inter_types :: [+UnionAltInterType]
-        then just(:union(inter_types))
-        else nothing;
+      return just(:union(inter_types));
     }
   }
 }
