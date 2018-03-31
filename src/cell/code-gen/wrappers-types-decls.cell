@@ -62,10 +62,9 @@ implicit prg : CompiledPrg {
           t = named_interface_types_defs(n, !!),
           u = strip_tags(t),
           d <- declarable_types(t),
-          d != u
+          d != u // This is rather confusing...
     ];
-    assert subset(named_types, direct_decl_types & indirect_decl_types);
-    return direct_decl_types & indirect_decl_types;
+    return named_types & direct_decl_types & indirect_decl_types;
   }
 
 
@@ -381,7 +380,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   String* to_string_method = (
     "",
     "public String toString() {",
-    "  return " & decl_type_import_funct_name(root_type) & "(this).toString();",
+    "  return import" & types_names(root_type, !!) & "(this).toString();", ## BAD BAD BAD: NON-DRY CODE: "import" IS DUPLICATED
     "}"
   );
 }
