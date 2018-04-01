@@ -30,6 +30,11 @@ type InterType          = BasicInterType,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType,
+                      UnionInterType, TaggedInterType;
+
+////////////////////////////////////////////////////////////////////////////////
+
 Symbol symbol(SymbolInterType)  = symbol(s?) = s;
 
 InterType+ field_types(TupleInterType)  = tuple(ts?) = ts;

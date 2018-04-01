@@ -1,9 +1,3 @@
-type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], named(type_symbol(Symbol));
-
-type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType,
-                      UnionInterType, TaggedInterType;
-
-
 implicit prg : CompiledPrg {
   // Types used at the boundary between generated and host code
   [NeType] boundary_types {
@@ -181,7 +175,7 @@ String decl_type_export_funct_name(String name) = "export" & name;
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit reserved_names : [String], direction : <in, out> {
+implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
   [DeclInterType -> String] interface_type_names([DeclInterType] decl_types) {
     type_names = [t -> safe_name(t, nothing) : t <- decl_types];
     loop
@@ -201,79 +195,6 @@ implicit reserved_names : [String], direction : <in, out> {
       };
     ;
     return type_names;
-  }
-
-
-  String safe_name(TupleInterType type, Maybe[Nat] unique_id) {
-    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    field_types = untag(type);
-    name = if field_types :: SimplyNamedInterType+
-      then append((field_type_name(t) : t <- field_types), "_")
-      else "Tuple";
-    return non_reserved_name(name & suffix);
-
-    String field_type_name(SimplyNamedInterType) =
-      bool                = "Bool",
-      integer             = "Long",
-      float               = "Double",
-      symbol              = "Symbol",
-      string              = "String",
-      generic             |
-      tagged(_, generic)  = if direction == :in then "String" else "Value",
-      named(ts?)          = upper_camel_case(match(ts) type_symbol(s?) = s);
-  }
-
-
-  String safe_name(SymbolInterType type, Maybe[Nat] unique_id) {
-    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    base_name = upper_camel_case(untag(type));
-    return non_reserved_name(base_name & suffix);
-  }
-
-
-  String safe_name(RecordInterType type, Maybe[Nat] unique_id) {
-    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    field_labels = isort(keys(untag(type)));
-    base_name = append((upper_camel_case(l) : l <- field_labels), "_");
-    return non_reserved_name(base_name & suffix);
-  }
-
-
-  String safe_name(NamedInterType type, Maybe[Nat] unique_id) {
-    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    return non_reserved_name(base_name(type_symb(type)) & suffix);
-
-
-    String base_name(BasicTypeSymbol) =
-      type_symbol(s?)         |
-      schema_type_symbol(s?)  = upper_camel_case(s),
-      builtin_type_symbol()   = undefined;
-
-    String base_name(ParTypeSymbol type_symb) {
-      ## IMPLEMENT FOR REAL...
-      return base_name(type_symb.symbol);
-    }
-  }
-
-
-  String safe_name(TaggedInterType type, Maybe[Nat] unique_id) {
-    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    return non_reserved_name(upper_camel_case(type_tag(type)) & suffix);
-  }
-
-
-  String safe_name(UnionInterType type, Maybe[Nat] unique_id) {
-    suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
-    return non_reserved_name("TypeUnion" & suffix);
-  }
-
-
-  String non_reserved_name(String unsafe_name) {
-    name = unsafe_name;
-    while reserved_names(name):
-      name = "_" & name;
-    ;
-    return name;
   }
 }
 
@@ -452,13 +373,13 @@ String safe_lower_camel_case(Symbol symb) = safe_lower_camel_case(symb, false);
 
 String safe_lower_camel_case(Symbol symb, Bool keep_underscore) {
   name = lower_camel_case(symb);
-  name = "_" & name if is_reserved(name);
+  name = name & "_" if is_reserved(name);
   return name;
 }
 
 String safe_lower_camel_case_chain(Symbol+ symbs) {
   name = append((lower_camel_case(s) : s <- symbs), "_");
-  name = "_" & name if is_reserved(name);
+  name = name & "_" if is_reserved(name);
   return name;
 }
 

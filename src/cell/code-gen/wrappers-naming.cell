@@ -1,0 +1,170 @@
+implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
+  String safe_name(DeclInterType inter_type, Maybe[Nat] unique_id) {
+    name = default_name(inter_type);
+    name = "GenType" if length(name) > 80;
+    name = name & printed(value(unique_id)) if unique_id != nothing;
+    while reserved_names(name):
+      name = name & "_";
+    ;
+    return name;
+  }
+
+
+  String default_name(InterType) =
+    bool                = "Bool",
+    integer             = "Long",
+    float               = "Double",
+    symbol              = undefined,
+    string              = "String",
+    symbol(s?)          = upper_camel_case(s),
+    tuple(ts?)          = append((default_name(t) : t <- ts), "_"),
+    record(fs?)         = append((upper_camel_case(l) : l <- isort(keys(fs))), "_"),
+    named(ts?)          = default_name(ts),
+    union(ts?)          = append((default_name(t) : t <- isort(ts)), "_"),
+    seq(t?)             = default_name(t) & "_Seq",
+    set(t?)             = default_name(t) & "_Set",
+    bin_rel(ts?)        = append((default_name(t) : t <- ts), "_") & "_Rel",
+    tern_rel(ts?)       = append((default_name(t) : t <- ts), "_") & "_Rel",
+    tagged(s?, _)       = upper_camel_case(s),
+    generic             = if direction == :in then "String" else "Value";
+
+
+  String default_name(BasicTypeSymbol) =
+    type_symbol(s?)         = upper_camel_case(s),
+    schema_type_symbol(s?)  = upper_camel_case(s),
+    builtin_type_symbol()   = undefined;
+
+
+  String default_name(ParTypeSymbol type_symb) {
+    args_names = (
+      if t != empty_type
+        then default_name(interface_type(t, typedefs = prg.typedefs))
+        else "Void"
+      : t <- type_symb.params
+    );
+    return default_name(type_symb.symbol) & "_" & append(args_names, "_");
+  }
+}
+
+
+Bool is_reserved(String id) {
+  return in(id, keywords_and_literals) or in(id, runtime_classes);
+}
+
+
+[String] keywords_and_literals = [
+  "abstract",
+  "assert",
+  "boolean",
+  "break",
+  "byte",
+  "case",
+  "catch",
+  "char",
+  "class",
+  "const",
+  "continue",
+  "default",
+  "do",
+  "double",
+  "else",
+  "enum",
+  "extends",
+  "false",
+  "final",
+  "finally",
+  "float",
+  "for",
+  "goto",
+  "if",
+  "implements",
+  "import",
+  "instanceof",
+  "int",
+  "interface",
+  "long",
+  "native",
+  "new",
+  "null",
+  "package",
+  "private",
+  "protected",
+  "public",
+  "return",
+  "short",
+  "static",
+  "strictfp",
+  "super",
+  "switch",
+  "synchronized",
+  "this",
+  "throw",
+  "throws",
+  "transient",
+  "true",
+  "try",
+  "void",
+  "volatile",
+  "while"
+];
+
+
+[String] runtime_classes = [
+  "Algs",
+  "BinaryTable",
+  "BinaryTableUpdater",
+  "BinRelIter",
+  "BlankObj",
+  "Builder",
+  "ByteStream",
+  "Conversions",
+  "EmptyRelObj",
+  "EmptyRelValue",
+  "FloatObj",
+  "FloatValue",
+  "Hacks",
+  "Index",
+  "IntObj",
+  "IntValue",
+  "Iter",
+  "Lexer",
+  "MasterSeqObj",
+  "Miscellanea",
+  "NeBinRelObj",
+  "NeBinRelValue",
+  "NeSetObj",
+  "NeSetValue",
+  "NeTernRelObj",
+  "NeTernRelValue",
+  "NullObj",
+  "Obj",
+  "OneWayBinTable",
+  "OverflowTable",
+  "Pair",
+  "Parser",
+  "Parsing",
+  "ParsingException",
+  "Procs",
+  "SeqObj",
+  "SeqOrSetIter",
+  "SeqValue",
+  "SliceObj",
+  "SymbObj",
+  "SymbTable",
+  "SymbValue",
+  "TaggedObj",
+  "TaggedValue",
+  "TernaryTable",
+  "TernaryTableUpdater",
+  "TernRelIter",
+  "Token",
+  "TokenStream",
+  "Triplet",
+  "UnaryTable",
+  "UnaryTableUpdater",
+  "ValueBase",
+  "ValueStore",
+  "ValueStoreBase",
+  "ValueStoreUpdater",
+  "WrappingUtils"
+];
