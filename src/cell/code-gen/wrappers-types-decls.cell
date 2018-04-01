@@ -338,22 +338,24 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     ;
 
 
-    String* untagged_type_decl_or_doc(DeclInterType type) = type_decl_or_doc(type);
+    String* untagged_type_decl_or_doc(DeclInterType inter_type) = type_decl_or_doc(inter_type);
 
 
-    String* untagged_type_decl_or_doc(BasicInterType type) {
-      // type AtomicInterType    = bool, integer, float, symbol, string;
-      // type BasicInterType     = AtomicInterType, generic;
-      fail; ## IMPLEMENT
-    }
+    // type AtomicInterType    = bool, integer, float, symbol, string;
+    // type BasicInterType     = AtomicInterType, generic;
+    // type CollInterType      = seq(InterType),
+    //                           set(InterType),
+    //                           bin_rel(InterType, InterType),
+    //                           tern_rel(InterType, InterType, InterType);
 
-
-    String* untagged_type_decl_or_doc(CollInterType type) {
-      // type CollInterType      = seq(InterType),
-      //                           set(InterType),
-      //                           bin_rel(InterType, InterType),
-      //                           tern_rel(InterType, InterType, InterType);
-      fail; ## IMPLEMENT
+    String* untagged_type_decl_or_doc(<BasicInterType, CollInterType> inter_type) {
+      type_name = match (direction)
+        in  = input_arg_type(inter_type),
+        out = return_value_type(inter_type, types_names);
+      body = (#(if doc_only then "" else "public ") & type_name & " inner;");
+      body = body & to_string_method if not doc_only;
+      header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {";
+      return (header) & indent_lines(body) & ("}");
     }
   }
 

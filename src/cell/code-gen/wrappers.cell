@@ -151,7 +151,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
     String* import_code(BasicInterType inter_type, String expr, String action_prefix) {
       // type AtomicInterType    = bool, integer, float, symbol, string;
       // type BasicInterType     = AtomicInterType, generic;
-      fail; ## IMPLEMENT
+      return (); ## IMPLEMENT
     }
 
 
@@ -160,7 +160,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       //                           set(InterType),
       //                           bin_rel(InterType, InterType),
       //                           tern_rel(InterType, InterType, InterType);
-      fail; ## IMPLEMENT
+      return (); ## IMPLEMENT
     }
   }
 
@@ -394,7 +394,7 @@ implicit prg : CompiledPrg {
     String* untagged_type_export_code(BasicInterType inter_type, String type_name, String expr, String action_prefix) {
       // type AtomicInterType    = bool, integer, float, symbol, string;
       // type BasicInterType     = AtomicInterType, generic;
-      fail; ## IMPLEMENT
+      return (); ## IMPLEMENT
     }
 
 
@@ -403,7 +403,7 @@ implicit prg : CompiledPrg {
       //                           set(InterType),
       //                           bin_rel(InterType, InterType),
       //                           tern_rel(InterType, InterType, InterType);
-      fail; ## IMPLEMENT
+      return (); ## IMPLEMENT
     }
   }
 
@@ -690,7 +690,7 @@ implicit typedefs : [TypeName -> NeType] {
 
   Bool is_nameable(NeType type) {
     return false if is_subset(type, type_bool) or is_subset(type, type_string);
-    return is_tuple(type) or is_record(type) or is_union(type) or is_tagged(type, is_nameable($));
+    return is_tuple(type) or is_record(type) or is_union(type) or is_tagged(type);
 
 
     Bool is_tuple(NeType type) {
@@ -714,38 +714,19 @@ implicit typedefs : [TypeName -> NeType] {
     }
 
 
-    Bool is_tagged(NeType type, (NeType -> Bool) is_valid_inner) {
+    Bool is_tagged(NeType type) {
       if is_subset(type, type_tagged_obj):
         tag_type = tag_supertype(type);
-        if is_symb_singl_type(tag_type):
-          obj_type = cast_ne_type(untagged_objs_supertype(type));
-          return true if is_valid_inner(obj_type);
-        ;
+        return true if is_symb_singl_type(tag_type);
       ;
       return false;
     }
 
 
     Bool is_union(NeType type) =
-      union_type(ts?)   = not (t <- ts : not is_union_alt(t)),
+      union_type(ts?)   = not (t <- ts : not is_symb_singl_type(t) and not is_tagged(t)),
       type_ref(ts?)     = is_union(cast_ne_type(expand_type_ref(ts, typedefs))),
       _                 = false;
-
-
-    Bool is_union_alt(NeType type) {
-      return true if is_symb_singl_type(type);
-      if is_subset(type, type_tagged_obj):
-        tag_type = tag_supertype(type);
-        if is_symb_singl_type(tag_type):
-          obj_type = cast_ne_type(untagged_objs_supertype(type));
-          return true if is_unionable(obj_type);
-        ;
-      ;
-      return false;
-    }
-
-
-    Bool is_unionable(NeType type) = is_tuple(type) or is_record(type) or is_tagged(type, is_unionable($));
   }
 }
 
