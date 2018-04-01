@@ -801,8 +801,13 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
           else interface_type(t)
         : t <- types
       ];
-      assert inter_types :: [+UnionAltInterType];
-      fail if not inter_types :: [+UnionAltInterType];
+
+      if not inter_types :: [+UnionAltInterType]:
+        print "WARNING: interface_type/union_intertype";
+        print types;
+        print inter_types;
+        return nothing;
+      ;
 
       return just(:union(inter_types));
     }
