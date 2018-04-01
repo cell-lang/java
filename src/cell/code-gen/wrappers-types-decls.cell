@@ -341,13 +341,6 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     String* untagged_type_decl_or_doc(DeclInterType inter_type) = type_decl_or_doc(inter_type);
 
 
-    // type AtomicInterType    = bool, integer, float, symbol, string;
-    // type BasicInterType     = AtomicInterType, generic;
-    // type CollInterType      = seq(InterType),
-    //                           set(InterType),
-    //                           bin_rel(InterType, InterType),
-    //                           tern_rel(InterType, InterType, InterType);
-
     String* untagged_type_decl_or_doc(<BasicInterType, CollInterType> inter_type) {
       type_name = match (direction)
         in  = input_arg_type(inter_type),

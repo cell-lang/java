@@ -148,19 +148,8 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       decl_type_import_code(inter_type, expr, action_prefix);
 
 
-    String* import_code(BasicInterType inter_type, String expr, String action_prefix) {
-      // type AtomicInterType    = bool, integer, float, symbol, string;
-      // type BasicInterType     = AtomicInterType, generic;
-      return (); ## IMPLEMENT
-    }
-
-
-    String* import_code(CollInterType inter_type, String expr, String action_prefix) {
-      // type CollInterType      = seq(InterType),
-      //                           set(InterType),
-      //                           bin_rel(InterType, InterType),
-      //                           tern_rel(InterType, InterType, InterType);
-      return (); ## IMPLEMENT
+    String* import_code(<BasicInterType, CollInterType> inter_type, String expr, String action_prefix) {
+      return import_code_ex(inter_type, expr & ".inner", action_prefix);
     }
   }
 
@@ -391,19 +380,12 @@ implicit prg : CompiledPrg {
       export_code(inter_type, type_name, expr, action_prefix);
 
 
-    String* untagged_type_export_code(BasicInterType inter_type, String type_name, String expr, String action_prefix) {
-      // type AtomicInterType    = bool, integer, float, symbol, string;
-      // type BasicInterType     = AtomicInterType, generic;
-      return (); ## IMPLEMENT
-    }
-
-
-    String* untagged_type_export_code(CollInterType inter_type, String type_name, String expr, String action_prefix) {
-      // type CollInterType      = seq(InterType),
-      //                           set(InterType),
-      //                           bin_rel(InterType, InterType),
-      //                           tern_rel(InterType, InterType, InterType);
-      return (); ## IMPLEMENT
+    String* untagged_type_export_code(<BasicInterType, CollInterType> inter_type, String type_name, String expr, String action_prefix) {
+      unique_id = printed(_counter_(:any_value_will_do));
+      var = "var_" & unique_id;
+      code = (type_name & " " & var & " = new " & type_name & "();");
+      code = code & export_code(inter_type, expr, var & ".inner = ");
+      return (code | action_prefix & var & ";");
     }
   }
 
