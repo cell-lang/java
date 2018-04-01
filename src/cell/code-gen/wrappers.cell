@@ -16,11 +16,7 @@ type CollInterType      = seq(InterType),
 
 type SymbolInterType    = symbol(Symbol);
 
-type UnionableInterType = TupleInterType,
-                          RecordInterType,
-                          TaggedInterType[UnionableInterType];
-
-type UnionAltInterType  = SymbolInterType, TaggedInterType[UnionableInterType];
+type UnionAltInterType  = SymbolInterType, TaggedInterType;
 type UnionInterType     = union([+UnionAltInterType]);
 
 type InterType          = BasicInterType,
@@ -128,23 +124,44 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
     return type_union_import_code(inter_types(inter_type), expr, action_prefix);
   }
 
-  String* decl_type_import_code(TaggedInterType[DeclInterType] inter_type, String expr, String action_prefix) {
+  String* decl_type_import_code(TaggedInterType inter_type, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     out_var = "var_" & unique_id;
     next_action_prefix = "Obj " & out_var & " = ";
     untagged_type = untagged_type(inter_type);
     if in(untagged_type, declared_types):
+      fail if not untagged_type :: DeclInterType;
       type_name = input_types_names(untagged_type, !!);
       unique_id = printed(_counter_(:any_value_will_do));
       in_var = "var_" & unique_id;
       code = (type_name & " " & in_var & " = " & expr & ".inner;");
       code = code & import_code_ex(untagged_type, in_var, next_action_prefix);
     else
-      code = decl_type_import_code(untagged_type, expr, next_action_prefix);
+      code = import_code(untagged_type, expr, next_action_prefix);
     ;
     tag = object(type_tag(inter_type));
     instr = action_prefix & "new TaggedObj(" & symb_idx_name(tag) & ", " & out_var & ");";
     return (code | instr);
+
+
+    String* import_code(DeclInterType inter_type, String expr, String action_prefix) =
+      decl_type_import_code(inter_type, expr, action_prefix);
+
+
+    String* import_code(BasicInterType inter_type, String expr, String action_prefix) {
+      // type AtomicInterType    = bool, integer, float, symbol, string;
+      // type BasicInterType     = AtomicInterType, generic;
+      fail; ## IMPLEMENT
+    }
+
+
+    String* import_code(CollInterType inter_type, String expr, String action_prefix) {
+      // type CollInterType      = seq(InterType),
+      //                           set(InterType),
+      //                           bin_rel(InterType, InterType),
+      //                           tern_rel(InterType, InterType, InterType);
+      fail; ## IMPLEMENT
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -353,7 +370,7 @@ implicit prg : CompiledPrg {
     return type_union_export_code(inter_types(inter_type), expr, action_prefix);
   }
 
-  String* export_code(TaggedInterType[DeclInterType] tagged_type, String type_name, String expr, String action_prefix) {
+  String* export_code(TaggedInterType tagged_type, String type_name, String expr, String action_prefix) {
     unique_id = printed(_counter_(:any_value_will_do));
     in_var = "var_" & unique_id;
     code = ("Obj " & in_var & " = " & expr & ".getInnerObj();");
@@ -365,9 +382,29 @@ implicit prg : CompiledPrg {
       code = code & export_code(untagged_type, in_var, out_var & ".inner = ");
       code = (code | action_prefix & out_var & ";");
     else
-      code = code & export_code(untagged_type, type_name, in_var, action_prefix);
+      code = code & untagged_type_export_code(untagged_type, type_name, in_var, action_prefix);
     ;
     return code;
+
+
+    String* untagged_type_export_code(DeclInterType inter_type, String type_name, String expr, String action_prefix) =
+      export_code(inter_type, type_name, expr, action_prefix);
+
+
+    String* untagged_type_export_code(BasicInterType inter_type, String type_name, String expr, String action_prefix) {
+      // type AtomicInterType    = bool, integer, float, symbol, string;
+      // type BasicInterType     = AtomicInterType, generic;
+      fail; ## IMPLEMENT
+    }
+
+
+    String* untagged_type_export_code(CollInterType inter_type, String type_name, String expr, String action_prefix) {
+      // type CollInterType      = seq(InterType),
+      //                           set(InterType),
+      //                           bin_rel(InterType, InterType),
+      //                           tern_rel(InterType, InterType, InterType);
+      fail; ## IMPLEMENT
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -414,7 +451,7 @@ implicit prg : CompiledPrg {
     unique_id = printed(_counter_(:any_value_will_do));
 
     symb_types = [t : t <- types, t :: SymbolInterType];
-    tagged_types = [t : t <- types, t :: TaggedInterType[UnionableInterType]];
+    tagged_types = [t : t <- types, t :: TaggedInterType];
     assert symb_types & tagged_types == types;
 
     code = ();

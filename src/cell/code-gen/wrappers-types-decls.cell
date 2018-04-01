@@ -1,7 +1,7 @@
 type SimplyNamedInterType = BasicInterType, TaggedInterType[<generic>], named(type_symbol(Symbol));
 
 type DeclInterType  = SymbolInterType, TupleInterType, RecordInterType, NamedInterType,
-                      UnionInterType, TaggedInterType[DeclInterType];
+                      UnionInterType, TaggedInterType;
 
 
 implicit prg : CompiledPrg {
@@ -74,7 +74,7 @@ implicit prg : CompiledPrg {
 
     [DeclInterType, DeclInterType] child_parent = [c, t : t <- declared_types, c <- children(t)];
 
-    [UnionAltInterType] children(DeclInterType type) =
+    [UnionAltInterType] children(InterType type) =
       union(ts?)    = ts,
       named(_)      = if named_interface_types_defs(type, *)
                         then children(named_interface_types_defs(type, !!))
@@ -256,7 +256,7 @@ implicit reserved_names : [String], direction : <in, out> {
   }
 
 
-  String safe_name(TaggedInterType[DeclInterType] type, Maybe[Nat] unique_id) {
+  String safe_name(TaggedInterType type, Maybe[Nat] unique_id) {
     suffix = if unique_id != nothing then "_" & printed(value(unique_id)) else "";
     return non_reserved_name(upper_camel_case(type_tag(type)) & suffix);
   }
@@ -325,16 +325,36 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   String* type_decl_or_doc(NamedInterType type) = type_decl_or_doc(named_interface_types_defs(type, !!));
 
 
-  String* type_decl_or_doc(TaggedInterType[DeclInterType] type) {
+  String* type_decl_or_doc(TaggedInterType type) {
     untagged = untagged_type(type);
     if in(untagged, declared_types):
+      fail if not untagged :: DeclInterType;
       body = (#(if doc_only then "" else "public ") & types_names(untagged, !!) & " inner;");
       body = body & to_string_method if not doc_only;
       first_line = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {";
       return (first_line) & indent_lines(body) & ("}");
     else
-      return type_decl_or_doc(untagged);
+      return untagged_type_decl_or_doc(untagged);
     ;
+
+
+    String* untagged_type_decl_or_doc(DeclInterType type) = type_decl_or_doc(type);
+
+
+    String* untagged_type_decl_or_doc(BasicInterType type) {
+      // type AtomicInterType    = bool, integer, float, symbol, string;
+      // type BasicInterType     = AtomicInterType, generic;
+      fail; ## IMPLEMENT
+    }
+
+
+    String* untagged_type_decl_or_doc(CollInterType type) {
+      // type CollInterType      = seq(InterType),
+      //                           set(InterType),
+      //                           bin_rel(InterType, InterType),
+      //                           tern_rel(InterType, InterType, InterType);
+      fail; ## IMPLEMENT
+    }
   }
 
 
