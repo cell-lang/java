@@ -1,6 +1,6 @@
 implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
-  String safe_name(DeclInterType inter_type, Maybe[Nat] unique_id) {
-    name = default_name(inter_type);
+  String safe_name(DeclInterType inter_type, Bool retry, Maybe[Nat] unique_id) {
+    name = default_name(inter_type, retry);
     name = "GenType" if length(name) > 80;
     name = name & printed(value(unique_id)) if unique_id != nothing;
     while reserved_names(name):
@@ -10,39 +10,39 @@ implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
   }
 
 
-  String default_name(InterType) =
-    bool                = "Bool",
-    integer             = "Long",
-    float               = "Double",
-    symbol              = undefined,
-    string              = "String",
-    symbol(s?)          = upper_camel_case(s),
-    tuple(ts?)          = append((default_name(t) : t <- ts), "_"),
-    record(fs?)         = append((upper_camel_case(l) : l <- isort(keys(fs))), "_"),
-    named(ts?)          = default_name(ts),
-    union(ts?)          = append((default_name(t) : t <- isort(ts)), "_"),
-    seq(t?)             = default_name(t) & "_Seq",
-    set(t?)             = default_name(t) & "_Set",
-    bin_rel(ts?)        = append((default_name(t) : t <- ts), "_") & "_Rel",
-    tern_rel(ts?)       = append((default_name(t) : t <- ts), "_") & "_Rel",
-    tagged(s?, _)       = upper_camel_case(s),
-    generic             = if direction == :in then "String" else "Value";
+  String default_name(InterType, Bool retry) =
+    bool              = "Bool",
+    integer           = "Long",
+    float             = "Double",
+    symbol            = undefined,
+    string            = "String",
+    symbol(s?)        = upper_camel_case(s),
+    tuple(ts?)        = append((default_name(t, retry) : t <- ts), "_"),
+    record(fs?)       = append((upper_camel_case(l) : l <- isort(keys(fs))), "_"),
+    named(ts?)        = default_name(ts, retry),
+    union(ts?)        = append((default_name(t, retry) : t <- isort(ts)), "_"),
+    seq(t?)           = default_name(t, retry) & "_Seq",
+    set(t?)           = default_name(t, retry) & "_Set",
+    bin_rel(ts?)      = append((default_name(t, retry) : t <- ts), "_") & "_Rel",
+    tern_rel(ts?)     = append((default_name(t, retry) : t <- ts), "_") & "_Rel",
+    tagged(s?, t?)    = upper_camel_case(s) & if retry then "_" & default_name(t, true) else "",
+    generic           = if direction == :in then "String" else "Value";
 
 
-  String default_name(BasicTypeSymbol) =
+  String default_name(BasicTypeSymbol, Bool) =
     type_symbol(s?)         = upper_camel_case(s),
     schema_type_symbol(s?)  = upper_camel_case(s),
     builtin_type_symbol()   = undefined;
 
 
-  String default_name(ParTypeSymbol type_symb) {
+  String default_name(ParTypeSymbol type_symb, Bool retry) {
     args_names = (
       if t != empty_type
-        then default_name(interface_type(t, typedefs = prg.typedefs))
+        then default_name(interface_type(t, typedefs = prg.typedefs), retry)
         else "Void"
       : t <- type_symb.params
     );
-    return default_name(type_symb.symbol) & "_" & append(args_names, "_");
+    return default_name(type_symb.symbol, retry) & "_" & append(args_names, "_");
   }
 }
 

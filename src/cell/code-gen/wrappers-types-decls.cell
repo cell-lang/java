@@ -26,7 +26,7 @@ implicit prg : CompiledPrg {
       // Mapping each type name to its corresponding interface type
       inter_type_defs = [
         :named(ts) -> {
-          exp_type = expand_top_level_type_refs(cast_ne_type(expand_type_ref(ts, typedefs)));
+          exp_type = cast_ne_type(expand_type_ref(ts, typedefs));
           inter_type = interface_type(exp_type);
           assert inter_type :: DeclInterType;
           fail if not inter_type :: DeclInterType;
@@ -150,8 +150,8 @@ implicit prg : CompiledPrg {
 
 
 // Names of the conversion functions for both input and output types
-String decl_type_import_funct_name(String name) = "import" & name;
-String decl_type_export_funct_name(String name) = "export" & name;
+String decl_type_import_funct_name(String name) = "import_" & name;
+String decl_type_export_funct_name(String name) = "export_" & name;
 
 
 [DeclInterType] declarable_types(InterType inter_type) =
@@ -177,11 +177,23 @@ String decl_type_export_funct_name(String name) = "export" & name;
 
 implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
   [DeclInterType -> String] interface_type_names([DeclInterType] decl_types) {
-    type_names = [t -> safe_name(t, nothing) : t <- decl_types];
+    type_names = [t -> safe_name(t, false, nothing) : t <- decl_types];
+
+    // If there are conflicts, the first option is to use the "try harder" flag
+    conflicts = non_injective_keys_by_value(type_names);
+    if conflicts != []:
+      for type_group <- isort(conflicts):
+        renamed_types = [t -> safe_name(t, true, nothing) : t <- type_group];
+        if non_injective_keys(renamed_types) == []:
+          type_names = [t -> lookup(renamed_types, t, type_names(t, !!)) : t <- decl_types];
+        ;
+      ;
+    ;
+
     loop
       conflicts = non_injective_keys_by_value(type_names);
       break if conflicts == [];
-      renamed_types = [t -> safe_name(t, just(i)) : ts <- conflicts, t @ i <~ isort(ts)];
+      renamed_types = [t -> safe_name(t, false, just(i)) : ts <- conflicts, t @ i <~ isort(ts)];
       type_names = [t -> lookup(renamed_types, t, type_names(t, !!)) : t <- decl_types];
 
       ## THIS IS JUST A CHECK THAT HAS TO BE REMOVED
