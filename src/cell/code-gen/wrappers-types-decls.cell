@@ -166,8 +166,8 @@ String decl_type_export_funct_name(String name) = "export_" & name;
   record(fs?)     = [inter_type] & union([declarable_types(t) : l, t <- fs]),
   seq(t?)         |
   set(t?)         = declarable_types(t),
-  bin_rel(ts?)    |
-  tern_rel(ts?)   = union([declarable_types(t) : t <~ ts]),
+  // bin_rel(ts?)    |
+  // tern_rel(ts?)   = union([declarable_types(t) : t <~ ts]),
   tagged()        = declarable_types(strip_tags(inter_type)),
   named()         = [inter_type],
   union(ts?)      = [inter_type] & ts & [d : t <- ts, d <- declarable_types(t), d != strip_tags(t)];
