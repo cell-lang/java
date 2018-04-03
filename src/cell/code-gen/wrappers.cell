@@ -83,6 +83,7 @@ String return_value_type(InterType it, [InterType -> String] types_names) =
   float           = "double",
   symbol          = "String",
   string          = "String",
+  symbol()        |
   tuple()         |
   record()        |
   union()         = types_names(it, !!),
@@ -100,6 +101,7 @@ implicit prg : CompiledPrg {
     bool            = "boolean",
     integer         = "long",
     float           = "double",
+    symbol()        |
     tuple()         |
     record()        |
     union()         = input_types_names(it, !!),
@@ -890,8 +892,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         if not intersect(symbols) and not intersect(tags):
           rem_depth = nat(depth - 1);
           inter_types = [interface_type(t, rem_depth) : t <- types];
-          fail if not inter_types :: [+UnionAltInterType];
-          return :union(inter_types);
+          return :union(inter_types) if inter_types :: [+UnionAltInterType];
         ;
       ;
       return :generic;

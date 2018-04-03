@@ -233,7 +233,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
     body = (#(if doc_only then "" else "public ") & t & spaces(i) & " item" & printed(i) & ";" : t @ i <- types);
     body = body & to_string_method if not doc_only;
-    header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {";
+    header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";
     return (header) & indent_lines(body) & ("}");
   }
 
@@ -250,7 +250,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
       } : l, t <- isort(fields)
     );
     body = body & to_string_method if not doc_only;
-    header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {";
+    header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";
     return (header) & indent_lines(body) & ("}");
   }
 
@@ -264,7 +264,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
       fail if not untagged :: DeclInterType;
       body = (#(if doc_only then "" else "public ") & types_names(untagged, !!) & " inner;");
       body = body & to_string_method if not doc_only;
-      first_line = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {";
+      first_line = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";
       return (first_line) & indent_lines(body) & ("}");
     else
       return untagged_type_decl_or_doc(untagged);
@@ -280,14 +280,14 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
         out = return_value_type(inter_type, types_names);
       body = (#(if doc_only then "" else "public ") & type_name & " inner;");
       body = body & to_string_method if not doc_only;
-      header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl & " {";
+      header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";
       return (header) & indent_lines(body) & ("}");
     }
   }
 
 
   String* type_decl_or_doc(UnionInterType type) = (
-    "interface " & name_and_parents_decl & " {",
+    "interface " & name_and_parents_decl(true) & " {",
     "",
     "}"
   );
@@ -297,13 +297,13 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     type_name = types_names(root_type, !!);
     if doc_only:
       return (
-        "class " & name_and_parents_decl & " {",
+        "class " & name_and_parents_decl(false) & " {",
         "  final static " & type_name & " singleton;",
         "}"
       );
     else
       return (
-        "public static class " & name_and_parents_decl & " {",
+        "public static class " & name_and_parents_decl(false) & " {",
         "  private " & type_name & "() {}",
         "",
         "  public final static " & type_name & " singleton = new " & type_name & "();",
@@ -317,10 +317,11 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   }
 
 
-  String name_and_parents_decl {
+  String name_and_parents_decl(Bool is_interface) {
     text = types_names(root_type, !!);
     parents = decl_types_parents(root_type);
-    text = text & " implements " & append((types_names(p, !!) : p <- isort(parents)), ", ") if parents != [];
+    keyword = if is_interface then " extends " else " implements ";
+    text = text & keyword & append((types_names(p, !!) : p <- isort(parents)), ", ") if parents != [];
     return text;
   }
 
