@@ -88,8 +88,8 @@ implicit prg : CompiledPrg {
       symbol()        |
       tuple()         |
       record()        |
-      union()         = input_types_names(it, !!),
-      named(n?)       = lookup(input_types_names, it, "String"),
+      union()         = undefined,
+      named(n?)       = input_arg_type(named_interface_types_defs(it, !!)),
       seq(t?)         |
       set(t?)         = input_arg_type(t) & "[]",
       tagged(_, t?)   = input_arg_type(t),
@@ -115,8 +115,8 @@ implicit prg : CompiledPrg {
       symbol()        |
       tuple()         |
       record()        |
-      union()         = types_names(it, !!),
-      named()         = lookup(types_names, it, "Value"),
+      union()         = undefined,
+      named()         = return_value_type(named_interface_types_defs(it, !!), types_names),
       seq(t?)         |
       set(t?)         = return_value_type(t, types_names) & "[]",
       tagged(_, t?)   = return_value_type(t, types_names),
@@ -196,21 +196,21 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
     ;
 
     return match (it)
-      bool                    = (action_prefix & "SymbObj.get(" & expr & ");"),
-      integer                 = (action_prefix & "IntObj.get(" & expr & ");"),
-      float                   = (action_prefix & "new FloatObj(" & expr & ");"),
-      string                  = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
-      symbol(s?)              = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
-      tuple(ts?)              = tuple_import_code(ts, expr, action_prefix),
-      record(fs?)             = record_import_code(fs, expr, action_prefix),
-      named()                 = named_type_import_code(it, expr, action_prefix),
-      union(ts?)              = type_union_import_code(ts, expr, action_prefix),
-      seq(t?)                 = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
-      set(t?)                 = array_import_code(t, expr, action_prefix, "Builder.createSet"),
-      tagged()                = tagged_value_import_code(it, expr, action_prefix),
-      generic                 = if treat_generic_as_value
-                                  then (action_prefix & "((ValueBase) " & expr & ").asObj();")
-                                  else (action_prefix & "Conversions.convertText(" & expr & ");");
+      bool          = (action_prefix & "SymbObj.get(" & expr & ");"),
+      integer       = (action_prefix & "IntObj.get(" & expr & ");"),
+      float         = (action_prefix & "new FloatObj(" & expr & ");"),
+      string        = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
+      symbol(s?)    = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
+      tuple()       |
+      record()      |
+      union()       = undefined, // They are supposed to always be declared
+      named()       = import_code_ex(named_interface_types_defs(it, !!), expr, action_prefix),
+      seq(t?)       = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
+      set(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSet"),
+      tagged()      = tagged_value_import_code(it, expr, action_prefix),
+      generic       = if treat_generic_as_value
+                        then (action_prefix & "((ValueBase) " & expr & ").asObj();")
+                        else (action_prefix & "Conversions.convertText(" & expr & ");");
   }
 
 
@@ -221,7 +221,10 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
 
 
   String* type_union_import_code([+UnionAltInterType] types, String expr, String action_prefix) {
-    assert action_prefix == "return "; ## BAD BAD BAD
+if action_prefix != "return ":
+  print "************************************************";
+  print (types, expr, action_prefix);
+;
 
     unique_id = printed(_counter_(:any_value_will_do));
     tmp_var = "var_" & unique_id;
@@ -409,7 +412,10 @@ implicit prg : CompiledPrg {
 
 
   String* type_union_export_code([+UnionAltInterType] types, String expr, String action_prefix) {
-    assert action_prefix == "return "; ## BAD BAD BAD
+if action_prefix != "return ":
+  print "************************************************";
+  print (types, expr, action_prefix);
+;
 
     unique_id = printed(_counter_(:any_value_will_do));
 
@@ -432,14 +438,16 @@ implicit prg : CompiledPrg {
         for s, t @ i <- isort(symbol_type_map):
           symbs_code = symbs_code & (
             "  case " & symb_idx_name(s) & ":",
-            "    return " & action_prefix & output_types_names(t, !!) & ".singleton;",
+            "    " & action_prefix & output_types_names(t, !!) & ".singleton;",
+            "    break" if action_prefix != "return ", ## BAD BAD BAD
             ""
           );
         ;
         symbs_code = (symbs_code | "  default:", "    throw Miscellanea.internalFail();", "}");
 
       else
-        symbs_code = export_code(only(values(symbol_type_map)), expr, action_prefix);
+        only_type = only(values(symbol_type_map));
+        symbs_code = (action_prefix & output_types_names(only_type, !!) & ".singleton;");
       ;
       symbs_code = ("if (" & expr & ".isSymb()) {") & indent_lines(symbs_code) & ("}") if tag_type_map != [];
       code = code & symbs_code;
@@ -452,14 +460,15 @@ implicit prg : CompiledPrg {
           type_name = output_types_names(type, !!);
           tagged_values_code = tagged_values_code & (
             "  case " & symb_idx_name(object(tag)) & ":",
-            "    return " & decl_type_export_funct_name(type_name) & "(" & expr & ");",
+            "    " & action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");",
             ""
           );
         ;
         tagged_values_code = (tagged_values_code | "  default:", "    throw Miscellanea.internalFail();", "}");
 
       else
-        tagged_values_code = export_code(only(values(tag_type_map)), expr, action_prefix);
+        type_name = output_types_names(only(values(tag_type_map)), !!);
+        tagged_values_code = (action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");");
       ;
       if symbol_type_map != []:
         tagged_values_code = ("else {") & indent_lines(tagged_values_code) & ("}");
