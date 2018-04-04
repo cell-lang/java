@@ -146,21 +146,15 @@ implicit prg : CompiledPrg {
 
 
   // Input types documentation
-  [DeclInterType -> String*] input_types_docs {
-    let direction = :in:
-      docs = [t -> type_docs(t, input_types_names, :in) : t, unused_var <- input_types_names];
-    ;
-    return docs;
-  }
+  [DeclInterType -> String*] input_types_docs = [
+    t -> type_docs(t, input_types_names, :in) : t, unused_var <- input_types_names
+  ];
 
 
   // Output types documentation
-  [DeclInterType -> String*] output_types_docs {
-    let direction = :out:
-      docs = [t -> type_docs(t, output_types_names, :out) : t, unused_var <- output_types_names];
-    ;
-    return docs;
-  }
+  [DeclInterType -> String*] output_types_docs = [
+    t -> type_docs(t, output_types_names, :out) : t, unused_var <- output_types_names
+  ];
 
 
   // Interface type declarations, for both input and output

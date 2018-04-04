@@ -22,8 +22,6 @@ implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
     union(ts?)        = append((default_name(t, retry) : t <- isort(ts)), "_"),
     seq(t?)           = default_name(t, retry) & "_Seq",
     set(t?)           = default_name(t, retry) & "_Set",
-    // bin_rel(ts?)      = append((default_name(t, retry) : t <- ts), "_") & "_Rel",
-    // tern_rel(ts?)     = append((default_name(t, retry) : t <- ts), "_") & "_Rel",
     tagged(s?, t?)    = upper_camel_case(s) & if retry then "_" & default_name(t, true) else "",
     generic           = if direction == :in then "String" else "Value";
 
