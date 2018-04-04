@@ -1,7 +1,7 @@
 implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
   String safe_name(DeclInterType inter_type, Bool retry, Maybe[Nat] unique_id) {
     name = default_name(inter_type, retry);
-    name = "GenType" if length(name) > 80;
+    name = take(name, 60);
     name = name & printed(value(unique_id)) if unique_id != nothing;
     while reserved_names(name):
       name = name & "_";
@@ -14,7 +14,6 @@ implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
     bool              = "Bool",
     integer           = "Long",
     float             = "Double",
-    symbol            = undefined,
     string            = "String",
     symbol(s?)        = upper_camel_case(s),
     tuple(ts?)        = append((default_name(t, retry) : t <- ts), "_"),

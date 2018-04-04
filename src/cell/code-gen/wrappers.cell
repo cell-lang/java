@@ -1,4 +1,4 @@
-type AtomicInterType    = bool, integer, float, symbol, string;
+type AtomicInterType    = bool, integer, float, string;
 type BasicInterType     = AtomicInterType, generic;
 
 type TupleInterType     = tuple(InterType+);
@@ -73,7 +73,6 @@ NeType internal_type(AtomicInterType) =
   bool        = type_bool,
   integer     = integer,
   float       = float_type,
-  symbol      = atom_type,
   string      = type_string;
 
 
@@ -81,7 +80,6 @@ String return_value_type(InterType it, [InterType -> String] types_names) =
   bool            = "boolean",
   integer         = "long",
   float           = "double",
-  symbol          = "String",
   string          = "String",
   symbol()        |
   tuple()         |
@@ -97,23 +95,29 @@ String return_value_type(InterType it, [InterType -> String] types_names) =
 
 
 implicit prg : CompiledPrg {
-  String input_arg_type(InterType it) =
-    bool            = "boolean",
-    integer         = "long",
-    float           = "double",
-    symbol()        |
-    tuple()         |
-    record()        |
-    union()         = input_types_names(it, !!),
-    named(n?)       = lookup(input_types_names, it, "String"),
-    seq(t?)         |
-    set(t?)         = input_arg_type(t) & "[]",
-    // bin_rel(ts?)    = "Pair<" & append((input_arg_type(t) & "[]" : t <- ts), ", ") & ">",
-    // tern_rel(ts?)   = "Triplet<" & append((input_arg_type(t) & "[]" : t <- ts), ", ") & ">",
-    tagged(_, t?)   = input_arg_type(t),
-    symbol          |
-    string          |
-    generic         = "String";
+  String input_arg_type(InterType it) {
+    if in(it, declared_types):
+      fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
+      return input_types_names(it, !!) if not is_simplifiable(it);
+    ;
+
+    return match (it)
+      bool            = "boolean",
+      integer         = "long",
+      float           = "double",
+      symbol()        |
+      tuple()         |
+      record()        |
+      union()         = input_types_names(it, !!),
+      named(n?)       = lookup(input_types_names, it, "String"),
+      seq(t?)         |
+      set(t?)         = input_arg_type(t) & "[]",
+      // bin_rel(ts?)    = "Pair<" & append((input_arg_type(t) & "[]" : t <- ts), ", ") & ">",
+      // tern_rel(ts?)   = "Triplet<" & append((input_arg_type(t) & "[]" : t <- ts), ", ") & ">",
+      tagged(_, t?)   = input_arg_type(t),
+      string          |
+      generic         = "String";
+  }
 
 
   String return_value_type(InterType it) = return_value_type(it, output_types_names);
@@ -184,15 +188,16 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
   String* import_code_ex(InterType it, String expr, String action_prefix) {
     if in(it, declared_types):
       fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
-      type_name = input_types_names(it, !!);
-      return (action_prefix & decl_type_import_funct_name(type_name) & "(" & expr & ");");
+      if not is_simplifiable(it):
+        type_name = input_types_names(it, !!);
+        return (action_prefix & decl_type_import_funct_name(type_name) & "(" & expr & ");");
+      ;
     ;
 
     return match (it)
       bool                    = (action_prefix & "SymbObj.get(" & expr & ");"),
       integer                 = (action_prefix & "IntObj.get(" & expr & ");"),
       float                   = (action_prefix & "new FloatObj(" & expr & ");"),
-      symbol                  = (action_prefix & "Conversions.convertText(" & expr & ");"),
       string                  = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
       symbol(s?)              = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
       tuple(ts?)              = tuple_import_code(ts, expr, action_prefix),
@@ -203,7 +208,6 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       set(t?)                 = array_import_code(t, expr, action_prefix, "Builder.createSet"),
       // bin_rel(t1?, t2?)       = bin_rel_import_code(t1, t2, expr, action_prefix),
       // tern_rel(t1?, t2?, t3?) = tern_rel_import_code(t1, t2, t3, expr, action_prefix),
-      tagged(_, generic)      = import_code_ex(:generic, expr, action_prefix),
       tagged()                = tagged_value_import_code(it, expr, action_prefix),
       generic                 = if treat_generic_as_value
                                   then (action_prefix & "((ValueBase) " & expr & ").asObj();")
@@ -218,21 +222,23 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
 
 
   String* type_union_import_code([+UnionAltInterType] types, String expr, String action_prefix) {
+    assert action_prefix == "return "; ## BAD BAD BAD
+
     unique_id = printed(_counter_(:any_value_will_do));
     tmp_var = "var_" & unique_id;
-    res_var = "res_var_" & unique_id;
 
-    code = ("Obj " & res_var & ";");
+    code = ();
     for t @ i <- isort(types):
       type_name = input_types_names(t, !!);
-      header = (
+      code = code & (
         #(if i > 0 then "else " else "") & "if (" & expr & " instanceof " & type_name & ") {",
-        "  " & type_name & " " & tmp_var & " = (" & type_name & ") " & expr & ";"
+        "  " & type_name & " " & tmp_var & " = (" & type_name & ") " & expr & ";",
+        "  " & action_prefix & decl_type_import_funct_name(type_name) & "(" & tmp_var & ");",
+        "}"
       );
-      code = code & header & indent_lines(import_code_ex(t, tmp_var, res_var & " = ")) & ("}");
     ;
 
-    return (code | "else", "  throw Miscellanea.internalFail();", action_prefix & res_var & ";");
+    return (code | "else", "  throw Miscellanea.internalFail();");
   }
 
 
@@ -354,6 +360,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
 
 
   String* tagged_value_import_code(TaggedInterType tagged_type, String expr, String action_prefix) {
+    return import_code_ex(:generic, expr, action_prefix) if tagged_type == :generic;
     unique_id = printed(_counter_(:any_value_will_do));
     out_var = "var_" & unique_id;
     code = import_code_ex(untagged_type(tagged_type), expr, "Obj " & out_var & " = ");
@@ -426,15 +433,16 @@ implicit prg : CompiledPrg {
   String* export_code(InterType it, String expr, String action_prefix) {
     if in(it, declared_types):
       fail if not it :: DeclInterType; ## BAD BAD BAD: IT CANNOT FAIL, BUT THE TYPECHECKER SHOULD BE ABLE TO FIGURE IT OUT ON ITS OWN
-      type_name = output_types_names(it, !!);
-      return (action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");");
+      if not is_simplifiable(it):
+        type_name = output_types_names(it, !!);
+        return (action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");");
+      ;
     ;
 
     return match (it)
       bool                = (action_prefix & expr & ".getBool();"),
       integer             = (action_prefix & expr & ".getLong();"),
       float               = (action_prefix & expr & ".getDouble();"),
-      symbol              = (action_prefix & expr & ".toString();"),
       string              = (action_prefix & expr & ".getString();"),
       symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton;"),
       tuple()             |
@@ -445,13 +453,13 @@ implicit prg : CompiledPrg {
       set(t?)             = array_export_code(t, expr, action_prefix),
       // bin_rel(t1?, t2?)   = bin_rel_export_code(t1, t2, expr, action_prefix),
       // tern_rel(t1?, t2?, t3?) = tern_rel_export_code(t1, t2, t3, expr, action_prefix),
-      tagged(_, generic)  = export_code(:generic, expr, action_prefix),
       tagged()            = tagged_type_export_code(it, expr, action_prefix),
       generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
   }
 
 
   String* tagged_type_export_code(TaggedInterType tagged_type, String expr, String action_prefix) {
+    return export_code(:generic, expr, action_prefix) if tagged_type == :generic;
     unique_id = printed(_counter_(:any_value_will_do));
     in_var = "var_" & unique_id;
     instr = "Obj " & in_var & " = " & expr & ".getInnerObj();";
@@ -461,6 +469,8 @@ implicit prg : CompiledPrg {
 
 
   String* type_union_export_code([+UnionAltInterType] types, String expr, String action_prefix) {
+    assert action_prefix == "return "; ## BAD BAD BAD
+
     unique_id = printed(_counter_(:any_value_will_do));
 
     symb_types   = [t : t <- types, t :: SymbolInterType];
@@ -480,10 +490,11 @@ implicit prg : CompiledPrg {
       if |symbol_type_map| > 1:
         symbs_code = ("switch (" & expr & ".getSymbId()) {");
         for s, t @ i <- isort(symbol_type_map):
-          symbs_code = (symbs_code | "  case " & symb_idx_name(s) & ":");
-          symbs_code = symbs_code & indent_lines(indent_lines(export_code(t, expr, action_prefix)));
-          ## BAD BAD BAD: THIS IS REALLY NASTY HACK
-          symbs_code = symbs_code & ("    break;" if action_prefix != "return ", "");
+          symbs_code = symbs_code & (
+            "  case " & symb_idx_name(s) & ":",
+            "    return " & action_prefix & output_types_names(t, !!) & ".singleton;",
+            ""
+          );
         ;
         symbs_code = (symbs_code | "  default:", "    throw Miscellanea.internalFail();", "}");
 
@@ -498,12 +509,12 @@ implicit prg : CompiledPrg {
       if |tag_type_map| > 1:
         tagged_values_code = ("switch (" & expr & ".getTagId()) {");
         for tag, type @ i <- isort(tag_type_map):
-          tagged_values_code = (tagged_values_code | "  case " & symb_idx_name(object(tag)) & ":");
-          case_code = export_code(type, expr, action_prefix);
-          tagged_values_code = tagged_values_code & indent_lines(indent_lines(case_code));
-           ## BAD BAD BAD: THIS IS REALLY NASTY HACK
-          tagged_values_code = (tagged_values_code | "    break;") if action_prefix != "return ";
-          tagged_values_code = (tagged_values_code | "");
+          type_name = output_types_names(type, !!);
+          tagged_values_code = tagged_values_code & (
+            "  case " & symb_idx_name(object(tag)) & ":",
+            "    return " & decl_type_export_funct_name(type_name) & "(" & expr & ");",
+            ""
+          );
         ;
         tagged_values_code = (tagged_values_code | "  default:", "    throw Miscellanea.internalFail();", "}");
 
@@ -561,7 +572,6 @@ implicit prg : CompiledPrg {
       bool                = (action_prefix & "Conversions.toBoolArray(" & expr & ");"),
       integer             = (action_prefix & "Conversions.toLongArray(" & expr & ");"),
       float               = (action_prefix & "Conversions.toDoubleArray(" & expr & ");"),
-      symbol              = (action_prefix & "Conversions.toSymbolArray(" & expr & ");"),
       string              = (action_prefix & "Conversions.toStringArray(" & expr & ");"),
       generic             = (action_prefix & "Conversions.toValueArray(" & expr & ");"),
       tagged(_, generic)  = array_export_code(:generic, expr, action_prefix),
@@ -754,6 +764,7 @@ implicit typedefs : [TypeName -> NeType] {
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   InterType interface_type(NeType type) {
     return interface_type(type, 8);
+
 
     InterType interface_type(NeType type, Nat depth) {
       // Named types
@@ -949,7 +960,6 @@ implicit typedefs : [TypeName -> NeType] {
   bool            |
   integer         |
   float           |
-  symbol          |
   string          |
   generic         |
   symbol()        |
