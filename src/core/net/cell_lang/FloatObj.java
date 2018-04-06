@@ -34,8 +34,7 @@ class FloatObj extends Obj {
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      Double obj = new Double(value);
-      writer.write(obj.toString());
+      writer.write(Double.toString(value));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -43,8 +42,7 @@ class FloatObj extends Obj {
   }
 
   public int minPrintedSize() {
-    Double obj = new Double(value);
-    return obj.toString().length();
+    return Double.toString(value).length();
   }
 
   public ValueBase getValue() {

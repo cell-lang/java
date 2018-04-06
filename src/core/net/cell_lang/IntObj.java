@@ -39,8 +39,7 @@ class IntObj extends Obj {
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      Long obj = new Long(value);
-      writer.write(obj.toString());
+      writer.write(Long.toString(value));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -48,8 +47,7 @@ class IntObj extends Obj {
   }
 
   public int minPrintedSize() {
-    Long obj = new Long(value);
-    return obj.toString().length();
+    return Long.toString(value).length();
   }
 
   public ValueBase getValue() {

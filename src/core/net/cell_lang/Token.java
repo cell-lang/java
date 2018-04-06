@@ -19,10 +19,10 @@ class Token {
   }
 
   public Token(int offset, int length, TokenType type, long value) {
-    this(offset, length, type, new Long(value));
+    this(offset, length, type, Long.valueOf(value));
   }
 
   public Token(int offset, int length, TokenType type, double value) {
-    this(offset, length, type, new Double(value));
+    this(offset, length, type, Double.valueOf(value));
   }
 };
