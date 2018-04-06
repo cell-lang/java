@@ -227,20 +227,29 @@ if action_prefix != "return ":
 ;
 
     unique_id = printed(_counter_(:any_value_will_do));
-    tmp_var = "var_" & unique_id;
+    in_var = "var_" & unique_id;
+    unique_id = printed(_counter_(:any_value_will_do));
+    out_var = "var_" & unique_id;
 
-    code = ();
+    is_return = action_prefix == "return "; ## BAD BAD BAD
+
+    code = ("Obj " & out_var & ";" if not is_return);
+    local_action = if is_return then action_prefix else out_var & " = ";
     for t @ i <- isort(types):
       type_name = input_types_names(t, !!);
       code = code & (
         #(if i > 0 then "else " else "") & "if (" & expr & " instanceof " & type_name & ") {",
-        "  " & type_name & " " & tmp_var & " = (" & type_name & ") " & expr & ";",
-        "  " & action_prefix & decl_type_import_funct_name(type_name) & "(" & tmp_var & ");",
+        "  " & type_name & " " & in_var & " = (" & type_name & ") " & expr & ";",
+        "  " & local_action & decl_type_import_funct_name(type_name) & "(" & in_var & ");",
         "}"
       );
     ;
 
-    return (code | "else", "  throw Miscellanea.internalFail();");
+    return code & (
+      "else",
+      "  throw Miscellanea.internalFail();",
+      action_prefix & out_var & ";" if not is_return
+    );
   }
 
 
@@ -413,7 +422,7 @@ implicit prg : CompiledPrg {
 
   String* type_union_export_code([+UnionAltInterType] types, String expr, String action_prefix) {
 if action_prefix != "return ":
-  print "************************************************";
+  print "** ** ** ** ** ** ** ** ** ** ** ** ** **";
   print (types, expr, action_prefix);
 ;
 
