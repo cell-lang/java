@@ -206,10 +206,10 @@ implicit
       ) & indent_lines(import_code(input_types(key_col), "key", "Obj keyObj = ")) & (
         "  int surr1 = " & relvar_path & ".store1.lookupValue(keyObj);",
         "  if (surr1 == -1)",
-        "    throw new NoSuchElementException();",
+        "    throw new java.util.NoSuchElementException();",
         "  BinaryTable.Iter it = " & relvar_path & ".getIter1((int) surr1);",
         "  if (it.done())",
-        "    throw new NoSuchElementException();",
+        "    throw new java.util.NoSuchElementException();",
         "  Miscellanea._assert(it.getField1() == surr1);",
         "  int surr2 = it.getField2();",
         "  it.next();",

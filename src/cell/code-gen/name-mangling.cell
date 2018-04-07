@@ -219,7 +219,7 @@ String var_decl(SeqItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & 
 String var_decl(SetItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";
 String var_decl(BinRelItVar v)  = "BinRelIter "     & native_var_decl_name(v) & ";";
 String var_decl(TernRelItVar v) = "TernRelIter "    & native_var_decl_name(v) & ";";
-String var_decl(StreamVar v)    = "ArrayList<Obj> " & native_var_decl_name(v) & ";";
+String var_decl(StreamVar v)    = "java.util.ArrayList<Obj> " & native_var_decl_name(v) & ";";
 String var_decl(VecVar v)       = "Obj[] " & native_var_decl_name(v) & " = new Obj[" & printed(v.size) & "];";
 String var_decl(TableItVar v)   = table_it_var_type[v.arity] & " " & native_var_decl_name(v) & ";";
 

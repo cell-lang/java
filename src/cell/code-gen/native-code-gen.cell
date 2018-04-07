@@ -435,7 +435,7 @@ implicit {
   String block_label(Int id) = "block" & printed(id);
 
   String* native_code(Instr instr, Maybe[Nat] block_id) =
-    init_stream(v?)       = (native_new_call(v, "ArrayList<Obj>", ())),
+    init_stream(v?)       = (native_new_call(v, "java.util.ArrayList<Obj>", ())),
     append()              = (native_method_call(instr.stream, "add", (instr.obj))),
     set_at()              = (native_method_call(instr.var, "initAt", (instr.idx, instr.value))),
     get_seq_iter()        |
