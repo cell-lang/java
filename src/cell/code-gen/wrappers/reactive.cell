@@ -1,5 +1,5 @@
-implicit block : ReactBlock {
-  String auto_class_name = upper_camel_case(bare_id(block.name));
+implicit prg : CompiledPrg, block : ReactBlock {
+  String auto_class_name = safe_class_name(block.name);
   String auto_struct_ptr = "((" & native_name(block.name) & " *) ptr)";
 
   [String] duplicate_names {

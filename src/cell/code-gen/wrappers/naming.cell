@@ -1,9 +1,22 @@
-implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
-  String safe_name(DeclInterType inter_type, Bool retry, Maybe[Nat] unique_id) {
+implicit prg : CompiledPrg {
+  String safe_class_name(<DBSymbol, AutoSymbol> id) = safe_block_class_names(id, !!);
+
+  [<DBSymbol, AutoSymbol> -> String] safe_block_class_names = [
+    b.name -> {
+      name = upper_camel_case(bare_id(b.name));
+      name = name & "_" if is_reserved(name);
+      return name;
+    } : b <- prg.static_blocks | b <- prg.react_blocks
+  ];
+}
+
+
+implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
+  String safe_class_name(DeclInterType inter_type, Bool retry, Maybe[Nat] unique_id) {
     name = default_name(inter_type, retry);
     name = take(name, 60);
     name = name & printed(value(unique_id)) if unique_id != nothing;
-    while reserved_names(name):
+    while taken_names(name) or is_reserved(name) or safe_block_class_names(*, name):
       name = name & "_";
     ;
     return name;
@@ -43,9 +56,37 @@ implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+String safe_lower_camel_case(Symbol symb) = safe_lower_camel_case(symb, false);
+
+String safe_lower_camel_case(Symbol symb, Bool keep_underscore) {
+  name = lower_camel_case(symb);
+  name = name & "_" if is_reserved(name);
+  return name;
+}
+
+String safe_lower_camel_case_chain(Symbol+ symbs) {
+  name = append((lower_camel_case(s) : s <- symbs), "_");
+  name = name & "_" if is_reserved(name);
+  return name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 Bool is_reserved(String id) {
-  return in(id, keywords_and_literals) or in(id, runtime_classes);
+  for p <- isort(standard_generated_class_prefixes):
+    len = length(p);
+    if length(id) > length(p):
+      prefix = take(p, len);
+      if prefix == p:
+        rest = drop(p, len);
+        return false if (ch <~ chars(rest) : not is_digit(ch));
+      ;
+    ;
+  ;
+  return in(id, keywords_and_literals) or in(id, runtime_classes) or in(id, standard_generated_classes);
 }
 
 
@@ -103,6 +144,19 @@ Bool is_reserved(String id) {
   "void",
   "volatile",
   "while"
+];
+
+
+[String] standard_generated_classes = [
+  "Generated", ## NOT SURE ABOUT THIS ONE, BUT JUST IN CASE
+  "Env",
+  "Lambda"
+];
+
+
+[String] standard_generated_class_prefixes = [
+  "Lambda",
+  "ConstIntSeq"
 ];
 
 

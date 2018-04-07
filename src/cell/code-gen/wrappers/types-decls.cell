@@ -103,8 +103,8 @@ implicit prg : CompiledPrg {
 
   // Names of the declared interface types when passing data from the host language to Cell
   [DeclInterType -> String] input_types_names {
-    reserved_names = []; ## IMPLEMENT IMPLEMENT IMPLEMENT
-    return interface_type_names(declared_types, direction = :in, reserved_names = reserved_names);
+    taken_names = []; ## IMPLEMENT IMPLEMENT IMPLEMENT
+    return interface_type_names(declared_types, direction = :in, taken_names = taken_names);
   }
 
 
@@ -116,9 +116,9 @@ implicit prg : CompiledPrg {
 
   // Names of the declared interface types when passing data from Cell to the host language
   [DeclInterType -> String] output_types_names {
-    reserved_names = []; ## IMPLEMENT IMPLEMENT IMPLEMENT
+    taken_names = []; ## IMPLEMENT IMPLEMENT IMPLEMENT
 
-    names = interface_type_names(declared_types, direction = :out, reserved_names = reserved_names);
+    names = interface_type_names(declared_types, direction = :out, taken_names = taken_names);
     decls = [t -> type_decl(t, names, :out) : t, unused_var <- names];
 
     loop
@@ -133,8 +133,8 @@ implicit prg : CompiledPrg {
 
       return names if conflicts == [];
 
-      reserved_names = reserved_names & [input_types_names(t, !!) : t <- conflicts];
-      names = interface_type_names(declared_types, direction = :out, reserved_names = reserved_names);
+      taken_names = taken_names & [input_types_names(t, !!) : t <- conflicts];
+      names = interface_type_names(declared_types, direction = :out, taken_names = taken_names);
     ;
   }
 
@@ -191,15 +191,15 @@ String decl_type_export_funct_name(String name) = "export_" & name;
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
+implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
   [DeclInterType -> String] interface_type_names([DeclInterType] decl_types) {
-    type_names = [t -> safe_name(t, false, nothing) : t <- decl_types];
+    type_names = [t -> safe_class_name(t, false, nothing) : t <- decl_types];
 
     // If there are conflicts, the first option is to use the "try harder" flag
     conflicts = non_injective_keys_by_value(type_names);
     if conflicts != []:
       for type_group <- isort(conflicts):
-        renamed_types = [t -> safe_name(t, true, nothing) : t <- type_group];
+        renamed_types = [t -> safe_class_name(t, true, nothing) : t <- type_group];
         if non_injective_keys(renamed_types) == []:
           type_names = [t -> lookup(renamed_types, t, type_names(t, !!)) : t <- decl_types];
         ;
@@ -209,7 +209,7 @@ implicit prg : CompiledPrg, reserved_names : [String], direction : <in, out> {
     loop
       conflicts = non_injective_keys_by_value(type_names);
       break if conflicts == [];
-      renamed_types = [t -> safe_name(t, false, just(i)) : ts <- conflicts, t @ i <~ isort(ts)];
+      renamed_types = [t -> safe_class_name(t, false, just(i)) : ts <- conflicts, t @ i <~ isort(ts)];
       type_names = [t -> lookup(renamed_types, t, type_names(t, !!)) : t <- decl_types];
 
       ## THIS IS JUST A CHECK THAT HAS TO BE REMOVED
@@ -394,22 +394,6 @@ implicit prg : CompiledPrg {
     l -> if conflicting_names(n) then safe_lower_camel_case(l, true) else n
     : l, n <- nice_field_names
   ];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-String safe_lower_camel_case(Symbol symb) = safe_lower_camel_case(symb, false);
-
-String safe_lower_camel_case(Symbol symb, Bool keep_underscore) {
-  name = lower_camel_case(symb);
-  name = name & "_" if is_reserved(name);
-  return name;
-}
-
-String safe_lower_camel_case_chain(Symbol+ symbs) {
-  name = append((lower_camel_case(s) : s <- symbs), "_");
-  name = name & "_" if is_reserved(name);
-  return name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

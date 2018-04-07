@@ -1,4 +1,4 @@
-implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol {
+implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol {
   String external_name(<MembVar, RelVar, MethodSymbol> member) =
     append((sentence_case(bare_id(x)) : x <- (db_var_chain | member)), "_");
 
@@ -9,11 +9,11 @@ implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : D
 
   String full_path(<MembVar, RelVar> var) = path_prefix & native_var_decl_name(var);
 
-  String db_class_name = upper_camel_case(bare_id(root_block_name));
+  String db_class_name = safe_class_name(root_block_name);
 }
 
 
-implicit block_name : DBSymbol, db_var_chain : NestedDBVar*,
+implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*,
          root_block_name : DBSymbol, duplicate_names : [String, Nat] {
 
   String get_method_name(MembVar var) =
@@ -401,7 +401,7 @@ implicit
 
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol {
+implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol {
   (String, Nat)* pretty_names(StaticBlock block, [DBSymbol -> StaticBlock] blocks) {
     state_vars_names = ((pretty_name(v), 0) : v, unused_var <- isort(block.state_vars));
     relvars_names = ((pretty_name(v), arity(t)) : v, t <- isort(block.tables));

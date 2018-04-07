@@ -1,4 +1,4 @@
-SRC-FILES=$(shell ls src/cell/*.cell src/cell/code-gen/*.cell)
+SRC-FILES=$(shell ls src/cell/*.cell src/cell/code-gen/*.cell src/cell/code-gen/wrappers/*.cell)
 RUNTIME-FILES=$(shell ls src/core/net/cell_lang/*.java src/automata/net/cell_lang/*.java)
 
 ################################################################################
