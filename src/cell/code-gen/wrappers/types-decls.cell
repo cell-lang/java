@@ -276,8 +276,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
   String* type_decl_or_doc(TaggedInterType type) {
     untagged = untagged_type(type);
-    if in(untagged, declared_types):
-      fail if not untagged :: DeclInterType;
+    if untagged :: <NamedInterType, UnionInterType> and in(untagged, declared_types):
       body = (#(if doc_only then "" else "public ") & types_names(untagged, !!) & " inner;");
       body = body & to_string_method if not doc_only;
       first_line = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";

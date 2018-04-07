@@ -160,8 +160,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
     out_var = "var_" & unique_id;
     next_action_prefix = "Obj " & out_var & " = ";
     untagged_type = untagged_type(inter_type);
-    if in(untagged_type, declared_types):
-      fail if not untagged_type :: DeclInterType;
+    if untagged_type :: <NamedInterType, UnionInterType> and in(untagged_type, declared_types):
       type_name = input_types_names(untagged_type, !!);
       unique_id = printed(_counter_(:any_value_will_do));
       in_var = "var_" & unique_id;
@@ -356,7 +355,7 @@ implicit prg : CompiledPrg {
     in_var = "var_" & unique_id;
     code = ("Obj " & in_var & " = " & expr & ".getInnerObj();");
     untagged_type = untagged_type(tagged_type);
-    if in(untagged_type, declared_types):
+    if untagged_type :: <NamedInterType, UnionInterType> and in(untagged_type, declared_types):
       unique_id = printed(_counter_(:any_value_will_do));
       out_var = "var_" & unique_id;
       code = (code | type_name & " " & out_var & " = new " & type_name & "();");
