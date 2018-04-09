@@ -1,9 +1,5 @@
 package net.cell_lang;
 
-import net.cell_lang.ord.Ints123;
-import net.cell_lang.ord.Ints231;
-import net.cell_lang.ord.Ints312;
-
 
 class TernaryTableUpdater {
   static int[] emptyArray = new int[0];

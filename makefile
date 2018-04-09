@@ -82,6 +82,11 @@ tests.jar: codegen.exe inputs/tests.txt
 	cp Generated.java src/java/net/cell_lang/
 	mv Generated.java tmp/tests-by-codegen.exe.java
 
+run-unit-tests:
+	javac -g -d tmp/ src/testcases/net/cell_lang/Sorting.java
+	jar cfe tmp/unit-tests.jar net.cell_lang.Sorting -C tmp net/
+	java -jar tmp/unit-tests.jar
+
 ################################################################################
 ################################################################################
 

@@ -1,7 +1,7 @@
-package net.cell_lang.ord;
+package net.cell_lang;
 
 
-public class Ints231 {
+class Ints231 {
   public static void sort(int[] array, int size) {
     throw new RuntimeException();
   }
