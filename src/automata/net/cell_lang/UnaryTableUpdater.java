@@ -54,6 +54,8 @@ class UnaryTableUpdater {
   }
 
   public void apply() {
+    //## HUGE BUG HERE. IF THE TABLE IS CLEARED,
+    //## THE REFERENCE COUNT IN THE VALUE STORE IS NOT DECREMENTED
     if (clear) {
       table.clear();
     }

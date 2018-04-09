@@ -210,8 +210,8 @@ implicit
         "  BinaryTable.Iter it = " & relvar_path & ".getIter1((int) surr1);",
         "  if (it.done())",
         "    throw new java.util.NoSuchElementException();",
-        "  Miscellanea._assert(it.getField1() == surr1);",
-        "  int surr2 = it.getField2();",
+        "  Miscellanea._assert(it.get1() == surr1);",
+        "  int surr2 = it.get2();",
         "  it.next();",
         "  Miscellanea._assert(it.done());"
       ) & indent_lines(export_code(
@@ -235,11 +235,11 @@ implicit
       "while (!it.done()) {"
     ) & indent_lines(export_code(
       output_types(0),
-      relvar_path & ".store" & phys_idxs(0) & ".lookupSurrogate(it.getField" & phys_idxs(0) & "())",
+      relvar_path & ".store" & phys_idxs(0) & ".lookupSurrogate(it.get" & phys_idxs(0) & "())",
       "col1[next] = "
     )) & indent_lines(export_code(
       output_types(1),
-      relvar_path & ".store" & phys_idxs(1) & ".lookupSurrogate(it.getField" & phys_idxs(1) & "())",
+      relvar_path & ".store" & phys_idxs(1) & ".lookupSurrogate(it.get" & phys_idxs(1) & "())",
       "col2[next++] = "
     )) & (
       "  it.next();",
@@ -311,15 +311,15 @@ implicit
       "  while (!it.done()) {"
       ) & indent_lines(indent_lines(export_code(
         output_types(0),
-        relvar_path & ".store" & perm_idxs(0) & ".lookupSurrogate(it.getField" & perm_idxs(0) & "())",
+        relvar_path & ".store" & perm_idxs(0) & ".lookupSurrogate(it.get" & perm_idxs(0) & "())",
         "col1[next] = "
       ))) & indent_lines(indent_lines(export_code(
         output_types(1),
-        relvar_path & ".store" & perm_idxs(1) & ".lookupSurrogate(it.getField" & perm_idxs(1) & "())",
+        relvar_path & ".store" & perm_idxs(1) & ".lookupSurrogate(it.get" & perm_idxs(1) & "())",
         "col2[next] = "
       ))) & indent_lines(indent_lines(export_code(
         output_types(2),
-        relvar_path & ".store" & perm_idxs(2) & ".lookupSurrogate(it.getField" & perm_idxs(2) & "())",
+        relvar_path & ".store" & perm_idxs(2) & ".lookupSurrogate(it.get" & perm_idxs(2) & "())",
         "col3[next++] = "
       ))) & (
       "    it.next();",

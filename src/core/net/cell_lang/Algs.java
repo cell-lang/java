@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 
 class Algs {
-  static void CheckIsOrdered(Obj[] objs) {
+  static void checkIsOrdered(Obj[] objs) {
     for (int i=1 ; i < objs.length ; i++) {
       int cmp = objs[i-1].cmp(objs[i]);
       if (cmp != 1) {

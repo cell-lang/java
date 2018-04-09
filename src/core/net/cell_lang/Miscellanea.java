@@ -293,6 +293,23 @@ class Miscellanea {
     return array;
   }
 
+  public static int[] array3Append(int[] array, int count, int val1, int val2, int val3) {
+    Miscellanea._assert(3 * count <= array.length);
+
+    if (array.length < 3 * (count + 1)) {
+      int newLen = Math.max(96, 3 * ((3 * count) / 2));
+      int[] newArray = new int[newLen];
+      arrayCopy(array, newArray, 3 * count);
+      array = newArray;
+    }
+
+    array[count] = val1;
+    array[count] = val2;
+    array[count] = val3;
+
+    return array;
+  }
+
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 

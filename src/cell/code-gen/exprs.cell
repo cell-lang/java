@@ -177,7 +177,7 @@ String native_expr(NatIntOp expr, Bool parentesised) =
   lookup_value_ex()     = native_method_call_expr(aux_struct_var_ref_name(expr.store), "lookupValueEx", (expr.value)),
   get_tuple_field()     = if expr.iter.arity == 1
                             then native_var_ref_name(expr.iter) & ".get()"
-                            else native_var_ref_name(expr.iter) & ".getField" & printed(expr.field+1) & "()",
+                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.field+1) & "()",
   unique_nat            = "Miscellanea.uniqueNat()",
   ticks                 = "Miscellanea.getTickCount()";
 

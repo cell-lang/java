@@ -1,15 +1,24 @@
 package net.cell_lang;
 
-import java.util.ArrayList;
-import java.util.ListIterator;
+import net.cell_lang.ord.Ints123;
+import net.cell_lang.ord.Ints231;
+import net.cell_lang.ord.Ints312;
 
 
 class TernaryTableUpdater {
-  ArrayList<TernaryTable.Tuple> deleteList = new ArrayList<TernaryTable.Tuple>();
-  ArrayList<TernaryTable.Tuple> insertList = new ArrayList<TernaryTable.Tuple>();
+  static int[] emptyArray = new int[0];
+
+  // boolean clear = false;
+
+  int deleteCount = 0;
+  int[] deleteList = emptyArray;
+
+  int insertCount = 0;
+  int[] insertList = emptyArray;
 
   TernaryTable table;
   ValueStoreUpdater store1, store2, store3;
+
 
   public TernaryTableUpdater(TernaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2, ValueStoreUpdater store3) {
     this.table = table;
@@ -19,17 +28,17 @@ class TernaryTableUpdater {
   }
 
   public void clear() {
-    deleteList.clear();
+    deleteCount = 0;
     TernaryTable.Iter it = table.getIter();
     while (!it.done()) {
-      deleteList.add(it.get());
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
       it.next();
     }
   }
 
   public void set(Obj value, int idx1, int idx2, int idx3) {
-    Miscellanea._assert(deleteList.size() == 0 || deleteList.size() == table.count);
-    Miscellanea._assert(insertList.size() == 0);
+    Miscellanea._assert(deleteCount == 0 || deleteCount == table.count);
+    Miscellanea._assert(insertCount == 0);
 
     clear();
     TernRelIter it = value.getTernRelIter();
@@ -46,24 +55,24 @@ class TernaryTableUpdater {
       int surr3 = store3.lookupValueEx(val3);
       if (surr3 == -1)
         surr3 = store3.insert(val3);
-      insertList.add(new TernaryTable.Tuple(surr1, surr2, surr3));
+      insertList = Miscellanea.array3Append(insertList, insertCount++, surr1, surr2, surr3);
       it.next();
     }
   }
 
   public void insert(int value1, int value2, int value3) {
-    insertList.add(new TernaryTable.Tuple(value1, value2, value3));
+    insertList = Miscellanea.array3Append(insertList, insertCount++, value1, value2, value3);
   }
 
   public void delete(int value1, int value2, int value3) {
     if (table.contains(value1, value2, value3))
-      deleteList.add(new TernaryTable.Tuple(value1, value2, value3));
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, value3);
   }
 
   public void delete12(int value1, int value2) {
     TernaryTable.Iter it = table.getIter12(value1, value2);
     while (!it.done()) {
-      deleteList.add(it.get());
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, it.get3());
       it.next();
     }
   }
@@ -71,7 +80,7 @@ class TernaryTableUpdater {
   public void delete13(int value1, int value3) {
     TernaryTable.Iter it = table.getIter13(value1, value3);
     while (!it.done()) {
-      deleteList.add(it.get());
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, it.get2(), value3);
       it.next();
     }
   }
@@ -79,7 +88,7 @@ class TernaryTableUpdater {
   public void delete23(int value2, int value3) {
     TernaryTable.Iter it = table.getIter23(value2, value3);
     while (!it.done()) {
-      deleteList.add(it.get());
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), value2, value3);
       it.next();
     }
   }
@@ -87,7 +96,7 @@ class TernaryTableUpdater {
   public void delete1(int value1) {
     TernaryTable.Iter it = table.getIter1(value1);
     while (!it.done()) {
-      deleteList.add(it.get());
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, it.get2(), it.get3());
       it.next();
     }
   }
@@ -95,7 +104,7 @@ class TernaryTableUpdater {
   public void delete2(int value2) {
     TernaryTable.Iter it = table.getIter2(value2);
     while (!it.done()) {
-      deleteList.add(it.get());
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), value2, it.get3());
       it.next();
     }
   }
@@ -103,280 +112,186 @@ class TernaryTableUpdater {
   public void delete3(int value3) {
     TernaryTable.Iter it = table.getIter3(value3);
     while (!it.done()) {
-      deleteList.add(it.get());
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), value3);
       it.next();
     }
   }
 
   public boolean checkUpdates_12() {
-    deleteList.sort(TernaryTableUpdater::compare123);
-    insertList.sort(TernaryTableUpdater::compare123);
-
-    int count = insertList.size();
-    if (count == 0)
+    if (insertCount == 0)
       return true;
 
-    TernaryTable.Tuple prev = insertList.get(0);
-    if (!contains12(deleteList, prev.field1OrNext, prev.field2OrEmptyMarker))
-      if (table.contains12(prev.field1OrNext, prev.field2OrEmptyMarker))
+    Ints123.sort(deleteList, deleteCount);
+    Ints123.sort(insertList, insertCount);
+
+    int prevField1 = -1;
+    int prevField2 = -1;
+    int prevField3 = -1;
+
+    for (int i=0 ; i < insertCount ; i++) {
+      int field1 = insertList[3 * i];
+      int field2 = insertList[3 * i + 1];
+      int field3 = insertList[3 * i + 2];
+
+      if (field1 == prevField1 & field2 == prevField2 & field3 != prevField3)
         return false;
 
-    for (int i=1 ; i < count ; i++) {
-      TernaryTable.Tuple curr = insertList.get(i);
-      if ( curr.field1OrNext == prev.field1OrNext &
-           curr.field2OrEmptyMarker == prev.field2OrEmptyMarker &
-           curr.field3 != prev.field3
-         )
+      if (!Ints123.contains12(deleteList, deleteCount, field1, field2) && table.contains12(field1, field2))
         return false;
-      if (!contains12(deleteList, curr.field1OrNext, curr.field2OrEmptyMarker))
-        if (table.contains12(curr.field1OrNext, curr.field2OrEmptyMarker))
-          return false;
-      prev = curr;
+
+      prevField1 = field1;
+      prevField2 = field2;
+      prevField3 = field3;
     }
 
     return true;
   }
 
   public boolean checkUpdates_12_3() {
+    if (insertCount == 0)
+      return true;
+
     if (!checkUpdates_12())
       return false;
 
-    deleteList.sort(TernaryTableUpdater::compare312);
-    insertList.sort(TernaryTableUpdater::compare312);
+    Ints312.sort(deleteList, deleteCount);
+    Ints312.sort(insertList, insertCount);
 
-    int count = insertList.size();
-    if (count == 0)
-      return true;
+    int prevField1 = -1;
+    int prevField2 = -1;
+    int prevField3 = -1;
 
-    TernaryTable.Tuple prev = insertList.get(0);
-    if (!contains3(deleteList, prev.field3))
-      if (table.contains3(prev.field3))
+    for (int i=0 ; i < insertCount ; i++) {
+      int field1 = insertList[3 * i];
+      int field2 = insertList[3 * i + 1];
+      int field3 = insertList[3 * i + 2];
+
+      if (field3 == prevField3 & (field1 != prevField1 | field2 != prevField2))
         return false;
 
-    for (int i=1 ; i < count ; i++) {
-      TernaryTable.Tuple curr = insertList.get(i);
-      if ( curr.field3 == prev.field3 &
-           (curr.field1OrNext != prev.field1OrNext | curr.field2OrEmptyMarker != prev.field2OrEmptyMarker)
-         )
+      if (!Ints312.contains3(deleteList, deleteCount, field3) && table.contains3(field3))
         return false;
-      if (!contains3(deleteList, prev.field3))
-        if (table.contains3(prev.field3))
-      prev = curr;
+
+      prevField1 = field1;
+      prevField2 = field2;
+      prevField3 = field3;
     }
 
     return true;
   }
 
   public boolean checkUpdates_12_23() {
+    if (insertCount == 0)
+      return true;
+
     if (!checkUpdates_12())
       return false;
 
-    deleteList.sort(TernaryTableUpdater::compare231);
-    insertList.sort(TernaryTableUpdater::compare231);
+    Ints231.sort(deleteList, deleteCount);
+    Ints231.sort(insertList, insertCount);
 
-    int count = insertList.size();
-    if (count == 0)
-      return true;
+    int prevField1 = -1;
+    int prevField2 = -1;
+    int prevField3 = -1;
 
-    TernaryTable.Tuple prev = insertList.get(0);
-    if (!contains23(deleteList, prev.field2OrEmptyMarker, prev.field3))
-      if (table.contains23(prev.field2OrEmptyMarker, prev.field3))
+    for (int i=0 ; i < insertCount ; i++) {
+      int field1 = insertList[3 * i];
+      int field2 = insertList[3 * i + 1];
+      int field3 = insertList[3 * i + 2];
+
+      if (field2 == prevField2 & field3 == prevField3 & field1 != prevField1)
         return false;
 
-    for (int i=1 ; i < count ; i++) {
-      TernaryTable.Tuple curr = insertList.get(i);
-      if ( curr.field2OrEmptyMarker == prev.field2OrEmptyMarker &
-           curr.field3 == prev.field3 &
-           curr.field1OrNext != prev.field1OrNext
-         )
+      if (!Ints231.contains23(deleteList, deleteCount, field2, field3) && table.contains23(field2, field3))
         return false;
-      if (!contains23(deleteList, curr.field2OrEmptyMarker, curr.field3))
-        if (table.contains23(curr.field2OrEmptyMarker, curr.field3))
-          return false;
-      prev = curr;
+
+      prevField1 = field1;
+      prevField2 = field2;
+      prevField3 = field3;
     }
 
     return true;
   }
 
   public boolean checkUpdates_12_23_31() {
+    if (insertCount == 0)
+      return true;
+
     if (!checkUpdates_12_23())
       return false;
 
-    deleteList.sort(TernaryTableUpdater::compare312);
-    insertList.sort(TernaryTableUpdater::compare312);
+    Ints312.sort(deleteList, deleteCount);
+    Ints312.sort(insertList, insertCount);
 
-    int count = insertList.size();
-    if (count == 0)
-      return true;
+    int prevField1 = -1;
+    int prevField2 = -1;
+    int prevField3 = -1;
 
-    TernaryTable.Tuple prev = insertList.get(0);
-    if (!contains31(deleteList, prev.field3, prev.field1OrNext))
-      if (table.contains13(prev.field1OrNext, prev.field3))
+    for (int i=0 ; i < insertCount ; i++) {
+      int field1 = insertList[3 * i];
+      int field2 = insertList[3 * i + 1];
+      int field3 = insertList[3 * i + 2];
+
+      if (field1 == prevField1 & field3 == prevField3 & field2 != prevField2)
         return false;
 
-    for (int i=1 ; i < count ; i++) {
-      TernaryTable.Tuple curr = insertList.get(i);
-      if ( curr.field3 == prev.field3 &
-           curr.field1OrNext == prev.field1OrNext &
-           curr.field2OrEmptyMarker != prev.field2OrEmptyMarker
-         )
+      if (!Ints312.contains13(deleteList, deleteCount, field1, field3) && table.contains13(field1, field3))
         return false;
-      if (!contains31(deleteList, curr.field3, curr.field1OrNext))
-        if (table.contains13(curr.field1OrNext, curr.field3))
-          return false;
-      prev = curr;
+
+      prevField1 = field1;
+      prevField2 = field2;
+      prevField3 = field3;
     }
 
     return true;
   }
 
   public void apply() {
-    for (int i=0 ; i < deleteList.size() ; i++) {
-      TernaryTable.Tuple tuple = deleteList.get(i);
-      if (table.contains(tuple.field1OrNext, tuple.field2OrEmptyMarker, tuple.field3))
-        table.delete(tuple.field1OrNext, tuple.field2OrEmptyMarker, tuple.field3);
+    for (int i=0 ; i < deleteCount ; i++) {
+      int field1 = deleteList[3 * i];
+      int field2 = deleteList[3 * i + 1];
+      int field3 = deleteList[3 * i + 2];
+      if (table.contains(field1, field2, field3))
+        table.delete(field1, field2, field3);
       else
-        deleteList.set(i, new TernaryTable.Tuple(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF));
+        deleteList[3 * i] = 0xFFFFFFFF;
     }
 
-    ListIterator<TernaryTable.Tuple> it = insertList.listIterator();
-    while (it.hasNext()) {
-      TernaryTable.Tuple curr = it.next();
-      if (!table.contains(curr.field1OrNext, curr.field2OrEmptyMarker, curr.field3)) {
-        table.insert(curr.field1OrNext, curr.field2OrEmptyMarker, curr.field3);
-        table.store1.addRef(curr.field1OrNext);
-        table.store2.addRef(curr.field2OrEmptyMarker);
-        table.store3.addRef(curr.field3);
+    for (int i=0 ; i < insertCount ; i++) {
+      int field1 = insertList[3 * i];
+      int field2 = insertList[3 * i + 1];
+      int field3 = insertList[3 * i + 2];
+
+      if (!table.contains(field1, field2, field3)) {
+        table.insert(field1, field2, field3);
+        table.store1.addRef(field1);
+        table.store2.addRef(field2);
+        table.store3.addRef(field3);
       }
     }
   }
 
   public void finish() {
-    ListIterator<TernaryTable.Tuple> it = deleteList.listIterator();
-    while (it.hasNext()) {
-      TernaryTable.Tuple tuple = it.next();
-      if (tuple.field1OrNext != 0xFFFFFFFF) {
-        table.store1.release(tuple.field1OrNext);
-        table.store2.release(tuple.field2OrEmptyMarker);
-        table.store3.release(tuple.field3);
+    for (int i=0 ; i < deleteCount ; i++) {
+      int field1 = deleteList[3 * i];
+      if (field1 != 0xFFFFFFFF) {
+        int field2 = deleteList[3 * i + 1];
+        int field3 = deleteList[3 * i + 2];
+        table.store1.release(field1);
+        table.store2.release(field2);
+        table.store3.release(field3);
       }
     }
   }
 
   public void reset() {
-    deleteList.clear();
-    insertList.clear();
-  }
+    // clear = false;
+    deleteCount = 0;
+    insertCount = 0;
 
-  static boolean contains12(ArrayList<TernaryTable.Tuple> tuples, int field1, int field2) {
-    int low = 0;
-    int high = tuples.size() - 1;
-
-    while (low <= high) {
-      int mid = (int) (((long) low + (long) high) / 2);
-      TernaryTable.Tuple tuple = tuples.get(mid);
-      if (tuple.field1OrNext > field1)
-        high = mid - 1;
-      else if (tuple.field1OrNext < field1)
-        low = mid + 1;
-      else if (tuple.field2OrEmptyMarker > field2)
-        high = mid - 1;
-      else if (tuple.field2OrEmptyMarker < field2)
-        low = mid + 1;
-      else
-        return true;
-    }
-
-    return false;
-  }
-
-  static boolean contains23(ArrayList<TernaryTable.Tuple> tuples, int field2, int field3) {
-    int low = 0;
-    int high = tuples.size() - 1;
-
-    while (low <= high) {
-      int mid = (int) (((long) low + (long) high) / 2);
-      TernaryTable.Tuple tuple = tuples.get(mid);
-      if (tuple.field2OrEmptyMarker > field2)
-        high = mid - 1;
-      else if (tuple.field2OrEmptyMarker < field2)
-        low = mid + 1;
-      else if (tuple.field3 > field3)
-        high = mid - 1;
-      else if (tuple.field3 < field3)
-        low = mid + 1;
-      else
-        return true;
-    }
-
-    return false;
-  }
-
-  static boolean contains31(ArrayList<TernaryTable.Tuple> tuples, int field3, int field1) {
-    int low = 0;
-    int high = tuples.size() - 1;
-
-    while (low <= high) {
-      int mid = (int) (((long) low + (long) high) / 2);
-      TernaryTable.Tuple tuple = tuples.get(mid);
-      if (tuple.field3 > field3)
-        high = mid - 1;
-      else if (tuple.field3 < field3)
-        low = mid + 1;
-      else if (tuple.field1OrNext > field1)
-        high = mid - 1;
-      else if (tuple.field1OrNext < field1)
-        low = mid + 1;
-      else
-        return true;
-    }
-
-    return false;
-  }
-
-  static boolean contains3(ArrayList<TernaryTable.Tuple> tuples, int field3) {
-    int low = 0;
-    int high = tuples.size() - 1;
-
-    while (low <= high) {
-      int mid = (int) (((long) low + (long) high) / 2);
-      int midField3 = tuples.get(mid).field3;
-      if (midField3 > field3)
-        high = mid - 1;
-      else if (midField3 < field3)
-        low = mid + 1;
-      else
-        return true;
-    }
-
-    return false;
-  }
-
-  static int compare123(TernaryTable.Tuple t1, TernaryTable.Tuple t2) {
-    if (t1.field1OrNext != t2.field1OrNext)
-      return t1.field1OrNext - t2.field1OrNext;
-    else if (t1.field2OrEmptyMarker != t2.field2OrEmptyMarker)
-      return t1.field2OrEmptyMarker - t2.field2OrEmptyMarker;
-    else
-      return t1.field3 - t2.field3;
-  }
-
-  static int compare231(TernaryTable.Tuple t1, TernaryTable.Tuple t2) {
-    if (t1.field2OrEmptyMarker != t2.field2OrEmptyMarker)
-      return t1.field2OrEmptyMarker - t2.field2OrEmptyMarker;
-    else if (t1.field3 != t2.field3)
-      return t1.field3 - t2.field3;
-    else
-      return t1.field1OrNext - t2.field1OrNext;
-  }
-
-  static int compare312(TernaryTable.Tuple t1, TernaryTable.Tuple t2) {
-    if (t1.field3 != t2.field3)
-      return t1.field3 - t2.field3;
-    if (t1.field1OrNext != t2.field1OrNext)
-      return t1.field1OrNext - t2.field1OrNext;
-    else
-      return t1.field2OrEmptyMarker - t2.field2OrEmptyMarker;
+    if (deleteList.length > 3 * 1024)
+      deleteList = emptyArray;
+    if (insertList.length > 3 * 1024)
+      insertList = emptyArray;
   }
 }
