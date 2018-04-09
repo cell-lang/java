@@ -6,7 +6,6 @@ class Ints123 {
     sort(array, 0, size-1);
   }
 
-
   static void sort(int[] array, int first, int last) {
     if (first >= last)
       return;
@@ -23,22 +22,14 @@ class Ints123 {
       // Incrementing low until it points to the first slot that does
       // not contain a value that is lower or equal to the pivot
       // Such slot may be the first element after the end of the array
-      while (low <= last && !isGreater(low, pivot, array))
+      while (low <= last && !isGreater(low, first, array))
         low++;
 
       // Decrementing high until it points to the first slot whose
       // value is lower or equal to the pivot. Such slot may be the
       // first one, which contains the pivot
-      while (high > first && isGreater(high, pivot, array))
+      while (high > first && isGreater(high, first, array))
         high--;
-
-      if (!(low < high | low == high + 1)) {
-        System.out.printf("first = %d, last = %d, low = %d, high = %d\n", first, last, low, high);
-        for (int i=first ; i <= last ; i++) {
-          int offset = 3 * i;
-          System.out.printf("%2d: %5d, %5d, %5d\n", i, array[offset], array[offset+1], array[offset+2]);
-        }
-      }
 
       Miscellanea._assert(low != high);
       Miscellanea._assert(low < high | low == high + 1);
@@ -53,12 +44,12 @@ class Ints123 {
 
     // Putting the pivot between the two partitions
     int lastLeq = low - 1;
-    if (lastLeq != pivot)
-      swap(lastLeq, pivot, array);
+    if (lastLeq != first)
+      swap(lastLeq, first, array);
 
     // Now the lower-or-equal partition starts at 'first' and ends at
     // 'lastLeq - 1' (inclusive), since lastLeq contains the pivot
-    sort(array, first, lastLeq);
+    sort(array, first, lastLeq-1);
 
     // The greater-then partition starts at high + 1 and
     // continues until the end of the array
@@ -67,7 +58,26 @@ class Ints123 {
 
 
   public static boolean contains12(int[] array, int size, int val1, int val2) {
-    throw new RuntimeException();
+    int low = 0;
+    int high = size - 1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      switch (rangeCheck12(mid, val1, val2, array)) {
+        case -1: // mid < target range
+          low = mid + 1;
+          break;
+
+        case 0: // mid in target range
+          return true;
+
+        case 1: // mid > target range
+          high = mid - 1;
+          break;
+      }
+    }
+
+    return false;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -103,36 +113,19 @@ class Ints123 {
     elem2 = array[offset2 + 2];
     return elem1 > elem2;
   }
+
+  static int rangeCheck12(int idx, int val1, int val2, int[] array) {
+    int offset = 3 * idx;
+    int val = array[offset];
+    if (val < val1)
+      return -1;
+    if (val > val1)
+      return 1;
+    val = array[offset + 1];
+    if (val < val2)
+      return -1;
+    if (val > val2)
+      return 1;
+    return 0;
+  }
 }
-
-// static boolean contains12(ArrayList<TernaryTable.Tuple> tuples, int field1, int field2) {
-//   int low = 0;
-//   int high = tuples.size() - 1;
-
-//   while (low <= high) {
-//     int mid = (int) (((long) low + (long) high) / 2);
-//     TernaryTable.Tuple tuple = tuples.get(mid);
-//     if (tuple.field1OrNext > field1)
-//       high = mid - 1;
-//     else if (tuple.field1OrNext < field1)
-//       low = mid + 1;
-//     else if (tuple.field2OrEmptyMarker > field2)
-//       high = mid - 1;
-//     else if (tuple.field2OrEmptyMarker < field2)
-//       low = mid + 1;
-//     else
-//       return true;
-//   }
-
-//   return false;
-// }
-
-
-// static int compare123(TernaryTable.Tuple t1, TernaryTable.Tuple t2) {
-//   if (t1.field1OrNext != t2.field1OrNext)
-//     return t1.field1OrNext - t2.field1OrNext;
-//   else if (t1.field2OrEmptyMarker != t2.field2OrEmptyMarker)
-//     return t1.field2OrEmptyMarker - t2.field2OrEmptyMarker;
-//   else
-//     return t1.field3 - t2.field3;
-// }
