@@ -10,14 +10,14 @@ public class Test_Ints123 {
 
   public static void run() {
     for (int i=0 ; i < 100000 ; i++) {
-      runInts123RandomTest();
+      runRandomTest();
       if ((i + 1) % 100 == 0)
         System.out.print('.');
     }
     System.out.println();
   }
 
-  static void runInts123RandomTest() {
+  static void runRandomTest() {
     int len = rand.nextInt(200);
     int[] array = new int[3 * len];
 
@@ -34,7 +34,6 @@ public class Test_Ints123 {
       int field2 = array[3 * i + 1];
       bitmap12[field1][field2] = true;
     }
-
 
     int[] ref = sort123(array, len);
 
