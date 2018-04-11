@@ -56,6 +56,7 @@ class OverflowTable {
   int head8;
   int head16;
 
+
   public void check(int[] column, int count) {
     int len = slots.length;
     boolean[] slotOK = new boolean[len];
@@ -160,7 +161,7 @@ class OverflowTable {
         actualCount++;
       }
       else {
-        actualCount += checkGroup(tag, payload, slotOK, actualCount);
+        actualCount += checkGroup(tag, payload, slotOK);
       }
     }
 
@@ -186,7 +187,7 @@ class OverflowTable {
     }
   }
 
-  int checkGroup(int tag, int blockIdx, boolean[] slotOK, int totalCount) {
+  int checkGroup(int tag, int blockIdx, boolean[] slotOK) {
     check(tag >= Block2Tag, "tag >= Block2Tag");
     check(tag <= HashedBlockTag, "tag <= HashedBlockTag");
 
@@ -218,6 +219,8 @@ class OverflowTable {
       slotOK[blockIdx+i] = true;
     }
 
+    int count = 0;
+
     if (tag != HashedBlockTag) {
       for (int i=0 ; i < capacity ; i++) {
         int slot = slots[blockIdx + i];
@@ -230,7 +233,7 @@ class OverflowTable {
         }
         check(slot >>> 29 == 0, "slot >>> 29 == 0");
         check((slot & PayloadMask) < 1000, "(slot & PayloadMask) < 1000");
-        totalCount++;
+        count++;
       }
     }
     else {
@@ -246,14 +249,14 @@ class OverflowTable {
             actualBlockCount++;
           }
           else
-            actualBlockCount += checkGroup(slotTag, slotPayload, slotOK, actualBlockCount);
+            actualBlockCount += checkGroup(slotTag, slotPayload, slotOK);
         }
       }
       check(blockCount == actualBlockCount, "blockCount == actualBlockCount");
-      totalCount += blockCount;
+      count += blockCount;
     }
 
-    return totalCount;
+    return count;
   }
 
   void check(boolean cond, String msg) {
