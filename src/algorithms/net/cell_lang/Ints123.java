@@ -57,6 +57,24 @@ class Ints123 {
   }
 
 
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void swap(int idx1, int idx2, int[] array) {
+    int offset1 = 3 * idx1;
+    int offset2 = 3 * idx2;
+    int tmp0 = array[offset1];
+    int tmp1 = array[offset1 + 1];
+    int tmp3 = array[offset1 + 2];
+    array[offset1]     = array[offset2];
+    array[offset1 + 1] = array[offset2 + 1];
+    array[offset1 + 2] = array[offset2 + 2];
+    array[offset2]     = tmp0;
+    array[offset2 + 1] = tmp1;
+    array[offset2 + 2] = tmp3;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   public static boolean contains12(int[] array, int size, int val1, int val2) {
     int low = 0;
     int high = size - 1;
@@ -78,22 +96,6 @@ class Ints123 {
     }
 
     return false;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  static void swap(int idx1, int idx2, int[] array) {
-    int offset1 = 3 * idx1;
-    int offset2 = 3 * idx2;
-    int tmp0 = array[offset1];
-    int tmp1 = array[offset1 + 1];
-    int tmp3 = array[offset1 + 2];
-    array[offset1]     = array[offset2];
-    array[offset1 + 1] = array[offset2 + 1];
-    array[offset1 + 2] = array[offset2 + 2];
-    array[offset2]     = tmp0;
-    array[offset2 + 1] = tmp1;
-    array[offset2 + 2] = tmp3;
   }
 
   //////////////////////////////////////////////////////////////////////////////
