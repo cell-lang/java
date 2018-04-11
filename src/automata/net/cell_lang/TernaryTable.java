@@ -48,10 +48,10 @@ class TernaryTable {
     Miscellanea._assert(3 * count == len);
     int[] newFlatTuples = new int[2 * len];
     Miscellanea.arrayCopy(flatTuples, newFlatTuples, len);
+    flatTuples = newFlatTuples;
     int size = len / 3;
     for (int i=size ; i < 2 * size ; i++)
       setEntry(i, i+1, Empty, 0);
-    flatTuples = newFlatTuples;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -82,6 +82,7 @@ class TernaryTable {
       index123 = null;
       index12 = null;
       index13 = null;
+      index23 = null;
       index1 = null;
       index2 = null;
       index3 = null;
