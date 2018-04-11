@@ -12,10 +12,12 @@ class Test_BinaryTable {
       for (int j=0 ; j < 100 ; j++) {
         run(i, false);
       }
+      System.out.printf("%d%n", i);
     }
 
     for (int i=1 ; i < 240 ; i++) {
       run(i, false);
+      System.out.printf("%d%n", i);
     }
   }
 
@@ -88,12 +90,12 @@ class Test_BinaryTable {
           list[count++] = j;
       int[] expValues = Arrays.copyOf(list, count);
 
-      if (table.containsField1(i) != (expValues.length > 0)) {
+      if (table.contains1(i) != (expValues.length > 0)) {
         System.out.println("ERROR (2)!\n");
         for (int k=0 ; k < expValues.length ; k++)
           System.out.printf("%d ", expValues[k]);
         System.out.println();
-        System.out.println(table.containsField1(i) ? "true" : "false");
+        System.out.println(table.contains1(i) ? "true" : "false");
         System.exit(1);
       }
 
@@ -126,7 +128,7 @@ class Test_BinaryTable {
           list[count++] = i;
       int[] expValues = Arrays.copyOf(list, count);
 
-      if (table.containsField2(j) != (expValues.length > 0)) {
+      if (table.contains2(j) != (expValues.length > 0)) {
         System.out.println("ERROR (5)!\n");
         System.exit(1);
       }
