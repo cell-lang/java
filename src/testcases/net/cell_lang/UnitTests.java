@@ -1,13 +1,17 @@
 package net.cell_lang;
 
-import java.util.Random;
-import java.util.Arrays;
-import java.math.BigInteger;
-
 
 public class UnitTests {
   public static void main(String[] args) {
-    Test_Ints123.main(args);
-    System.out.println("Ints123           OK");
+    // Test_Ints123.run();
+    // System.out.println("Ints123           OK");
+    // Test_Ints231.run();
+    // System.out.println("Ints231           OK");
+    // Test_Ints312.run();
+    // System.out.println("Ints312           OK");
+    // Test_BinaryTable.run();
+    // System.out.println("BinaryTable       OK");
+    Test_TernaryTable.run();
+    System.out.println("TernaryTable      OK");
   }
 }
