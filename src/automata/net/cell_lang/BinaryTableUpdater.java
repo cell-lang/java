@@ -1,39 +1,14 @@
 package net.cell_lang;
 
-import java.util.ArrayList;
-import java.util.ListIterator;
-
 
 class BinaryTableUpdater {
-  static class Tuple {
-    public int field1;
-    public int field2;
+  static int[] emptyArray = new int[0];
 
-    public Tuple(int field1, int field2) {
-      this.field1 = field1;
-      this.field2 = field2;
-    }
+  int deleteCount = 0;
+  int[] deleteList = emptyArray;
 
-    public Tuple(long field1, long field2) {
-      this((int) field1, (int) field2);
-    }
-
-    @Override
-    public String toString() {
-      return "(" + Integer.toString(field1) + ", " + Integer.toString(field2) + ")";
-    }
-
-    public static int compareLeftToRigth(Tuple t1, Tuple t2) {
-      return (t1.field1 != t2.field1 ? t1.field1 - t2.field1 : t1.field2 - t2.field2);
-    };
-
-    public static int compareRightToLeft(Tuple t1, Tuple t2) {
-      return (t1.field2 != t2.field2 ? t1.field2 - t2.field2 : t1.field1 - t2.field1);
-    };
-  }
-
-  ArrayList<Tuple> deleteList = new ArrayList<Tuple>();
-  ArrayList<Tuple> insertList = new ArrayList<Tuple>();
+  int insertCount = 0;
+  int[] insertList = emptyArray;
 
   BinaryTable table;
   ValueStoreUpdater store1;
@@ -46,16 +21,13 @@ class BinaryTableUpdater {
   }
 
   public void clear() {
-    int[][] columns = table.rawCopy();
-    int len = columns[0].length;
-    deleteList.clear();
-    for (int i=0 ; i < len ; i++)
-      deleteList.add(new Tuple(columns[0][i], columns[1][i]));
+    deleteList = table.rawCopy();
+    deleteCount = deleteList.length / 2;
   }
 
   public void set(Obj value, boolean flipped) {
     clear();
-    Miscellanea._assert(insertList.size() == 0);
+    Miscellanea._assert(insertCount == 0);
     BinRelIter it = value.getBinRelIter();
     while (!it.done()) {
       Obj val1 = flipped ? it.get2() : it.get1();
@@ -66,194 +38,167 @@ class BinaryTableUpdater {
       int surr2 = store2.lookupValueEx(val2);
       if (surr2 == -1)
         surr2 = store2.insert(val2);
-      insertList.add(new Tuple(surr1, surr2));
+      Miscellanea.array2Append(insertList, insertCount++, surr1, surr2);
       it.next();
     }
   }
 
   public void delete(int value1, int value2) {
     if (table.contains(value1, value2))
-      deleteList.add(new Tuple(value1, value2));
+      Miscellanea.array2Append(deleteList, deleteCount++, value1, value2);
   }
 
   public void delete1(int value) {
     int[] assocs = table.lookupByCol1((int) value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList.add(new Tuple(value, assocs[i]));
+      Miscellanea.array2Append(deleteList, deleteCount++, value, assocs[i]);
   }
 
   public void delete2(int value) {
     int[] assocs = table.lookupByCol2((int) value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList.add(new Tuple(assocs[i], value));
+      Miscellanea.array2Append(deleteList, deleteCount++, assocs[i], value);
   }
 
   public void insert(int value1, int value2) {
-    insertList.add(new Tuple(value1, value2));
+    Miscellanea.array2Append(insertList, insertCount++, value1, value2);
   }
 
   public boolean checkUpdates_1() {
-    deleteList.sort(Tuple::compareLeftToRigth);
-    insertList.sort(Tuple::compareLeftToRigth);
-
-    int count = insertList.size();
-    if (count == 0)
+    if (insertCount == 0)
       return true;
 
-    Tuple prev = insertList.get(0);
-    if (!containsField1(deleteList, prev.field1))
-      if (table.containsField1(prev.field1))
+    Ints12.sort(deleteList, deleteCount);
+    Ints12.sort(insertList, insertCount);
+
+    int prev1 = -1;
+    int prev2 = -1;
+
+    for (int i=0 ; i < insertCount ; i++) {
+      int curr1 = insertList[2 * i];
+      int curr2 = insertList[2 * i + 1];
+
+      if (curr1 == prev1 & curr2 != prev2)
         return false;
 
-    for (int i=1 ; i < count ; i++) {
-      Tuple curr = insertList.get(i);
-      if (curr.field1 == prev.field1 & curr.field2 != prev.field2)
+      if (!Ints12.contains1(deleteList, deleteCount, curr1) && table.contains1(curr1))
         return false;
-      if (!containsField1(deleteList, curr.field1))
-        if (table.containsField1(curr.field1))
-          return false;
-      prev = curr;
+
+      prev1 = curr1;
+      prev2 = curr2;
     }
 
     return true;
   }
 
   public boolean checkUpdates_1_2() {
+    if (insertCount == 0)
+      return true;
+
     if (!checkUpdates_1())
       return false;
 
-    deleteList.sort(Tuple::compareRightToLeft);
-    insertList.sort(Tuple::compareRightToLeft);
+    Ints21.sort(deleteList, deleteCount);
+    Ints21.sort(insertList, insertCount);
 
-    int count = insertList.size();
-    if (count == 0)
-      return true;
+    int prev1 = -1;
+    int prev2 = -1;
 
-    Tuple prev = insertList.get(0);
-    if (!containsField2(deleteList, prev.field2))
-      if (table.containsField2(prev.field2))
+    for (int i=0 ; i < insertCount ; i++) {
+      int curr1 = insertList[2 * i];
+      int curr2 = insertList[2 * i + 1];
+
+      if (curr2 == prev2 & curr1 != prev1)
         return false;
 
-    for (int i=1 ; i < count ; i++) {
-      Tuple curr = insertList.get(i);
-      if (curr.field2 == prev.field2 & curr.field1 != prev.field1)
+      if (!Ints21.contains2(insertList, insertCount, curr2) & table.contains2(curr2))
         return false;
-      if (!containsField2(deleteList, curr.field2))
-        if (table.containsField2(curr.field2))
-          return false;
-      prev = curr;
+
+      prev1 = curr1;
+      prev2 = curr2;
     }
 
     return true;
   }
 
   public void apply() {
-    for (int i=0 ; i < deleteList.size() ; i++) {
-      Tuple tuple = deleteList.get(i);
-      if (table.contains(tuple.field1, tuple.field2)) {
-        table.delete(tuple.field1, tuple.field2);
-      }
+    for (int i=0 ; i < deleteCount ; i++) {
+      int field1 = deleteList[2 * i];
+      int field2 = deleteList[2 * i + 1];
+      if (table.contains(field1, field2))
+        table.delete(field1, field2);
       else
-        deleteList.set(i, new Tuple(0xFFFFFFFF, 0xFFFFFFFF));
+        deleteList[2 * i] = 0xFFFFFFFF;
     }
 
-    ListIterator<Tuple> it = insertList.listIterator();
-    while (it.hasNext()) {
-      Tuple curr = it.next();
-      if (!table.contains(curr.field1, curr.field2)) {
-        table.insert(curr.field1, curr.field2);
-        table.store1.addRef(curr.field1);
-        table.store2.addRef(curr.field2);
+    for (int i=0 ; i < insertCount ; i++) {
+      int field1 = insertList[2 * i];
+      int field2 = insertList[2 * i + 1];
+      if (!table.contains(field1, field2)) {
+        table.insert(field1, field2);
+        table.store1.addRef(field1);
+        table.store2.addRef(field2);
       }
     }
   }
 
   public void finish() {
-    ListIterator<Tuple> it = deleteList.listIterator();
-    while (it.hasNext()) {
-      Tuple tuple = it.next();
-      if (tuple.field1 != 0xFFFFFFFF) {
-        Miscellanea._assert(table.store1.lookupSurrogate(tuple.field1) != null);
-        Miscellanea._assert(table.store2.lookupSurrogate(tuple.field2) != null);
-        table.store1.release(tuple.field1);
-        table.store2.release(tuple.field2);
+    for (int i=0 ; i < deleteCount ; i++) {
+      int field1 = deleteList[2 * i];
+      if (field1 != 0xFFFFFFFF) {
+        int field2 = deleteList[2 * i + 1];
+        Miscellanea._assert(table.store1.lookupSurrogate(field1) != null);
+        Miscellanea._assert(table.store2.lookupSurrogate(field2) != null);
+        table.store1.release(field1);
+        table.store2.release(field2);
       }
     }
     reset();
   }
 
   public void reset() {
-    deleteList.clear();
-    insertList.clear();
+    deleteCount = 0;
+    insertCount = 0;
+
+    if (deleteList.length > 2 * 1024)
+      deleteList = emptyArray;
+    if (insertList.length > 2 * 1024)
+      insertList = emptyArray;
   }
 
-  public void dump() {
+  public void dump(boolean flipped) {
     System.out.print("deleteList =");
-    for (int i=0 ; i < deleteList.size() ; i++)
-      System.out.print(" " + deleteList.get(i).toString());
-    System.out.println("");
+    for (int i=0 ; i < deleteCount ; i++)
+      System.out.printf(" (%d, %d)", deleteList[2 * i], deleteList[2 * i + 1]);
+    System.out.println();
 
     System.out.print("insertList =");
-    for (int i=0 ; i < insertList.size() ; i++)
-      System.out.print(" " + insertList.get(i).toString());
+    for (int i=0 ; i < insertCount ; i++)
+      System.out.printf(" (%d, %d)", insertList[2 * i], insertList[2 * i + 1]);
     System.out.println("\n");
 
     System.out.print("deleteList =");
-    for (int i=0 ; i < deleteList.size() ; i++) {
-      Tuple tuple = deleteList.get(i);
-      Obj obj1 = store1.lookupSurrogateEx(tuple.field1);
-      Obj obj2 = store2.lookupSurrogateEx(tuple.field2);
+    for (int i=0 ; i < deleteCount ; i++) {
+      int field1 = deleteList[2 * i];
+      int field2 = deleteList[2 * i + 1];
+      Obj obj1 = store1.lookupSurrogateEx(field1);
+      Obj obj2 = store2.lookupSurrogateEx(field2);
       System.out.printf(" (%s, %s)", obj1.toString(), obj2.toString());
     }
     System.out.println("");
 
     System.out.print("insertList =");
-    for (int i=0 ; i < insertList.size() ; i++) {
-      Tuple tuple = insertList.get(i);
-      Obj obj1 = store1.lookupSurrogateEx(tuple.field1);
-      Obj obj2 = store2.lookupSurrogateEx(tuple.field2);
+    for (int i=0 ; i < insertCount ; i++) {
+      int field1 = insertList[2 * i];
+      int field2 = insertList[2 * i + 1];
+      Obj obj1 = store1.lookupSurrogateEx(field1);
+      Obj obj2 = store2.lookupSurrogateEx(field2);
       System.out.printf(" (%s, %s)", obj1.toString(), obj2.toString());
     }
-    //## WHY THE ARGUMENT TO BinaryTable.copy(boolean flipped) IS SET TO true?
-    System.out.printf("\n\n%s\n\n", table.copy(true).toString());
+
+    System.out.printf("\n\n%s\n\n", table.copy(flipped).toString());
 
     store1.dump();
     store2.dump();
-  }
-
-  static boolean containsField1(ArrayList<Tuple> tuples, int field1) {
-    int low = 0;
-    int high = tuples.size() - 1;
-
-    while (low <= high) {
-      int mid = (int) (((long) low + (long) high) / 2);
-      int midField1 = tuples.get(mid).field1;
-      if (midField1 > field1)
-        high = mid - 1;
-      else if (midField1 < field1)
-        low = mid + 1;
-      else
-        return true;
-    }
-
-    return false;
-  }
-
-  static boolean containsField2(ArrayList<Tuple> tuples, int field2) {
-    int low = 0;
-    int high = tuples.size() - 1;
-
-    while (low <= high) {
-      int mid = (int) (((long) low + (long) high) / 2);
-      int midField2 = tuples.get(mid).field2;
-      if (midField2 > field2)
-        high = mid - 1;
-      else if (midField2 < field2)
-        low = mid + 1;
-      else
-        return true;
-    }
-
-    return false;
   }
 }

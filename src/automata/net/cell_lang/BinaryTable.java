@@ -3,14 +3,14 @@ package net.cell_lang;
 
 class BinaryTable {
   public static class Iter {
-    int[][] entries;
+    int[] entries;
     int next;
     int end;
 
-    public Iter(int[][] entries) {
+    public Iter(int[] entries) {
       this.entries = entries;
       next = 0;
-      end = entries[0].length;
+      end = entries.length;
     }
 
     public boolean done() {
@@ -18,15 +18,15 @@ class BinaryTable {
     }
 
     public int getField1() {
-      return entries[0][next];
+      return entries[next];
     }
 
     public int getField2() {
-      return entries[1][next];
+      return entries[next+1];
     }
 
     public void next() {
-      next++;
+      next += 2;
     }
   }
 
@@ -40,7 +40,7 @@ class BinaryTable {
   public BinaryTable(ValueStore store1, ValueStore store2) {
     this.store1 = store1;
     this.store2 = store2;
-    // Check();
+    check();
   }
 
   public void check() {
@@ -56,11 +56,11 @@ class BinaryTable {
     return table1.contains(surr1, surr2);
   }
 
-  public boolean containsField1(int surr1) {
+  public boolean contains1(int surr1) {
     return table1.containsKey(surr1);
   }
 
-  public boolean containsField2(int surr2) {
+  public boolean contains2(int surr2) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(table1);
     return table2.containsKey(surr2);
@@ -82,20 +82,22 @@ class BinaryTable {
 
   public Iter getIter1(int surr1) {
     int[] col2 = lookupByCol1(surr1);
-    int[][] entries = new int[][] {new int[col2.length], new int[col2.length]};
-    for (int i=0 ; i < col2.length ; i++) {
-      entries[0][i] = surr1;
-      entries[1][i] = col2[i];
+    int count = col2.length;
+    int[] entries = new int[2 * count];
+    for (int i=0 ; i < count ; i++) {
+      entries[2 * i] = surr1;
+      entries[2 * i + 1] = col2[i];
     }
     return new Iter(entries);
   }
 
   public Iter getIter2(int surr2) {
     int[] col1 = lookupByCol2(surr2);
-    int[][] entries = new int[][] {new int[col1.length], new int[col1.length]};
-    for (int i=0 ; i < col1.length ; i++) {
-      entries[0][i] = col1[i];
-      entries[1][i] = surr2;
+    int count = col1.length;
+    int[] entries = new int[2 * count];
+    for (int i=0 ; i < count ; i++) {
+      entries[2 * i] = col1[i];
+      entries[2 * i + 1] = surr2;
     }
     return new Iter(entries);
   }
@@ -104,20 +106,20 @@ class BinaryTable {
     table1.insert(surr1, surr2);
     if (table2.count > 0)
       table2.insert(surr2, surr1);
-    // Check();
+    check();
   }
 
   public void clear() {
     table1 = new OneWayBinTable();
     table2 = new OneWayBinTable();
-    // Check();
+    check();
   }
 
   public void delete(int surr1, int surr2) {
     table1.delete(surr1, surr2);
     if (table2.count > 0)
       table2.delete(surr2, surr1);
-    // Check();
+    check();
   }
 
   public Obj copy(boolean flipped) {
@@ -154,7 +156,7 @@ class BinaryTable {
     return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
   }
 
-  public int[][] rawCopy() {
+  public int[] rawCopy() {
     return table1.copy();
   }
 }

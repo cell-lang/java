@@ -124,27 +124,27 @@ class OneWayBinTable {
     }
   }
 
-  public int[][] copy() {
-    int[][] res = new int[][] {new int[count], new int[count]};
+  public int[] copy() {
+    int[] res = new int[2 * count];
     int next = 0;
     for (int i=0 ; i < column.length ; i++) {
       int code = column[i];
       if (code != OverflowTable.EmptyMarker) {
         if (code >> 29 == 0) {
-          res[0][next] = i;
-          res[1][next++] = code;
+          res[next++] = i;
+          res[next++] = code;
         }
         else {
           OverflowTable.Iter it = overflowTable.getIter(code);
           while (!it.done()) {
-            res[0][next] = i;
-            res[1][next++] = it.get();
+            res[next++] = i;
+            res[next++] = it.get();
             it.next();
           }
         }
       }
     }
-    Miscellanea._assert(next == count);
+    Miscellanea._assert(next == 2 * count);
     return res;
   }
 }
