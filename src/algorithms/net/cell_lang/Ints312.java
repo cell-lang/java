@@ -64,13 +64,13 @@ class Ints312 {
     int offset2 = 3 * idx2;
     int tmp0 = array[offset1];
     int tmp1 = array[offset1 + 1];
-    int tmp3 = array[offset1 + 2];
+    int tmp2 = array[offset1 + 2];
     array[offset1]     = array[offset2];
     array[offset1 + 1] = array[offset2 + 1];
     array[offset1 + 2] = array[offset2 + 2];
     array[offset2]     = tmp0;
     array[offset2 + 1] = tmp1;
-    array[offset2 + 2] = tmp3;
+    array[offset2 + 2] = tmp2;
   }
 
   //////////////////////////////////////////////////////////////////////////////

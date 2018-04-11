@@ -64,13 +64,13 @@ class Ints231 {
     int offset2 = 3 * idx2;
     int tmp0 = array[offset1];
     int tmp1 = array[offset1 + 1];
-    int tmp3 = array[offset1 + 2];
+    int tmp2 = array[offset1 + 2];
     array[offset1]     = array[offset2];
     array[offset1 + 1] = array[offset2 + 1];
     array[offset1 + 2] = array[offset2 + 2];
     array[offset2]     = tmp0;
     array[offset2 + 1] = tmp1;
-    array[offset2 + 2] = tmp3;
+    array[offset2 + 2] = tmp2;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -117,13 +117,6 @@ class Ints231 {
   }
 
   static int rangeCheck23(int idx, int val2, int val3, int[] array) {
-    int res = rangeCheck23_(idx, val2, val3, array);
-    // if (Miscellanea.debugFlag)
-    //   System.out.printf("idx = %3d, val2 = %3d, val3 = %3d --> %d\n", idx, val2, val3, res);
-    return res;
-  }
-
-  static int rangeCheck23_(int idx, int val2, int val3, int[] array) {
     int offset = 3 * idx;
     int val = array[offset + 1];
     if (val < val2)
