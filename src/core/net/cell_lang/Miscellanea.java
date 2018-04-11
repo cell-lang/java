@@ -293,6 +293,22 @@ class Miscellanea {
     return array;
   }
 
+  public static int[] array2Append(int[] array, int count, int val1, int val2) {
+    Miscellanea._assert(2 * count <= array.length);
+
+    if (array.length < 2 * (count + 1)) {
+      int newLen = Math.max(64, 2 * ((3 * count) / 2));
+      int[] newArray = new int[newLen];
+      arrayCopy(array, newArray, 2 * count);
+      array = newArray;
+    }
+
+    array[2 * count] = val1;
+    array[2 * count + 1] = val2;
+
+    return array;
+  }
+
   public static int[] array3Append(int[] array, int count, int val1, int val2, int val3) {
     Miscellanea._assert(3 * count <= array.length);
 
@@ -303,9 +319,9 @@ class Miscellanea {
       array = newArray;
     }
 
-    array[count] = val1;
-    array[count] = val2;
-    array[count] = val3;
+    array[2 * count] = val1;
+    array[2 * count + 1] = val2;
+    array[2 * count + 2] = val3;
 
     return array;
   }
