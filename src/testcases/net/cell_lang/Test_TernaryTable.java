@@ -9,15 +9,15 @@ class Test_TernaryTable {
 
   public static void run() {
     for (int i=1 ; i < 50 ; i++) {
-      // for (int j=0 ; j < 100 ; j++) {
+      for (int j=0 ; j < 100 ; j++) {
         run(i, false);
-      // }
-        System.out.printf("%d\n", i);
+      }
+      System.out.printf("%d ", i);
     }
 
-    // for (int i=1 ; i < 240 ; i++) {
-    //   run(i, false);
-    // }
+    for (int i=1 ; i < 27 ; i++) {
+      run(i, false);
+    }
   }
 
   public static void run(int range, boolean trace) {
