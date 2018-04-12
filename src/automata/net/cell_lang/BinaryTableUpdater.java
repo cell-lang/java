@@ -38,30 +38,30 @@ class BinaryTableUpdater {
       int surr2 = store2.lookupValueEx(val2);
       if (surr2 == -1)
         surr2 = store2.insert(val2);
-      Miscellanea.array2Append(insertList, insertCount++, surr1, surr2);
+      insertList = Miscellanea.array2Append(insertList, insertCount++, surr1, surr2);
       it.next();
     }
   }
 
   public void delete(int value1, int value2) {
     if (table.contains(value1, value2))
-      Miscellanea.array2Append(deleteList, deleteCount++, value1, value2);
+      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, value1, value2);
   }
 
   public void delete1(int value) {
     int[] assocs = table.lookupByCol1((int) value);
     for (int i=0 ; i < assocs.length ; i++)
-      Miscellanea.array2Append(deleteList, deleteCount++, value, assocs[i]);
+      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, value, assocs[i]);
   }
 
   public void delete2(int value) {
     int[] assocs = table.lookupByCol2((int) value);
     for (int i=0 ; i < assocs.length ; i++)
-      Miscellanea.array2Append(deleteList, deleteCount++, assocs[i], value);
+      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, assocs[i], value);
   }
 
   public void insert(int value1, int value2) {
-    Miscellanea.array2Append(insertList, insertCount++, value1, value2);
+    insertList = Miscellanea.array2Append(insertList, insertCount++, value1, value2);
   }
 
   public boolean checkUpdates_1() {

@@ -106,9 +106,14 @@ class UnaryTable {
     // Miscellanea._assert(count == LiveCount());
   }
 
-  public void clear() {
+  public long[] clear(int minCapacity) {
     count = 0;
-    Miscellanea.arrayReset(bitmap);
+    int size = InitSize;
+    while (64 * size < minCapacity)
+      size *= 2;
+    long[] bitmapCopy = bitmap;
+    bitmap = new long[size];
+    return bitmapCopy;
   }
 
   public Obj copy() {

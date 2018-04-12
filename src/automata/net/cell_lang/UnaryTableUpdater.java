@@ -5,6 +5,7 @@ class UnaryTableUpdater {
   static int[] emptyArray = new int[0];
 
   boolean clear = false;
+  long[] bitmapCopy = null;
 
   int deleteCount = 0;
   int[] deleteList = emptyArray;
@@ -54,10 +55,14 @@ class UnaryTableUpdater {
   }
 
   public void apply() {
-    //## HUGE BUG HERE. IF THE TABLE IS CLEARED,
-    //## THE REFERENCE COUNT IN THE VALUE STORE IS NOT DECREMENTED
     if (clear) {
-      table.clear();
+      int max = 0;
+      for (int i=0 ; i < insertCount ; i++) {
+        int surr = insertList[i];
+        if (surr > max)
+          max = surr;
+      }
+      bitmapCopy = table.clear(max + 1);
     }
     else {
       for (int i=0 ; i < deleteCount ; i++) {
@@ -79,15 +84,29 @@ class UnaryTableUpdater {
   }
 
   public void finish() {
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr = deleteList[i];
-      if (surr != 0xFFFFFFFF)
-        table.store.release(surr);
+    if (clear) {
+      int len = bitmapCopy.length;
+      for (int i=0 ; i < len ; i++) {
+        long mask = bitmapCopy[i];
+        int base = 64 * i;
+        for (int j=0 ; j < 64 ; j++)
+          if (((mask >>> j) & 1) != 0)
+            table.store.release(base + j);
+      }
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (surr != 0xFFFFFFFF)
+          table.store.release(surr);
+      }
     }
   }
 
   public void reset() {
     clear = false;
+    bitmapCopy = null;
+
     deleteCount = 0;
     insertCount = 0;
 

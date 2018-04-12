@@ -17,11 +17,11 @@ class BinaryTable {
       return next >= end;
     }
 
-    public int getField1() {
+    public int get1() {
       return entries[next];
     }
 
-    public int getField2() {
+    public int get2() {
       return entries[next+1];
     }
 
