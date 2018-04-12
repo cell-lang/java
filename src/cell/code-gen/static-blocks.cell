@@ -145,6 +145,7 @@ implicit {
       "}",
       "catch (Exception e) {",
       // "  pop_try_mode_call_info(depth);",
+      "  e.printStackTrace(System.err);" if debug_mode,
       "}",
       updater_reset_call,
       "return ok;"

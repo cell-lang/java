@@ -82,6 +82,6 @@ class ValueStoreUpdater extends ValueStoreBase {
   public void dump() {
     super.dump();
     writeInts("surrogates", surrogates);
-    System.out.printf("lastSurrogate = {0}", lastSurrogate);
+    System.out.printf("lastSurrogate = {0}\n\n", lastSurrogate);
   }
 }

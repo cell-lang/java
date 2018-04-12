@@ -319,9 +319,10 @@ class Miscellanea {
       array = newArray;
     }
 
-    array[2 * count] = val1;
-    array[2 * count + 1] = val2;
-    array[2 * count + 2] = val3;
+    int offset = 3 * count;
+    array[offset] = val1;
+    array[offset + 1] = val2;
+    array[offset + 2] = val3;
 
     return array;
   }

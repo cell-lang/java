@@ -111,7 +111,8 @@ class BinaryTableUpdater {
       if (curr2 == prev2 & curr1 != prev1)
         return false;
 
-      if (!Ints21.contains2(insertList, insertCount, curr2) & table.contains2(curr2))
+
+      if (!Ints21.contains2(deleteList, deleteCount, curr2) && table.contains2(curr2))
         return false;
 
       prev1 = curr1;
@@ -193,7 +194,10 @@ class BinaryTableUpdater {
       int field2 = insertList[2 * i + 1];
       Obj obj1 = store1.lookupSurrogateEx(field1);
       Obj obj2 = store2.lookupSurrogateEx(field2);
-      System.out.printf(" (%s, %s)", obj1.toString(), obj2.toString());
+      System.out.printf(" (%s, %s)",
+        obj1 != null ? obj1.toString() : "null",
+        obj2 != null ? obj2.toString() : "null"
+      );
     }
 
     System.out.printf("\n\n%s\n\n", table.copy(flipped).toString());
