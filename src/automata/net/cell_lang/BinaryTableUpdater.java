@@ -154,7 +154,6 @@ class BinaryTableUpdater {
         table.store2.release(field2);
       }
     }
-    reset();
   }
 
   public void reset() {
