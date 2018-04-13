@@ -394,8 +394,9 @@ implicit {
 
   // String* native_code(ClsDef cd, Nat id) {
   String* gen_lambda(ClsDef cd, Nat id) {
-    vars_decls = gen_vars_decls(cd.body);
-    comp_body = native_code(cd.body, nothing);
+    body = remove_dead_code(cd.body); ## BAD BAD BAD: THIS OUGHT TO BE DONE IN DEAD CODE REMOVAL, NOT HERE
+    vars_decls = gen_vars_decls(body);
+    comp_body = native_code(body, nothing);
     full_body = vars_decls & ("" if vars_decls != ()) & comp_body;
 
     id_str = printed(id);
