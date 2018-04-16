@@ -431,7 +431,7 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, 
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
-  (String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
+  (String, String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
     let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name:
       dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];
       let duplicate_names = dup_names:
@@ -449,14 +449,17 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     ctor_impl_args = (t & " l" & printed(i) : t @ i <- links_types);
 
     class_impl = (
-      "public static class " & class_name & " {",
-      "  Env env;",
-      "  " & db_name & " automaton;",
-      "  " & updater_name & " updater;",
+      "package net.cell_lang;",
+      "",
+      "",
+      "public class " & class_name & " {",
+      "  Generated.Env env;",
+      "  Generated." & db_name & " automaton;",
+      "  Generated." & updater_name & " updater;",
       "",
       "  public " & class_name & "(" & append(ctor_impl_args, ", ") & ") {",
-      "    env = new Env();",
-      "    automaton = new " & db_name & "(env);",
+      "    env = new Generated.Env();",
+      "    automaton = new Generated." & db_name & "(env);",
       "    updater = automaton.newUpdater();",
       "  }",
       "",
@@ -467,7 +470,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "",
       "  public void setState(String text) {",
       "    Obj obj = Conversions.convertText(text);",
-      "    if (!" & native_fn_name(root_block.state_memb_pred) & "(obj))",
+      "    if (!Generated." & native_fn_name(root_block.state_memb_pred) & "(obj))",
       "      throw new RuntimeException(\"Invalid state\");",
       "    boolean " & native_method_call("ok", "automaton", set_state_entry_point_name(root_block.name), ("obj", "updater")),
       "    if (!ok)",
@@ -480,11 +483,11 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "",
         "  public void execute(String text) {",
         "    Obj msg = Conversions.convertText(text);",
-        "    if (!" & native_fn_name(value_unsafe(root_block.msg_memb_pred)) & "(msg))",
+        "    if (!Generated." & native_fn_name(value_unsafe(root_block.msg_memb_pred)) & "(msg))",
         "      throw new RuntimeException(\"Invalid message\");",
         "    boolean " & native_method_call("ok", "automaton", update_entry_point_name(root_block.name), ("msg", "updater", "env")),
         "    if (!ok) {",
-        "      env = new Env();",
+        "      env = new Generated.Env();",
         "      throw new RuntimeException(\"Update failed\");",
         "    }",
         "  }"
@@ -494,7 +497,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     class_impl = class_impl & indent_lines(accessors_code) & ("}") ;
 
     class_docs = (
-      "class net.cell_lang.Generated." & class_name & " {",
+      "class Generated." & class_name & " {",
       "  " & class_name & "(" & append(ctor_impl_args, ", ") & ");",
       "",
       "  Value readState();",
@@ -504,6 +507,6 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     class_docs = class_docs & accessors_docs if accessors_docs != ();
     class_docs = (class_docs | "}");
 
-    return (class_impl, class_docs);
+    return (class_name, class_impl, class_docs);
   }
 }

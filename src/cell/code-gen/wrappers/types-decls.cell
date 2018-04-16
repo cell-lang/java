@@ -158,7 +158,18 @@ implicit prg : CompiledPrg {
 
 
   // Interface type declarations, for both input and output
-  [String*] interface_types_decls = values(input_types_decls) & values(output_types_decls);
+  [String -> String*] interface_types_decls {
+    header = ("package net.cell_lang;", "");
+    input_types = [
+      input_types_names(inter_type, !!) & ".java" -> header & decl
+      : inter_type, decl <- input_types_decls
+    ];
+    output_types = [
+      output_types_names(inter_type, !!) & ".java" -> header & decl
+      : inter_type, decl <- output_types_decls
+    ];
+    return input_types & output_types;
+  }
 
 
   // Documentation for the generated types, for both input and output
@@ -249,7 +260,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
     body = (#(if doc_only then "" else "public ") & t & spaces(i) & " item" & printed(i) & ";" : t @ i <- types);
     body = body & to_string_method if not doc_only;
-    header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";
+    header = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
     return (header) & indent_lines(body) & ("}");
   }
 
@@ -266,7 +277,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
       } : l, t <- isort(fields)
     );
     body = body & to_string_method if not doc_only;
-    header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";
+    header = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
     return (header) & indent_lines(body) & ("}");
   }
 
@@ -279,7 +290,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     if untagged :: <NamedInterType, UnionInterType> and in(untagged, declared_types):
       body = (#(if doc_only then "" else "public ") & types_names(untagged, !!) & " inner;");
       body = body & to_string_method if not doc_only;
-      first_line = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";
+      first_line = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
       return (first_line) & indent_lines(body) & ("}");
     else
       return untagged_type_decl_or_doc(untagged);
@@ -295,7 +306,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
         out = return_value_type(inter_type, types_names);
       body = (#(if doc_only then "" else "public ") & type_name & " inner;");
       body = body & to_string_method if not doc_only;
-      header = #(if doc_only then "" else "public static ") & "class " & name_and_parents_decl(false) & " {";
+      header = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
       return (header) & indent_lines(body) & ("}");
     }
   }
@@ -318,7 +329,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
       );
     else
       return (
-        "public static class " & name_and_parents_decl(false) & " {",
+        "public class " & name_and_parents_decl(false) & " {",
         "  private " & type_name & "() {}",
         "",
         "  public final static " & type_name & " singleton = new " & type_name & "();",
@@ -344,7 +355,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   String* to_string_method = (
     "",
     "public String toString() {",
-    "  return " & decl_type_import_funct_name(types_names(root_type, !!)) & "(this).toString();",
+    "  return Generated." & decl_type_import_funct_name(types_names(root_type, !!)) & "(this).toString();",
     "}"
   );
 }

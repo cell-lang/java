@@ -1,4 +1,4 @@
-(String*, String*) native_code(CompiledPrg prg, Bool include_runtime, Bool debug_mode) {
+[String -> String*] native_code(CompiledPrg prg, Bool include_runtime, Bool debug_mode) {
   symbs = used_symbols(prg);
   assert |symbs| <= 64 * 1024; ## IMPLEMENT PROPERLY
 
@@ -76,8 +76,8 @@
 
   static_blocks_map = [b.name -> b : b <- prg.static_blocks];
   let prg = prg, typedefs = prg.typedefs:
-    auto_wrappers, auto_wrappers_docs = unzip((react_auto_wrapper(b) : b <- ord_react_blocks));
-    db_wrappers, db_wrappers_docs = unzip((static_auto_wrapper(b, static_blocks_map) : b <- ord_static_blocks));
+    react_auto_wrappers = (react_auto_wrapper(b) : b <- ord_react_blocks);
+    rel_auto_wrappers = (static_auto_wrapper(b, static_blocks_map) : b <- ord_static_blocks);
     inter_types_decls = interface_types_decls;
     inter_types_docs = interface_types_docs;
 
@@ -85,14 +85,20 @@
       ("") & decl_type_import_functions(t) & ("") & decl_type_export_function(t)
       : t <- declared_types
     ];
-
   ;
 
-  wrappers = join(intermix(
-    auto_wrappers & db_wrappers & isort(inter_types_decls) & isort(decl_types_conv_functs),
+  decl_types_conv_functs = join((("", "") & t : t <- isort(decl_types_conv_functs)));
+
+  wrappers = [name & ".java" -> src_code : name, src_code, unused_var <~ react_auto_wrappers] &
+             [name & ".java" -> src_code : name, src_code, unused_var <~ rel_auto_wrappers] &
+             inter_types_decls;
+
+  wrappers_docs = ("package net.cell_lang;", "", "") & join(intermix(
+    (docs : unused_var_1, unused_var_2, docs <- react_auto_wrappers) &
+    (docs : unused_var_1, unused_var_2, docs <- rel_auto_wrappers) &
+    isort(inter_types_docs),
     ("", "")
   ));
-  wrappers_docs = join(intermix(auto_wrappers_docs & db_wrappers_docs & isort(inter_types_docs), ("", "")));
 
   has_automata = prg.react_blocks != [] or prg.static_blocks != [];
 
@@ -107,6 +113,7 @@
       "import java.io.PrintWriter;",
       "import java.io.StringWriter;",
       "import java.io.Writer;",
+      "import java.io.IOException;",
       "import java.nio.file.Files;",
       "import java.nio.file.Path;",
       "import java.nio.file.Paths;",
@@ -115,13 +122,14 @@
       "import java.util.HashMap;",
       "import java.util.NoSuchElementException;",
       "import java.util.Random;",
+      "import java.util.IdentityHashMap;",
       "",
       "",
       "class Generated {" if has_main,
       "public class Generated {" if not has_main
     ),
 
-    indent_lines(code & proc_code & int_seqs_code & ("", "") & wrappers),
+    indent_lines(code & proc_code & ("", "") & int_seqs_code & decl_types_conv_functs),
 
     indent_lines(c_main_fn(debug_mode)) if has_main,
 
@@ -129,6 +137,7 @@
 
     // Runtime support for the functional subset of the language
     core_runtime if include_runtime,
+    private_value_class_def if has_main and include_runtime,
     ("") if include_runtime,
 
     // Runtime support for mutable relation variables
@@ -140,7 +149,7 @@
     ("") if include_runtime and has_automata
   ));
 
-  return (gen_code, wrappers_docs);
+  return ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs] & wrappers;
 
 
   String* generate_cls_obj_typedef([NzNat] arities) {
@@ -154,6 +163,16 @@
     return ("static class Lambda {") & join(intermix(methods, (""))) & ("}");
   }
 }
+
+
+String* private_value_class_def = (
+    if take(l, 8) == "package " or take(l, 7) == "import "
+      then ""
+    elif take(l, 16) == "public interface"
+      then drop(l, 7)
+    else l
+  : l <- value_class_def
+);
 
 
 String* gen_env_decl(CompiledPrg prg) {

@@ -27,7 +27,7 @@ String* create_error_msg(ParserError err, String filename) =
                               };
 
 
-Maybe[(String*, String*)] Compile(
+[String -> String*] Compile(
   [String -> Nat*] src_files, Bool include_runtime, Bool run_typechecking, Bool ignore_assertions,
   Bool debug_mode, Bool print_intermediate, Bool print_times, Bool wait_for_key
 ) {
@@ -41,7 +41,7 @@ Maybe[(String*, String*)] Compile(
     else
       err_msg = create_error_msg(get_error(res), fn);
       Print(append(err_msg, "\n") & "\n");
-      return nothing;
+      return [];
     ;
   ;
   syn_prg = syn_prg(parsed_src_files: merge(decls));
@@ -69,7 +69,7 @@ Maybe[(String*, String*)] Compile(
   else
     msgs = append((append(create_error_msg(e), "\n") & "\n\n" : e <- errs));
     Print(msgs);
-    return nothing;
+    return [];
   ;
 
   prg = desugared_prg(syn_prg=syn_prg);
@@ -87,7 +87,7 @@ Maybe[(String*, String*)] Compile(
   if errs != []:
     msgs = append((append(error_message(e), "\n") & "\n\n" : e <- rand_sort(errs)));
     Print(msgs);
-    return nothing;
+    return [];
   ;
   t4 = _ticks_(:any_value_will_do);
   Print("Additional checks passed\n");
@@ -114,7 +114,7 @@ Maybe[(String*, String*)] Compile(
         Print("\n");
       ;
       Print("Number of functions with typechecking errors: " & printed(|errs|) & "\n");
-      return nothing;
+      return [];
     ;
   ;
 
@@ -150,7 +150,7 @@ Maybe[(String*, String*)] Compile(
     ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
   ;
 
-  cs_code  = native_code(opt_code, include_runtime, debug_mode);
+  files = native_code(opt_code, include_runtime, debug_mode);
   t8 = _ticks_(:any_value_will_do);
   Print("Java code generated\n");
   if wait_for_key:
@@ -172,7 +172,7 @@ Maybe[(String*, String*)] Compile(
     Print("Total time elapsed:    " & printed(t8-t0) & "ms\n");
   ;
 
-  return just(cs_code);
+  return files;
 }
 
 
@@ -206,13 +206,14 @@ Nat* trim_spaces(Nat* line) {
 Int Main(String* args) {
   argc = |args|;
 
-  if args == ():
-    Print("Usage: amberc <project file>\n");
+  if argc < 2:
+    Print("Usage: cellc-java <project file> <output directory>\n");
     return 1;
   ;
 
-  fname = last(args);
-  options = subseq(args, 0, argc-1);
+  fname = args(argc-2);
+  out_dir = args(argc-1);
+  options = subseq(args, 0, argc-2);
 
   include_runtime = core_runtime != ();
   run_typechecking = true;
@@ -269,22 +270,16 @@ Int Main(String* args) {
     src_files = src_files & [fn -> value(fc)];
   ;
 
-  output = Compile(src_files, include_runtime, run_typechecking, ignore_assertions,
+  files = Compile(src_files, include_runtime, run_typechecking, ignore_assertions,
                    debug_mode, print_intermediate, print_times, wait_for_key_at_every_step);
 
-  if output != nothing:
-    code, docs = value(output);
-    body = append(code, "\n");
-    ok = FileWrite("Generated.java", chars(body));
-    if docs != ():
-      header = append(docs, "\n");
-      ok = FileWrite("interfaces.txt", chars(header));
-    ;
+  for name, lines <- isort(files):
+    ok = FileWrite(out_dir & "/" & name, chars(append(lines, "\n")));
   ;
 
   if wait_for_key_at_the_end:
     unused_var = GetChar();
   ;
 
-  return if output != nothing then 0 else 1;
+  return if files != [] then 0 else 1;
 }

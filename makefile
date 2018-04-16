@@ -72,6 +72,43 @@ bin/cellcd-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 	rm -f bin/cellcd-java.jar
 	mv cellcd-java.jar bin/
 
+################################################################################
+################################################################################
+
+full-compiler:
+	rm -f runtime/*
+	bin/build-runtime-src-file.py src/ runtime/runtime-sources.cell runtime/runtime-sources-empty.cell
+	bin/cellc-java projects/compiler.txt
+	bin/apply-hacks < Generated.java > tmp/cellc-java.java
+	mv Generated.java tmp/
+	javac -d tmp/ tmp/cellc-java.java
+	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
+
+compiler-test-loop:
+	rm -f runtime/*
+	bin/build-runtime-src-file.py src/ runtime/runtime-sources.cell runtime/runtime-sources-empty.cell
+
+	bin/cellc-java projects/compiler.txt
+	bin/apply-hacks < Generated.java > tmp/cellc-java.java
+	mv Generated.java tmp/
+	javac -d tmp/ tmp/cellc-java.java
+	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
+	rm -rf tmp/*
+
+	java -jar cellc-java.jar projects/compiler.txt
+	bin/apply-hacks < Generated.java > tmp/cellc-java.java
+	mv Generated.java Generated-A.java
+	javac -d tmp/ tmp/cellc-java.java
+	rm cellc-java.jar
+	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
+	rm -rf tmp/*
+
+	java -jar cellc-java.jar projects/compiler.txt
+	cmp Generated.java Generated-A.java
+
+################################################################################
+################################################################################
+
 inputs/tests.txt: tests.cell
 	cellc-cs.exe -p projects/tests.txt
 	mv dump-opt-code.txt inputs/tests.txt
@@ -95,7 +132,7 @@ clean:
 	@make -s soft-clean
 
 soft-clean:
-	@rm -f generated.cpp generated.cs Generated.java
+	@rm -f generated.cpp generated.cs Generated.java Generated-A.java
 	@rm -f *.class
 	@rm -f src/core/net/cell_lang/*.class
 	@rm -f src/automata/net/cell_lang/*.class

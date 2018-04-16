@@ -157,7 +157,7 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
-  (String*, String*) react_auto_wrapper(ReactBlock block) {
+  (String, String*, String*) react_auto_wrapper(ReactBlock block) {
     ord_inputs = block.ord_inputs;
     ord_outputs = (o : o <- block.ord_outputs, not block.inputs(o, *));
 
@@ -238,12 +238,12 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 
     code = enums_decls & (
       "" if enums_decls != (),
-      "Env env;",
-      auto_name & " automaton;",
+      "Generated.Env env;",
+      "Generated." & auto_name & " automaton;",
       "",
       "public " & auto_class_name & "() {",
-      "  env = new Env();",
-      "  automaton = new " & auto_name & "(env);", ## WHY IS env NEEDED HERE? AND WHAT HAPPENS IF AN EXCEPTION IS THROWN?
+      "  env = new Generated.Env();",
+      "  automaton = new Generated." & auto_name & "(env);", ## WHY IS env NEEDED HERE? AND WHAT HAPPENS IF AN EXCEPTION IS THROWN?
       "}",
       "",
       "public " & apply_ret_type & " apply() {",
@@ -259,7 +259,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "  if (automaton.is_new)",
       "    throw new RuntimeException(\"Cannot set state: automaton instance is not new\");",
       "  Obj obj = Conversions.convertText(str);",
-      "  if (!is_type_0(obj))",
+      "  if (!Generated." & native_fn_name(block.state_memb_pred) & "(obj))",
       "    throw new RuntimeException(\"Invalid state\");",
       "  automaton.setState(obj);",
       "}"
@@ -292,7 +292,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         code = code & (
           "" if j > 0,
           "    case " & input & ":",
-          "      if (" & input_memb_test_pred_name(j) & "(obj)) {",
+          "      if (Generated." & input_memb_test_pred_name(j) & "(obj)) {",
           "        automaton." & input_set_methods_names(j) & "(obj);",
           "        return;",
           "      }",
@@ -342,9 +342,14 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     ;
 
     code = code & input_setters & output_getters & methods_wrappers;
-    code = ("public static class " & auto_class_name & " {") & indent_lines(code) & ("}");
+    code = (
+      "package net.cell_lang;",
+      "",
+      "",
+      "public class " & auto_class_name & " {"
+      ) & indent_lines(code) & ("}");
 
-    return (code, docs);
+    return (auto_class_name, code, docs);
   }
 }
 
@@ -380,9 +385,12 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       : it @ i <- args_inter_types
     ));
 
-    conds = (native_fn_name(p) & "(objArg" & printed(i) & ")" : i, p <- mono_args);
+    conds = ("Generated." & native_fn_name(p) & "(objArg" & printed(i) & ")" : i, p <- mono_args);
     if poly_args != ():
-      poly_conds = ((native_fn_name(ps(i)) & "(objArg" & printed(i) & ")" : i <- poly_args) : ps <- isort(memb_preds));
+      poly_conds = ((
+        "Generated." & native_fn_name(ps(i)) & "(objArg" & printed(i) & ")" : i <- poly_args
+        ) : ps <- isort(memb_preds)
+      );
       anded_conds = ({
           c = append(cs, " && ");
           c = "(" & c & ")" if |cs| > 1;
@@ -410,7 +418,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       )) & (
       "  }",
       "  catch (Exception e) {",
-      "    env = new Env();",
+      "    env = new Generated.Env();",
       "    throw e;",
       "  }",
       "}"
