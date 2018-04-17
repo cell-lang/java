@@ -615,7 +615,7 @@ implicit typedefs : [TypeName -> NeType] {
 
   Bool is_nameable(NeType type) {
     return false if is_subset(type, type_bool) or is_subset(type, type_string);
-    return is_tuple(type) or is_record(type) or is_union(type) or is_tagged(type);
+    return is_symb_singl_type(type) or is_tuple(type) or is_record(type) or is_union(type) or is_tagged(type);
 
 
     Bool is_tuple(NeType type) {
