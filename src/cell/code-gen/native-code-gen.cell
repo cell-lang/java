@@ -137,7 +137,7 @@
 
     // Runtime support for the functional subset of the language
     core_runtime if include_runtime,
-    private_value_class_def if has_main and include_runtime,
+    private_class_def(value_class_def) if has_main and include_runtime,
     ("") if include_runtime,
 
     // Runtime support for mutable relation variables
@@ -146,10 +146,26 @@
 
     // Runtime support for wrapping code
     interface_runtime if include_runtime and has_automata,
+    private_class_def(pair_class_def) if has_main and include_runtime and has_automata,
+    private_class_def(triplet_class_def) if has_main and include_runtime and has_automata,
     ("") if include_runtime and has_automata
   ));
 
-  return ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs] & wrappers;
+  if has_main:
+    unused_wrappers = [private_class_def(wrapper_code) : unused_var, wrapper_code <- wrappers];
+    wrappers = [];
+    gen_code = gen_code & join(isort(unused_wrappers));
+  ;
+
+  files = ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs] & wrappers;
+  if include_runtime and not has_main:
+    files = files & [
+      "Value.java"    -> value_class_def,
+      "Pair.java"     -> pair_class_def,
+      "Triplet.java"  -> triplet_class_def
+    ];
+  ;
+  return files;
 
 
   String* generate_cls_obj_typedef([NzNat] arities) {
@@ -165,13 +181,15 @@
 }
 
 
-String* private_value_class_def = (
+String* private_class_def(String* class_def) = (
     if take(l, 8) == "package " or take(l, 7) == "import "
       then ""
     elif take(l, 16) == "public interface"
       then drop(l, 7)
+    elif take(l, 12) == "public class"
+      then drop(l, 7)
     else l
-  : l <- value_class_def
+  : l <- class_def
 );
 
 

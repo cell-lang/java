@@ -76,13 +76,20 @@ bin/cellcd-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 ################################################################################
 
 full-compiler:
-	rm -f runtime/*
+	rm -f runtime/* bin/cellc-java.jar bin/cellcd-java.jar
 	bin/build-runtime-src-file.py src/ runtime/runtime-sources.cell runtime/runtime-sources-empty.cell
 	bin/cellc-java projects/compiler.txt
 	bin/apply-hacks < Generated.java > tmp/cellc-java.java
 	mv Generated.java tmp/
 	javac -d tmp/ tmp/cellc-java.java
 	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
+	rm -rf tmp/*
+	bin/cellc-java -d projects/compiler.txt
+	bin/apply-hacks < Generated.java > tmp/cellc-java.java
+	mv Generated.java tmp/
+	javac -g -d tmp/ tmp/cellc-java.java
+	jar cfe cellcd-java.jar net.cell_lang.Generated -C tmp net/
+	mv cellc-java.jar cellcd-java.jar bin/
 
 compiler-test-loop:
 	rm -f runtime/*

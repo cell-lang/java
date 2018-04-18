@@ -135,10 +135,11 @@ table_sources = [
 
 interface_sources = [
   src_Conversions,
-  src_Pair,
-  src_Triplet,
+  # src_Pair,
+  # src_Triplet,
   src_WrappingUtils
 ]
+
 
 ################################################################################
 
@@ -231,7 +232,9 @@ file_data = [
   data_array_def('core_runtime', input_dir, std_sources, False),
   data_array_def('table_runtime', input_dir, table_sources, False),
   data_array_def('interface_runtime', input_dir, interface_sources, False),
-  data_array_def('value_class_def', input_dir, [src_Value], True)
+  data_array_def('value_class_def', input_dir, [src_Value], True),
+  data_array_def('pair_class_def', input_dir, [src_Pair], True),
+  data_array_def('triplet_class_def', input_dir, [src_Triplet], True)
 ]
 
 out_file = open(out_fname, 'w')
@@ -245,7 +248,9 @@ empty_file_data = [
   data_array_def('core_runtime', input_dir, [], False),
   data_array_def('table_runtime', input_dir, [], False),
   data_array_def('interface_runtime', input_dir, [], False),
-  data_array_def('value_class_def', input_dir, [], True)
+  data_array_def('value_class_def', input_dir, [], True),
+  data_array_def('pair_class_def', input_dir, [], True),
+  data_array_def('triplet_class_def', input_dir, [], True)
 ]
 
 empty_out_file = open(empty_out_fname, 'w')
