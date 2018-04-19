@@ -52,22 +52,26 @@ cellcd-java: $(SRC-FILES) $(RUNTIME-FILES)
 	g++ -ggdb -DNDEBUG tmp/cellc-java.cpp -o cellcd-java
 
 cellc-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
+	mkdir -p tmp/
+	rm -rf tmp/*
+	mkdir tmp/gen/
 	# java -jar bin/cellc-java.jar projects/compiler-no-runtime.txt
-	bin/cellc-java projects/compiler-no-runtime.txt
-	bin/apply-hacks < Generated.java > tmp/cellc-java.java
-	mv Generated.java tmp/
-	javac -d tmp/ tmp/cellc-java.java
+	bin/cellc-java projects/compiler-no-runtime.txt tmp/gen/
+	mv tmp/gen/Generated.java tmp/
+	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
+	javac -d tmp/ tmp/gen/*.java
 	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
-
-bin/cellc-java.jar: cellc-java.jar
 	rm -f bin/cellc-java.jar
 	mv cellc-java.jar bin/
 
-bin/cellcd-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
-	bin/cellc-java -d projects/compiler-no-runtime.txt
-	bin/apply-hacks < Generated.java > tmp/cellcd-java.java
-	mv Generated.java tmp/
-	javac -g -d tmp/ tmp/cellcd-java.java
+cellcd-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
+	mkdir -p tmp/
+	rm -rf tmp/*
+	mkdir tmp/gen/
+	bin/cellc-java -d projects/compiler-no-runtime.txt tmp/gen/
+	mv tmp/gen/Generated.java tmp/
+	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
+	javac -g -d tmp/ tmp/gen/*.java
 	jar cfe cellcd-java.jar net.cell_lang.Generated -C tmp net/
 	rm -f bin/cellcd-java.jar
 	mv cellcd-java.jar bin/
@@ -95,23 +99,28 @@ compiler-test-loop:
 	rm -f runtime/*
 	bin/build-runtime-src-file.py src/ runtime/runtime-sources.cell runtime/runtime-sources-empty.cell
 
-	bin/cellc-java projects/compiler.txt
-	bin/apply-hacks < Generated.java > tmp/cellc-java.java
-	mv Generated.java tmp/
-	javac -d tmp/ tmp/cellc-java.java
+	rm -rf tmp/
+	mkdir tmp
+	mkdir tmp/gen/
+
+	bin/cellc-java projects/compiler.txt tmp/gen/
+	mv tmp/gen/Generated.java tmp/
+	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
+	javac -d tmp/ tmp/gen/*.java
 	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
 	rm -rf tmp/*
+	mkdir tmp/gen/
 
-	java -jar cellc-java.jar projects/compiler.txt
-	bin/apply-hacks < Generated.java > tmp/cellc-java.java
-	mv Generated.java Generated-A.java
-	javac -d tmp/ tmp/cellc-java.java
+	java -jar cellc-java.jar projects/compiler.txt tmp/gen/
+	mv tmp/gen/Generated.java tmp/
+	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
+	javac -d tmp/ tmp/gen/*.java
 	rm cellc-java.jar
 	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
-	rm -rf tmp/*
+	rm -rf tmp/gen/* tmp/net/
 
-	java -jar cellc-java.jar projects/compiler.txt
-	cmp Generated.java Generated-A.java
+	java -jar cellc-java.jar projects/compiler.txt tmp/gen/
+	cmp tmp/gen/Generated.java tmp/Generated.java
 
 ################################################################################
 ################################################################################

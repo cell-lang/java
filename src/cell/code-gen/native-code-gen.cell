@@ -93,12 +93,13 @@
              [name & ".java" -> src_code : name, src_code, unused_var <~ rel_auto_wrappers] &
              inter_types_decls;
 
-  wrappers_docs = ("package net.cell_lang;", "", "") & join(intermix(
+  wrappers_docs = join(intermix(
     (docs : unused_var_1, unused_var_2, docs <- react_auto_wrappers) &
     (docs : unused_var_1, unused_var_2, docs <- rel_auto_wrappers) &
     isort(inter_types_docs),
     ("", "")
   ));
+  wrappers_docs = ("package net.cell_lang;", "", "") & wrappers_docs if wrappers_docs != ();
 
   has_automata = prg.react_blocks != [] or prg.static_blocks != [];
 
@@ -157,7 +158,7 @@
     gen_code = gen_code & join(isort(unused_wrappers));
   ;
 
-  files = ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs] & wrappers;
+  files = ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs if wrappers_docs != ()] & wrappers;
   if include_runtime and not has_main:
     files = files & [
       "Value.java"    -> value_class_def,

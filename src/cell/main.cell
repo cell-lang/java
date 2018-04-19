@@ -275,6 +275,10 @@ Int Main(String* args) {
 
   for name, lines <- isort(files):
     ok = FileWrite(out_dir & "/" & name, chars(append(lines, "\n")));
+    if not ok:
+      Print("Error: cannot write file " & name & " to " & out_dir & "\n");
+      return 1;
+    ;
   ;
 
   if wait_for_key_at_the_end:
