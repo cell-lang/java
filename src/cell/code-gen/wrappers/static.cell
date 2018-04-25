@@ -497,7 +497,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     class_impl = class_impl & indent_lines(accessors_code) & ("}") ;
 
     class_docs = (
-      "class Generated." & class_name & " {",
+      "class " & class_name & " {",
       "  " & class_name & "(" & append(ctor_impl_args, ", ") & ");",
       "",
       "  Value readState();",

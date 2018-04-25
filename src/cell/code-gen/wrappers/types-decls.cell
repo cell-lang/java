@@ -258,7 +258,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
       out = (return_value_type(t, types_names) : t @ i <- untag(type));
     max_len = max((length(t) : t <- types));
     spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
-    body = (#(if doc_only then "" else "public ") & t & spaces(i) & " item" & printed(i) & ";" : t @ i <- types);
+    body = (#(if doc_only then "" else "public ") & t & spaces(i) & " item" & printed(i+1) & ";" : t @ i <- types);
     body = body & to_string_method if not doc_only;
     header = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
     return (header) & indent_lines(body) & ("}");

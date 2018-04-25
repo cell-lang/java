@@ -281,7 +281,7 @@ if action_prefix != "return ":
     unique_id = printed(_counter_(:any_value_will_do));
 
     field_vars = ("field" & printed(i) & "_" & unique_id : t @ i <- types);
-    fields_code = (import_code_ex(t, expr & ".item" & printed(i), "Obj " & field_vars(i) & " = ") : t @ i <- types);
+    fields_code = (import_code_ex(t, expr & ".item" & printed(i+1), "Obj " & field_vars(i) & " = ") : t @ i <- types);
 
     tuple_instr = action_prefix & "new MasterSeqObj(new Obj[] {" & append(field_vars, ", ") & "});";
 
@@ -515,7 +515,7 @@ if action_prefix != "return ":
     tuple_instantiation_instr = type_name & " " & tuple_var & " = new " & type_name & "();";
 
     asgnm_code = join(({
-        asgnm_text = tuple_var & ".item" & printed(i) & " = ";
+        asgnm_text = tuple_var & ".item" & printed(i+1) & " = ";
         return export_code(t, expr & ".getItem(" & printed(i) & ")", asgnm_text);
       } : t @ i <- types
     ));

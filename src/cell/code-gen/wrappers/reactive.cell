@@ -4,9 +4,17 @@ implicit prg : CompiledPrg, block : ReactBlock {
 
   [String] duplicate_names {
     inputs = keys(block.inputs);
+    inputs_names = ("set" & upper_camel_case(id) : id <- isort(inputs));
     outputs = keys(block.outputs) - inputs;
-    names = (safe_lower_camel_case(id) : id <- isort(inputs) & isort(outputs));
-    return duplicates(names);
+    outputs_names = (safe_lower_camel_case(id) : id <- isort(outputs));
+    return duplicates(inputs_names & outputs_names);
+  }
+
+  String safe_setter_name(Symbol input_signal) {
+    name = "set" & upper_camel_case(input_signal);
+    name = "set" & capitalize(_str_(input_signal), true) if in(name, duplicate_names);
+    name = "_" & name if has_conflicts(name);
+    return name;
   }
 
   String safe_name(Symbol signal) {
@@ -86,7 +94,7 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
     // return ((), ()) if inter_type == :generic;
     input_type = input_arg_type(inter_type);
 
-    name = safe_name(id);
+    name = safe_setter_name(id);
     uc_name = uppercase(id);
 
     code = (
@@ -97,7 +105,7 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
       "}"
     );
 
-    docs = "  " & input_type & " " & name & ";";
+    docs = "  void " & name & "(" & input_type & ");";
 
     return (code, (docs));
   }
@@ -213,7 +221,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     auto_class_name = auto_class_name(block = block);
 
     docs = (
-      "class net.cell_lang.Generated." & auto_class_name & " {"
+      "class " & auto_class_name & " {"
     ) & indent_lines(enums_docs) & (
       "",
       "  " & auto_class_name & "();",
