@@ -1,0 +1,204 @@
+String native_expr(InlineObj) =
+  object(<+> a?)    = "SymbObj.get(" & symb_idx_name(a) & ")",
+  object(<*..*> n?) = "IntObj.get(" & printed(n) & "L)",
+  empty_seq         = "SeqObj.empty()",
+  empty_rel         = "EmptyRelObj.singleton()";
+
+
+String native_expr(StdObjVar var) = native_var_ref_name(var);
+
+
+String native_expr(NatObjOp expr) =
+  at()                = native_expr(expr.seq)    & ".getItem("     & native_expr(expr.idx) & ")",
+  lookup()            = native_expr(expr.rel)    & ".lookup("      & native_expr(expr.key) & ")",
+  lookup_field()      = native_expr(expr.record) & ".lookupField(" & symb_idx_name(expr.field) & ")",
+  get_tag(e?)         = native_expr(e)           & ".getTag()",
+  get_inner_obj(e?)   = native_expr(e)           & ".getInnerObj()",
+  obj_neg(e?)         = native_expr(e)           & ".negate()",
+  get_curr_obj(v?)    = native_var_ref_name(v)   & ".get()",
+  rand_elem(e?)       = native_expr(e)           & ".randElem()",
+  bool_obj(e?)        = "SymbObj.get(" & native_expr(e, true) & " ? " & symb_idx_name(true) & " : " & symb_idx_name(false) & ")",
+  int_obj(e?)         = "IntObj.get("  & native_expr(e) & ")",
+  to_symb(e?)         = "Parsing.parseSymb(" & native_expr(e) & ")",
+  get_curr_arg()      = native_get_curr_arg_expr(expr.var, expr.arg);
+
+
+String unboxed_float(AtomicExpr e) = native_expr(e, true) & ".getDouble()";
+
+String native_expr(FloatExpr expr) =
+  float_lit()           = native_float_literal(expr),
+  mk_float()            = "new FloatObj(" & printed(expr.mantissa) & "e" & printed(expr.dec_exp) & ")",
+  int_to_float(e?)      = "new FloatObj(" & native_expr(e, true) & ".getLong())",
+  neg_float(e?)         = "new FloatObj(-" & unboxed_float(e) & ")",
+  add_floats(e1?, e2?)  = "new FloatObj(" & unboxed_float(e1) & " + " & unboxed_float(e2) & ")",
+  sub_floats(e1?, e2?)  = "new FloatObj(" & unboxed_float(e1) & " - " & unboxed_float(e2) & ")",
+  mult_floats(e1?, e2?) = "new FloatObj(" & unboxed_float(e1) & " * " & unboxed_float(e2) & ")",
+  div_floats(e1?, e2?)  = "new FloatObj(" & unboxed_float(e1) & " / " & unboxed_float(e2) & ")",
+  exp_floats(e1?, e2?)  = "new FloatObj(Math.pow(" & unboxed_float(e1) & ", " & unboxed_float(e2) & "))",
+  square_root(e?)       = "new FloatObj(Math.sqrt(" & unboxed_float(e) & "))",
+  floor_op(e?)          = undefined,
+  ceiling_op(e?)        = undefined;
+
+
+String native_float_literal(FloatLit literal) {
+  res = string((nat(ascii_0 + d) : d <- literal.mantissa));
+  res = "-" & res if literal.negative;
+  res = res & "e" & printed(literal.dec_exp) if literal.dec_exp != 0;
+  return "new FloatObj(" & res & ")";
+}
+
+
+String native_get_curr_arg_expr(BinRelItVar var, <0..2> arg) {
+  assert arg != 2;
+  return native_var_ref_name(var) & ".get" & printed(arg+1) & "()";
+}
+
+
+String native_get_curr_arg_expr(TernRelItVar var, <0..2> arg) =
+  native_var_ref_name(var) & ".get" & printed(arg+1) & "()";
+
+
+String native_expr(BoolExpr expr)       = native_expr(expr, false);
+String native_expr(ObjExpr expr, Bool)  = native_expr(expr);
+
+
+String native_expr(BoolExpr expr, Bool parentesised) {
+  return native_var_ref_name(expr) if expr :: BoolVar;
+  return match (expr)
+    true                  = "true",
+    false                 = "false",
+
+    is_symb(e?)           = native_expr(e) & ".isSymb()",
+    is_int(e?)            = native_expr(e) & ".isInt()",
+    is_float(e?)          = native_expr(e) & ".isFloat()",
+    is_ne_seq(e?)         = native_expr(e) & ".isNeSeq()",
+    is_ne_set(e?)         = native_expr(e) & ".isNeSet()",
+    is_ne_map(e?)         = native_expr(e) & ".isNeMap()",
+    is_ne_bin_rel(e?)     = native_expr(e) & ".isNeBinRel()",
+    is_ne_tern_rel(e?)    = native_expr(e) & ".isNeTernRel()",
+    is_tagged_obj(e?)     = native_expr(e) & ".isTagged()",
+
+    neg(is_eq_bool() e?)  = native_nary_op(" != ", (e.expr1, e.expr2), parentesised),
+    neg(is_eq_int() e?)   = native_nary_op(" != ", (e.expr1, e.expr2), parentesised),
+
+    is_eq_bool()          = native_nary_op(" == ", (expr.expr1, expr.expr2), parentesised),
+    is_eq_int()           = native_nary_op(" == ", (expr.expr1, expr.expr2), parentesised),
+
+    is_eq()               = native_expr(expr.expr1) & ".isEq(" & native_expr(expr.expr2) & ")",
+
+    // is_gt()               = native_nary_op(" > ",  (expr.expr1, expr.expr2), parentesised),
+    // is_ge()               = native_nary_op(" >= ", (expr.expr1, expr.expr2), parentesised),
+    is_lt()               = native_nary_op(" < ",  (expr.expr1, expr.expr2), parentesised),
+    is_le()               = native_nary_op(" <= ", (expr.expr1, expr.expr2), parentesised),
+
+    inline_is_eq()        = native_inline_is_eq_expr(expr.expr, expr.value, parentesised),
+
+    is_flt(e1?, e2?)      = to_float_op(" < ",  e1, e2, parentesised),
+    is_fle(e1?, e2?)      = to_float_op(" <= ", e1, e2, parentesised),
+
+    is_out_of_range(v?)   = native_var_ref_name(v) & ".done()",
+
+    is_blank(v?)          = native_var_ref_name(v) & ".isBlankObj()",
+    is_null(v?)           = native_var_ref_name(v) & ".isNullObj()",
+
+    has_elem()            = native_expr(expr.set) & ".hasElem(" & native_expr(expr.elt) & ")",
+    has_field()           = native_expr(expr.record) & ".hasField(" & symb_idx_name(expr.field) & ")",
+
+    contains()            = native_contains_expr(expr.coll, expr.entry),
+    table_contains()      = native_method_call_expr(expr.table, "contains", ("(int) (" & native_expr(a) & ")" : a <- expr.tuple)),
+
+    is_member()           = native_fn_name(expr.pred) & "(" & native_expr(expr.obj) & ")",
+    state_is_def()        = native_var_ref_name(expr.auto_var) & "." & state_is_def_proc_name(expr.type) & "()",
+
+    neg(e?)               = parentesize("!" & native_expr(e, true), parentesised),
+
+    and(es?)              = native_nary_op(" & ",  es, parentesised),
+    or(es?)               = native_nary_op(" | ",  es, parentesised),
+    and_then(es?)         = native_nary_op(" && ", es, parentesised),
+    or_else(es?)          = native_nary_op(" || ", es, parentesised);
+}
+
+
+String native_contains_expr(ObjExpr rel, ObjExpr+ tuple) {
+  fn_name = fn_names_by_arity[|tuple|];
+  return native_method_call_expr(rel, fn_name, tuple);
+  // return native_expr(rel) & "." & fn_name & "(" & append((native_expr(a) : a <- tuple), ", ") & ")";
+
+  [NzNat -> String] fn_names_by_arity = [
+    1 -> "hasElem",
+    2 -> "hasPair",
+    3 -> "hasTriple"
+  ];
+}
+
+
+String native_inline_is_eq_expr(ObjExpr expr, InlineObj value, Bool parentesised) {
+  expr_str = native_expr(expr, false);
+  return match (value)
+    object(<+> a?)    = expr_str & ".isSymb(" & symb_idx_name(a) & ")",
+    object(<*..*> n?) = expr_str & ".isInt(" & printed(n) & ")",
+    empty_seq         = expr_str & ".isEmptySeq()",
+    empty_rel         = expr_str & ".isEmptyRel()";
+}
+
+
+String native_expr(IntExpr expr) = native_expr(expr, false);
+
+
+String native_expr(Int value, Bool parentesised) {
+  str = printed(value);
+  str = str & "L" if value >= 2147483648 or value < -2147483648;
+  return str;
+}
+
+
+String native_expr(IntConst expr, Bool parentesised) =
+  time_slots_table_name(expr.automaton, expr.expr_id) & "[(int) (" & native_expr(expr.time_slot) & ")]";
+
+String native_expr(IntVar expr, Bool parentesised) = native_var_ref_name(expr);
+
+String native_expr(NatIntOp expr, Bool parentesised) =
+  get_int_val(e?)       = native_expr(e) & ".getLong()",
+  get_size(e?)          = native_expr(e) & ".getSize()",
+  minus(e?)             = "-" & native_expr(e, true),
+  add()                 = native_nary_op(" + ", (expr.val1, expr.val2), parentesised),
+  sub()                 = native_nary_op(" - ", (expr.val1, expr.val2), parentesised),
+  mult()                = native_nary_op(" * ", (expr.val1, expr.val2), parentesised),
+  div()                 = native_nary_op(" / ", (expr.val1, expr.val2), parentesised),
+  mod()                 = native_nary_op(" % ", (expr.val1, expr.val2), parentesised),
+  bitwise_and(e1?, e2?) = native_nary_op(" & ", (e1, e2), parentesised),
+  bitwise_or(e1?, e2?)  = native_nary_op(" | ", (e1, e2), parentesised),
+  bitwise_xor(e1?, e2?) = native_nary_op(" ^ ", (e1, e2), parentesised),
+  float_bits(e?)        = native_expr(e) & ".floatBits()",
+  mantissa(e?)          = native_expr(e) & ".mantissa()",
+  dec_exp(e?)           = native_expr(e) & ".decExp()",
+  rand_nat(e?)          = "Miscellanea.randNat(" & native_expr(e) & ")",
+  lookup_value()        = native_method_call_expr(expr.store, "lookupValue", (expr.value)),
+  lookup_value_ex()     = native_method_call_expr(aux_struct_var_ref_name(expr.store), "lookupValueEx", (expr.value)),
+  get_tuple_field()     = if expr.iter.arity == 1
+                            then native_var_ref_name(expr.iter) & ".get()"
+                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.field+1) & "()",
+  unique_nat            = "Miscellanea.uniqueNat()",
+  ticks                 = "Miscellanea.getTickCount()";
+
+
+String native_expr(
+  <ElemVar, VecVar, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId, AnyAutoVar, AnyDBVar> var
+) = native_var_ref_name(var);
+
+String native_expr(<blank_obj>) = "BlankObj.singleton()";
+String native_expr(<null_obj>) = "NullObj.singleton()";
+
+// String native_expr(ClsVar v) = native_var_ref_name(v);
+
+String native_nary_op(String op, AnyTypeExpr+ exprs, Bool parentesised) {
+  expr = append((native_expr(e, true) : e <- exprs), op);
+  expr = "(" & expr & ")" if |exprs| > 1 and parentesised;
+  return expr;
+}
+
+String to_float_op(String op, ObjExpr expr1, ObjExpr expr2, Bool parentesised) {
+  expr = native_expr(expr1, false) & ".getDouble() " & op & native_expr(expr2, false) & ".getDouble()";
+  expr = "(" & expr & ")" if parentesised;
+  return expr;
+}

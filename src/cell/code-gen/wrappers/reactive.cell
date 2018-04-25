@@ -1,0 +1,439 @@
+implicit prg : CompiledPrg, block : ReactBlock {
+  String auto_class_name = safe_class_name(block.name);
+  String auto_struct_ptr = "((" & native_name(block.name) & " *) ptr)";
+
+  [String] duplicate_names {
+    inputs = keys(block.inputs);
+    inputs_names = ("set" & upper_camel_case(id) : id <- isort(inputs));
+    outputs = keys(block.outputs) - inputs;
+    outputs_names = (safe_lower_camel_case(id) : id <- isort(outputs));
+    return duplicates(inputs_names & outputs_names);
+  }
+
+  String safe_setter_name(Symbol input_signal) {
+    name = "set" & upper_camel_case(input_signal);
+    name = "set" & capitalize(_str_(input_signal), true) if in(name, duplicate_names);
+    name = "_" & name if has_conflicts(name);
+    return name;
+  }
+
+  String safe_name(Symbol signal) {
+    name = safe_lower_camel_case(signal);
+    name = capitalize(_str_(signal), true) if in(name, duplicate_names); ## MOVE THIS TO A NEW FUNCTION utils IN.cell
+    name = "_" & name if has_conflicts(name);
+    return name;
+  }
+
+  [String] inputs_and_outputs_names = [
+    safe_name(s) : s, unused_var <- block.inputs | s, unused_var <- block.outputs
+  ];
+
+  [String, Nat] duplicate_method_names {
+    method_ids = [id.symbol, id.arity : id, unused_var <- block.methods, not id.id?];
+    native_ids = ((safe_lower_camel_case(bare_id(s)), a) : s, a <- isort(method_ids));
+    return [nid(0), nid(1) : nid <- duplicates(native_ids)];
+  }
+
+  String safe_name(MethodSymbol method_symb, Nat arity) {
+    symbol = bare_id(method_symb);
+    name = safe_lower_camel_case(symbol);
+    // We first check if this conflicts with other method names
+    duplicate_method_names = duplicate_method_names; //## BAD
+    name = capitalize(_str_(symbol), true) if duplicate_method_names(name, arity);
+    // Now we've to deal with conflicts with inputs, outputs and reserved_names
+    name = "__" & name if in(name, inputs_and_outputs_names) or has_conflicts(name);
+    return name;
+  }
+
+  Bool has_conflicts(String name) {
+    return name == auto_class_name or in(name, reserved_names);
+
+    [String] reserved_names = [
+      // Object class constructor
+      "Object",
+
+      // Object class instance methods
+      "equals",
+      "finalize",
+      "hashCode",
+      "getClass",
+      "clone",
+      "toString",
+      "notify",
+      "notifyAll",
+      "wait",
+
+      // Always present methods
+      "readState",
+      "setState",
+      "execute",
+
+      // Automata reserved names
+      "Input",
+      "Output",
+
+      // Standard automaton methods
+      "apply",
+      "readState",
+      "setState",
+      "setElapsedMillisecs",
+      "setElapsedSecs",
+      "internalSetInput",
+      "setInput",
+      "readOutput",
+      "changedOutputs"
+    ];
+  }
+}
+
+
+implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] {
+  (String*, String*) input_setter(Atom id) {
+    type = block.inputs[id].type;
+    inter_type = interface_type(type);
+    // return ((), ()) if inter_type == :generic;
+    input_type = input_arg_type(inter_type);
+
+    name = safe_setter_name(id);
+    uc_name = uppercase(id);
+
+    code = (
+      "",
+      "public void " & name & "(" & input_type & " value) {"
+    ) & indent_lines(import_code(inter_type, "value", "Obj obj = ")) & (
+      "  internalSetInput(Input." & uc_name & ", obj);",
+      "}"
+    );
+
+    docs = "  void " & name & "(" & input_type & ");";
+
+    return (code, (docs));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  (String*, String*) output_getter(Atom id) {
+    output = block.outputs[id];
+    type = output.type;
+    inter_type = interface_type(type);
+    ret_type = return_value_type(inter_type);
+
+    name = safe_name(id);
+    var_name = native_var_decl_name(signal_var(id));
+
+    code = (
+      "",
+      "public " & ret_type & " " & name & "() {",
+      "  Obj obj = automaton." & var_name & ";",
+      "  if (obj.isNullObj())",
+      "    throw new RuntimeException(\"Output is undefined\");",
+      "  if (obj.isBlankObj())" if output.discrete,
+      "    throw new RuntimeException(\"Discrete output is not set\");" if output.discrete
+    ) & indent_lines(export_code(inter_type, "obj", "return ")) & (
+      "}"
+    );
+
+    docs = "  " & ret_type & " " & name & ";";
+
+    return (code, (docs));
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] {
+  (String*, String*) auto_method_wrapper(MethodId method_id, CompiledMethod method) {
+    return ((), ()) if method_id.id?;
+    name = safe_name(method_id.symbol, method_id.arity);
+    return method_wrapper(method_id, method, block.name, name, auto_class_name, "automaton.");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+[NeType] interface_types(ReactBlock block) {
+  inputs_types = [info.type : id, info <- block.inputs];
+  outputs_types = [info.type : id, info <- block.outputs];
+  methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- block.methods]);
+  return inputs_types & outputs_types & methods_types;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
+  (String, String*, String*) react_auto_wrapper(ReactBlock block) {
+    ord_inputs = block.ord_inputs;
+    ord_outputs = (o : o <- block.ord_outputs, not block.inputs(o, *));
+
+    inputs = (uppercase(i) : i <- ord_inputs);
+    outputs = (uppercase(o) : o <- ord_outputs, not block.inputs(o, *));
+
+    is_time_sensitive = block.memb_vars(elapsed_time); ## BAD BAD: NOT A RELIABLE WAY TO DO IT...
+    apply_ret_type = if is_time_sensitive then "boolean" else "void";
+
+    auto_name = native_name(block.name);
+
+    pre_init_method_name = pre_init_method_name(block.name);
+    cleanup_method_name = cleanup_method_name(block.name);
+    apply_method_name = apply_method_name(block.name);
+
+    input_set_methods_names = (input_set_method_name(block.name, i) : i <- ord_inputs);
+    output_vars_names = (native_var_decl_name(signal_var(o)) : o <- ord_outputs);
+
+    input_memb_test_pred_name = (native_fn_name(block.input_memb_preds[i]) : i <- ord_inputs);
+
+    elapsed_time_var_name = native_var_decl_name(elapsed_time);
+    changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
+
+    methods = block.methods;
+    let block = block:
+      input_setters, input_setters_docs = (join(ls) : ls <- unzip((input_setter(i) : i <- ord_inputs)));
+      output_getters, output_getters_docs = (join(ls) : ls <- unzip((output_getter(o) : o <- ord_outputs)));
+      methods_wrappers, methods_wrappers_docs = (
+        join(ls) : ls <- unzip(isort([auto_method_wrapper(id, m) : id, m <- methods]))
+      );
+    ;
+
+    input_enum_docs = if inputs == ()
+        then ()
+      elif sum((length(i) : i <- inputs)) <= 80
+        then ("enum Input {" & append(inputs, ", ") & "};")
+      else
+        ("enum Input {") & ("    " & i & "," : i <- inputs) & ("  };");
+
+    output_enum_docs = if outputs == ()
+        then ()
+      elif sum((length(o) : o <- inputs)) <= 80
+        then ("enum Output {" & append(outputs, ", ") & "};")
+      else
+        ("enum Output {") & ("    " & o & "," : o <- outputs) & ("  };");
+
+    enum_empty_line = ("" if input_enum_docs != () and output_enum_docs != ());
+    enums_docs = input_enum_docs & enum_empty_line & output_enum_docs;
+    enums_decls = (if i == 0 then "public " & l else l : l @ i <- input_enum_docs) &
+                  enum_empty_line &
+                  (if i == 0 then "public " & l else l : l @ i <- output_enum_docs);
+
+    auto_class_name = auto_class_name(block = block);
+
+    docs = (
+      "class " & auto_class_name & " {"
+    ) & indent_lines(enums_docs) & (
+      "",
+      "  " & auto_class_name & "();",
+      "",
+      "  void setInput(Input input, String value);" if inputs != (),
+      "  Value readOutput(Output output);" if outputs != (),
+      "" if is_time_sensitive,
+      "  void setElapsedMillisecs(int);" if is_time_sensitive,
+      "  void setElapsedSecs(int);" if is_time_sensitive,
+      "",
+      "  " & apply_ret_type & " apply();",
+      "  Value readState();",
+      "  void setState(String);",
+      "",
+      "  Output[] changedOutputs();" if outputs != ()
+    );
+
+    docs = docs & ("", "  // Inputs") & input_setters_docs if input_setters_docs != ();
+    docs = docs & ("", "  // Outputs") & output_getters_docs if output_getters_docs != ();
+    docs = docs & ("", "  // Methods") & indent_lines(methods_wrappers_docs) if methods_wrappers_docs != ();
+    docs = (docs | "}");
+
+    code = enums_decls & (
+      "" if enums_decls != (),
+      "Generated.Env env;",
+      "Generated." & auto_name & " automaton;",
+      "",
+      "public " & auto_class_name & "() {",
+      "  env = new Generated.Env();",
+      "  automaton = new Generated." & auto_name & "(env);", ## WHY IS env NEEDED HERE? AND WHAT HAPPENS IF AN EXCEPTION IS THROWN?
+      "}",
+      "",
+      "public " & apply_ret_type & " apply() {",
+      "  automaton.apply(env);",
+      "  return automaton.elapsed_time == 0;" if is_time_sensitive,
+      "}",
+      "",
+      "public Value readState() {",
+      "  return Conversions.exportAsValue(automaton.copyState());",
+      "}",
+      "",
+      "public void setState(String str) {",
+      "  if (automaton.is_new)",
+      "    throw new RuntimeException(\"Cannot set state: automaton instance is not new\");",
+      "  Obj obj = Conversions.convertText(str);",
+      "  if (!Generated." & native_fn_name(block.state_memb_pred) & "(obj))",
+      "    throw new RuntimeException(\"Invalid state\");",
+      "  automaton.setState(obj);",
+      "}"
+    );
+
+    if is_time_sensitive:
+      code = code & (
+        "",
+        "public void setElapsedMillisecs(int time) {",
+        "  if (automaton.is_new | automaton.elapsed_time > 0)",
+        "    throw new RuntimeException(\"Cannot set elapsed time now\");",
+        "  if (time < 0)",
+        "    throw new RuntimeException(\"Time cannot be negative\");",
+        "  automaton.elapsed_time = 1000000L * time;",
+        "}",
+        "",
+        "public void setElapsedSecs(int time) {",
+        "  setElapsedMillisecs(1000 * time);",
+        "}"
+      );
+    ;
+
+    if inputs != ():
+      code = code & (
+        "",
+        "void internalSetInput(Input input, Obj obj) {",
+        "  switch (input) {"
+      );
+      for input @ j <- inputs:
+        code = code & (
+          "" if j > 0,
+          "    case " & input & ":",
+          "      if (Generated." & input_memb_test_pred_name(j) & "(obj)) {",
+          "        automaton." & input_set_methods_names(j) & "(obj);",
+          "        return;",
+          "      }",
+          "      break;"
+        );
+      ;
+      code = (code |
+        "  }",
+        "  System.exit(1); // Internal error",
+        "}",
+        "",
+        "public void setInput(Input input, String value) {",
+        "  internalSetInput(input, Conversions.convertText(value));",
+        "}"
+      );
+    ;
+
+    if outputs != ():
+      code = code & (
+        "",
+        "public Output[] changedOutputs() {",
+        "  int count = (int) automaton.changed_outputs_count;",
+        "  Output[] outputs = new Output[count];",
+        "  Output[] values = Output.values();", ## THIS SHOULD BE MADE MORE EFFICIENT
+        "  for (int i=0 ; i < count ; i++)",
+        "    outputs[i] = values[(int) automaton.changed_outputs[i]];",
+        "  return outputs;",
+        "}",
+        "",
+        "public Value readOutput(Output output) {",
+        "  Obj obj = null;",
+        "  switch (output) {"
+      );
+      for output @ i <- outputs:
+        code = code & (
+          "" if i > 0,
+          "    case " & output & ":",
+          "      obj = automaton." & output_vars_names(i) & ";",
+          "      break;"
+        );
+      ;
+      code = code & (
+        "  }",
+        "  return Conversions.exportAsValue(obj);",
+        "}"
+      );
+    ;
+
+    code = code & input_setters & output_getters & methods_wrappers;
+    code = (
+      "package net.cell_lang;",
+      "",
+      "",
+      "public class " & auto_class_name & " {"
+      ) & indent_lines(code) & ("}");
+
+    return (auto_class_name, code, docs);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////// Code shared between static and reactive automata ///////////////
+////////////////////////////////////////////////////////////////////////////////
+
+implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
+  (String*, String*) method_wrapper(MethodId method_id, CompiledMethod method,
+    <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name, String method_path) {
+    args_inter_types = (interface_type(t) : t <- method.args_types);
+    inter_ret_type = interface_type(method.ret_type);
+
+    input_args_types = (input_arg_type(it) : it <- args_inter_types);
+    args_types_str = append(input_args_types, ", ");
+    args_decls = append((it & " arg" & printed(i) : it @ i <- input_args_types), ", ");
+
+    ret_val_str = return_value_type(inter_ret_type);
+
+    arity = |method.args_types|;
+    memb_preds = method.args_memb_preds;
+    args_types_by_pos = ([ps(i) : ps <- memb_preds] : i < arity);
+    mono_args = ((i, only(ts)) : ts @ i <- args_types_by_pos, |ts| == 1);
+    poly_args = isort([i : ts @ i <~ args_types_by_pos, |ts| != 1]);
+
+    code = (
+      "",
+      "public " & ret_val_str & " " & ext_name & "(" & args_decls & ") {"
+    );
+
+    code = code & join((
+      indent_lines(import_code(it, "arg" & printed(i), "Obj objArg" & printed(i) & " = "))
+      : it @ i <- args_inter_types
+    ));
+
+    conds = ("Generated." & native_fn_name(p) & "(objArg" & printed(i) & ")" : i, p <- mono_args);
+    if poly_args != ():
+      poly_conds = ((
+        "Generated." & native_fn_name(ps(i)) & "(objArg" & printed(i) & ")" : i <- poly_args
+        ) : ps <- isort(memb_preds)
+      );
+      anded_conds = ({
+          c = append(cs, " && ");
+          c = "(" & c & ")" if |cs| > 1;
+          return c;
+        } : cs <- poly_conds
+      );
+      poly_cond = append(anded_conds, " || ");
+      poly_cond = "(" & poly_cond & ")" if |anded_conds| > 1;
+      conds = (conds | poly_cond);
+    ;
+    cond = append(conds, " && ");
+    cond = "(" & cond & ")" if |conds| > 1;
+
+    code = code & (
+      "  if (!" & cond & ")",
+      "    throw new RuntimeException(\"Invalid argument type\");"
+    ) if cond != "";
+
+    code = code & (
+      "  try {",
+      "    Obj resObj = " & method_path & user_def_method_name(block_name, method_id) &
+        "(" & append((("objArg" & printed(i) : i < arity) | "env"), ", ") & ");"
+      ) & indent_lines(indent_lines(
+        export_code(inter_ret_type, "resObj", "return ")
+      )) & (
+      "  }",
+      "  catch (Exception e) {",
+      "    env = new Generated.Env();",
+      "    throw e;",
+      "  }",
+      "}"
+    );
+
+    docs = ret_val_str & " " & ext_name & "(" & args_types_str & ");";
+
+    return (code, (docs));
+  }
+}

@@ -1,0 +1,87 @@
+package net.cell_lang;
+
+
+class Index {
+  final int Empty = 0xFFFFFFFF;
+
+  public int[] hashtable;
+  public int[] buckets;
+
+  public Index(int size) {
+    hashtable = new int[size];
+    buckets   = new int[size];
+    for (int i=0 ; i < size ; i++) {
+      hashtable[i] = Empty;
+      buckets[i] = Empty;
+    }
+  }
+
+  public void clear() {
+    int size = hashtable.length;
+    for (int i=0 ; i < size ; i++) {
+      hashtable[i] = Empty;
+      buckets[i] = Empty;
+    }
+  }
+
+  public void insert(int index, int hashcode) {
+    Miscellanea._assert(buckets[index] == Empty);
+    Miscellanea._assert(index < hashtable.length);
+
+    int hashIdx = Integer.remainderUnsigned(hashcode, hashtable.length);
+    int head = hashtable[hashIdx];
+    hashtable[hashIdx] = index;
+    buckets[index] = head;
+  }
+
+  public void delete(int index, int hashcode) {
+    int hashIdx = Integer.remainderUnsigned(hashcode, hashtable.length);
+    int head = hashtable[hashIdx];
+    Miscellanea._assert(head != Empty);
+
+    if (head == index) {
+      hashtable[hashIdx] = buckets[index];
+      buckets[index] = Empty;
+      return;
+    }
+
+    int curr = head;
+    for ( ; ; ) {
+      int next = buckets[curr];
+      Miscellanea._assert(next != Empty);
+      if (next == index) {
+        buckets[curr] = buckets[next];
+        buckets[next] = Empty;
+        return;
+      }
+      curr = next;
+    }
+  }
+
+  public int head(int hashcode) {
+    return hashtable[Integer.remainderUnsigned(hashcode, hashtable.length)];
+  }
+
+  public int next(int index) {
+    return buckets[index];
+  }
+
+  public void dump() {
+    System.out.print("hashtable =");
+    if (hashtable != null)
+      for (int i=0 ; i < hashtable.length ; i++)
+        System.out.print(" " + (hashtable[i] == Empty ? "-" : Integer.toString(hashtable[i])));
+    else
+      System.out.print(" null");
+    System.out.println("");
+
+    System.out.print("buckets   =");
+    if (hashtable != null)
+      for (int i=0 ; i < buckets.length ; i++)
+        System.out.print(" " + (buckets[i] == Empty ? "-" : Integer.toString(buckets[i])));
+    else
+      System.out.print(" null");
+    System.out.println("");
+    System.out.println("");
+  }
+}

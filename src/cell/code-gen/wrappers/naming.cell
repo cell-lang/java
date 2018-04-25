@@ -1,0 +1,222 @@
+implicit prg : CompiledPrg {
+  String safe_class_name(<DBSymbol, AutoSymbol> id) = safe_block_class_names(id, !!);
+
+  [<DBSymbol, AutoSymbol> -> String] safe_block_class_names = [
+    b.name -> {
+      name = upper_camel_case(bare_id(b.name));
+      name = name & "_" if is_reserved(name);
+      return name;
+    } : b <- prg.static_blocks | b <- prg.react_blocks
+  ];
+}
+
+
+implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
+  String safe_class_name(DeclInterType inter_type, Bool retry, Maybe[Nat] unique_id) {
+    name = default_name(inter_type, retry);
+    name = take(name, 60);
+    name = name & "_" & printed(value(unique_id)) if unique_id != nothing;
+    while taken_names(name) or is_reserved(name) or safe_block_class_names(*, name):
+      name = name & "_";
+    ;
+    return name;
+  }
+
+
+  String default_name(InterType, Bool retry) =
+    bool              = "Bool",
+    integer           = "Long",
+    float             = "Double",
+    string            = "String",
+    symbol(s?)        = upper_camel_case(s),
+    tuple(ts?)        = append((default_name(t, retry) : t <- ts), "_"),
+    record(fs?)       = append((upper_camel_case(l) : l <- isort(keys(fs))), "_"),
+    named(ts?)        = default_name(ts, retry),
+    union(ts?)        = append((default_name(t, retry) : t <- isort(ts)), "_"),
+    seq(t?)           = default_name(t, retry) & "_Seq",
+    set(t?)           = default_name(t, retry) & "_Set",
+    tagged(s?, t?)    = upper_camel_case(s) & if retry then "_" & default_name(t, true) else "",
+    generic           = if direction == :in then "String" else "Value";
+
+
+  String default_name(BasicTypeSymbol, Bool) =
+    type_symbol(s?)         = upper_camel_case(s),
+    schema_type_symbol(s?)  = upper_camel_case(s),
+    builtin_type_symbol()   = undefined;
+
+
+  String default_name(ParTypeSymbol type_symb, Bool retry) {
+    args_names = (
+      if t != empty_type
+        then default_name(interface_type(t, typedefs = prg.typedefs), retry)
+        else "Void"
+      : t <- type_symb.params
+    );
+    return default_name(type_symb.symbol, retry) & "_" & append(args_names, "_");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+String safe_lower_camel_case(Symbol symb) = safe_lower_camel_case(symb, false);
+
+String safe_lower_camel_case(Symbol symb, Bool keep_underscore) {
+  name = lower_camel_case(symb);
+  name = name & "_" if is_reserved(name);
+  return name;
+}
+
+String safe_lower_camel_case_chain(Symbol+ symbs) {
+  name = append((lower_camel_case(s) : s <- symbs), "_");
+  name = name & "_" if is_reserved(name);
+  return name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+Bool is_reserved(String id) {
+  for p <- isort(standard_generated_class_prefixes):
+    len = length(p);
+    if length(id) > length(p):
+      prefix = take(p, len);
+      if prefix == p:
+        rest = drop(p, len);
+        return false if (ch <~ chars(rest) : not is_digit(ch));
+      ;
+    ;
+  ;
+  return in(id, keywords_and_literals) or in(id, runtime_classes) or in(id, standard_generated_classes);
+}
+
+
+[String] keywords_and_literals = [
+  "abstract",
+  "assert",
+  "boolean",
+  "break",
+  "byte",
+  "case",
+  "catch",
+  "char",
+  "class",
+  "const",
+  "continue",
+  "default",
+  "do",
+  "double",
+  "else",
+  "enum",
+  "extends",
+  "false",
+  "final",
+  "finally",
+  "float",
+  "for",
+  "goto",
+  "if",
+  "implements",
+  "import",
+  "instanceof",
+  "int",
+  "interface",
+  "long",
+  "native",
+  "new",
+  "null",
+  "package",
+  "private",
+  "protected",
+  "public",
+  "return",
+  "short",
+  "static",
+  "strictfp",
+  "super",
+  "switch",
+  "synchronized",
+  "this",
+  "throw",
+  "throws",
+  "transient",
+  "true",
+  "try",
+  "void",
+  "volatile",
+  "while"
+];
+
+
+[String] standard_generated_classes = [
+  "Generated", ## NOT SURE ABOUT THIS ONE, BUT JUST IN CASE
+  "Env",
+  "Lambda"
+];
+
+
+[String] standard_generated_class_prefixes = [
+  "Lambda",
+  "ConstIntSeq"
+];
+
+
+[String] runtime_classes = [
+  "Algs",
+  "BinaryTable",
+  "BinaryTableUpdater",
+  "BinRelIter",
+  "BlankObj",
+  "Builder",
+  "ByteStream",
+  "Conversions",
+  "EmptyRelObj",
+  "EmptyRelValue",
+  "FloatObj",
+  "FloatValue",
+  "Hacks",
+  "Index",
+  "IntObj",
+  "IntValue",
+  "Iter",
+  "Lexer",
+  "MasterSeqObj",
+  "Miscellanea",
+  "NeBinRelObj",
+  "NeBinRelValue",
+  "NeSetObj",
+  "NeSetValue",
+  "NeTernRelObj",
+  "NeTernRelValue",
+  "NullObj",
+  "Obj",
+  "OneWayBinTable",
+  "OverflowTable",
+  "Pair",
+  "Parser",
+  "Parsing",
+  "ParsingException",
+  "Procs",
+  "SeqObj",
+  "SeqOrSetIter",
+  "SeqValue",
+  "SliceObj",
+  "SymbObj",
+  "SymbTable",
+  "SymbValue",
+  "TaggedObj",
+  "TaggedValue",
+  "TernaryTable",
+  "TernaryTableUpdater",
+  "TernRelIter",
+  "Token",
+  "TokenStream",
+  "Triplet",
+  "UnaryTable",
+  "UnaryTableUpdater",
+  "Value",
+  "ValueBase",
+  "ValueStore",
+  "ValueStoreBase",
+  "ValueStoreUpdater",
+  "WrappingUtils"
+];
