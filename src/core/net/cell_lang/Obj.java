@@ -68,6 +68,7 @@ abstract class Obj implements Comparable<Obj> {
   public long mantissa()                                {throw Miscellanea.internalFail(this);}
   public long decExp()                                  {throw Miscellanea.internalFail(this);}
 
+  //## REMOVE REMOVE REMOVE
   public Obj negate()                                   {throw Miscellanea.internalFail(this);}
   public Obj reverse()                                  {throw Miscellanea.internalFail(this);}
   public void initAt(long i, Obj v)                     {throw Miscellanea.internalFail(this);}
@@ -114,6 +115,45 @@ abstract class Obj implements Comparable<Obj> {
   ////////////////////////////////////////////////////////////////////////////
 
   public Obj randElem() {throw Miscellanea.internalFail(this);}
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public boolean getBoolAt(long idx) {
+    return getItem(idx).getBool();
+  }
+
+  public long getLongAt(long idx) {
+    return getItem(idx).getLong();
+  }
+
+  public double getDoubleAt(long idx) {
+    return getItem(idx).getDouble();
+  }
+
+  public boolean[] getArray(boolean[] buffer) {
+    for (int i=0 ; i < buffer.length ; i++)
+      buffer[i] = getBoolAt(i);
+    return buffer;
+  }
+
+  public long[] getArray(long[] buffer) {
+    for (int i=0 ; i < buffer.length ; i++)
+      buffer[i] = getLongAt(i);
+    return buffer;
+  }
+
+  public double[] getArray(double[] buffer) {
+    for (int i=0 ; i < buffer.length ; i++)
+      buffer[i] = getDoubleAt(i);
+    return buffer;
+  }
+
+  public Obj[] getArray(Obj[] buffer) {
+    for (int i=0 ; i < buffer.length ; i++)
+      buffer[i] = getItem(i);
+    return buffer;
+  }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////

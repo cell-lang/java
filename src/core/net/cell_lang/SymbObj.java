@@ -43,6 +43,7 @@ class SymbObj extends Obj {
     return obj.isSymb(id);
   }
 
+  //## REMOVE REMOVE REMOVE
   public Obj negate() {
     if (id == SymbTable.FalseSymbId)
       return SymbObj.get(SymbTable.TrueSymbId);

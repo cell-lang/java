@@ -107,22 +107,33 @@ class Builder {
   }
 
   public static Obj buildConstIntSeq(byte[] vals) {
-    int len = vals.length;
-    Obj[] objs = new Obj[len];
-    for (int i=0 ; i < len ; i++)
-      objs[i] = IntObj.get(vals[i]);
-    return new MasterSeqObj(objs);
+    return wrapSeq(vals);
   }
 
   public static Obj buildConstIntSeq(short[] vals) {
-    int len = vals.length;
-    Obj[] objs = new Obj[len];
-    for (int i=0 ; i < len ; i++)
-      objs[i] = IntObj.get(vals[i]);
-    return new MasterSeqObj(objs);
+    return wrapSeq(vals);
   }
 
   public static Obj buildConstIntSeq(int[] vals) {
+    return wrapSeq(vals);
+  }
+
+  public static Obj buildConstIntSeq(long[] vals) {
+    return wrapSeq(vals);
+  }
+
+
+  //## IMPLEMENT IMPLEMENT IMPLEMENT
+
+  public static Obj wrapSeq(boolean[] vals) {
+    int len = vals.length;
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = SymbObj.get(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(byte[] vals) {
     int len = vals.length;
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
@@ -130,11 +141,87 @@ class Builder {
     return new MasterSeqObj(objs);
   }
 
-  public static Obj buildConstIntSeq(long[] vals) {
+  public static Obj wrapSeq(short[] vals) {
     int len = vals.length;
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       objs[i] = IntObj.get(vals[i]);
     return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(int[] vals) {
+    int len = vals.length;
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = IntObj.get(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(long[] vals) {
+    int len = vals.length;
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = IntObj.get(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(double[] vals) {
+    int len = vals.length;
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = new FloatObj(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(Obj[] vals) {
+    return new MasterSeqObj(vals);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static Obj wrapSeq(boolean[] vals, int len) {
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = SymbObj.get(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(byte[] vals, int len) {
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = IntObj.get(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(short[] vals, int len) {
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = IntObj.get(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(int[] vals, int len) {
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = IntObj.get(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(long[] vals, int len) {
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = IntObj.get(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(double[] vals, int len) {
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = new FloatObj(vals[i]);
+    return new MasterSeqObj(objs);
+  }
+
+  public static Obj wrapSeq(Obj[] vals, int len) {
+    return new MasterSeqObj(vals, len);
   }
 }

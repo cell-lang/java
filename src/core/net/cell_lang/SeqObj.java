@@ -51,15 +51,23 @@ abstract class SeqObj extends Obj {
       throw new IndexOutOfBoundsException();
   }
 
+  // public Obj updatedAt(long idx, Obj obj) {
+  //   if (idx < 0 | idx >= length)
+  //     Miscellanea.softFail("Invalid sequence index");
+
+  //   Obj[] newItems = new Obj[length];
+  //   for (int i=0 ; i < length ; i++)
+  //     newItems[i] = i == idx ? obj : items[offset + i];
+
+  //   return new MasterSeqObj(newItems);
+  // }
+
   public Obj updatedAt(long idx, Obj obj) {
     if (idx < 0 | idx >= length)
       Miscellanea.softFail("Invalid sequence index");
 
-    Obj[] newItems = new Obj[length];
-    for (int i=0 ; i < length ; i++)
-      newItems[i] = i == idx ? obj : items[offset + i];
-
-    return new MasterSeqObj(newItems);
+    items[offset + (int) idx] = obj;
+    return this;
   }
 
   public Obj reverse() {

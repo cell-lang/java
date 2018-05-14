@@ -30,14 +30,14 @@ type VarTypesNotToDeclare = FnArg,
 
 
 ## BAD: THIS THING IS INCREDIBLY MESSY. I MUST IMPLEMENT A VERSION OF SELECT WITH A <STOP> GUARD
-[AnyVar] vars_to_declare(Instr* instrs) {
+[AnyVar] vars_to_declare(Instr* instrs, [AnyFnArg] fn_args) {
   vars = select(
     instrs,
     $ :: <AnyVar, ClsDef> and not $ :: <VarTypesNotToDeclare, ClsDef>
   );
   fail if not vars :: [AnyVar];
   vars = vars - [never_used_lvar]; ## THIS IS A REALLY, REALLY UGLY THING
-  return vars;
+  return vars - fn_args;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

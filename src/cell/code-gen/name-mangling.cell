@@ -38,11 +38,11 @@ String symb_idx_name(SymbObj symb) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String native_var_decl_name(<ObjVar, PendingInputVar, BoolVar, IntVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v) = native_var_name(v, false);
-String native_var_ref_name(<ObjVar, PendingInputVar, BoolVar, IntVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v)  = native_var_name(v, true);
+String native_var_decl_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v) = native_var_name(v, false);
+String native_var_ref_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v)  = native_var_name(v, true);
 
-String native_var_decl_name(<VecVar, ItVar, StreamVar, AnyClsVar> v) = native_var_name(v);
-String native_var_ref_name(<VecVar, ItVar, StreamVar, AnyClsVar> v)  = native_var_name(v);
+String native_var_decl_name(<VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v) = native_var_name(v);
+String native_var_ref_name(<VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v)  = native_var_name(v);
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +53,7 @@ String native_var_decl_name(MembIntVectVar v) =
 /////////////////////////////////////////////////////////////////////////////////////
 
 String native_var_name(VecVar v)          = "vec_" & printed(v.id);
+String native_var_name(ArrayVar var)      = "avar" & printed(var.id);
 String native_var_name(SeqItVar v)        = "seq_it_" & printed(bare_id_2(v));
 String native_var_name(SetItVar v)        = "set_it_" & printed(bare_id_2(v));
 String native_var_name(BinRelItVar v)     = "bin_rel_it_" & printed(bare_id_2(v));
@@ -122,6 +123,8 @@ String native_var_name(BoolVar var, Bool add_prefix) {
 
   return match (var)
     bvar(n?)                                      = "b" & printed(n),
+    bool_arg(<+> s?)                              = printed(s) & "_Vb",
+    bool_arg(<*..*> n?)                           = "a" & printed(n),
     nested_db_spent(v?)                           = prefix & native_var_decl_name(v) & "s",
     cond_value_var(n?)                            = prefix & "cond_" & printed(n),
     cond_is_def_var(n?)                           = prefix & "cond_def_" & printed(n),
@@ -144,6 +147,8 @@ String native_var_name(IntVar v, Bool add_prefix) {
   prefix = if add_prefix then "this." else "";
   return match (v)
     ivar(n?)                            = "i" & printed(n),
+    int_arg(<+> s?)                     = printed(s) & "_Vi",
+    int_arg(<*..*> n?)                  = "a" & printed(n),
     curr_time                           = "curr_time",
     update_time                         = "update_time",
     update_expr_index                   = "update_expr_index",
@@ -163,6 +168,16 @@ String native_var_name(IntVar v, Bool add_prefix) {
     elapsed_time(av?)                   = native_var_name(av, false) & ".elapsed_time",
     nested_auto_int_var()               = native_var_name(v.auto_var, true) & "." & native_var_name(v.memb_var, false);
 }
+
+
+String native_var_name(Int32Var v, Bool add_prefix) =
+  ivar32(n?)  = "i32_" & printed(n);
+
+
+String native_var_name(FloatVar v, Bool add_prefix) =
+  fvar(n?)              = "f" & printed(n),
+  float_arg(<+> s?)     = printed(s) & "_Vf",
+  float_arg(<*..*> n?)  = "a" & printed(n);
 
 
 String native_var_name(AnyAutoVar v, Bool add_prefix) =
@@ -219,6 +234,9 @@ String aux_struct_var_ref_name(ValueStoreId vs) = "updater." & aux_struct_var_de
 String var_decl(ObjVar v)       = "Obj "            & native_var_decl_name(v) & " = null;"; ## CHANGE THIS
 String var_decl(BoolVar v)      = "boolean "        & native_var_decl_name(v) & ";";
 String var_decl(IntVar v)       = "long "           & native_var_decl_name(v) & ";";
+String var_decl(Int32Var v)     = native_var_type(v) & " " & native_var_decl_name(v) & ";";
+String var_decl(FloatVar v)     = native_var_type(v) & " " & native_var_decl_name(v) & ";";
+
 String var_decl(SeqItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";
 String var_decl(SetItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";
 String var_decl(BinRelItVar v)  = "BinRelIter "     & native_var_decl_name(v) & ";";
@@ -226,6 +244,7 @@ String var_decl(TernRelItVar v) = "TernRelIter "    & native_var_decl_name(v) & 
 String var_decl(StreamVar v)    = "java.util.ArrayList<Obj> " & native_var_decl_name(v) & ";";
 String var_decl(VecVar v)       = "Obj[] " & native_var_decl_name(v) & " = new Obj[" & printed(v.size) & "];";
 String var_decl(TableItVar v)   = table_it_var_type[v.arity] & " " & native_var_decl_name(v) & ";";
+String var_decl(ArrayVar v)     = native_elt_type(v) & "[] " & native_var_name(v) & ";";
 
 
 [NzNat -> String] table_it_var_type = [
@@ -261,10 +280,26 @@ String time_slots_table_name(AutoSymbol auto_name, Atom table_id) =
   native_name(auto_name) & "_" & _str_(table_id) & "_Bt";
 
 
-String native_var_type(ObjVar)           = "Obj";
-String native_var_type(IntVar)           = "long";
-String native_var_type(MembIntVectVar)   = "long[]";
-String native_var_type(BoolVar)          = "boolean";
+String native_var_type(ObjVar)          = "Obj";
+String native_var_type(IntVar)          = "long";
+String native_var_type(Int32Var)        = "int";
+String native_var_type(MembIntVectVar)  = "long[]";
+String native_var_type(BoolVar)         = "boolean";
+String native_var_type(FloatVar)        = "double";
+
+
+String native_elt_type(ArrayVar var) = native_type(var.repr);
+
+String native_type(LowLevelEltRepr) =
+  bool      = "boolean",
+  int8      = "byte",
+  int16     = "short",
+  int32     = "int",
+  int       = "long",
+  float     = "double",
+  symbol    |
+  object    = "Obj",
+  array()   = undefined;
 
 
 String native_table_type(Table table) {

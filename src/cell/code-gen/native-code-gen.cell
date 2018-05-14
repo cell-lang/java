@@ -328,13 +328,16 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     args_list = gen_args_list(pd);
     args_list_str = append(args_list, ", ");
 
-    signature = "static " & ret_type_str(pd) & fn_name & suffix & "(" & args_list_str & ")";
+    signature = "static " & ret_type_str(pd) & " " & fn_name & suffix & "(" & args_list_str & ")";
 
     body = pd.body;
     auto_vars_types = if pd.loc_auto_vars? then pd.loc_auto_vars else [];
     db_vars_types = if pd.loc_db_vars? then pd.loc_db_vars else [];
 
-    var_decls = gen_vars_decls(body, if pd.args? then [a : a <~ pd.args, a :: StdVar] else []);
+    args_vars = match (pd)
+      obj_proc_def()  = [v : a <~ pd.args, a :: StdVar],
+      bool_proc_def() = [];
+    var_decls = gen_vars_decls(body, args_vars);
 
     auto_vars = isort(keys(auto_vars_types));
     auto_var_decls = (native_name(auto_vars_types[v]) & " " & native_var_decl_name(v) & ";" : v <- auto_vars);
@@ -358,7 +361,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         "",
         "static Obj " & cache_var_name & ";" if is_real_const,
         "" if is_real_const,
-        "static " & ret_type_str(pd) & fn_name & "(" & args_list_str & ") {",
+        "static " & ret_type_str(pd) & " " & fn_name & "(" & args_list_str & ") {",
         "  if (" & cache_var_name & " == null)",
         "    " & cache_var_name & " = " & fn_name & suffix & "(env);",
         "  return " & cache_var_name & ";",
@@ -374,9 +377,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       obj_proc_def()    = in_arity(pd),
       bool_proc_def()   = pd.arity;
 
-    String ret_type_str(ProcDef) =
-      obj_proc_def()    = "Obj ",
-      bool_proc_def()   = "boolean ";
+    String ret_type_str(ProcDef proc_def) =
+      obj_proc_def()    = native_type(proc_def.ret_val_repr),
+      bool_proc_def()   = "boolean";
 
     String* gen_args_list(ObjProcDef pd) {
       args = ("Obj " & native_var_decl_name(v) : v <- pd.args);
@@ -421,6 +424,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     init_stream(v?)       = (native_new_call(v, "java.util.ArrayList<Obj>", ())),
     append()              = (native_method_call(instr.stream, "add", (instr.obj))),
     set_at()              = (native_method_call(instr.var, "initAt", (instr.idx, instr.value))),
+    alloc_array()         = alloc_array_native_code(instr.var, instr.size),
+    write_array()         = write_array_native_code(instr.var, instr.idx, instr.value),
+    traverse_array()      = traverse_array_native_code(instr.src, instr.buffer, instr.target, instr.idx_var,
+                              instr.it_var, instr.body, block_id),
     get_seq_iter()        |
     get_set_iter()        = (native_method_call(instr.var, instr.src, "getSeqOrSetIter", ())),
     get_bin_rel_iter()    = (native_get_bin_rel_iter_code(instr.var, instr.src, instr.args)),
@@ -428,7 +435,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     move_forward(v?)      = (native_method_call(v, "next", ())),
     set_var()             = native_set_var_code(instr.var, instr.value),
     set_bvar()            |
-    set_ivar()            = (native_assignment_code(instr.var, instr.value)),
+    set_ivar()            |
+    set_ivar32()          |
+    set_fvar()            = (native_assignment_code(instr.var, instr.value)),
     set_rc_var()          = (native_code(instr.value, instr.var)),
     init_memb_var()       = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
     reset_memb_var()      = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
@@ -457,6 +466,38 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     runtime_check()       = native_runtime_check_code(instr.cond, instr.file, instr.line, instr.text, instr.vars),
     branch()              = native_branch_code(instr.cond, instr.when_true, instr.when_false, block_id),
     _                     = auto_instr_native_code(instr, block_id);
+
+
+  String* traverse_array_native_code(<LocVar, StdVar> src, ArrayVar buffer, ArrayVar target, Int32Var idx_var, AnyLocVar it_var, Instr* body, Maybe[Nat] block_id) {
+    src_name     = native_var_ref_name(src);
+    buffer_name  = native_var_ref_name(buffer);
+    target_name  = native_var_ref_name(target);
+    idx_var_name = native_var_ref_name(idx_var);
+    it_var_name  = native_var_ref_name(it_var);
+
+    src_repr = low_level_repr(it_var);
+    buffer_arg = if src_repr == target.repr then target_name else "(" & native_type(src_repr) & "[]) null";
+
+    header = (
+      buffer_name & " = " & src_name & ".getArray(" & buffer_arg & ");",
+      "for (" & idx_var_name & " = 0 ; " & idx_var_name & " < " & target_name & ".length ; " & idx_var_name & "++) {",
+      "  " & it_var_name & " = " & buffer_name & "[" & idx_var_name & "];"
+    );
+
+    return header & indent_lines(native_code(body, block_id)) & ("}");
+  }
+
+
+  String* alloc_array_native_code(ArrayVar var, IntExpr size) {
+    elt_type = native_elt_type(var);
+    var_name = native_var_name(var);
+    return (var_name & " = new " & elt_type & "[" & native_expr(size) & "];");
+  }
+
+
+  String* write_array_native_code(ArrayVar var, IntExpr idx, AnyTypeExpr value) {
+    return (native_var_name(var) & "[" & native_expr(idx, true) & "] = " & native_expr(value) & ";");
+  }
 
 
   String native_cls_call_code(AnyClsVar cls_var, WriteObjVar var, AtomicExpr+ args) =
@@ -555,6 +596,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_set()                    = native_static_call(var, "Builder.createSet",        (expr.elems, expr.size)),
     mk_seq_from_stream()        = native_static_call(var, "Builder.createSeq",        (expr.stream)),
     mk_seq()                    = native_static_call(var, "Builder.createSeq",        (expr.elems, expr.size)),
+    mk_seq_from_array()         = native_static_call(var, "Builder.wrapSeq",          (expr.array, value(expr.size) if expr.size != nothing)),
     build_const_int_seq()       = native_build_const_int_seq_code(expr.seq_id, var),
     mk_map_from_streams()       = native_static_call(var, "Builder.createMap",        (expr.key_stream, expr.value_stream)),
     mk_map()                    = native_static_call(var, "Builder.createMap",        (expr.keys, expr.values, expr.size)),
@@ -593,7 +635,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     return native_new_call(var, "RecordObj", (label_set_name, value_array_expr));
   }
 
-  String* native_call_proc_code(Maybe[ObjVar] var, ObjFnName name, ObjExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
+
+  // String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, <AnyTypeExpr, BoundCls>* params, Maybe[Nat] block_id) {
+  //   pars_info = (gen_par_info(p) : p <- params);
+  //   code_frags, args = unzip(pars_info);
+  String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, ObjExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
     cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
     args_list = (args & cls_args_refs | "env");
     name_str = native_fn_name(name);
