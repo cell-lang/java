@@ -334,10 +334,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     auto_vars_types = if pd.loc_auto_vars? then pd.loc_auto_vars else [];
     db_vars_types = if pd.loc_db_vars? then pd.loc_db_vars else [];
 
-    args_vars = match (pd)
-      obj_proc_def()  = [v : a <~ pd.args, a :: StdVar],
-      bool_proc_def() = [];
-    var_decls = gen_vars_decls(body, args_vars);
+    var_decls = gen_vars_decls(body, if pd.args? then set(pd.args) else []);
 
     auto_vars = isort(keys(auto_vars_types));
     auto_var_decls = (native_name(auto_vars_types[v]) & " " & native_var_decl_name(v) & ";" : v <- auto_vars);
@@ -382,7 +379,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       bool_proc_def()   = "boolean";
 
     String* gen_args_list(ObjProcDef pd) {
-      args = ("Obj " & native_var_decl_name(v) : v <- pd.args);
+      args = (native_var_type(v) & " " & native_var_decl_name(v) : v <- pd.args);
       cls_args = ("Lambda " & native_var_decl_name(a.var) : a <- pd.cls_args);
       return (args & cls_args | "Env env");
     }
@@ -639,7 +636,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   // String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, <AnyTypeExpr, BoundCls>* params, Maybe[Nat] block_id) {
   //   pars_info = (gen_par_info(p) : p <- params);
   //   code_frags, args = unzip(pars_info);
-  String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, ObjExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
+  String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, AnyTypeExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
     cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
     args_list = (args & cls_args_refs | "env");
     name_str = native_fn_name(name);
