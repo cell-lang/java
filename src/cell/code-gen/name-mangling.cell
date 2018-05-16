@@ -53,7 +53,7 @@ String native_var_decl_name(MembIntVectVar v) =
 /////////////////////////////////////////////////////////////////////////////////////
 
 String native_var_name(VecVar v)          = "vec_" & printed(v.id);
-String native_var_name(ArrayVar var)      = "avar" & printed(var.id);
+String native_var_name(ArrayVar var)      = "y" & printed(var.id);
 String native_var_name(SeqItVar v)        = "seq_it_" & printed(bare_id_2(v));
 String native_var_name(SetItVar v)        = "set_it_" & printed(bare_id_2(v));
 String native_var_name(BinRelItVar v)     = "bin_rel_it_" & printed(bare_id_2(v));
@@ -102,7 +102,7 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
     watched_signal_value_var(a?)  = prefix & _str_(a) & "_Sw",
     prev_var_value(v?)            = prefix & ad_hoc_var_name(v) & "d",
     pending_state_var(a?)         = prefix & _str_(a) & "_Mp",
-    lvar(<*..*> n?)               = "l" & printed(n),
+    lvar(<*..*> n?)               = "v" & printed(n),
     evar()                        = "vec_" & printed(var.id) & "[(int)(" & native_idx_expr(var.idx) & ")]",
     pending_input_var(<+> a?)     = prefix & _str_(a) & "_Sp";
 
@@ -146,7 +146,7 @@ String native_var_name(IntVar v, Bool add_prefix) {
 
   prefix = if add_prefix then "this." else "";
   return match (v)
-    ivar(n?)                            = "i" & printed(n),
+    ivar(n?)                            = "l" & printed(n),
     int_arg(<+> s?)                     = printed(s) & "_Vi",
     int_arg(<*..*> n?)                  = "a" & printed(n),
     curr_time                           = "curr_time",
@@ -171,7 +171,7 @@ String native_var_name(IntVar v, Bool add_prefix) {
 
 
 String native_var_name(Int32Var v, Bool add_prefix) =
-  ivar32(n?)  = "i32_" & printed(n);
+  ivar32(n?)  = "i" & printed(n);
 
 
 String native_var_name(FloatVar v, Bool add_prefix) =
@@ -231,7 +231,7 @@ String aux_struct_var_ref_name(ValueStoreId vs) = "updater." & aux_struct_var_de
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String var_decl(ObjVar v)       = "Obj "            & native_var_decl_name(v) & " = null;"; ## CHANGE THIS
+String var_decl(ObjVar v)       = "Obj "            & native_var_decl_name(v) & ";";
 String var_decl(BoolVar v)      = "boolean "        & native_var_decl_name(v) & ";";
 String var_decl(IntVar v)       = "long "           & native_var_decl_name(v) & ";";
 String var_decl(Int32Var v)     = native_var_type(v) & " " & native_var_decl_name(v) & ";";
