@@ -89,7 +89,7 @@ implicit {
         return native_var_ref_name(v) & " = new " & native_table_type(t) & "(" & arg_list & ");";
       } : v, t <- isort(tables)
     );
-    vars_decl = gen_vars_decls(init_code);
+    vars_decl = gen_vars_decls(init_code, []);
     vars_decl = vars_decl & ("") if vars_decl != ();
     body = vars_decl & links_init_code & tables_init_code & native_code(init_code, nothing);
     link_args = append((native_name(l) & " linkedAuto" & printed(i) & ", " : l @ i <- links));
@@ -108,7 +108,7 @@ implicit {
 
 
   String* native_copy_state_code(DBSymbol name, Instr* code) {
-    vars_decls = gen_vars_decls(code);
+    vars_decls = gen_vars_decls(code, []);
     body = vars_decls & ("" if vars_decls != ()) & native_code(code, nothing);
     sgn = "public Obj " & copy_state_proc_name(name) & "() {";
     return (sgn) & indent_lines(body) & ("}");
@@ -117,7 +117,7 @@ implicit {
 
   String* native_set_state_code(DBSymbol name, Instr* code) {
     //aux_struct_init_call = native_method_call("this", aux_struct_init_proc_name(name), ());
-    vars_decls = gen_vars_decls(code);
+    vars_decls = gen_vars_decls(code, []);
     //body = vars_decls & ("" if vars_decls != (), aux_struct_init_call) & native_code(code, nothing);
     body = vars_decls & native_code(code, nothing);
     sgn = "public void " & set_state_proc_name(name) & "(Obj a0, " & aux_struct_c_name(name) & " updater) {";
@@ -409,7 +409,7 @@ implicit {
   String* native_user_def_method_code(DBSymbol block_name, MethodId method_id, Instr* body) {
     args_str = append(("Obj " & native_var_decl_name(fn_arg(i)) & ", " : i < method_id.arity));
     sgn = "public Obj " & user_def_method_name(block_name, method_id) & "(" & args_str & "Env env) {";
-    vars_decls = gen_vars_decls(body);
+    vars_decls = gen_vars_decls(body, []);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn) & indent_lines(body_text) & ("}");
   }
@@ -418,7 +418,7 @@ implicit {
   String* native_update_code(DBSymbol block_name, UpdateId update_id, Instr* body) {
     args_strs = ("Obj " & native_var_decl_name(fn_arg(i)) & ", " : i < arity(update_id));
     sgn = "public void " & update_name(block_name, update_id) & "(" & append(args_strs) & aux_struct_c_name(block_name) & " updater, Env env) {";
-    vars_decls = gen_vars_decls(body);
+    vars_decls = gen_vars_decls(body, []);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn) & indent_lines(body_text) & ("}");
   }

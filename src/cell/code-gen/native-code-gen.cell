@@ -4,11 +4,6 @@
 
   code = ("static final int " & symb_idx_name(s) & " = " & printed(i) & ";" : s @ i <- symbs) & 4 * ("");
 
-  // for s <- symbs:
-  //   code = (code | "  " & _str_(bare_obj(s)) & "_G,");
-  //   code = (code | "static final String " & _str_(bare_obj(s)) & "_G = \"" & _str_(bare_obj(s)) & "\";");
-  // ;
-
   for s @ i <- symbs:
     is_first = mod(i, 100) == 0;
     is_last  = mod(i, 100) == 99 or i == |symbs| - 1;
@@ -38,7 +33,7 @@
 
   code = code & env_decl;
 
-  all_cls_arities = [p.arity : pd <- prg.procs, p <~ pd.args, p != :obj]; ## MAYBE HERE IT WOULD BE BETTER TO DO A NORMAL SORT
+  all_cls_arities = [p.arity : pd <- prg.procs, p <~ pd.cls_args];
 
   cls_obj_typedef = generate_cls_obj_typedef(all_cls_arities);
   code = code & cls_obj_typedef & 4 * ("") if cls_obj_typedef != ();
@@ -321,25 +316,6 @@ implicit {
   }
 
 
-  // String gen_c_decl(ObjProcDef pd) {
-  //   args_types = (if p == :obj then "Obj" else "const CLS &" : p <- pd.args);
-  //   args_list = append(args_types & ("ENV &"), ", ");
-  //   return "Obj " & native_fn_name(pd.name) & "(" & args_list & ");";
-  // }
-
-
-  // String gen_c_decl(BoolProcDef pd) {
-  //   par_list = append(pd.arity * ("Obj"), ", ");
-  //   return "boolean " & native_fn_name(pd.name) & "(" & par_list & ");";
-  // }
-
-
-  // String gen_c_decl(ClsDef cd, Nat id) {
-  //   par_list = append(cd.arity * ("Obj") & ("const Obj *", "const CLS *", "ENV &"), ", ");
-  //   return "Obj lambda_" & printed(id) & "(" & par_list & ");";
-  // }
-
-
   String* native_code(ProcDef pd) {
     cached = pd.cached? and pd.cached;
 
@@ -347,16 +323,16 @@ implicit {
 
     suffix = if cached then "_calculate" else "";
 
-    par_list = gen_fn_pars(pd);
-    par_list_str = append(par_list, ", ");
+    args_list = gen_args_list(pd);
+    args_list_str = append(args_list, ", ");
 
-    signature = "static " & ret_type_str(pd) & fn_name & suffix & "(" & par_list_str & ")";
+    signature = "static " & ret_type_str(pd) & fn_name & suffix & "(" & args_list_str & ")";
 
     body = pd.body;
     auto_vars_types = if pd.loc_auto_vars? then pd.loc_auto_vars else [];
     db_vars_types = if pd.loc_db_vars? then pd.loc_db_vars else [];
 
-    var_decls = gen_vars_decls(body);
+    var_decls = gen_vars_decls(body, if pd.args? then [a : a <~ pd.args, a :: StdVar] else []);
 
     auto_vars = isort(keys(auto_vars_types));
     auto_var_decls = (native_name(auto_vars_types[v]) & " " & native_var_decl_name(v) & ";" : v <- auto_vars);
@@ -380,7 +356,7 @@ implicit {
         "",
         "static Obj " & cache_var_name & ";" if is_real_const,
         "" if is_real_const,
-        "static " & ret_type_str(pd) & fn_name & "(" & par_list_str & ") {",
+        "static " & ret_type_str(pd) & fn_name & "(" & args_list_str & ") {",
         "  if (" & cache_var_name & " == null)",
         "    " & cache_var_name & " = " & fn_name & suffix & "(env);",
         "  return " & cache_var_name & ";",
@@ -400,18 +376,18 @@ implicit {
       obj_proc_def()    = "Obj ",
       bool_proc_def()   = "boolean ";
 
-    String gen_fn_arg(ObjProcPar par, Nat pos) =
-      obj   = "Obj " & native_var_decl_name(fn_arg(pos)),
-      cls() = "Lambda " & native_var_decl_name(if par.name? then par.name else cls_var(pos));
+    String* gen_args_list(ObjProcDef pd) {
+      args = ("Obj " & native_var_decl_name(v) : v <- pd.args);
+      cls_args = ("Lambda " & native_var_decl_name(a.var) : a <- pd.cls_args);
+      return (args & cls_args | "Env env");
+    }
 
-    String* gen_fn_pars(ProcDef pd) =
-      obj_proc_def()  = (gen_fn_arg(p, i) : p @ i <- pd.args) & ("Env env"),
-      bool_proc_def() = ("Obj " & native_var_decl_name(fn_arg(n)) : n < arity(pd));
+    String* gen_args_list(BoolProcDef pd) = ("Obj " & native_var_decl_name(fn_arg(n)) : n < arity(pd));
   }
 
 
-  String* gen_vars_decls(Instr* body) {
-    vars_to_decl = [v : v <- vars_to_declare(body), not v :: AuxVar];
+  String* gen_vars_decls(Instr* body, [StdVar] args) {
+    vars_to_decl = [v : v <- vars_to_declare(body), not v :: AuxVar, not args(v)];
 
     vector_vars = [v : v <- vars_to_decl, v :: VecVar];
     scalar_vars = vars_to_decl - vector_vars;
@@ -430,10 +406,9 @@ implicit {
   }
 
 
-  // String* native_code(ClsDef cd, Nat id) {
   String* gen_lambda(ClsDef cd, Nat id) {
     body = remove_dead_code(cd.body); ## BAD BAD BAD: THIS OUGHT TO BE DONE IN DEAD CODE REMOVAL, NOT HERE
-    vars_decls = gen_vars_decls(body);
+    vars_decls = gen_vars_decls(body, []);
     comp_body = native_code(body, nothing);
     full_body = vars_decls & ("" if vars_decls != ()) & comp_body;
 
@@ -455,17 +430,6 @@ implicit {
       "}"
     );
   }
-
-  ## DUPLICATED CODE
-  // String* native_code(ClsDef cd, Nat id) {
-  //   par_list  = ("Obj " & native_var_decl_name(fn_arg(n)) : n < cd.arity) & ("const Obj *captured", "const CLS *captured_cls", "ENV &env"); ## BAD
-  //   signature = "Obj lambda_" & printed(id) & "(" & append(par_list, ", ") & ")";
-
-  //   vars_decls = gen_vars_decls(cd.body);
-  //   comp_body = native_code(cd.body, nothing);
-
-  //   return (signature & " {") & indent_lines(vars_decls) & ("") & indent_lines(comp_body) & ("}");
-  // }
 
 
   String* native_code(Instr* instrs, Maybe[Nat] block_id) = join((native_code(instr, block_id) : instr <- instrs));
@@ -506,7 +470,7 @@ implicit {
     exit_block            = ("break " & block_label(value_unsafe(block_id)) & ";"),
     switch_on_nat()       = native_nat_switch_code(instr.value, instr.cases, block_id),
     symb_switch()         = native_symb_switch_code(instr.value, instr.cases, instr.else, block_id),
-    call_proc()           = native_call_proc_code(if instr.var? then just(instr.var) else nothing, instr.name, instr.args, block_id),
+    call_proc()           = native_call_proc_code(if instr.var? then just(instr.var) else nothing, instr.name, instr.args, instr.cls_args, block_id),
     call_cls()            = (native_cls_call_code(instr.cls_var, instr.var, instr.args)),
     push_call_info()      = (native_push_call_info_code(instr.fn_name, instr.params) if debug_mode),
     pop_call_info         = (native_static_call("Miscellanea.popCallInfo", ()) if debug_mode),
@@ -520,7 +484,7 @@ implicit {
     cls_var(<+> symb?) | capt_cls_var(symb?) = native_method_call(var, cls_var, "invoke", (args | "env"));
 
 
-  String native_push_call_info_code(ObjFnName fn_name, Maybe[FnArg]* args) {
+  String native_push_call_info_code(ObjFnName fn_name, Maybe[<StdVar, FnArg>]* args) {
     fn_name_str = printed(user_repr(fn_name));
     args_strs = (if a != nothing then native_var_ref_name(value(a)) else "NullObj.singleton()" : a <- args);
     argv_str = if args != () then "new Obj[] {" & append(args_strs, ", ") & "}" else "null";
@@ -640,37 +604,40 @@ implicit {
 
   ///////////////////////////////////////////////////////////////////////////////
 
-  String* native_call_proc_code(Maybe[ObjVar] var, ObjFnName name, <ObjExpr, BoundCls>* params, Maybe[Nat] block_id) {
-    pars_info = (gen_par_info(p) : p <- params);
-    code_frags, args = unzip(pars_info);
+  String* native_call_proc_code(Maybe[ObjVar] var, ObjFnName name, ObjExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
+    cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
+    args_list = (args & cls_args_refs | "env");
+    name_str = native_fn_name(name);
     call_code = if var != nothing
-      then native_static_call(value(var), native_fn_name(name), (args | "env"))
-      else native_static_call(native_fn_name(name), (args | "env"));
-    return (join(code_frags) | call_code);
+      then native_static_call(value(var), name_str, args_list)
+      else native_static_call(name_str, args_list);
+    return (join(cls_setup_code) | call_code);
 
-    (String*, FnCallParam) gen_par_info(ObjExpr p) = ((), p);
 
-    (String*, FnCallParam) gen_par_info(BoundCls p) =
+    (String*, FnCallParam) gen_cls_info(BoundCls cls) =
       cls_var()       |
-      capt_cls_var()  = ((), p),
-      bound_cls()     = {
-        par_id = _counter_(:any_value_will_do);
-        par_var = cls_var(par_id);
-        par_name = native_expr(par_var);
+      capt_cls_var()  = ((), cls),
+      bound_cls()     = gen_cls_info(cls.cls, cls.capt_vars, cls.capt_cls_vars);
 
-        capt_var_array = if p.capt_vars != ()
-          then "new Obj[] {" & append((native_expr(v) : v <- p.capt_vars), ", ") & "}"
-          else "null";
 
-        capt_cls_var_array = if p.capt_cls_vars != ()
-          then "new Lambda[] {" & append((native_expr(v) : v <- p.capt_cls_vars), ", ") & "}"
-          else "null";
+    (String*, FnCallParam) gen_cls_info(ClsDef cls, <StdVar, CaptVar>* capt_vars, AnyClsVar* capt_cls_vars) {
+      id = _counter_(:any_value_will_do);
+      var = cls_var(id);
+      name = native_expr(var);
 
-        instr = "Lambda " & par_name & " = new Lambda" & printed(cls2id(p.cls)) &
-                "(" & capt_var_array & ", " & capt_cls_var_array & ");";
+      capt_var_array = if capt_vars != ()
+        then "new Obj[] {" & append((native_expr(v) : v <- capt_vars), ", ") & "}"
+        else "null";
 
-        return ((instr), par_var);
-      };
+      capt_cls_var_array = if capt_cls_vars != ()
+        then "new Lambda[] {" & append((native_expr(v) : v <- capt_cls_vars), ", ") & "}"
+        else "null";
+
+      instr = "Lambda " & name & " = new Lambda" & printed(cls2id(cls)) &
+              "(" & capt_var_array & ", " & capt_cls_var_array & ");";
+
+      return ((instr), var);
+    }
   }
 
 
