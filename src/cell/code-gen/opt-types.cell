@@ -1,0 +1,36 @@
+String** native_opt_type_decls(CompiledPrg program) {
+  return join(((native_tag_rec_type_decl(s, r, i) : r @ i <- rs) : s, rs <- isort(program.opt_reprs)));
+}
+
+
+String* native_tag_rec_type_decl(Symbol tag, OptRecRepr repr, Nat idx) {
+  class_name    = opt_tag_rec_name(tag, idx);
+
+  fields        = untag(repr);
+  ord_labels    = isort(keys(fields));
+  native_types  = (native_type(fields(l, !!).repr) : l <- ord_labels);
+  types_lengths = (length(s) : s <- native_types);
+  max_type_len  = max(types_lengths);
+  spaces        = (nat(max_type_len - l + 1) * " " : l <- types_lengths);
+  vars_names    = (opt_rec_field_name(l) : l <- ord_labels);
+  vars_decls    = (native_types(i) & spaces(i) & v & ";" : v @ i <- vars_names);
+
+  set_test_labels = isort([l : l, f <- fields, f.optional, not is_nullable(f.repr)]);
+  test_vars_decls = ("boolean " & opt_rec_field_nonempty_test_var(l) & ";" : l <- set_test_labels);
+
+  code = ("class " & class_name & " extends Obj {") &
+         indent_lines(vars_decls) &
+         ("") &
+         indent_lines(test_vars_decls) &
+         ("}");
+
+  return code;
+}
+
+
+
+// type LowLevelRepr = bool, int, symbol, float, object,
+
+
+// opt_rec_field_nonempty_test_var
+// type OptRecRepr       = opt_rec_repr([+Symbol -> (repr: LowLevelRepr, optional: Bool)]);

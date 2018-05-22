@@ -134,6 +134,7 @@ String* create_error_msg(ParserError err, String filename) =
 
   opt_code = compiled_prg(
     typedefs:       code.typedefs,
+    opt_reprs:      code.opt_reprs,
     bool_procs:     code.bool_procs,
     procs:          [remove_dead_code(pd) : pd <- code.procs],
     react_blocks:   [remove_dead_code(b)  : b  <- code.react_blocks],

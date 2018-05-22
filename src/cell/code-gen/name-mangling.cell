@@ -9,7 +9,7 @@
 //  I
 //  J
 //  K     null_locks_count_var()
-//  L
+//  L     Optimized record field
 //  M     MembVar                                                     MethodId
 //  N     Reactive automaton named nodes
 //  O
@@ -24,6 +24,13 @@
 //  X     update_source_var()
 //  Y
 //  Z
+
+
+String opt_tag_rec_name(Symbol tag, Nat idx) = "Obj_" & upper_camel_case(tag) & "_" & printed(idx);
+
+String opt_rec_field_name(Symbol label) = printed(label) & "_L";
+
+String opt_rec_field_nonempty_test_var(Symbol label) = printed(label) & "_Ls";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -299,6 +306,18 @@ String native_type(LowLevelEltRepr) =
   float     = "double",
   symbol    |
   object    = "Obj",
+  array()   = undefined;
+
+
+Bool is_nullable(LowLevelEltRepr) =
+  bool      |
+  int8      |
+  int16     |
+  int32     |
+  int       |
+  float     = false,
+  symbol    |
+  object    = true,
   array()   = undefined;
 
 

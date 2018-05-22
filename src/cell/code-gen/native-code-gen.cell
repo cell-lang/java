@@ -37,6 +37,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     cls_obj_typedef = generate_cls_obj_typedef(all_cls_arities);
     code = code & cls_obj_typedef & 4 * ("") if cls_obj_typedef != ();
 
+    native_opt_type_decls = native_opt_type_decls(prg);
+    code = code & join(((d | "", "") : d <- native_opt_type_decls));
+    code = (code | "", "") if native_opt_type_decls != ();
+
     int_seqs_code = gen_int_seqs_code(prg.int_seqs);
 
     symbs_seqs_code = symbols_arrays_decls(values(symbols_sets_info));
@@ -425,6 +429,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     write_array()         = write_array_native_code(instr.var, instr.idx, instr.value),
     traverse_array()      = traverse_array_native_code(instr.src, instr.buffer, instr.target, instr.idx_var,
                               instr.it_var, instr.body, block_id),
+    write_rec_field()     = (native_assignment_code(native_expr(instr.var) & "." & opt_rec_field_name(instr.label), instr.value)),
     get_seq_iter()        |
     get_set_iter()        = (native_method_call(instr.var, instr.src, "getSeqOrSetIter", ())),
     get_bin_rel_iter()    = (native_get_bin_rel_iter_code(instr.var, instr.src, instr.args)),
@@ -604,6 +609,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_tagged_obj()             = native_new_call(var, "TaggedObj",                   (expr.tag, expr.obj)),
     mk_array()                  = native_new_call(var, "MasterSeqObj",                (expr.size)),
     mk_record()                 = native_mk_record_code(expr.fields, var),
+    inst_opt_tag_rec()          = native_new_call(var, opt_tag_rec_name(expr.tag, expr.repr_idx), ()),
     get_seq_slice()             = native_method_call(var, expr.seq,  "getSlice",      (expr.idx_first, expr.len)),
     append_to_seq()             = native_method_call(var, expr.seq,  "append",        (expr.new_elem)),
     update_seq_at()             = native_method_call(var, expr.seq,  "updatedAt",     (get_int_val(expr.idx), expr.value)),
@@ -732,8 +738,8 @@ String native_static_call(Encodable res, String static_name, Encodable* args) =
 String native_new_call(Encodable res, String obj_type, Encodable* args) =
   native_code(res) & " = new " & obj_type & "(" & append((native_code(a) : a <- args), ", ") & ");";
 
-String native_assignment_code(AnyVar var, Encodable value) =
-  native_var_ref_name(var) & " = " & native_code(value) & ";";
+String native_assignment_code(Encodable var, Encodable value) =
+  native_code(var) & " = " & native_code(value) & ";";
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
