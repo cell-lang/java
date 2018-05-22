@@ -27,6 +27,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+String block_label(Int id) = "block" & printed(id);
+
+////////////////////////////////////////////////////////////////////////////////
+
 String symb_idx_name(Atom symb) = _str_(symb) & "_A";
 
 String symb_idx_name(SymbObj symb) =
@@ -348,6 +352,8 @@ String node_specific_method_name_prefix(BlockNodeId id, AutoSymbol auto) =
 String const_int_seq_holder_class_name(Nat seq_id) = "ConstIntSeq" & printed(seq_id);
 
 String const_int_seq_ref_name(Nat seq_id) = const_int_seq_holder_class_name(seq_id) & ".data";
+
+String const_symb_seq_ref_name(Nat seq_id) = "constSymbolSeq" & printed(seq_id);
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////

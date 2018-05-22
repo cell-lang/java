@@ -1,10 +1,4 @@
-implicit {
-  debug_mode                      : Bool,
-  sorted_cls_defs                 : ClsDef*,
-  int_seqs_types_and_lengths      : (String, Nat)*,
-  cached_semi_consts_by_impl_arg  : [ImplArg -> [+FnId]];
-
-
+implicit prg : CompiledPrg, debug_mode : Bool {
   String* native_static_block_decl(StaticBlock block) {
     links_decls = (native_name(l) & " *linkedAuto" & printed(i) & ";" : l @ i <- block.links);
     state_vars_decls = ["public Obj " & native_var_decl_name(v) & ";" : v, unused_var <- block.state_vars];

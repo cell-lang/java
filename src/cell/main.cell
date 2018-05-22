@@ -150,7 +150,7 @@ String* create_error_msg(ParserError err, String filename) =
     ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
   ;
 
-  files = native_code(opt_code, include_runtime, debug_mode);
+  files = generated_code(include_runtime, prg = opt_code, debug_mode = debug_mode);
   t8 = _ticks_(:any_value_will_do);
   Print("Java code generated\n");
   if wait_for_key:
