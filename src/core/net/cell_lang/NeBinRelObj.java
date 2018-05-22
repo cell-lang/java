@@ -3,7 +3,6 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-
 class NeBinRelObj extends Obj {
   Obj[] col1;
   Obj[] col2;
@@ -237,6 +236,24 @@ class NeBinRelObj extends Obj {
     }
     for (int i=0 ; i < len ; i++) {
       int res = otherCol2[i].cmp(col2[i]);
+      if (res != 0)
+        return res;
+    }
+    return 0;
+  }
+
+  public int cmpRecord(int[] otherLabels, Obj[] otherValues) {
+    int len = col1.length;
+    int otherLen = otherLabels.length;
+    if (otherLen != len)
+      return otherLen < len ? 1 : -1;
+    for (int i=0 ; i < len ; i++) {
+      int res = SymbTable.get(otherLabels[i]).cmp(col1[i]);
+      if (res != 0)
+        return res;
+    }
+    for (int i=0 ; i < len ; i++) {
+      int res = otherValues[i].cmp(col2[i]);
       if (res != 0)
         return res;
     }

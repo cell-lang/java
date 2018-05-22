@@ -92,6 +92,7 @@ abstract class Obj implements Comparable<Obj> {
   public int cmpNeBinRel(Obj[] c1, Obj[] c2)            {throw Miscellanea.internalFail(this);}
   public int cmpNeTernRel(Obj[] c1, Obj[] c2, Obj[] c3) {throw Miscellanea.internalFail(this);}
   public int cmpTaggedObj(int tag, Obj obj)             {throw Miscellanea.internalFail(this);}
+  public int cmpRecord(int[] ls, Obj[] vs)              {throw Miscellanea.internalFail(this);}
 
   public ValueBase getValue()                           {throw Miscellanea.internalFail(this);}
 

@@ -52,7 +52,11 @@ class SymbObj extends Obj {
   }
 
   public int hashCode() {
-    return (int) id; //## BAD HASHCODE, IT'S NOT STABLE
+    return hashCode(id);
+  }
+
+  public static int hashCode(int symbId) {
+    return symbId; //## BAD HASHCODE, IT'S NOT STABLE
   }
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
