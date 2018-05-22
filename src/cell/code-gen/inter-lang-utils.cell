@@ -101,25 +101,6 @@ String uppercase_encoding(Nat n) {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-[[+Symbol]] record_labels_sets(CompiledPrg prg) {
-  // mk_record(fields: [+Symbol -> AtomicExpr]),
-  mk_rec_exprs = select(prg, match ($) mk_record() = true, _ = false);
-  fail if not mk_rec_exprs :: [<mk_record(fields: [+Symbol -> AtomicExpr])>];
-  return [[l : l, unused_var <- e.fields] : e <- mk_rec_exprs];
-}
-
-// type CompiledPrg  = compiled_prg(
-//                       typedefs:       [TypeName -> NeType],
-//                       bool_procs:     [BoolProcDef],
-//                       procs:          [ObjProcDef],
-//                       react_blocks:   [ReactBlock],
-//                       static_blocks:  [StaticBlock],
-//                       int_seqs:       Int+*
-//                     );
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
 implicit prg : CompiledPrg {
   SymbObj+ program_symbols {
     fixed_symbs = (object(a) : a <- special_symbols);
@@ -170,6 +151,15 @@ implicit prg : CompiledPrg {
 
 
   [[+Symbol] -> (Symbol+, Nat)] symbols_sets_info {
-    fail;
+    mk_rec_exprs = select(prg, match ($) mk_record() = true, _ = false);
+    fail if not mk_rec_exprs :: [<mk_record(fields: [+SymbObj -> AtomicExpr])>];
+    labels_sets = isort([[untag(l) : l, unused_var <- e.fields] : e <- mk_rec_exprs]);
+
+    symbols_map = [untag(s) -> i : s @ i <~ program_symbols];
+    return [ls -> {
+        ord_labels = sort_set(ls, symbols_map($a, !!) < symbols_map($b, !!));
+        return (nonempty(ord_labels), i);
+      } : ls @ i <~ labels_sets
+    ];
   }
 }

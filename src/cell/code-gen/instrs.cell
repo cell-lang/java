@@ -171,10 +171,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   ///////////////////////////////////////////////////////////////////////////////
 
-  String native_mk_record_code([+Symbol -> AtomicExpr] fields, WriteObjVar var) {
-    ord_labels, index = symbols_sets_info(keys(fields), !!);
-    label_set_name = const_symb_seq_ref_name(index);
-    values_strs = (native_expr(fields(l, !!)) : l <- ord_labels);
+  String native_mk_record_code([+SymbObj -> AtomicExpr] fields, WriteObjVar var) {
+    ord_labels, index = symbols_sets_info([untag(l) : l, unused_var <- fields], !!);
+    label_set_name = const_symb_seq_name(index);
+    values_strs = (native_expr(fields(object(l), !!)) : l <- ord_labels);
     value_array_expr = "new Obj[] {" & append(values_strs, ", ") & "}";
     return native_new_call(var, "RecordObj", (label_set_name, value_array_expr));
   }

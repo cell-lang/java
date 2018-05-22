@@ -353,7 +353,7 @@ String const_int_seq_holder_class_name(Nat seq_id) = "ConstIntSeq" & printed(seq
 
 String const_int_seq_ref_name(Nat seq_id) = const_int_seq_holder_class_name(seq_id) & ".data";
 
-String const_symb_seq_ref_name(Nat seq_id) = "constSymbolSeq" & printed(seq_id);
+String const_symb_seq_name(Nat seq_id) = "constSymbolSeq" & printed(seq_id);
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////

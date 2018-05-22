@@ -28,8 +28,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     ;
     code = (code | "};", "", "");
 
-    cls_defs = cls_defs(prg);
-
     env_decl = gen_env_decl(prg) & 4 * ("");
 
     code = code & env_decl;
@@ -41,11 +39,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     int_seqs_code = gen_int_seqs_code(prg.int_seqs);
 
-    // symb_sets_code, symbs_sets = symb_sets_info(prg, symbs);
-    // code = code & symb_sets_code;
-
-    sorted_cls_defs = isort(cls_defs);
-
+    symbs_seqs_code = symbols_arrays_decls(values(symbols_sets_info));
 
     // Sorting static blocks in topological order
     static_blocks_dep_map = [b.name -> values(b.nested_blocks) & set(b.links) : b <- prg.static_blocks];
@@ -124,7 +118,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         "public class Generated {" if not has_main
       ),
 
-      indent_lines(code & proc_code & ("", "") & int_seqs_code & decl_types_conv_functs),
+      indent_lines(code & proc_code & ("", "") & int_seqs_code & ("", "") & symbs_seqs_code & decl_types_conv_functs),
 
       indent_lines(c_main_fn(debug_mode)) if has_main,
 
@@ -209,22 +203,13 @@ String native_int_type(Int min_val, Int max_val) {
     return type_name if min_val >= lb and max_val < up;
   ;
   return "long";
-}
 
 
-(Int, Int, String)+ type_bounds = (
-  (-pow(2, 7),    pow(2, 7),    "byte"),
-  (-pow(2, 15),   pow(2, 15),   "short"),
-  (-pow(2, 31),   pow(2, 31),   "int")
-);
-
-
-Int pow(Int b, Nat e) {
-  res = 1;
-  for e:
-    res = b * res;
-  ;
-  return res;
+  (Int, Int, String)+ type_bounds = (
+    (-pow(2, 7),    pow(2, 7),    "byte"),
+    (-pow(2, 15),   pow(2, 15),   "short"),
+    (-pow(2, 31),   pow(2, 31),   "int")
+  );
 }
 
 
@@ -276,6 +261,18 @@ String* gen_int_seq_code(Int+ int_seq, Nat seq_id) {
     str_len = length(str);
     filling = if len >= str_len then string(nat(len-str_len) * (filler)) else "";
     return filling & str;
+  }
+}
+
+
+String* symbols_arrays_decls([(Symbol+, Nat)] symbs_seqs) {
+  ord_symbs_seqs = sort_set(symbs_seqs, right($a) < right($b));
+  return (symbols_array_decl(ss, i) : ss, i <- ord_symbs_seqs);
+
+  String symbols_array_decl(Symbol+ symbs, Nat index) {
+    name = const_symb_seq_name(index);
+    symbs_strs = (symb_idx_name(s) : s <- symbs);
+    return "public static int[] " & name & " = {" & append(symbs_strs, ", ") & "};";
   }
 }
 

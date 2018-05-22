@@ -110,6 +110,7 @@
 
 src/cell/code-gen/auto-instrs.cell
 src/cell/code-gen/exprs.cell
+src/cell/code-gen/instrs.cell
 src/cell/code-gen/inter-lang-utils.cell
 src/cell/code-gen/name-mangling.cell
 src/cell/code-gen/native-code-gen.cell
