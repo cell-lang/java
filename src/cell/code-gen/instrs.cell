@@ -1,246 +1,287 @@
-// implicit prg : CompiledPrg, debug_mode : Bool {
-//   String* native_code(Instr* instrs, Maybe[Nat] block_id) =
-//     join((native_code(instr, block_id) : instr <- instrs));
+implicit prg : CompiledPrg, debug_mode : Bool {
+  String* native_code(Instr* instrs, Maybe[Nat] block_id) =
+    join((native_code(instr, block_id) : instr <- instrs));
 
 
-//   String* native_code(Instr instr, Maybe[Nat] block_id) =
-//     init_stream(v?)       = (native_new_call(v, "java.util.ArrayList<Obj>", ())),
-//     append()              = (native_method_call(instr.stream, "add", (instr.obj))),
-//     set_at()              = (native_method_call(instr.var, "initAt", (instr.idx, instr.value))),
-//     get_seq_iter()        |
-//     get_set_iter()        = (native_method_call(instr.var, instr.src, "getSeqOrSetIter", ())),
-//     get_bin_rel_iter()    = (native_get_bin_rel_iter_code(instr.var, instr.src, instr.args)),
-//     get_tern_rel_iter()   = (native_get_tern_rel_iter_code(instr.var, instr.src, instr.args)),
-//     move_forward(v?)      = (native_method_call(v, "next", ())),
-//     set_var()             = native_set_var_code(instr.var, instr.value),
-//     set_bvar()            |
-//     set_ivar()            = (native_assignment_code(instr.var, instr.value)),
-//     set_rc_var()          = (native_code(instr.value, instr.var)),
-//     init_memb_var()       = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
-//     reset_memb_var()      = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
-//     clear_loc_var(v?)     = (native_var_ref_name(v) & " = NullObj.singleton();"),
-//     terminate             = ("throw Miscellanea.softFail();"),
-//     add_ref(v?)           = undefined,
-//     release(v?)           = undefined,
-//     print_obj()           = (native_method_call(instr.obj, "print", ())),
-//     ret_val(e?)           = ("return " & native_expr(e) & ";"),
-//     no_op                 = (),
-//     repeat(body?)         = native_repeat_code(body, block_id),
-//     break_loop            = ("break;"),
-//     execute_block(body?)  = { new_block_id = _counter_(:any_value_will_do);
-//                               body_code = native_code(body, just(new_block_id));
-//                               block_start = block_label(new_block_id) & ": do {";
-//                               block_end = "} while (false);";
-//                               return (block_start) & indent_lines(body_code) & (block_end);
-//                             },
-//     exit_block            = ("break " & block_label(value_unsafe(block_id)) & ";"),
-//     switch_on_nat()       = native_nat_switch_code(instr.value, instr.cases, block_id),
-//     symb_switch()         = native_symb_switch_code(instr.value, instr.cases, instr.else, block_id),
-//     call_proc()           = native_call_proc_code(if instr.var? then just(instr.var) else nothing, instr.name, instr.args, instr.cls_args, block_id),
-//     call_cls()            = (native_cls_call_code(instr.cls_var, instr.var, instr.args)),
-//     push_call_info()      = (native_push_call_info_code(instr.fn_name, instr.params) if debug_mode),
-//     pop_call_info         = (native_static_call("Miscellanea.popCallInfo", ()) if debug_mode),
-//     runtime_check()       = native_runtime_check_code(instr.cond, instr.file, instr.line, instr.text, instr.vars),
-//     branch()              = native_branch_code(instr.cond, instr.when_true, instr.when_false, block_id),
-//     _                     = auto_instr_native_code(instr, block_id);
+  String* native_code(Instr instr, Maybe[Nat] block_id) =
+    init_stream(v?)       = (native_new_call(v, "java.util.ArrayList<Obj>", ())),
+    append()              = (native_method_call(instr.stream, "add", (instr.obj))),
+    set_at()              = (native_method_call(instr.var, "initAt", (instr.idx, instr.value))),
+    alloc_array()         = alloc_array_native_code(instr.var, instr.size),
+    write_array()         = write_array_native_code(instr.var, instr.idx, instr.value),
+    traverse_array()      = traverse_array_native_code(instr.src, instr.buffer, instr.target, instr.idx_var,
+                              instr.it_var, instr.body, block_id),
+    write_rec_field()     = (native_assignment_code(native_expr(instr.var) & "." & opt_rec_field_name(instr.label), instr.value)),
+    get_seq_iter()        |
+    get_set_iter()        = (native_method_call(instr.var, instr.src, "getSeqOrSetIter", ())),
+    get_bin_rel_iter()    = (native_get_bin_rel_iter_code(instr.var, instr.src, instr.args)),
+    get_tern_rel_iter()   = (native_get_tern_rel_iter_code(instr.var, instr.src, instr.args)),
+    move_forward(v?)      = (native_method_call(v, "next", ())),
+    set_var()             = native_set_var_code(instr.var, instr.value),
+    set_bvar()            |
+    set_ivar()            |
+    set_ivar32()          |
+    set_fvar()            = (native_assignment_code(instr.var, instr.value)),
+    set_rc_var()          = (native_code(instr.value, instr.var)),
+    init_memb_var()       = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
+    reset_memb_var()      = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
+    clear_loc_var(v?)     = (native_var_ref_name(v) & " = NullObj.singleton();"),
+    terminate             = ("throw Miscellanea.softFail();"),
+    add_ref(v?)           = undefined,
+    release(v?)           = undefined,
+    print_obj()           = (native_method_call(instr.obj, "print", ())),
+    ret_val(e?)           = ("return " & native_expr(e) & ";"),
+    no_op                 = (),
+    repeat(body?)         = native_repeat_code(body, block_id),
+    break_loop            = ("break;"),
+    execute_block(body?)  = { new_block_id = _counter_(:any_value_will_do);
+                              body_code = native_code(body, just(new_block_id));
+                              block_start = block_label(new_block_id) & ": do {";
+                              block_end = "} while (false);";
+                              return (block_start) & indent_lines(body_code) & (block_end);
+                            },
+    exit_block            = ("break " & block_label(value_unsafe(block_id)) & ";"),
+    switch_on_nat()       = native_nat_switch_code(instr.value, instr.cases, block_id),
+    symb_switch()         = native_symb_switch_code(instr.value, instr.cases, instr.else, block_id),
+    call_proc()           = native_call_proc_code(if instr.var? then just(instr.var) else nothing, instr.name, instr.args, instr.cls_args, block_id),
+    call_cls()            = (native_cls_call_code(instr.cls_var, instr.var, instr.args)),
+    push_call_info()      = (native_push_call_info_code(instr.fn_name, instr.params) if debug_mode),
+    pop_call_info         = (native_static_call("Miscellanea.popCallInfo", ()) if debug_mode),
+    runtime_check()       = native_runtime_check_code(instr.cond, instr.file, instr.line, instr.text, instr.vars),
+    branch()              = native_branch_code(instr.cond, instr.when_true, instr.when_false, block_id),
+    _                     = auto_instr_native_code(instr, block_id);
 
 
-//   String native_cls_call_code(AnyClsVar cls_var, WriteObjVar var, AtomicExpr+ args) =
-//     ## NO NEED FOR NOW TO HANDLE THE CASE cls_var(Nat), AS THOSE VARIABLES ARE NEVER "CALLED", ONLY PASSED ON
-//     cls_var(<+> symb?) | capt_cls_var(symb?) = native_method_call(var, cls_var, "invoke", (args | "env"));
+  String* traverse_array_native_code(<LocVar, StdVar> src, ArrayVar buffer, ArrayVar target, Int32Var idx_var, AnyLocVar it_var, Instr* body, Maybe[Nat] block_id) {
+    src_name     = native_var_ref_name(src);
+    buffer_name  = native_var_ref_name(buffer);
+    target_name  = native_var_ref_name(target);
+    idx_var_name = native_var_ref_name(idx_var);
+    it_var_name  = native_var_ref_name(it_var);
+
+    src_repr = low_level_repr(it_var);
+    buffer_arg = if src_repr == target.repr then target_name else "(" & native_type(src_repr) & "[]) null";
+
+    header = (
+      buffer_name & " = " & src_name & ".getArray(" & buffer_arg & ");",
+      "for (" & idx_var_name & " = 0 ; " & idx_var_name & " < " & target_name & ".length ; " & idx_var_name & "++) {",
+      "  " & it_var_name & " = " & buffer_name & "[" & idx_var_name & "];"
+    );
+
+    return header & indent_lines(native_code(body, block_id)) & ("}");
+  }
 
 
-//   String native_push_call_info_code(ObjFnName fn_name, Maybe[<StdVar, FnArg>]* args) {
-//     fn_name_str = printed(user_repr(fn_name));
-//     args_strs = (if a != nothing then native_var_ref_name(value(a)) else "NullObj.singleton()" : a <- args);
-//     argv_str = if args != () then "new Obj[] {" & append(args_strs, ", ") & "}" else "null";
-//     return native_static_call("Miscellanea.pushCallInfo", (fn_name_str, argv_str));
-//   }
+  String* alloc_array_native_code(ArrayVar var, IntExpr size) {
+    elt_type = native_elt_type(var);
+    var_name = native_var_name(var);
+    return (var_name & " = new " & elt_type & "[" & native_expr(size) & "];");
+  }
 
 
-//   String native_get_bin_rel_iter_code(BinRelItVar var, AtomicExpr src, (Maybe[AtomicExpr], Maybe[AtomicExpr]) args) =
-//     match (args)
-//       (nothing,   nothing)    = native_method_call(var, src, "getBinRelIter", ()),
-//       (just(a0?), nothing)    = native_method_call(var, src, "getBinRelIterByCol1", (a0)),
-//       (nothing,   just(a1?))  = native_method_call(var, src, "getBinRelIterByCol2", (a1));
+  String* write_array_native_code(ArrayVar var, IntExpr idx, AnyTypeExpr value) {
+    return (native_var_name(var) & "[" & native_expr(idx, true) & "] = " & native_expr(value) & ";");
+  }
 
 
-//   String native_get_tern_rel_iter_code(TernRelItVar var, AtomicExpr src, (Maybe[AtomicExpr], Maybe[AtomicExpr], Maybe[AtomicExpr]) args) =
-//     match (args)
-//       (nothing,   nothing,   nothing)     = native_method_call(var, src, "getTernRelIter", ()),
-//       (just(a0?), nothing,   nothing)     = native_method_call(var, src, "getTernRelIterByCol1",  (a0)),
-//       (nothing,   just(a1?), nothing)     = native_method_call(var, src, "getTernRelIterByCol2",  (a1)),
-//       (nothing,   nothing,   just(a2?))   = native_method_call(var, src, "getTernRelIterByCol3",  (a2)),
-//       (just(a0?), just(a1?), nothing)     = native_method_call(var, src, "getTernRelIterByCol12", (a0, a1)),
-//       (just(a0?), nothing,   just(a2?))   = native_method_call(var, src, "getTernRelIterByCol13", (a0, a2)),
-//       (nothing,   just(a1?), just(a2?))   = native_method_call(var, src, "getTernRelIterByCol23", (a1, a2));
+  String native_cls_call_code(AnyClsVar cls_var, WriteObjVar var, AtomicExpr+ args) =
+    ## NO NEED FOR NOW TO HANDLE THE CASE cls_var(Nat), AS THOSE VARIABLES ARE NEVER "CALLED", ONLY PASSED ON
+    cls_var(<+> symb?) | capt_cls_var(symb?) = native_method_call(var, cls_var, "invoke", (args | "env"));
 
 
-//   String* native_repeat_code(Instr+ body, Maybe[Nat] block_id) {
-//     head = body(0);
-//     if head :: <branch(cond: BoolExpr, when_true: (<break_loop>), when_false: ())>:
-//       cond_str = native_expr(neg(head.cond));
-//       body_text = indent_lines(native_code(tail(body), block_id)) & ("}");
-//       return ("while (" & cond_str & ") {") & body_text;
-//     else
-//       body_text = indent_lines(native_code(body, block_id)) & ("}");
-//       return ("for ( ; ; ) {") & body_text;
-//     ;
-//   }
+  String native_push_call_info_code(ObjFnName fn_name, Maybe[<StdVar, FnArg>]* args) {
+    fn_name_str = printed(user_repr(fn_name));
+    args_strs = (if a != nothing then native_var_ref_name(value(a)) else "NullObj.singleton()" : a <- args);
+    argv_str = if args != () then "new Obj[] {" & append(args_strs, ", ") & "}" else "null";
+    return native_static_call("Miscellanea.pushCallInfo", (fn_name_str, argv_str));
+  }
 
 
-//   String* gen_cache_clearing_code(ImplArg arg) {
-//     code = ();
-//     for fn_id <- isort(lookup(cached_semi_consts_by_impl_arg, arg, [])):
-//       cache_var_name = memo_var_name(fn_id);
-//       code = (code | "env." & cache_var_name & " = null;");
-//     ;
-//     return code;
-//   }
+  String native_get_bin_rel_iter_code(BinRelItVar var, AtomicExpr src, (Maybe[AtomicExpr], Maybe[AtomicExpr]) args) =
+    match (args)
+      (nothing,   nothing)    = native_method_call(var, src, "getBinRelIter", ()),
+      (just(a0?), nothing)    = native_method_call(var, src, "getBinRelIterByCol1", (a0)),
+      (nothing,   just(a1?))  = native_method_call(var, src, "getBinRelIterByCol2", (a1));
 
 
-//   String* native_set_var_code(WriteObjVar var, ObjExpr value) = (native_assignment_code(var, value));
-
-//   String* native_set_var_code(ImplArg var, ObjExpr value) =
-//     (native_assignment_code(var, value)) & gen_cache_clearing_code(var);
-
-
-//   ## BUG BUG BUG: IF THERE IS INSIDE ONE OF THE CASES A BREAK STATEMENT MEANT TO
-//   ## TERMINATE AN OUTER LOOP, THAT BREAK WILL TERMINATE THE SWITCH/CASE INSTEAD.
-//   String* native_nat_switch_code(IntExpr value, Instr*+ cases, Maybe[Nat] block_id) {
-//     cases_code = (
-//       ("case " & printed(i) & ":") & indent_lines((native_code(c, block_id) | "break;", ""))
-//       : c @ i <- cases
-//     );
-//     return ("switch ((int) (" & native_expr(value) & ")) {") & indent_lines(join(cases_code)) & ("}");
-//   }
+  String native_get_tern_rel_iter_code(TernRelItVar var, AtomicExpr src, (Maybe[AtomicExpr], Maybe[AtomicExpr], Maybe[AtomicExpr]) args) =
+    match (args)
+      (nothing,   nothing,   nothing)     = native_method_call(var, src, "getTernRelIter", ()),
+      (just(a0?), nothing,   nothing)     = native_method_call(var, src, "getTernRelIterByCol1",  (a0)),
+      (nothing,   just(a1?), nothing)     = native_method_call(var, src, "getTernRelIterByCol2",  (a1)),
+      (nothing,   nothing,   just(a2?))   = native_method_call(var, src, "getTernRelIterByCol3",  (a2)),
+      (just(a0?), just(a1?), nothing)     = native_method_call(var, src, "getTernRelIterByCol12", (a0, a1)),
+      (just(a0?), nothing,   just(a2?))   = native_method_call(var, src, "getTernRelIterByCol13", (a0, a2)),
+      (nothing,   just(a1?), just(a2?))   = native_method_call(var, src, "getTernRelIterByCol23", (a1, a2));
 
 
-//   ## BUG BUG BUG: IF THERE IS INSIDE ONE OF THE CASES A BREAK STATEMENT MEANT TO
-//   ## TERMIMATE AN OUTER LOOP, THAT BREAK WILL TERMINATE THE SWITCH/CASE INSTEAD.
-//   String* native_symb_switch_code(ObjExpr value, [+([+SymbObj], Instr+)] cases, Instr* else, Maybe[Nat] block_id) {
-//     value_str = match (value)
-//       get_tag(tag_obj?)   = native_expr(tag_obj) & ".getTagId()",
-//       _                   = native_expr(value) & ".getSymbId()";
-
-//     body_code = (
-//       ("" if i > 0) &
-//       ("case " & symb_idx_name(a) & ":" : a <- isort(as)) &
-//       indent_lines(native_code(is, block_id)) &
-//       ("  break;" if in(falls_through, code_outcomes(is)))
-//       : as, is @ i <- isort(cases)
-//     );
-//     body_code = (body_code | ("", "default:") & indent_lines(native_code(else, block_id))) if else != ();
-
-//     return ("switch (" & value_str & ") {") & indent_lines(join(body_code)) & ("}");
-//   }
+  String* native_repeat_code(Instr+ body, Maybe[Nat] block_id) {
+    head = body(0);
+    if head :: <branch(cond: BoolExpr, when_true: (<break_loop>), when_false: ())>:
+      cond_str = native_expr(neg(head.cond));
+      body_text = indent_lines(native_code(tail(body), block_id)) & ("}");
+      return ("while (" & cond_str & ") {") & body_text;
+    else
+      body_text = indent_lines(native_code(body, block_id)) & ("}");
+      return ("for ( ; ; ) {") & body_text;
+    ;
+  }
 
 
-//   String native_code(RefObjExpr expr, WriteObjVar var) =
-//     mk_set_from_stream()        = native_static_call(var, "Builder.createSet",        (expr.stream)),
-//     mk_set()                    = native_static_call(var, "Builder.createSet",        (expr.elems, expr.size)),
-//     mk_seq_from_stream()        = native_static_call(var, "Builder.createSeq",        (expr.stream)),
-//     mk_seq()                    = native_static_call(var, "Builder.createSeq",        (expr.elems, expr.size)),
-//     build_const_int_seq()       = native_build_const_int_seq_code(expr.seq_id, var),
-//     mk_map_from_streams()       = native_static_call(var, "Builder.createMap",        (expr.key_stream, expr.value_stream)),
-//     mk_map()                    = native_static_call(var, "Builder.createMap",        (expr.keys, expr.values, expr.size)),
-//     mk_bin_rel_from_streams()   = native_static_call(var, "Builder.createBinRel",     expr.streams),
-//     mk_bin_rel()                = native_static_call(var, "Builder.createBinRel",     (expr.cols | expr.size)),
-//     mk_tern_rel_from_streams()  = native_static_call(var, "Builder.createTernRel",    expr.streams),
-//     mk_tern_rel()               = native_static_call(var, "Builder.createTernRel",    (expr.cols | expr.size)),
-//     mk_tagged_obj()             = native_new_call(var, "TaggedObj",                   (expr.tag, expr.obj)),
-//     mk_array()                  = native_new_call(var, "MasterSeqObj",                (expr.size)),
-//     mk_record()                 = native_mk_record_code(expr.fields, var),
-//     get_seq_slice()             = native_method_call(var, expr.seq,  "getSlice",      (expr.idx_first, expr.len)),
-//     append_to_seq()             = native_method_call(var, expr.seq,  "append",        (expr.new_elem)),
-//     update_seq_at()             = native_method_call(var, expr.seq,  "updatedAt",     (get_int_val(expr.idx), expr.value)),
-//     join_seqs()                 = native_method_call(var, expr.left, "concat",        (expr.right)),
-//     rev_seq()                   = native_method_call(var, expr.seq,  "reverse",       ()),
-//     internal_sort()             = native_method_call(var, expr.set,  "internalSort",  ()),
-//     symb_to_str(e?)             = native_method_call(var, e,         "printed",       ()),
-//     parse_value()               = native_static_call(var, "Parsing.parse",            (expr.value)),
-//     print_value()               = native_method_call(var, expr.value,"printed",       ()),
-//     _                           = auto_expr_native_code(expr, var);
+  String* gen_cache_clearing_code(ImplArg arg) {
+    code = ();
+    for fn_id <- isort(lookup(cached_semi_consts_by_impl_arg, arg, [])):
+      cache_var_name = memo_var_name(fn_id);
+      code = (code | "env." & cache_var_name & " = null;");
+    ;
+    return code;
+  }
 
 
-//   String native_build_const_int_seq_code(Nat seq_id, ObjVar var) {
-//     type, len = item(int_seqs_types_and_lengths, seq_id);
-//     seq_name = const_int_seq_ref_name(seq_id);
-//     return native_var_ref_name(var) & " = Builder.buildConstIntSeq(" & seq_name & ");";
-//   }
+  String* native_set_var_code(WriteObjVar var, ObjExpr value) = (native_assignment_code(var, value));
 
-//   ///////////////////////////////////////////////////////////////////////////////
-
-//   String native_mk_record_code([+SymbObj -> AtomicExpr] fields, WriteObjVar var) {
-//     ord_labels, index = symbols_sets_info([untag(l) : l, unused_var <- fields], !!);
-//     label_set_name = const_symb_seq_name(index);
-//     values_strs = (native_expr(fields(object(l), !!)) : l <- ord_labels);
-//     value_array_expr = "new Obj[] {" & append(values_strs, ", ") & "}";
-//     return native_new_call(var, "RecordObj", (label_set_name, value_array_expr));
-//   }
-
-//   String* native_call_proc_code(Maybe[ObjVar] var, ObjFnName name, ObjExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
-//     cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
-//     args_list = (args & cls_args_refs | "env");
-//     name_str = native_fn_name(name);
-//     call_code = if var != nothing
-//       then native_static_call(value(var), name_str, args_list)
-//       else native_static_call(name_str, args_list);
-//     return (join(cls_setup_code) | call_code);
+  String* native_set_var_code(ImplArg var, ObjExpr value) =
+    (native_assignment_code(var, value)) & gen_cache_clearing_code(var);
 
 
-//     (String*, AnyClsVar) gen_cls_info(BoundCls cls) =
-//       cls_var()       |
-//       capt_cls_var()  = ((), cls),
-//       bound_cls()     = gen_cls_info(cls.cls, cls.capt_vars, cls.capt_cls_vars);
+  ## BUG BUG BUG: IF THERE IS INSIDE ONE OF THE CASES A BREAK STATEMENT MEANT TO
+  ## TERMINATE AN OUTER LOOP, THAT BREAK WILL TERMINATE THE SWITCH/CASE INSTEAD.
+  String* native_nat_switch_code(IntExpr value, Instr*+ cases, Maybe[Nat] block_id) {
+    cases_code = (
+      ("case " & printed(i) & ":") & indent_lines((native_code(c, block_id) | "break;", ""))
+      : c @ i <- cases
+    );
+    return ("switch ((int) (" & native_expr(value) & ")) {") & indent_lines(join(cases_code)) & ("}");
+  }
 
 
-//     (String*, AnyClsVar) gen_cls_info(ClsDef cls, <StdVar, CaptVar>* capt_vars, AnyClsVar* capt_cls_vars) {
-//       id = _counter_(:any_value_will_do);
-//       var = cls_var(id);
-//       name = native_expr(var);
+  ## BUG BUG BUG: IF THERE IS INSIDE ONE OF THE CASES A BREAK STATEMENT MEANT TO
+  ## TERMIMATE AN OUTER LOOP, THAT BREAK WILL TERMINATE THE SWITCH/CASE INSTEAD.
+  String* native_symb_switch_code(ObjExpr value, [+([+SymbObj], Instr+)] cases, Instr* else, Maybe[Nat] block_id) {
+    value_str = match (value)
+      get_tag(tag_obj?)   = native_expr(tag_obj) & ".getTagId()",
+      _                   = native_expr(value) & ".getSymbId()";
 
-//       capt_var_array = if capt_vars != ()
-//         then "new Obj[] {" & append((native_expr(v) : v <- capt_vars), ", ") & "}"
-//         else "null";
+    body_code = (
+      ("" if i > 0) &
+      ("case " & symb_idx_name(a) & ":" : a <- isort(as)) &
+      indent_lines(native_code(is, block_id)) &
+      ("  break;" if in(falls_through, code_outcomes(is)))
+      : as, is @ i <- isort(cases)
+    );
+    body_code = (body_code | ("", "default:") & indent_lines(native_code(else, block_id))) if else != ();
 
-//       capt_cls_var_array = if capt_cls_vars != ()
-//         then "new Lambda[] {" & append((native_expr(v) : v <- capt_cls_vars), ", ") & "}"
-//         else "null";
-
-//       instr = "Lambda " & name & " = new Lambda" & printed(index_first(cls, sorted_cls_defs)) &
-//               "(" & capt_var_array & ", " & capt_cls_var_array & ");";
-
-//       return ((instr), var);
-//     }
-//   }
-
-
-//   String* native_branch_code(BoolExpr cond, Instr* when_true, Instr* when_false, Maybe[Nat] block_id) {
-//     assert when_true != ();
-//     code = ("if (" & native_expr(cond) & ") {") &
-//            indent_lines(native_code(when_true, block_id)) &
-//            ("}");
-//     if when_false != ():
-//       code = code & ("else {") & indent_lines(native_code(when_false, block_id)) & ("}");
-//     ;
-//     return code;
-//   }
+    return ("switch (" & value_str & ") {") & indent_lines(join(body_code)) & ("}");
+  }
 
 
-//   String* native_runtime_check_code(AtomicExpr cond, String file, NzNat line, Maybe[String] text, <StdVar, ImplArg>* vars) {
-//     text_arg = if text != nothing then _print_(value(text)) else "null";
-//     header = (
-//       "if (" & native_expr(cond) & ".isSymb(" & symb_idx_name(false) & ")) {",
-//       "  Miscellanea.printAssertionFailedMsg(" & _print_(file) & ", " & printed(line) & ", " & text_arg & ");"
-//     );
+  String native_code(RefObjExpr expr, WriteObjVar var) =
+    mk_set_from_stream()        = native_static_call(var, "Builder.createSet",        (expr.stream)),
+    mk_set()                    = native_static_call(var, "Builder.createSet",        (expr.elems, expr.size)),
+    mk_seq_from_stream()        = native_static_call(var, "Builder.createSeq",        (expr.stream)),
+    mk_seq()                    = native_static_call(var, "Builder.createSeq",        (expr.elems, expr.size)),
+    mk_seq_from_array()         = native_static_call(var, "Builder.wrapSeq",          (expr.array, value(expr.size) if expr.size != nothing)),
+    build_const_int_seq()       = native_build_const_int_seq_code(expr.seq_id, var),
+    mk_map_from_streams()       = native_static_call(var, "Builder.createMap",        (expr.key_stream, expr.value_stream)),
+    mk_map()                    = native_static_call(var, "Builder.createMap",        (expr.keys, expr.values, expr.size)),
+    mk_bin_rel_from_streams()   = native_static_call(var, "Builder.createBinRel",     expr.streams),
+    mk_bin_rel()                = native_static_call(var, "Builder.createBinRel",     (expr.cols | expr.size)),
+    mk_tern_rel_from_streams()  = native_static_call(var, "Builder.createTernRel",    expr.streams),
+    mk_tern_rel()               = native_static_call(var, "Builder.createTernRel",    (expr.cols | expr.size)),
+    mk_tagged_obj()             = native_new_call(var, "TaggedObj",                   (expr.tag, expr.obj)),
+    mk_array()                  = native_new_call(var, "MasterSeqObj",                (expr.size)),
+    mk_record()                 = native_mk_record_code(expr.fields, var),
+    inst_opt_tag_rec()          = native_new_call(var, opt_tag_rec_name(expr.tag, expr.repr_idx), ()),
+    get_seq_slice()             = native_method_call(var, expr.seq,  "getSlice",      (expr.idx_first, expr.len)),
+    append_to_seq()             = native_method_call(var, expr.seq,  "append",        (expr.new_elem)),
+    update_seq_at()             = native_method_call(var, expr.seq,  "updatedAt",     (get_int_val(expr.idx), expr.value)),
+    join_seqs()                 = native_method_call(var, expr.left, "concat",        (expr.right)),
+    rev_seq()                   = native_method_call(var, expr.seq,  "reverse",       ()),
+    internal_sort()             = native_method_call(var, expr.set,  "internalSort",  ()),
+    symb_to_str(e?)             = native_method_call(var, e,         "printed",       ()),
+    parse_value()               = native_static_call(var, "Parsing.parse",            (expr.value)),
+    print_value()               = native_method_call(var, expr.value,"printed",       ()),
+    _                           = auto_expr_native_code(expr, var);
 
-//     vars_content = ("  Miscellanea.dumpVar(" & printed(_str_(bare_id(v))) & ", " & native_var_ref_name(v) & ");" : v <- vars);
-//     footer = (
-//       "  return Miscellanea.hardFail();",
-//       "}"
-//     );
-//     return header & vars_content & footer;
-//   }
-// }
 
+  String native_build_const_int_seq_code(Nat seq_id, ObjVar var) {
+    type, len = item(int_seqs_types_and_lengths, seq_id);
+    seq_name = const_int_seq_ref_name(seq_id);
+    return native_var_ref_name(var) & " = Builder.buildConstIntSeq(" & seq_name & ");";
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////
+
+  String native_mk_record_code([+SymbObj -> AtomicExpr] fields, WriteObjVar var) {
+    ord_labels, index = symbols_sets_info([untag(l) : l, unused_var <- fields], !!);
+    label_set_name = const_symb_seq_name(index);
+    values_strs = (native_expr(fields(object(l), !!)) : l <- ord_labels);
+    value_array_expr = "new Obj[] {" & append(values_strs, ", ") & "}";
+    return native_new_call(var, "RecordObj", (label_set_name, value_array_expr));
+  }
+
+
+  String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, AnyTypeExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
+    cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
+    args_list = (args & cls_args_refs | "env");
+    name_str = native_fn_name(name);
+    call_code = if var != nothing
+      then native_static_call(value(var), name_str, args_list)
+      else native_static_call(name_str, args_list);
+    return (join(cls_setup_code) | call_code);
+
+
+    (String*, AnyClsVar) gen_cls_info(BoundCls cls) =
+      cls_var()       |
+      capt_cls_var()  = ((), cls),
+      bound_cls()     = gen_cls_info(cls.cls, cls.capt_vars, cls.capt_cls_vars);
+
+
+    (String*, AnyClsVar) gen_cls_info(ClsDef cls, <StdVar, CaptVar>* capt_vars, AnyClsVar* capt_cls_vars) {
+      id = _counter_(:any_value_will_do);
+      var = cls_var(id);
+      name = native_expr(var);
+
+      capt_var_array = if capt_vars != ()
+        then "new Obj[] {" & append((native_expr(v) : v <- capt_vars), ", ") & "}"
+        else "null";
+
+      capt_cls_var_array = if capt_cls_vars != ()
+        then "new Lambda[] {" & append((native_expr(v) : v <- capt_cls_vars), ", ") & "}"
+        else "null";
+
+      instr = "Lambda " & name & " = new Lambda" & printed(index_first(cls, sorted_cls_defs)) &
+              "(" & capt_var_array & ", " & capt_cls_var_array & ");";
+
+      return ((instr), var);
+    }
+  }
+
+
+  String* native_branch_code(BoolExpr cond, Instr* when_true, Instr* when_false, Maybe[Nat] block_id) {
+    assert when_true != ();
+    code = ("if (" & native_expr(cond) & ") {") &
+           indent_lines(native_code(when_true, block_id)) &
+           ("}");
+    if when_false != ():
+      code = code & ("else {") & indent_lines(native_code(when_false, block_id)) & ("}");
+    ;
+    return code;
+  }
+
+
+  String* native_runtime_check_code(AtomicExpr cond, String file, NzNat line, Maybe[String] text, <StdVar, ImplArg>* vars) {
+    text_arg = if text != nothing then _print_(value(text)) else "null";
+    header = (
+      "if (" & native_expr(cond) & ".isSymb(" & symb_idx_name(false) & ")) {",
+      "  Miscellanea.printAssertionFailedMsg(" & _print_(file) & ", " & printed(line) & ", " & text_arg & ");"
+    );
+
+    vars_content = ("  Miscellanea.dumpVar(" & printed(_str_(bare_id(v))) & ", " & native_var_ref_name(v) & ");" : v <- vars);
+    footer = (
+      "  return Miscellanea.hardFail();",
+      "}"
+    );
+    return header & vars_content & footer;
+  }
+}
