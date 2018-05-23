@@ -28,8 +28,7 @@ class FloatObj extends Obj {
   }
 
   public int hashCode() {
-    long longVal = Double.doubleToLongBits(value);
-    return ((int) (longVal >> 32)) ^ ((int) longVal);
+    return hashCode(value);
   }
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
@@ -54,7 +53,17 @@ class FloatObj extends Obj {
   }
 
   protected int internalCmp(Obj other) {
-    double otherValue = other.getDouble();
-    return value == otherValue ? 0 : (value < otherValue ? 1 : -1);
+    return compare(value, other.getDouble());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static int hashCode(double x) {
+    long l = Double.doubleToLongBits(x);
+    return ((int) (l >> 32)) ^ ((int) l);
+  }
+
+  public static int compare(double x1, double x2) {
+    return x1 == x2 ? 0 : (x1 < x2 ? 1 : -1);
   }
 }

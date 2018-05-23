@@ -34,7 +34,7 @@ class IntObj extends Obj {
   }
 
   public int hashCode() {
-    return ((int) (value >> 32)) ^ ((int) value);
+    return hashCode(value);
   }
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
@@ -59,8 +59,17 @@ class IntObj extends Obj {
   }
 
   protected int internalCmp(Obj obj) {
-    long otherValue = obj.getLong();
-    return value == otherValue ? 0 : (value < otherValue ? 1 : -1);
+    return compare(value, obj.getLong());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static int hashCode(long n) {
+    return ((int) (n >> 32)) ^ ((int) n);
+  }
+
+  public static int compare(long n1, long n2) {
+    return n1 == n2 ? 0 : (n1 < n2 ? 1 : -1);
   }
 
   static IntObj[] byteObjs = new IntObj[256];
