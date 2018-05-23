@@ -281,8 +281,8 @@ String* symbols_arrays_decls([(Symbol+, Nat)] symbs_seqs) {
 }
 
 
-String* gen_vars_decls(Instr* body, [StdVar] args) {
-  vars_to_decl = [v : v <- vars_to_declare(body), not v :: AuxVar, not args(v)];
+String* gen_vars_decls(Instr* body, [ObjProcArg] args) {
+  vars_to_decl = [v : v <- vars_to_declare(body, args), not v :: AuxVar];
 
   vector_vars = [v : v <- vars_to_decl, v :: VecVar];
   scalar_vars = vars_to_decl - vector_vars;
@@ -420,8 +420,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type EncodInst  = blank_obj, ObjExpr, ElemVar, PendingInputVar, VecVar, BoolExpr, IntExpr,
-                  ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId, AnyAutoVar, AnyDBVar;
+type EncodInst  = blank_obj, ObjExpr, ElemVar, PendingInputVar, VecVar, ArrayVar, BoolExpr, IntExpr,
+                  Int32Expr, FloatExpr, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId,
+                  AnyAutoVar, AnyDBVar;
+
 
 String native_code(EncodInst enc) = native_expr(enc);
 String native_code(String str)    = str;
