@@ -37,7 +37,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     cls_obj_typedef = generate_cls_obj_typedef(all_cls_arities);
     code = code & cls_obj_typedef & 4 * ("") if cls_obj_typedef != ();
 
-    native_opt_type_decls = native_opt_type_decls(prg);
     code = code & join(((d | "", "") : d <- native_opt_type_decls));
     code = (code | "", "") if native_opt_type_decls != ();
 

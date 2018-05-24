@@ -76,4 +76,8 @@ class SymbTable {
     String str2 = symbTable.get(id2);
     return str1.compareTo(str2) < 0 ? 1 : -1;
   }
+
+  public static int compBools(boolean b1, boolean b2) {
+    return b1 == b2 ? 0 : (b1 ? -1 : 1);
+  }
 }

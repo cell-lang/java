@@ -11,14 +11,6 @@ class SymbObj extends Obj {
     this.id = id;
   }
 
-  public static SymbObj get(int id) {
-    return SymbTable.get(id);
-  }
-
-  public static SymbObj get(boolean b) {
-    return SymbTable.get(b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
-  }
-
   public boolean isSymb() {
     return true;
   }
@@ -56,10 +48,6 @@ class SymbObj extends Obj {
     return hashCode(id);
   }
 
-  public static int hashCode(int symbId) {
-    return symbId; //## BAD HASHCODE, IT'S NOT STABLE
-  }
-
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       writer.write(SymbTable.idxToStr(id));
@@ -83,5 +71,23 @@ class SymbObj extends Obj {
 
   protected int internalCmp(Obj other) {
     return SymbTable.compSymbs(id, other.getSymbId());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static SymbObj get(int id) {
+    return SymbTable.get(id);
+  }
+
+  public static SymbObj get(boolean b) {
+    return SymbTable.get(b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
+  }
+
+  public static int hashCode(int symbId) {
+    return symbId; //## BAD HASHCODE, IT'S NOT STABLE
+  }
+
+  public static int hashCode(boolean b) {
+    return b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId;
   }
 }

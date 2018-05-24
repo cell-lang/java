@@ -153,13 +153,15 @@ implicit prg : CompiledPrg {
   [[+Symbol] -> (Symbol+, Nat)] symbols_sets_info {
     mk_rec_exprs = select(prg, match ($) mk_record() = true, _ = false);
     fail if not mk_rec_exprs :: [<mk_record(fields: [+SymbObj -> AtomicExpr])>];
-    labels_sets = isort([[untag(l) : l, unused_var <- e.fields] : e <- mk_rec_exprs]);
+    symbs_sets = [[untag(l) : l, unused_var <- e.fields] : e <- mk_rec_exprs] &
+                 [keys(untag(r)) : unused_var, rs <- prg.opt_reprs, r <~ rs];
+    ord_symbs_sets = isort(symbs_sets);
 
     symbols_map = [untag(s) -> i : s @ i <~ program_symbols];
     return [ls -> {
         ord_labels = sort_set(ls, symbols_map($a, !!) < symbols_map($b, !!));
         return (nonempty(ord_labels), i);
-      } : ls @ i <~ labels_sets
+      } : ls @ i <~ ord_symbs_sets
     ];
   }
 }
