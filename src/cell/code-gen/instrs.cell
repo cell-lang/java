@@ -11,7 +11,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     write_array()         = write_array_native_code(instr.var, instr.idx, instr.value),
     traverse_array()      = traverse_array_native_code(instr.src, instr.buffer, instr.target, instr.idx_var,
                               instr.it_var, instr.body, block_id),
-    write_rec_field()     = (native_assignment_code(native_expr(instr.var) & "." & opt_rec_field_name(instr.label), instr.value)),
+    write_rec_field()     = write_rec_field_native_code(instr.var, instr.label, instr.value, instr.optional),
     get_seq_iter()        |
     get_set_iter()        = (native_method_call(instr.var, instr.src, "getSeqOrSetIter", ())),
     get_bin_rel_iter()    = (native_get_bin_rel_iter_code(instr.var, instr.src, instr.args)),
@@ -50,6 +50,17 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     runtime_check()       = native_runtime_check_code(instr.cond, instr.file, instr.line, instr.text, instr.vars),
     branch()              = native_branch_code(instr.cond, instr.when_true, instr.when_false, block_id),
     _                     = auto_instr_native_code(instr, block_id);
+
+
+  String* write_rec_field_native_code(WriteObjVar var, Symbol label, AnyTypeExpr value, Bool optional) {
+    path = native_expr(var) & ".";
+    has_set_test_var = optional and not is_nullable(low_level_repr(value));
+
+    return (
+      native_assignment_code(path & opt_rec_field_name(label), value),
+      native_assignment_code(path & opt_rec_field_nonempty_test_var(label), true) if has_set_test_var
+    );
+  }
 
 
   String* traverse_array_native_code(<LocVar, StdVar> src, ArrayVar buffer, ArrayVar target, Int32Var idx_var, AnyLocVar it_var, Instr* body, Maybe[Nat] block_id) {

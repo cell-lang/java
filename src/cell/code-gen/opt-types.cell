@@ -244,7 +244,7 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
 String set_check_expr(LowLevelRepr repr, Symbol label, String path, Bool parenthesized) =
   if is_nullable(repr)
     then parenthesize( path & opt_rec_field_name(label) & " != null", parenthesized)
-    else path &opt_rec_field_nonempty_test_var(label);
+    else path & opt_rec_field_nonempty_test_var(label);
 
 
 String native_obj_expr(LowLevelRepr repr, String expr) =
