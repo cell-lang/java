@@ -5,10 +5,7 @@ implicit prg : CompiledPrg {
 
 
   String* native_tag_rec_type_decl(Symbol tag, OptRecRepr repr, Nat idx) {
-    code : String*;
-
-    class_name    = opt_tag_rec_name(tag, idx);
-
+    class_name        = opt_tag_rec_name(tag, idx);
     fields            = untag(repr);
     labels            = keys(fields);
     ord_labels, index = symbols_sets_info(labels, !!);
@@ -23,9 +20,7 @@ implicit prg : CompiledPrg {
     max_type_len  = max(types_lengths);
     spaces        = (nat(max_type_len - l + 1) * " " : l <- types_lengths);
     vars_names    = (opt_rec_field_name(l) : l <- ord_labels);
-    vars_decls    = (native_types(i) & spaces(i) & v & ";" : v @ i <- vars_names);
-
-    body = vars_decls;
+    body          = (native_types(i) & spaces(i) & v & ";" : v @ i <- vars_names);
 
     // Test variables declarations
     set_test_labels = isort([l : l, f <- fields, f.optional, not is_nullable(f.repr)]);
@@ -39,9 +34,43 @@ implicit prg : CompiledPrg {
 
     // Mandatory labels hashcodes sum
     hash_exprs = ("SymbObj.hashCode(" & symb_idx_name(l) & ")" : l <- ord_mand_labels);
-    var_name = if has_opt_fields then "mandatoryLabelsHashSum" else "labelsHashSum";
-    body = (body | "", "static int " & var_name & " = " & append(hash_exprs, " + ") & ";");
+    body = (body | "", "static int staticHashSumPart = " & append(hash_exprs, " + ") & ";");
 
+    // Methods
+    reprs = [l -> fields(l, !!).repr : l <- labels];
+    let tag = tag, ord_labels = ord_labels, opt_labels = opt_labels, reprs = reprs:
+      methods_defs = (
+        get_tag_id_def,
+        has_field_def,
+        lookup_field_def,
+        hash_code_def(ord_mand_labels, ord_opt_labels),
+        internal_cmp_def(class_name, ord_opt_labels),
+        count_fields_def,
+        get_labels_def(index)
+      );
+    ;
+    body = body & join(intermix(methods_defs, ("")));
+
+    // Class definition
+    header_line = "static final class " & class_name & " extends OptTagRecObj {";
+    return (header_line) & indent_lines(body) & ("}");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// Methods generation //////////////////////////////
+
+
+implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Symbol -> LowLevelRepr] {
+  String* get_tag_id_def = (
+    "public int getTagId() {",
+    "  return " & symb_idx_name(tag) & ";",
+    "}"
+  );
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  String* has_field_def {
     has_field_exprs = (
       if opt_labels(l)
         then "(" & opt_rec_field_nonempty_test_var(l) & " & id == " & symb_idx_name(l) & ")"
@@ -49,67 +78,63 @@ implicit prg : CompiledPrg {
       : l <- ord_labels
     );
 
-    // Methods implementations
-    body = (body |
-      "",
-      "",
-      "public int getTagId() {",
-      "  return " & symb_idx_name(tag) & ";",
-      "}",
-      "",
+    return (
       "public boolean hasField(int id) {",
       "  return " & append(has_field_exprs, " | ") & ";",
-      "}",
-      "",
+      "}"
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  String* lookup_field_def {
+    cases = ((
+        "" if i != 0,
+        "case " & symb_idx_name(l) & ":",
+        "  return " & native_obj_expr(reprs(l, !!), opt_rec_field_name(l)) & ";"
+      ) : l @ i <- ord_labels
+    );
+
+    return (
       "public Obj lookupField(int id) {",
       "  Miscellanea._assert(hasField(id));",
       "  switch (id) {"
-    );
-
-    for l @ i <- ord_labels:
-      body = (body | "") if i != 0;
-      body = (body |
-        "    case " & symb_idx_name(l) & ":",
-        "      return " & native_obj_expr(fields(l, !!).repr, opt_rec_field_name(l)) & ";"
-      );
-    ;
-
-    body = (body |
+    ) & indent_lines(indent_lines(join(cases))) & (
       "  }",
       "  throw Miscellanea.internalFail();",
-      "}",
-      "",
-      "public int hashCode() {"
+      "}"
     );
+  }
 
-    hash_exprs = (hash_code_expr(fields(l, !!).repr, opt_rec_field_name(l)) : l <- ord_mand_labels);
-    if has_opt_fields:
-      body = (body | "  int hashSum = mandatoryLabelsHashSum + " & append(hash_exprs, " + ") & ";");
+  //////////////////////////////////////////////////////////////////////////////
+
+  String* hash_code_def(Symbol* ord_mand_labels, Symbol* ord_opt_labels) {
+    hash_exprs = (hash_code_expr(reprs(l, !!), opt_rec_field_name(l)) : l <- ord_mand_labels);
+    if opt_labels != []:
+      body = ("int hashSum = staticHashSumPart + " & append(hash_exprs, " + ") & ";");
       for l <- ord_opt_labels:
-        value_hash_expr = hash_code_expr(fields(l, !!).repr, opt_rec_field_name(l));
+        value_hash_expr = hash_code_expr(reprs(l, !!), opt_rec_field_name(l));
         body = (body |
-          "  if (" & opt_rec_field_nonempty_test_var(l) & ")",
-          "    hashSum += SymbObj.hashCode(" & symb_idx_name(l) & ") + " & value_hash_expr & ";"
+          "if (" & opt_rec_field_nonempty_test_var(l) & ")",
+          "  hashSum += SymbObj.hashCode(" & symb_idx_name(l) & ") + " & value_hash_expr & ";"
         );
       ;
-      body = (body | "  return " & symb_idx_name(tag) & " ^ (hashSum ^ countFields());");
+      body = (body | "return " & symb_idx_name(tag) & " ^ (hashSum ^ countFields());");
     else
-      body = (body |
-        "  int hashSum = labelsHashSum + " & append(hash_exprs, " + ") & ";",
-        "  return " & symb_idx_name(tag) & " ^ (hashSum ^ " & printed(|labels|) & ");"
+      body = (
+        "int hashSum = staticHashSumPart + " & append(hash_exprs, " + ") & ";",
+        "return " & symb_idx_name(tag) & " ^ (hashSum ^ " & printed(|ord_labels|) & ");"
       );
     ;
 
-    body = (body |
-      "}",
-      "",
-      "protected int internalCmp(Obj other) {",
-      "  if (other instanceof " & class_name & ") {",
-      "    " & class_name & " otherOpt = (" & class_name & ") other;"
-    );
+    return ("public int hashCode() {") & indent_lines(body) & ("}");
+  }
 
-    if has_opt_fields:
-      body = (body |
+  //////////////////////////////////////////////////////////////////////////////
+
+  String* internal_cmp_def(String class_name, Symbol* ord_opt_labels) {
+    if opt_labels != []:
+      body = (
         "",
         "    int len = countFields();",
         "    int otherLen = otherOpt.countFields();",
@@ -126,24 +151,28 @@ implicit prg : CompiledPrg {
         );
       ;
 
-      body = (body | "", "    int res;") if fields(ord_labels(0), !!).optional;
+      body = (body | "", "    int res;") if opt_labels(ord_labels(0));
+
+    else
+      body = ();
     ;
 
     for l @ i <- ord_labels:
-      field = fields(l, !!);
+      repr = reprs(l, !!);
+      optional = opt_labels(l);
       field_name = opt_rec_field_name(l);
-      comp_expr = comparison_expr(field.repr, field_name, "otherOpt." & field_name);
+      comp_expr = comparison_expr(repr, field_name, "otherOpt." & field_name);
       body = (body | "");
-      if i == |ord_labels| - 1 and not field.optional:
+      if i == |ord_labels| - 1 and not optional:
         body = (body | "    return " & comp_expr & ";");
       else
-        maybe_var_type = if i == 0 and not field.optional then "int " else "";
+        maybe_var_type = if i == 0 and not optional then "int " else "";
         field_code = (
           "    " & maybe_var_type & "res = " & comp_expr & ";",
           "    if (res != 0)",
           "      return res;"
         );
-        if field.optional:
+        if optional:
           test_var_name = opt_rec_field_nonempty_test_var(l);
           field_code = ("    if (" & test_var_name & ") {") & indent_lines(field_code) & ("    }");
         ;
@@ -151,58 +180,64 @@ implicit prg : CompiledPrg {
       ;
     ;
 
-    body = (body | "", "    return 0;") if fields(rat(ord_labels, 0), !!).optional;
+    body = (body | "", "    return 0;") if opt_labels(rat(ord_labels, 0));
 
-    opt_fields_bits = ("(" & opt_rec_field_nonempty_test_var(l) & " ? 1 : 0)" : l <- ord_opt_labels);
-    count_fields_exprs = (printed(|ord_mand_labels|)) & opt_fields_bits;
-
-    body = (body |
+    return (
+      "protected int internalCmp(Obj other) {",
+      "  if (other instanceof " & class_name & ") {",
+      "    " & class_name & " otherOpt = (" & class_name & ") other;"
+    ) & body & (
       "  }",
       "",
       "  return super.internalCmp(other);",
-      "}",
-      "",
+      "}"
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  String* count_fields_def {
+    opt_fields_bits = ("(" & opt_rec_field_nonempty_test_var(l) & " ? 1 : 0)" : l <- isort(opt_labels));
+    count_fields_exprs = (printed(|ord_labels| - |opt_labels|)) & opt_fields_bits;
+
+    return (
       "protected int countFields() {",
       "  return " & append(count_fields_exprs, " + ") & ";",
-      "}",
-      "",
-      "protected int[] getLabels() {"
+      "}"
     );
+  }
 
-    labels_seq_name = const_symb_seq_name(index);
-    if has_opt_fields:
-      body = (body |
-        "  if (labels == null) {",
-        "    int count = countFields();",
-        "    labels = new int[count];",
-        "    int idx = 0;"
+  //////////////////////////////////////////////////////////////////////////////
+
+  String* get_labels_def(Nat symb_seq_index) {
+    if opt_labels != []:
+      body = (
+        "if (labels == null) {",
+        "  int count = countFields();",
+        "  labels = new int[count];",
+        "  int idx = 0;"
       );
 
       for l <- ord_labels:
-        label_code = ("    labels[idx++] = " & symb_idx_name(l) & ";");
-        if fields(l, !!).optional:
-          label_code = ("    if (" & opt_rec_field_nonempty_test_var(l) & ")") & indent_lines(label_code);
+        label_code = ("  labels[idx++] = " & symb_idx_name(l) & ";");
+        if opt_labels(l):
+          label_code = ("  if (" & opt_rec_field_nonempty_test_var(l) & ")") & indent_lines(label_code);
         ;
         body = body & label_code;
       ;
 
-      body = (body |
-        "  }",
-        "  return labels;"
-      );
+      body = (body | "}", "return labels;");
 
     else
-      body = (body | "  return " & labels_seq_name & ";");
+      body = ("return " & const_symb_seq_name(symb_seq_index) & ";");
     ;
 
-    body = (body | "}");
-
-    // Class header
-    header_line = "static final class " & class_name & " extends OptTagRecObj {";
-    return (header_line) & indent_lines(body) & ("}");
+    return ("protected int[] getLabels() {") & indent_lines(body) & ("}");
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 String native_obj_expr(LowLevelRepr repr, String expr) =
   bool    = "SymbObj.get(" & expr & ")",
