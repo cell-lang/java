@@ -49,7 +49,7 @@ implicit prg : CompiledPrg {
         get_labels_def(index)
       );
     ;
-    body = body & join(intermix(methods_defs, ("")));
+    body = body & ("", "") & join(intermix(methods_defs, ("")));
 
     // Class definition
     header_line = "static final class " & class_name & " extends OptTagRecObj {";
@@ -73,7 +73,7 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
   String* has_field_def {
     has_field_exprs = (
       if opt_labels(l)
-        then "(" & opt_rec_field_nonempty_test_var(l) & " & id == " & symb_idx_name(l) & ")"
+        then "(" & set_check_expr(reprs(l, !!), l, "", false) & " & id == " & symb_idx_name(l) & ")"
         else "id == " & symb_idx_name(l)
       : l <- ord_labels
     );
@@ -115,7 +115,7 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
       for l <- ord_opt_labels:
         value_hash_expr = hash_code_expr(reprs(l, !!), opt_rec_field_name(l));
         body = (body |
-          "if (" & opt_rec_field_nonempty_test_var(l) & ")",
+          "if (" & set_check_expr(reprs(l, !!), l, "", false) & ")",
           "  hashSum += SymbObj.hashCode(" & symb_idx_name(l) & ") + " & value_hash_expr & ";"
         );
       ;
@@ -143,11 +143,13 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
       );
 
       for l @ i <- ord_opt_labels:
-        test_var_name = opt_rec_field_nonempty_test_var(l);
+        test_var_name = set_check_expr(reprs(l, !!), l, "", true);
+        unparenthesized_test_var_name = set_check_expr(reprs(l, !!), l, "", false);
+        other_test_var_name = set_check_expr(reprs(l, !!), l, "otherOpt.", true);
         body = (body |
           "",
-          "    if (" & test_var_name & " != otherOpt." & test_var_name & ")",
-          "      return " & test_var_name & " ? 1 : -1;" ## NOT SURE ABOUT THIS ONE
+          "    if (" & test_var_name & " != " & other_test_var_name & ")",
+          "      return " & unparenthesized_test_var_name & " ? 1 : -1;" ## NOT SURE ABOUT THIS ONE
         );
       ;
 
@@ -173,7 +175,7 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
           "      return res;"
         );
         if optional:
-          test_var_name = opt_rec_field_nonempty_test_var(l);
+          test_var_name = set_check_expr(reprs(l, !!), l, "", false);
           field_code = ("    if (" & test_var_name & ") {") & indent_lines(field_code) & ("    }");
         ;
         body = body & field_code;
@@ -197,7 +199,7 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
   //////////////////////////////////////////////////////////////////////////////
 
   String* count_fields_def {
-    opt_fields_bits = ("(" & opt_rec_field_nonempty_test_var(l) & " ? 1 : 0)" : l <- isort(opt_labels));
+    opt_fields_bits = ("(" & set_check_expr(reprs(l, !!), l, "", false) & " ? 1 : 0)" : l <- isort(opt_labels));
     count_fields_exprs = (printed(|ord_labels| - |opt_labels|)) & opt_fields_bits;
 
     return (
@@ -221,7 +223,7 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
       for l <- ord_labels:
         label_code = ("  labels[idx++] = " & symb_idx_name(l) & ";");
         if opt_labels(l):
-          label_code = ("  if (" & opt_rec_field_nonempty_test_var(l) & ")") & indent_lines(label_code);
+          label_code = ("  if (" & set_check_expr(reprs(l, !!), l, "", false) & ")") & indent_lines(label_code);
         ;
         body = body & label_code;
       ;
@@ -238,6 +240,12 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+
+String set_check_expr(LowLevelRepr repr, Symbol label, String path, Bool parenthesized) =
+  if is_nullable(repr)
+    then parentesize( path & opt_rec_field_name(label) & " != null", parenthesized)
+    else path &opt_rec_field_nonempty_test_var(label);
+
 
 String native_obj_expr(LowLevelRepr repr, String expr) =
   bool    = "SymbObj.get(" & expr & ")",
