@@ -43,7 +43,7 @@ type VarTypesNotToDeclare = FnArg,
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-String parentesize(String code, Bool parentesized) = if parentesized then "(" & code & ")" else code;
+String parenthesize(String code, Bool parenthesized) = if parenthesized then "(" & code & ")" else code;
 
 
 String uppercase_encoding(Nat n) {

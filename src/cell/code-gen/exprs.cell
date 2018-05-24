@@ -37,7 +37,7 @@ String native_expr(BoolExpr expr)       = native_expr(expr, false);
 String native_expr(ObjExpr expr, Bool)  = native_expr(expr);
 
 
-String native_expr(BoolExpr expr, Bool parentesised) {
+String native_expr(BoolExpr expr, Bool parenthesized) {
   return native_var_ref_name(expr) if expr :: BoolVar;
   return match (expr)
     true                  = "true",
@@ -53,16 +53,16 @@ String native_expr(BoolExpr expr, Bool parentesised) {
     is_ne_tern_rel(e?)    = native_expr(e) & ".isNeTernRel()",
     is_tagged_obj(e?)     = native_expr(e) & ".isTagged()",
 
-    are_eq(e1?, e2?)      = native_eq_expr(e1, e2, parentesised),
+    are_eq(e1?, e2?)      = native_eq_expr(e1, e2, parenthesized),
 
-    // is_gt()               = native_nary_op(" > ",  (expr.expr1, expr.expr2), parentesised),
-    // is_ge()               = native_nary_op(" >= ", (expr.expr1, expr.expr2), parentesised),
-    is_lt()               = native_nary_op(" < ",  (expr.expr1, expr.expr2), parentesised),
-    is_le()               = native_nary_op(" <= ", (expr.expr1, expr.expr2), parentesised),
+    // is_gt()               = native_nary_op(" > ",  (expr.expr1, expr.expr2), parenthesized),
+    // is_ge()               = native_nary_op(" >= ", (expr.expr1, expr.expr2), parenthesized),
+    is_lt()               = native_nary_op(" < ",  (expr.expr1, expr.expr2), parenthesized),
+    is_le()               = native_nary_op(" <= ", (expr.expr1, expr.expr2), parenthesized),
 
 
-    is_flt(e1?, e2?)      = native_nary_op(" < ",  (e1, e2), parentesised),
-    is_fle(e1?, e2?)      = native_nary_op(" <= ", (e1, e2), parentesised),
+    is_flt(e1?, e2?)      = native_nary_op(" < ",  (e1, e2), parenthesized),
+    is_fle(e1?, e2?)      = native_nary_op(" <= ", (e1, e2), parenthesized),
 
     is_out_of_range(v?)   = native_var_ref_name(v) & ".done()",
 
@@ -78,13 +78,13 @@ String native_expr(BoolExpr expr, Bool parentesised) {
     is_member()           = native_fn_name(expr.pred) & "(" & native_expr(expr.obj) & ")",
     state_is_def()        = native_var_ref_name(expr.auto_var) & "." & state_is_def_proc_name(expr.type) & "()",
 
-    neg(are_eq(e1?, e2?)) = native_neq_expr(e1, e2, parentesised),
-    neg(e?)               = parentesize("!" & native_expr(e, true), parentesised),
+    neg(are_eq(e1?, e2?)) = native_neq_expr(e1, e2, parenthesized),
+    neg(e?)               = parenthesize("!" & native_expr(e, true), parenthesized),
 
-    and(es?)              = native_nary_op(" & ",  es, parentesised),
-    or(es?)               = native_nary_op(" | ",  es, parentesised),
-    and_then(es?)         = native_nary_op(" && ", es, parentesised),
-    or_else(es?)          = native_nary_op(" || ", es, parentesised);
+    and(es?)              = native_nary_op(" & ",  es, parenthesized),
+    or(es?)               = native_nary_op(" | ",  es, parenthesized),
+    and_then(es?)         = native_nary_op(" && ", es, parenthesized),
+    or_else(es?)          = native_nary_op(" || ", es, parenthesized);
 }
 
 
@@ -101,16 +101,16 @@ String native_contains_expr(ObjExpr rel, ObjExpr+ tuple) {
 }
 
 
-String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parentesised) =
-  bool_obj(e1?),      bool_obj(e2?)     = native_nary_op(" == ", (e1, e2), parentesised),
-  bool_obj(e1?),      object(true)      = native_expr(e1, parentesised),
-  bool_obj(e1?),      object(false)     = native_expr(neg(e1), parentesised),
-  object(true),       bool_obj(e2?)     = native_expr(e2, parentesised),
-  object(false),      bool_obj(e2?)     = native_expr(neg(e2), parentesised),
+String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
+  bool_obj(e1?),      bool_obj(e2?)     = native_nary_op(" == ", (e1, e2), parenthesized),
+  bool_obj(e1?),      object(true)      = native_expr(e1, parenthesized),
+  bool_obj(e1?),      object(false)     = native_expr(neg(e1), parenthesized),
+  object(true),       bool_obj(e2?)     = native_expr(e2, parenthesized),
+  object(false),      bool_obj(e2?)     = native_expr(neg(e2), parenthesized),
 
-  int_obj(e1?),       int_obj(e2?)      = native_nary_op(" == ", (e1, e2), parentesised),
-  int_obj(e1?),       object(<*..*> n?) = native_nary_op(" == ", (e1, n), parentesised),
-  object(<*..*> n?),  int_obj(e2?)      = native_nary_op(" == ", (n, e2), parentesised),
+  int_obj(e1?),       int_obj(e2?)      = native_nary_op(" == ", (e1, e2), parenthesized),
+  int_obj(e1?),       object(<*..*> n?) = native_nary_op(" == ", (e1, n), parenthesized),
+  object(<*..*> n?),  int_obj(e2?)      = native_nary_op(" == ", (n, e2), parenthesized),
   int_obj(e1?),       _                 = native_expr(expr2) & ".isInt(" & native_expr(e1) & ")",
   _,                  int_obj(e2?)      = native_expr(expr1) & ".isInt(" & native_expr(e2) & ")",
 
@@ -129,47 +129,47 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parentesised) =
   _,                  _                 = native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")";
 
 
-String native_neq_expr(ObjExpr expr1, ObjExpr expr2, Bool parentesised) =
-  bool_obj(e1?),      bool_obj(e2?)     = native_nary_op(" != ", (e1, e2), parentesised),
-  bool_obj(e1?),      object(true)      = native_expr(neg(e1), parentesised),
-  bool_obj(e1?),      object(false)     = native_expr(e1, parentesised),
-  object(true),       bool_obj(e2?)     = native_expr(neg(e2), parentesised),
-  object(false),      bool_obj(e2?)     = native_expr(e2, parentesised),
+String native_neq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
+  bool_obj(e1?),      bool_obj(e2?)     = native_nary_op(" != ", (e1, e2), parenthesized),
+  bool_obj(e1?),      object(true)      = native_expr(neg(e1), parenthesized),
+  bool_obj(e1?),      object(false)     = native_expr(e1, parenthesized),
+  object(true),       bool_obj(e2?)     = native_expr(neg(e2), parenthesized),
+  object(false),      bool_obj(e2?)     = native_expr(e2, parenthesized),
 
-  int_obj(e1?),       int_obj(e2?)      = native_nary_op(" != ", (e1, e2), parentesised),
-  int_obj(e1?),       object(<*..*> n?) = native_nary_op(" != ", (e1, n), parentesised),
-  object(<*..*> n?),  int_obj(e2?)      = native_nary_op(" != ", (n, e2), parentesised),
+  int_obj(e1?),       int_obj(e2?)      = native_nary_op(" != ", (e1, e2), parenthesized),
+  int_obj(e1?),       object(<*..*> n?) = native_nary_op(" != ", (e1, n), parenthesized),
+  object(<*..*> n?),  int_obj(e2?)      = native_nary_op(" != ", (n, e2), parenthesized),
 
-  _,                  _                 = parentesize("!" & native_eq_expr(expr1, expr2, true), parentesised);
+  _,                  _                 = parenthesize("!" & native_eq_expr(expr1, expr2, true), parenthesized);
 
 
 String native_expr(IntExpr expr) = native_expr(expr, false);
 
 
-String native_expr(Int value, Bool parentesised) {
+String native_expr(Int value, Bool parenthesized) {
   str = printed(value);
   str = str & "L" if value >= 2147483648 or value < -2147483648;
   return str;
 }
 
 
-String native_expr(IntConst expr, Bool parentesised) =
+String native_expr(IntConst expr, Bool parenthesized) =
   time_slots_table_name(expr.automaton, expr.expr_id) & "[(int) (" & native_expr(expr.time_slot) & ")]";
 
-String native_expr(IntVar expr, Bool parentesised) = native_var_ref_name(expr);
+String native_expr(IntVar expr, Bool parenthesized) = native_var_ref_name(expr);
 
-String native_expr(IntNatOp expr, Bool parentesised) =
+String native_expr(IntNatOp expr, Bool parenthesized) =
   get_int_val(at() e?)  = native_expr(e.seq) & ".getLongAt(" & native_expr(e.idx) & ")",
   get_int_val(e?)       = native_expr(e) & ".getLong()",
   minus(e?)             = "-" & native_expr(e, true),
-  add()                 = native_nary_op(" + ", (expr.val1, expr.val2), parentesised),
-  sub()                 = native_nary_op(" - ", (expr.val1, expr.val2), parentesised),
-  mult()                = native_nary_op(" * ", (expr.val1, expr.val2), parentesised),
-  div()                 = native_nary_op(" / ", (expr.val1, expr.val2), parentesised),
-  mod()                 = native_nary_op(" % ", (expr.val1, expr.val2), parentesised),
-  bitwise_and(e1?, e2?) = native_nary_op(" & ", (e1, e2), parentesised),
-  bitwise_or(e1?, e2?)  = native_nary_op(" | ", (e1, e2), parentesised),
-  bitwise_xor(e1?, e2?) = native_nary_op(" ^ ", (e1, e2), parentesised),
+  add()                 = native_nary_op(" + ", (expr.val1, expr.val2), parenthesized),
+  sub()                 = native_nary_op(" - ", (expr.val1, expr.val2), parenthesized),
+  mult()                = native_nary_op(" * ", (expr.val1, expr.val2), parenthesized),
+  div()                 = native_nary_op(" / ", (expr.val1, expr.val2), parenthesized),
+  mod()                 = native_nary_op(" % ", (expr.val1, expr.val2), parenthesized),
+  bitwise_and(e1?, e2?) = native_nary_op(" & ", (e1, e2), parenthesized),
+  bitwise_or(e1?, e2?)  = native_nary_op(" | ", (e1, e2), parenthesized),
+  bitwise_xor(e1?, e2?) = native_nary_op(" ^ ", (e1, e2), parenthesized),
   float_bits(e?)        = native_expr(e) & ".floatBits()",
   mantissa(e?)          = native_expr(e) & ".mantissa()",
   dec_exp(e?)           = native_expr(e) & ".decExp()",
@@ -183,33 +183,33 @@ String native_expr(IntNatOp expr, Bool parentesised) =
   ticks                 = "Miscellanea.getTickCount()";
 
 
-String native_expr(Int32Var var, Bool parentesised) = native_var_ref_name(var);
+String native_expr(Int32Var var, Bool parenthesized) = native_var_ref_name(var);
 
-String native_expr(Int32NatOp expr, Bool parentesised) =
+String native_expr(Int32NatOp expr, Bool parenthesized) =
   bool_to_bit(e?)       = "(" & native_expr(e, false) & " ? 1 : 0)",
   get_size(e?)          = native_expr(e) & ".getSize()",
   cast_int32(e?)        = "((int) " & native_expr(e, true) & ")",
-  add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parentesised);
+  add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized);
 
 
 String native_expr(FloatExpr expr) = native_expr(expr, false);
 
-String native_expr(FloatVar var, Bool parentesised) = native_var_ref_name(var);
+String native_expr(FloatVar var, Bool parenthesized) = native_var_ref_name(var);
 
-String native_expr(FloatNatOp expr, Bool parentesised) =
+String native_expr(FloatNatOp expr, Bool parenthesized) =
   float_value(at() e?)  = native_expr(e.seq) & ".getDoubleAt(" & native_expr(e.idx) & ")",
   float_value(e?)       = native_expr(e) & ".getDouble()",
-  int_to_float(e?)      = parentesize("(double) " & native_expr(e, true), parentesised),
+  int_to_float(e?)      = parenthesize("(double) " & native_expr(e, true), parenthesized),
   neg_float(e?)         = "-" & native_expr(e, true),
-  add_floats(e1?, e2?)  = native_nary_op(" + ", (e1, e2), parentesised),
-  sub_floats(e1?, e2?)  = native_nary_op(" - ", (e1, e2), parentesised),
-  mult_floats(e1?, e2?) = native_nary_op(" * ", (e1, e2), parentesised),
-  div_floats(e1?, e2?)  = native_nary_op(" / ", (e1, e2), parentesised),
+  add_floats(e1?, e2?)  = native_nary_op(" + ", (e1, e2), parenthesized),
+  sub_floats(e1?, e2?)  = native_nary_op(" - ", (e1, e2), parenthesized),
+  mult_floats(e1?, e2?) = native_nary_op(" * ", (e1, e2), parenthesized),
+  div_floats(e1?, e2?)  = native_nary_op(" / ", (e1, e2), parenthesized),
   exp_floats(e1?, e2?)  = "Math.pow(" & native_expr(e1, false) & ", " & native_expr(e2, false) & ")",
   square_root(e?)       = "Math.sqrt(" & native_expr(e, false) & ")";
 
 
-String native_expr(FloatLit literal, Bool parentesised) {
+String native_expr(FloatLit literal, Bool parenthesized) {
   res = string((nat(ascii_0 + d) : d <- literal.mantissa));
   res = "-" & res if literal.negative;
   res = res & "e" & printed(literal.dec_exp) if literal.dec_exp != 0;
@@ -226,8 +226,8 @@ String native_expr(<null_obj>) = "NullObj.singleton()";
 
 // String native_expr(ClsVar v) = native_var_ref_name(v);
 
-String native_nary_op(String op, AnyTypeExpr+ exprs, Bool parentesised) {
+String native_nary_op(String op, AnyTypeExpr+ exprs, Bool parenthesized) {
   expr = append((native_expr(e, true) : e <- exprs), op);
-  expr = "(" & expr & ")" if |exprs| > 1 and parentesised;
+  expr = "(" & expr & ")" if |exprs| > 1 and parenthesized;
   return expr;
 }
