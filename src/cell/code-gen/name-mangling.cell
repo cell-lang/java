@@ -25,8 +25,15 @@
 //  Y
 //  Z
 
+String native_var_name(OptTagRecVar var) {
+  id_str = if var.id != 0 then "_" & printed(var.id) else "";
+  return "r" & printed(var.id) & id_str & "_" & printed(var.tag);
+}
 
-String opt_tag_rec_name(Symbol tag, Nat idx) = "Obj_" & upper_camel_case(tag) & "_" & printed(idx);
+String opt_tag_rec_name(Symbol tag, Nat idx) {
+  idx_str = if idx != 0 then "_" & printed(idx) else "";
+  return "Obj_" & upper_camel_case(tag) & idx_str;
+}
 
 String opt_rec_field_name(Symbol label) = printed(label) & "_L";
 
@@ -48,8 +55,8 @@ String symb_idx_name(SymbObj symb) =
 String native_var_decl_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v) = native_var_name(v, false);
 String native_var_ref_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v)  = native_var_name(v, true);
 
-String native_var_decl_name(<VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v) = native_var_name(v);
-String native_var_ref_name(<VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v)  = native_var_name(v);
+String native_var_decl_name(<OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v) = native_var_name(v);
+String native_var_ref_name(<OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v)  = native_var_name(v);
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -243,6 +250,7 @@ String var_decl(BoolVar v)      = "boolean "        & native_var_decl_name(v) & 
 String var_decl(IntVar v)       = "long "           & native_var_decl_name(v) & ";";
 String var_decl(Int32Var v)     = native_var_type(v) & " " & native_var_decl_name(v) & ";";
 String var_decl(FloatVar v)     = native_var_type(v) & " " & native_var_decl_name(v) & ";";
+String var_decl(OptTagRecVar v) = opt_tag_rec_name(v.tag, v.index) & " " & native_var_name(v) & ";";
 
 String var_decl(SeqItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";
 String var_decl(SetItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";

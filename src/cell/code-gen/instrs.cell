@@ -52,7 +52,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     _                     = auto_instr_native_code(instr, block_id);
 
 
-  String* write_rec_field_native_code(WriteObjVar var, Symbol label, AnyTypeExpr value, Bool optional) {
+  String* write_rec_field_native_code(OptTagRecVar var, Symbol label, AnyTypeExpr value, Bool optional) {
     path = native_expr(var) & ".";
     has_set_test_var = optional and not is_nullable(low_level_repr(value));
 
@@ -202,7 +202,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_tagged_obj()             = native_new_call(var, "TaggedObj",                   (expr.tag, expr.obj)),
     mk_array()                  = native_new_call(var, "MasterSeqObj",                (expr.size)),
     mk_record()                 = native_mk_record_code(expr.fields, var),
-    inst_opt_tag_rec()          = native_new_call(var, opt_tag_rec_name(expr.tag, expr.repr_idx), ()),
     get_seq_slice()             = native_method_call(var, expr.seq,  "getSlice",      (expr.idx_first, expr.len)),
     append_to_seq()             = native_method_call(var, expr.seq,  "append",        (expr.new_elem)),
     update_seq_at()             = native_method_call(var, expr.seq,  "updatedAt",     (get_int_val(expr.idx), expr.value)),
@@ -213,6 +212,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     parse_value()               = native_static_call(var, "Parsing.parse",            (expr.value)),
     print_value()               = native_method_call(var, expr.value,"printed",       ()),
     _                           = auto_expr_native_code(expr, var);
+
+
+  String native_code(RefObjExpr expr, OptTagRecVar var) =
+    inst_opt_tag_rec()          = native_new_call(var, opt_tag_rec_name(expr.tag, expr.repr_idx), ());
 
 
   String native_build_const_int_seq_code(Nat seq_id, ObjVar var) {

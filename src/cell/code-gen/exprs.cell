@@ -217,6 +217,9 @@ String native_expr(FloatLit literal, Bool parenthesized) {
 }
 
 
+String native_expr(OptTagRecVar var) = native_var_name(var);
+
+
 String native_expr(
   <ElemVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId, AnyAutoVar, AnyDBVar> var
 ) = native_var_ref_name(var);
