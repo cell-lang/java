@@ -199,7 +199,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_bin_rel()                = native_static_call(var, "Builder.createBinRel",     (expr.cols | expr.size)),
     mk_tern_rel_from_streams()  = native_static_call(var, "Builder.createTernRel",    expr.streams),
     mk_tern_rel()               = native_static_call(var, "Builder.createTernRel",    (expr.cols | expr.size)),
-    mk_tagged_obj()             = native_new_call(var, "TaggedObj",                   (expr.tag, expr.obj)),
+    mk_tagged_obj()             = native_mk_tagged_obj_code(expr.tag, expr.obj, var),
     mk_array()                  = native_new_call(var, "MasterSeqObj",                (expr.size)),
     mk_record()                 = native_mk_record_code(expr.fields, var),
     get_seq_slice()             = native_method_call(var, expr.seq,  "getSlice",      (expr.idx_first, expr.len)),
@@ -225,6 +225,14 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
   ///////////////////////////////////////////////////////////////////////////////
+
+  String native_mk_tagged_obj_code(ObjExpr tag, ObjExpr value, WriteObjVar var) {
+    tag_expr = match (tag)
+      object(<+> s?)  = symb_idx_name(s),
+      _               = tag;
+    return native_new_call(var, "TaggedObj", (tag_expr, value));
+  }
+
 
   String native_mk_record_code([+SymbObj -> AtomicExpr] fields, WriteObjVar var) {
     ord_labels, index = symbols_sets_info([untag(l) : l, unused_var <- fields], !!);

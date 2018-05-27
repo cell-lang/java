@@ -289,7 +289,7 @@ String pending_updates_var_type(Table table) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String memo_var_name(<ProcSymbol, MembTestPredId>) = undefined;
+String memo_var_name(<ProcSymbol, MembTestPredId, ConvFnId>) = undefined;
 
 String memo_var_name(FnId id) =
   fn_family_id()  = native_fn_symb_name(id.symbol) & "_E",
@@ -458,6 +458,12 @@ String native_fn_name(ProcSymbol proc_symb) {
   name = "Procs." & name if bare_symb :: <file_read, file_write, print, get_char>;
   return name;
 }
+
+
+String native_fn_name(ConvFnId) =
+  any_tag_rec_conv          = "convertGenericTaggedValue",
+  tag_rec_conv(t?)          = "convertTaggedValue_" & upper_camel_case(t),
+  tag_rec_repr_conv(t?, i?) = "convertTaggedValue_" & upper_camel_case(t) & "_" & printed(i);
 
 ////////////////////////////////////////////////////////////////////////////////
 
