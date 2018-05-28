@@ -11,7 +11,7 @@ String native_expr(StdObjVar var) = native_var_ref_name(var);
 String native_expr(ObjNatOp expr) =
   at()                = native_expr(expr.seq)    & ".getItem("     & native_expr(expr.idx) & ")",
   lookup()            = native_expr(expr.rel)    & ".lookup("      & native_expr(expr.key) & ")",
-  lookup_field()      = native_expr(expr.record) & ".lookupField(" & symb_idx_name(expr.field) & ")",
+  lookup_field()      = native_lookup_field_expr(expr.record, expr.field, expr.repr),
   get_tag(e?)         = native_expr(e)           & ".getTag()",
   get_inner_obj(e?)   = native_expr(e)           & ".getInnerObj()",
   get_curr_obj(v?)    = native_var_ref_name(v)   & ".get()",
@@ -21,6 +21,21 @@ String native_expr(ObjNatOp expr) =
   float_obj(e?)       = "new FloatObj(" & native_expr(e) & ")",
   to_symb(e?)         = "Parsing.parseSymb(" & native_expr(e) & ")",
   get_curr_arg()      = native_get_curr_arg_expr(expr.var, expr.arg);
+
+
+String native_lookup_field_expr(ObjExpr record, SymbObj field, Maybe[LowLevelRepr] repr) {
+  if record :: OptTagRecExpr and repr != nothing:
+    expr_str = native_expr(record) & "." & opt_rec_field_name(untag(field));
+    return match (value(repr))
+      bool    = "SymbObj.get(" & expr_str & ")",
+      int     = "IntObj.get(" & expr_str & ")",
+      float   = "new FloatObj(" & expr_str & ")",
+      symbol  |
+      object  = expr_str;
+  ;
+
+  return native_expr(record) & ".lookupField(" & symb_idx_name(field) & ")";
+}
 
 
 String native_get_curr_arg_expr(BinRelItVar var, <0..2> arg) {
@@ -114,6 +129,10 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   int_obj(e1?),       _                 = native_expr(expr2) & ".isInt(" & native_expr(e1) & ")",
   _,                  int_obj(e2?)      = native_expr(expr1) & ".isInt(" & native_expr(e2) & ")",
 
+  lookup_field(),     object(true)      = if expr1.repr == just(:bool) and expr1.record :: OptTagRecExpr
+                                            then native_expr(expr1.record) & "." & opt_rec_field_name(untag(expr1.field))
+                                            else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
+
   object(<+> s?),     _                 = native_expr(expr2) & ".isSymb(" & symb_idx_name(s) & ")",
   _,                  object(<+> s?)    = native_expr(expr1) & ".isSymb(" & symb_idx_name(s) & ")",
 
@@ -159,8 +178,7 @@ String native_expr(IntConst expr, Bool parenthesized) =
 String native_expr(IntVar expr, Bool parenthesized) = native_var_ref_name(expr);
 
 String native_expr(IntNatOp expr, Bool parenthesized) =
-  get_int_val(at() e?)  = native_expr(e.seq) & ".getLongAt(" & native_expr(e.idx) & ")",
-  get_int_val(e?)       = native_expr(e) & ".getLong()",
+  get_int_val(e?)       = native_get_int_val_expr(e, parenthesized),
   minus(e?)             = "-" & native_expr(e, true),
   add()                 = native_nary_op(" + ", (expr.val1, expr.val2), parenthesized),
   sub()                 = native_nary_op(" - ", (expr.val1, expr.val2), parenthesized),
@@ -183,6 +201,14 @@ String native_expr(IntNatOp expr, Bool parenthesized) =
   ticks                 = "Miscellanea.getTickCount()";
 
 
+String native_get_int_val_expr(ObjExpr expr, Bool parenthesized) =
+  at()            = native_expr(expr.seq) & ".getLongAt(" & native_expr(expr.idx) & ")",
+  lookup_field()  = if expr.repr == just(:int) and expr.record :: OptTagRecExpr
+                      then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
+                      else native_expr(expr) & ".getLong()",
+  _               = native_expr(expr) & ".getLong()";
+
+
 String native_expr(Int32Var var, Bool parenthesized) = native_var_ref_name(var);
 
 String native_expr(Int32NatOp expr, Bool parenthesized) =
@@ -197,8 +223,7 @@ String native_expr(FloatExpr expr) = native_expr(expr, false);
 String native_expr(FloatVar var, Bool parenthesized) = native_var_ref_name(var);
 
 String native_expr(FloatNatOp expr, Bool parenthesized) =
-  float_value(at() e?)  = native_expr(e.seq) & ".getDoubleAt(" & native_expr(e.idx) & ")",
-  float_value(e?)       = native_expr(e) & ".getDouble()",
+  float_value(e?)       = native_float_value_expr(e, parenthesized),
   int_to_float(e?)      = parenthesize("(double) " & native_expr(e, true), parenthesized),
   neg_float(e?)         = "-" & native_expr(e, true),
   add_floats(e1?, e2?)  = native_nary_op(" + ", (e1, e2), parenthesized),
@@ -209,6 +234,14 @@ String native_expr(FloatNatOp expr, Bool parenthesized) =
   square_root(e?)       = "Math.sqrt(" & native_expr(e, false) & ")";
 
 
+String native_float_value_expr(ObjExpr expr, Bool parenthesized) =
+  at()            = native_expr(expr.seq) & ".getDoubleAt(" & native_expr(expr.idx) & ")",
+  lookup_field()  = if expr.repr == just(:float) and expr.record :: OptTagRecExpr
+                      then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
+                      else native_expr(expr) & ".getDouble()",
+  _               = native_expr(expr) & ".getDouble()";
+
+
 String native_expr(FloatLit literal, Bool parenthesized) {
   res = string((nat(ascii_0 + d) : d <- literal.mantissa));
   res = "-" & res if literal.negative;
@@ -217,8 +250,13 @@ String native_expr(FloatLit literal, Bool parenthesized) {
 }
 
 
-String native_expr(OptTagRecVar var) = native_var_name(var);
-
+String native_expr(OptTagRecExpr expr) =
+  opt_tag_rec_var()     |
+  opt_tag_rec_fn_arg()  = native_var_name(expr),
+  cast_opt_tag_rec()    = { type_name = opt_tag_rec_name(expr.tag, expr.index);
+                            expr_str = native_expr(expr.expr, true);
+                            return "((" & type_name & ") " & expr_str & ")";
+                          };
 
 String native_expr(
   <ElemVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId, AnyAutoVar, AnyDBVar> var

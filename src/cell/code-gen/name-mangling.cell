@@ -31,12 +31,11 @@ String native_var_name(LocOptTagRecVar var) {
   return "r" & printed(var.id) & id_str & "_" & printed(var.tag);
 }
 
-String native_var_name(OptTagRecFnArg var) {
-  idx_str = if var.index != 0 then "_" & printed(var.index) else "";
-  return match (var.id)
-    <+>     = printed(var.id) & "_Vr_" & printed(var.tag) & idx_str,
+String native_var_name(OptTagRecFnArg var) =
+  match (var.id)
+    <+>     = printed(var.id) & "_V",
     <*..*>  = "a" & printed(var.id);
-}
+
 
 String opt_tag_rec_name(Symbol tag, Nat idx) {
   idx_str = if idx != 0 then "_" & printed(idx) else "";
