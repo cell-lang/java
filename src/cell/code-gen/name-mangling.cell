@@ -26,15 +26,13 @@
 //  Z
 
 
-String native_var_name(LocOptTagRecVar var) {
-  id_str = if var.id != 0 then "_" & printed(var.id) else "";
-  return "r" & printed(var.id) & id_str & "_" & printed(var.tag);
-}
-
-String native_var_name(OptTagRecFnArg var) =
+String native_var_name(LocOptTagRecVar var) =
   match (var.id)
-    <+>     = printed(var.id) & "_V",
-    <*..*>  = "a" & printed(var.id);
+    <+>     = printed(var.id) & "_Vr_" & printed(var.tag),
+    <*..*>  = "r" & printed(var.id) & "_" & printed(var.index) & "_" & printed(var.tag);
+
+
+String native_var_name(OptTagRecFnArg var) = "a" & printed(var.id);
 
 
 String opt_tag_rec_name(Symbol tag, Nat idx) {
@@ -143,9 +141,9 @@ String native_var_name(BoolVar var, Bool add_prefix) {
     else "";
 
   return match (var)
-    bvar(n?)                                      = "b" & printed(n),
-    bool_arg(<+> s?)                              = printed(s) & "_Vb",
-    bool_arg(<*..*> n?)                           = "a" & printed(n),
+    bvar(<+> s?)                                  = printed(s) & "_Vb",
+    bvar(<*..*> n?)                               = "b" & printed(n),
+    bool_arg(n?)                                  = "a" & printed(n),
     nested_db_spent(v?)                           = prefix & native_var_decl_name(v) & "s",
     cond_value_var(n?)                            = prefix & "cond_" & printed(n),
     cond_is_def_var(n?)                           = prefix & "cond_def_" & printed(n),
@@ -167,9 +165,9 @@ String native_var_name(IntVar v, Bool add_prefix) {
 
   prefix = if add_prefix then "this." else "";
   return match (v)
-    ivar(n?)                            = "l" & printed(n),
-    int_arg(<+> s?)                     = printed(s) & "_Vi",
-    int_arg(<*..*> n?)                  = "a" & printed(n),
+    ivar(<+> s?)                        = printed(s) & "_Vl",
+    ivar(<*..*> n?)                     = "l" & printed(n),
+    int_arg(n?)                         = "a" & printed(n),
     curr_time                           = "curr_time",
     update_time                         = "update_time",
     update_expr_index                   = "update_expr_index",
@@ -196,9 +194,9 @@ String native_var_name(Int32Var v, Bool add_prefix) =
 
 
 String native_var_name(FloatVar v, Bool add_prefix) =
-  fvar(n?)              = "f" & printed(n),
-  float_arg(<+> s?)     = printed(s) & "_Vf",
-  float_arg(<*..*> n?)  = "a" & printed(n);
+  fvar(<+> s?)    = printed(s) & "_Vf",
+  fvar(<*..*> n?) = "f" & printed(n),
+  float_arg(n?)   = "a" & printed(n);
 
 
 String native_var_name(AnyAutoVar v, Bool add_prefix) =
