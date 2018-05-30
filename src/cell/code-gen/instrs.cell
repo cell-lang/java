@@ -149,7 +149,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* native_set_var_code(WriteObjVar var, ObjExpr value) = (native_assignment_code(var, value));
+  String* native_set_var_code(<WriteObjVar, LocOptTagRecVar> var, ObjExpr value) =
+    (native_assignment_code(var, value));
 
   String* native_set_var_code(ImplArg var, ObjExpr value) =
     (native_assignment_code(var, value)) & gen_cache_clearing_code(var);
