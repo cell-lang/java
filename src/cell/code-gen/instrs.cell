@@ -33,6 +33,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     ret_val(e?)           = ("return " & native_expr(e) & ";"),
     no_op                 = (),
     repeat(body?)         = native_repeat_code(body, block_id),
+    foreach()             = native_foreach_code(instr.seq, instr.buffer, instr.idx_var, instr.it_var, instr.body, block_id),
     break_loop            = ("break;"),
     execute_block(body?)  = { new_block_id = _counter_(:any_value_will_do);
                               body_code = native_code(body, just(new_block_id));
@@ -136,6 +137,24 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       body_text = indent_lines(native_code(body, block_id)) & ("}");
       return ("for ( ; ; ) {") & body_text;
     ;
+  }
+
+
+  String* native_foreach_code(<LocVar, StdVar> seq, ArrayVar buffer, Int32Var idx_var, AnyLocVar it_var, Instr* body, Maybe[Nat] block_id) {
+    seq_name     = native_var_ref_name(seq);
+    buffer_name  = native_var_ref_name(buffer);
+    idx_var_name = native_var_ref_name(idx_var);
+    it_var_name  = native_var_ref_name(it_var);
+
+    elt_repr = low_level_repr(it_var);
+
+    header = (
+      buffer_name & " = " & seq_name & ".getArray((" & native_type(elt_repr) & "[]) null);",
+      "for (" & idx_var_name & " = 0 ; " & idx_var_name & " < " & buffer_name & ".length ; " & idx_var_name & "++) {",
+      "  " & it_var_name & " = " & buffer_name & "[" & idx_var_name & "];"
+    );
+
+    return header & indent_lines(native_code(body, block_id)) & ("}");
   }
 
 
