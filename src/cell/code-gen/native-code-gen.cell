@@ -354,16 +354,23 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     if cached:
       is_real_const = pd.cached? and pd.impl_args == [];
-      cache_var_name = if is_real_const then fn_name & "__Cached" else "env." & memo_var_name(pd.name);
+      cache_var_name = if is_real_const then fn_name & "__CV" else "env." & memo_var_name(pd.name);
+      needs_set_flag = is_real_const and pd.ret_val_repr? and not is_nullable(pd.ret_val_repr);
+      set_flag_name = if needs_set_flag then fn_name & "__CI" else "???"; ## UGLY UGLY UGLY
+      ret_type_name = ret_type_str(pd);
 
       wrapper_code = (
         "",
         "",
-        "static Obj " & cache_var_name & ";" if is_real_const,
+        "static " & ret_type_name & " " & cache_var_name & ";" if is_real_const,
+        "static boolean " & set_flag_name & ";" if needs_set_flag,
         "" if is_real_const,
-        "static " & ret_type_str(pd) & " " & fn_name & "(" & args_list_str & ") {",
-        "  if (" & cache_var_name & " == null)",
+        "static " & ret_type_name & " " & fn_name & "(" & args_list_str & ") {",
+        "  if (" & cache_var_name & " == null)" if not needs_set_flag,
+        "  if (!" & set_flag_name & ") {" if needs_set_flag,
         "    " & cache_var_name & " = " & fn_name & suffix & "(env);",
+        "    " & set_flag_name & " = true;" if needs_set_flag,
+        "  }" if needs_set_flag,
         "  return " & cache_var_name & ";",
         "}"
       );

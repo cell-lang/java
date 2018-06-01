@@ -336,6 +336,8 @@ Bool is_nullable(LowLevelEltRepr) =
   object    = true,
   array()   = undefined;
 
+Bool is_nullable(OptTagRecRepr) = true;
+
 
 String native_table_type(Table table) {
   return names_by_arity[arity(table)];

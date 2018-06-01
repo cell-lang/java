@@ -74,10 +74,12 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     src_repr = low_level_repr(it_var);
     buffer_arg = if src_repr == target.repr then target_name else "(" & native_type(src_repr) & "[]) null";
 
+    possible_cast = if it_var :: OptTagRecVar then "(" & native_type(low_level_repr(it_var)) & ") " else "";
+
     header = (
       buffer_name & " = " & src_name & ".getArray(" & buffer_arg & ");",
       "for (" & idx_var_name & " = 0 ; " & idx_var_name & " < " & target_name & ".length ; " & idx_var_name & "++) {",
-      "  " & it_var_name & " = " & buffer_name & "[" & idx_var_name & "];"
+      "  " & it_var_name & " = " & possible_cast & buffer_name & "[" & idx_var_name & "];"
     );
 
     return header & indent_lines(native_code(body, block_id)) & ("}");
@@ -146,12 +148,14 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     idx_var_name = native_var_ref_name(idx_var);
     it_var_name  = native_var_ref_name(it_var);
 
-    elt_repr = low_level_repr(it_var);
+    elt_native_type = native_type(low_level_repr(it_var));
+    possible_cast = if it_var :: OptTagRecVar then "(" & elt_native_type & ") " else "";
 
     header = (
-      buffer_name & " = " & seq_name & ".getArray((" & native_type(elt_repr) & "[]) null);",
+      ## WHAT IF elt_native_type IS SOMETHING LIKE Obj_MyType?
+      buffer_name & " = " & seq_name & ".getArray((" & elt_native_type & "[]) null);",
       "for (" & idx_var_name & " = 0 ; " & idx_var_name & " < " & buffer_name & ".length ; " & idx_var_name & "++) {",
-      "  " & it_var_name & " = " & buffer_name & "[" & idx_var_name & "];"
+      "  " & it_var_name & " = " & possible_cast & buffer_name & "[" & idx_var_name & "];"
     );
 
     return header & indent_lines(native_code(body, block_id)) & ("}");
