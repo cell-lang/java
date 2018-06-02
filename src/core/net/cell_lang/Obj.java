@@ -132,25 +132,37 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public boolean[] getArray(boolean[] buffer) {
-    for (int i=0 ; i < buffer.length ; i++)
+    int len = getSize();
+    if (buffer == null)
+      buffer = new boolean[len];
+    for (int i=0 ; i < len ; i++)
       buffer[i] = getBoolAt(i);
     return buffer;
   }
 
   public long[] getArray(long[] buffer) {
-    for (int i=0 ; i < buffer.length ; i++)
+    int len = getSize();
+    if (buffer == null)
+      buffer = new long[len];
+    for (int i=0 ; i < len ; i++)
       buffer[i] = getLongAt(i);
     return buffer;
   }
 
   public double[] getArray(double[] buffer) {
-    for (int i=0 ; i < buffer.length ; i++)
+    int len = getSize();
+    if (buffer == null)
+      buffer = new double[len];
+    for (int i=0 ; i < len ; i++)
       buffer[i] = getDoubleAt(i);
     return buffer;
   }
 
   public Obj[] getArray(Obj[] buffer) {
-    for (int i=0 ; i < buffer.length ; i++)
+    int len = getSize();
+    if (buffer == null)
+      buffer = new Obj[len];
+    for (int i=0 ; i < len ; i++)
       buffer[i] = getItem(i);
     return buffer;
   }

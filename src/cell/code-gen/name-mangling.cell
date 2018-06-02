@@ -72,7 +72,7 @@ String native_var_decl_name(MembIntVectVar v) =
 /////////////////////////////////////////////////////////////////////////////////////
 
 String native_var_name(VecVar v)          = "vec_" & printed(v.id);
-String native_var_name(ArrayVar var)      = "y" & printed(var.id);
+String native_var_name(ArrayVar var)      = "y" & printed(var.id) & "_" & native_type(var.repr);
 String native_var_name(SeqItVar v)        = "seq_it_" & printed(bare_id_2(v));
 String native_var_name(SetItVar v)        = "set_it_" & printed(bare_id_2(v));
 String native_var_name(BinRelItVar v)     = "bin_rel_it_" & printed(bare_id_2(v));
