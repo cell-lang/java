@@ -9,8 +9,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     set_at()              = (native_method_call(instr.var, "initAt", (instr.idx, instr.value))),
     alloc_array()         = alloc_array_native_code(instr.var, instr.size),
     write_array()         = write_array_native_code(instr.var, instr.idx, instr.value),
-    traverse_array()      = traverse_array_native_code(instr.src, instr.buffer, instr.target, instr.idx_var,
-                              instr.it_var, instr.body, block_id),
     write_rec_field()     = write_rec_field_native_code(instr.var, instr.label, instr.value, instr.optional),
     get_seq_iter()        |
     get_set_iter()        = (native_method_call(instr.var, instr.src, "getSeqOrSetIter", ())),
@@ -33,7 +31,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     ret_val(e?)           = ("return " & native_expr(e) & ";"),
     no_op                 = (),
     repeat(body?)         = native_repeat_code(body, block_id),
-    foreach()             = native_foreach_code(instr.seq, instr.buffer, instr.idx_var, instr.it_var, instr.body, block_id),
+    foreach()             = native_foreach_code(instr, block_id),
     break_loop            = ("break;"),
     execute_block(body?)  = { new_block_id = _counter_(:any_value_will_do);
                               body_code = native_code(body, just(new_block_id));
@@ -61,28 +59,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       native_assignment_code(path & opt_rec_field_name(label), value),
       native_assignment_code(path & opt_rec_field_nonempty_test_var(label), true) if has_set_test_var
     );
-  }
-
-
-  String* traverse_array_native_code(<LocVar, StdVar> src, ArrayVar buffer, ArrayVar target, Int32Var idx_var, AnyLocVar it_var, Instr* body, Maybe[Nat] block_id) {
-    src_name     = native_var_ref_name(src);
-    buffer_name  = native_var_ref_name(buffer);
-    target_name  = native_var_ref_name(target);
-    idx_var_name = native_var_ref_name(idx_var);
-    it_var_name  = native_var_ref_name(it_var);
-
-    src_repr = low_level_repr(it_var);
-    buffer_arg = if src_repr == target.repr then target_name else "(" & native_type(src_repr) & "[]) null";
-
-    possible_cast = if it_var :: OptTagRecVar then "(" & native_type(low_level_repr(it_var)) & ") " else "";
-
-    header = (
-      buffer_name & " = " & src_name & ".getArray(" & buffer_arg & ");",
-      "for (" & idx_var_name & " = 0 ; " & idx_var_name & " < " & target_name & ".length ; " & idx_var_name & "++) {",
-      "  " & it_var_name & " = " & possible_cast & buffer_name & "[" & idx_var_name & "];"
-    );
-
-    return header & indent_lines(native_code(body, block_id)) & ("}");
   }
 
 
@@ -142,23 +118,29 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* native_foreach_code(<LocVar, StdVar> seq, ArrayVar buffer, Int32Var idx_var, AnyLocVar it_var, Instr* body, Maybe[Nat] block_id) {
-    seq_name     = native_var_ref_name(seq);
-    buffer_name  = native_var_ref_name(buffer);
-    idx_var_name = native_var_ref_name(idx_var);
-    it_var_name  = native_var_ref_name(it_var);
+  String* native_foreach_code(ForeachInstr instr, Maybe[Nat] block_id) {
+    seq_name        = native_var_ref_name(instr.seq);
+    src_array_name  = native_var_ref_name(instr.src_array);
+    count_var_name  = native_var_ref_name(instr.count_var);
+    idx_var_name    = native_var_ref_name(instr.idx_var);
+    it_var_name     = native_var_ref_name(instr.it_var);
 
-    elt_native_type = native_type(low_level_repr(it_var));
-    possible_cast = if it_var :: OptTagRecVar then "(" & elt_native_type & ") " else "";
+    src_repr = low_level_repr(instr.it_var);
+    buffer_arg = if instr.tmp_buffer? and src_repr == instr.tmp_buffer.repr
+      then native_var_ref_name(instr.tmp_buffer)
+      else "(" & native_type(src_repr) & "[]) null";
+
+    elt_native_type = native_type(src_repr);
+    possible_cast = if instr.it_var :: OptTagRecVar then "(" & elt_native_type & ") " else "";
 
     header = (
       ## WHAT IF elt_native_type IS SOMETHING LIKE Obj_MyType?
-      buffer_name & " = " & seq_name & ".getArray((" & elt_native_type & "[]) null);",
-      "for (" & idx_var_name & " = 0 ; " & idx_var_name & " < " & buffer_name & ".length ; " & idx_var_name & "++) {",
-      "  " & it_var_name & " = " & possible_cast & buffer_name & "[" & idx_var_name & "];"
+      src_array_name & " = " & seq_name & ".getArray(" & buffer_arg & ");",
+      "for (" & idx_var_name & " = 0 ; " & idx_var_name & " < " & count_var_name & " ; " & idx_var_name & "++) {",
+      "  " & it_var_name & " = " & possible_cast & src_array_name & "[" & idx_var_name & "];"
     );
 
-    return header & indent_lines(native_code(body, block_id)) & ("}");
+    return header & indent_lines(native_code(instr.body, block_id)) & ("}");
   }
 
 
