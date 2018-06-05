@@ -73,6 +73,8 @@ class Miscellanea {
     return softFail();
   }
 
+  //## SWITCH ONCE THE NEW CODE GENERATOR IS READY
+  // public static RuntimeException hardFail() {
   public static Obj hardFail() {
     printCallStack();
     System.exit(1);
@@ -104,6 +106,10 @@ class Miscellanea {
       System.out.printf("\nAssertion failed. File: %s, line: %d\n\n\n", file, line);
     else
       System.out.printf("\nAssertion failed: %s\nFile: %s, line: %d\n\n\n", text, file, line);
+  }
+
+  public static void printFailReachedMsg(String file, int line) {
+    System.out.printf("\nFail statement reached. File: %s, line: %d\n\n\n", file, line);
   }
 
   public static void dumpVar(String name, Obj obj) {
