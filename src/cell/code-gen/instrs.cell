@@ -210,7 +210,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_record()                 = native_mk_record_code(expr.fields, var),
     get_seq_slice()             = native_method_call(var, expr.seq,  "getSlice",      (expr.idx_first, expr.len)),
     append_to_seq()             = native_method_call(var, expr.seq,  "append",        (expr.new_elem)),
-    update_seq_at()             = native_method_call(var, expr.seq,  "updatedAt",     (get_int_val(expr.idx), expr.value)),
+    update_seq_at()             = native_method_call(var, expr.seq,  "updatedAt",     (expr.idx, expr.value)),
     join_seqs()                 = native_method_call(var, expr.left, "concat",        (expr.right)),
     rev_seq()                   = native_method_call(var, expr.seq,  "reverse",       ()),
     internal_sort()             = native_method_call(var, expr.set,  "internalSort",  ()),
