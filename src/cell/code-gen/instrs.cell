@@ -197,6 +197,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String native_code(RefObjExpr expr, WriteObjVar var) =
     mk_set_from_stream()        = native_static_call(var, "Builder.createSet",        (expr.stream)),
     mk_set()                    = native_static_call(var, "Builder.createSet",        (expr.elems, expr.size)),
+    mk_set_from_array()         = native_static_call(var, "Builder.createSet",        (expr.array, value(expr.size) if expr.size != nothing)),
     mk_seq_from_stream()        = native_static_call(var, "Builder.createSeq",        (expr.stream)),
     mk_seq()                    = native_static_call(var, "Builder.createSeq",        (expr.elems, expr.size)),
     mk_seq_from_array()         = native_static_call(var, "Builder.wrapSeq",          (expr.array, value(expr.size) if expr.size != nothing)),
