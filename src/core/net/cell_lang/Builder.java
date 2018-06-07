@@ -42,16 +42,21 @@ class Builder {
     return createMap(keys.toArray(new Obj[keys.size()]), vals.toArray(new Obj[vals.size()]), keys.size());
   }
 
+  public static Obj createMap(Obj[] keys, Obj[] vals) {
+    return createMap(keys, vals, keys.length);
+  }
+
   public static Obj createMap(Obj[] keys, Obj[] vals, long count) {
     Obj binRel = createBinRel(keys, vals, count);
     if (!binRel.isEmptyRel() && !binRel.isNeMap()) {
-      BinRelIter iter = binRel.getBinRelIter();
-      //## REMOVE WHEN DONE
-      while (!iter.done()) {
-        System.out.println(iter.get1().toString());
-        iter.next();
-      }
-      throw new RuntimeException();
+      throw Miscellanea.softFail("Error: map contains duplicate keys");
+      // BinRelIter iter = binRel.getBinRelIter();
+      // //## REMOVE WHEN DONE
+      // while (!iter.done()) {
+      //   System.out.println(iter.get1().toString());
+      //   iter.next();
+      // }
+      // throw new RuntimeException();
     }
     return binRel;
   }
@@ -59,6 +64,10 @@ class Builder {
   public static Obj createBinRel(ArrayList<Obj> col1, ArrayList<Obj> col2) {
     Miscellanea._assert(col1.size() == col2.size());
     return createBinRel(col1.toArray(new Obj[col1.size()]), col2.toArray(new Obj[col2.size()]), col1.size());
+  }
+
+  public static Obj createBinRel(Obj[] col1, Obj[] col2) {
+    return createBinRel(col1, col2, col1.length);
   }
 
   public static Obj createBinRel(Obj[] col1, Obj[] col2, long count) {
@@ -83,6 +92,10 @@ class Builder {
   public static Obj createTernRel(ArrayList<Obj> col1, ArrayList<Obj> col2, ArrayList<Obj> col3) {
     Miscellanea._assert(col1.size() == col2.size() && col1.size() == col3.size());
     return createTernRel(col1.toArray(new Obj[col1.size()]), col2.toArray(new Obj[col2.size()]), col3.toArray(new Obj[col3.size()]), col1.size());
+  }
+
+  public static Obj createTernRel(Obj[] col1, Obj[] col2, Obj[] col3) {
+    return createTernRel(col1, col2, col3, col1.length);
   }
 
   public static Obj createTernRel(Obj[] col1, Obj[] col2, Obj[] col3, long count) {

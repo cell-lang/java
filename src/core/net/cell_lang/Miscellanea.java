@@ -56,7 +56,8 @@ class Miscellanea {
   }
 
   public static RuntimeException softFail(String msg) {
-    System.err.println(msg);
+    if (exitOnSoftFail)
+      System.err.println(msg);
     return softFail();
   }
 

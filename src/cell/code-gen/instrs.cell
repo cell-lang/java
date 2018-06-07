@@ -206,8 +206,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_map()                    = native_static_call(var, "Builder.createMap",        (expr.keys, expr.values, expr.size)),
     mk_bin_rel_from_streams()   = native_static_call(var, "Builder.createBinRel",     expr.streams),
     mk_bin_rel()                = native_static_call(var, "Builder.createBinRel",     (expr.cols | expr.size)),
+    mk_bin_rel_from_arrays()    = native_mk_bin_rel(var, expr.col1, expr.col2, expr.size, expr.is_map),
     mk_tern_rel_from_streams()  = native_static_call(var, "Builder.createTernRel",    expr.streams),
     mk_tern_rel()               = native_static_call(var, "Builder.createTernRel",    (expr.cols | expr.size)),
+    mk_tern_rel_from_arrays()   = native_static_call(var, "Builder.createTernRel",    (expr.col1, expr.col2, expr.col3, value(expr.size) if expr.size != nothing)),
     mk_tagged_obj()             = native_mk_tagged_obj_code(expr.tag, expr.obj, var),
     mk_array()                  = native_new_call(var, "MasterSeqObj",                (expr.size)),
     mk_record()                 = native_mk_record_code(expr.fields, var),
@@ -221,6 +223,12 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     parse_value()               = native_static_call(var, "Parsing.parse",            (expr.value)),
     print_value()               = native_method_call(var, expr.value,"printed",       ()),
     _                           = auto_expr_native_code(expr, var);
+
+
+  String native_mk_bin_rel(WriteObjVar var, ArrayVar col1, ArrayVar col2, Maybe[IntExpr] size, Bool is_map) {
+    ctor_name = if is_map then "Builder.createMap" else "Builder.createBinRel";
+    return native_static_call(var, ctor_name, (col1, col2, value(size) if size != nothing));
+  }
 
 
   String native_code(RefObjExpr expr, OptTagRecVar var) =
