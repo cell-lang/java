@@ -286,8 +286,15 @@ String* gen_vars_decls(Instr* body, [ObjProcArg] args) {
   vector_vars = [v : v <- vars_to_decl, v :: VecVar];
   scalar_vars = vars_to_decl - vector_vars;
 
+  scalar_vars_by_type = group_by(scalar_vars, native_var_type);
+  scalar_vars_decls = (
+    t & " " & append((native_var_decl_name(v) : v <- isort(vs)), ", ") & ";"
+    : t, vs <- isort(scalar_vars_by_type)
+  );
+
   vec_vars_by_id = group_by(vector_vars, $.id);
   new_vec_vars = [vvar(id, nz_nat(max([v.size : v <- vs]))) : id, vs <- vec_vars_by_id];
+  vec_vars_decls = (var_decl(v) : v <- isort(new_vec_vars));
 
   assert {
     vec_var_ids  = [v.id : v <- vector_vars];
@@ -295,8 +302,7 @@ String* gen_vars_decls(Instr* body, [ObjProcArg] args) {
     return new_vec_vars == ref_new_vec_vars;
   };
 
-  vars_to_decl = scalar_vars & new_vec_vars;
-  return (var_decl(v) : v <- isort(vars_to_decl));
+  return scalar_vars_decls & vec_vars_decls;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -250,39 +250,9 @@ String aux_struct_var_ref_name(ValueStoreId vs) = "updater." & aux_struct_var_de
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String var_decl(ObjVar v)       = native_var_type(v) & " " & native_var_decl_name(v) & ";";
-String var_decl(BoolVar v)      = native_var_type(v) & " " & native_var_decl_name(v) & ";";
-String var_decl(IntVar v)       = native_var_type(v) & " " & native_var_decl_name(v) & ";";
-String var_decl(Int32Var v)     = native_var_type(v) & " " & native_var_decl_name(v) & ";";
-String var_decl(FloatVar v)     = native_var_type(v) & " " & native_var_decl_name(v) & ";";
-String var_decl(OptTagRecVar v) = native_var_type(v) & " " & native_var_decl_name(v) & ";";
-
-String var_decl(SeqItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";
-String var_decl(SetItVar v)     = "SeqOrSetIter "   & native_var_decl_name(v) & ";";
-String var_decl(BinRelItVar v)  = "BinRelIter "     & native_var_decl_name(v) & ";";
-String var_decl(TernRelItVar v) = "TernRelIter "    & native_var_decl_name(v) & ";";
-String var_decl(StreamVar v)    = "java.util.ArrayList<Obj> " & native_var_decl_name(v) & ";";
-String var_decl(VecVar v)       = "Obj[] " & native_var_decl_name(v) & " = new Obj[" & printed(v.size) & "];";
-String var_decl(TableItVar v)   = table_it_var_type[v.arity] & " " & native_var_decl_name(v) & ";";
-String var_decl(ArrayVar v)     = native_elt_type(v) & "[] " & native_var_name(v) & ";";
-
-
-[NzNat -> String] table_it_var_type = [
-  1 -> "UnaryTable.Iter",
-  2 -> "BinaryTable.Iter",
-  3 -> "TernaryTable.Iter"
-];
-
-
-String pending_updates_var_type(Table table) {
-  return names_by_arity[arity(table)];
-
-  [NzNat -> String] names_by_arity = [
-    1 -> "UnaryTableUpdater",
-    2 -> "BinaryTableUpdater",
-    3 -> "TernaryTableUpdater"
-  ];
-}
+String var_decl(AnyVar v) =
+  vvar() = "Obj[] " & native_var_decl_name(v) & " = new Obj[" & printed(v.size) & "];",
+  _      = native_var_type(v) & " " & native_var_decl_name(v) & ";";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -307,6 +277,16 @@ String native_var_type(MembIntVectVar)    = "long[]";
 String native_var_type(BoolVar)           = "boolean";
 String native_var_type(FloatVar)          = "double";
 String native_var_type(OptTagRecVar var)  = opt_tag_rec_name(var.tag, var.index);
+
+String native_var_type(SeqItVar v)     = "SeqOrSetIter";
+String native_var_type(SetItVar v)     = "SeqOrSetIter";
+String native_var_type(BinRelItVar v)  = "BinRelIter";
+String native_var_type(TernRelItVar v) = "TernRelIter";
+String native_var_type(StreamVar v)    = "java.util.ArrayList<Obj>";
+
+String native_var_type(VecVar v)       = undefined;
+String native_var_type(TableItVar v)   = table_it_var_type[v.arity];
+String native_var_type(ArrayVar v)     = native_elt_type(v) & "[]";
 
 String native_elt_type(ArrayVar var) = native_type(var.repr);
 
@@ -346,6 +326,23 @@ String native_table_type(Table table) {
     1 -> "UnaryTable",
     2 -> "BinaryTable",
     3 -> "TernaryTable"
+  ];
+}
+
+[NzNat -> String] table_it_var_type = [
+  1 -> "UnaryTable.Iter",
+  2 -> "BinaryTable.Iter",
+  3 -> "TernaryTable.Iter"
+];
+
+
+String pending_updates_var_type(Table table) {
+  return names_by_arity[arity(table)];
+
+  [NzNat -> String] names_by_arity = [
+    1 -> "UnaryTableUpdater",
+    2 -> "BinaryTableUpdater",
+    3 -> "TernaryTableUpdater"
   ];
 }
 
