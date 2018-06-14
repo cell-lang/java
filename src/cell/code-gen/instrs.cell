@@ -297,13 +297,33 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* native_branch_code(BoolExpr cond, Instr* when_true, Instr* when_false, Maybe[Nat] block_id) {
-    assert when_true != ();
-    code = ("if (" & native_expr(cond) & ") {") &
-           indent_lines(native_code(when_true, block_id)) &
-           ("}");
-    if when_false != ():
-      code = code & ("else {") & indent_lines(native_code(when_false, block_id)) & ("}");
+  String* native_branch_code(BoolExpr cond, Instr+ when_true, Instr* when_false, Maybe[Nat] block_id) {
+    conds = (cond);
+    bodies = (when_true);
+    else_code = when_false;
+    loop
+      break if |else_code| != 1;
+      else_instr = only(else_code);
+      maybe_branch = match (else_instr)
+        branch()  = just(else_instr),
+        _         = nothing;
+      break if maybe_branch == nothing;
+      branch = value(maybe_branch);
+      conds = (conds | branch.cond);
+      bodies = (bodies | branch.when_true);
+      else_code = branch.when_false;
+    ;
+
+    code = ();
+    for c @ i <- conds:
+      opt_else = if i > 0 then "else " else "";
+      if_line = opt_else & "if (" & native_expr(c) & ") {";
+      body = indent_lines(native_code(bodies(i), block_id));
+      code = code & (if_line) & body & ("}");
+    ;
+
+    if else_code != ():
+      code = code & ("else {") & indent_lines(native_code(else_code, block_id)) & ("}");
     ;
     return code;
   }
