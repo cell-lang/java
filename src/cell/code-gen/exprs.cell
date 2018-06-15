@@ -133,6 +133,9 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
                                             then native_expr(expr1.record) & "." & opt_rec_field_name(untag(expr1.field))
                                             else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
 
+  get_tag(e?),        object(<+> s?)    = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
+  object(<+> s?),     get_tag(e?)       = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
+
   object(<+> s?),     _                 = native_expr(expr2) & ".isSymb(" & symb_idx_name(s) & ")",
   _,                  object(<+> s?)    = native_expr(expr1) & ".isSymb(" & symb_idx_name(s) & ")",
 
