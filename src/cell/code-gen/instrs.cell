@@ -276,7 +276,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       bound_cls()     = gen_cls_info(cls.cls, cls.capt_vars, cls.capt_cls_vars);
 
 
-    (String*, AnyClsVar) gen_cls_info(ClsDef cls, <StdVar, CaptVar>* capt_vars, AnyClsVar* capt_cls_vars) {
+    (String*, AnyClsVar) gen_cls_info(ClsDef cls, ObjExpr* capt_vars, AnyClsVar* capt_cls_vars) {
       id = _counter_(:any_value_will_do);
       var = cls_var(id);
       name = native_expr(var);
