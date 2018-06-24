@@ -364,6 +364,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       needs_set_flag = is_real_const and pd.ret_val_repr? and not is_nullable(pd.ret_val_repr);
       set_flag_name = if needs_set_flag then fn_name & "__CI" else "???"; ## UGLY UGLY UGLY
       ret_type_name = ret_type_str(pd);
+      cast = if ret_type_name != "Obj" then " (" & ret_type_name & ")" else "";
 
       wrapper_code = (
         "",
@@ -377,7 +378,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         "    " & cache_var_name & " = " & fn_name & suffix & "(env);",
         "    " & set_flag_name & " = true;" if needs_set_flag,
         "  }" if needs_set_flag,
-        "  return " & cache_var_name & ";",
+        "  return" & cast & " " & cache_var_name & ";",
         "}"
       );
       code = code & wrapper_code;

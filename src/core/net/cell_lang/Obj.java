@@ -65,6 +65,7 @@ abstract class Obj implements Comparable<Obj> {
   public TernRelIter getTernRelIterByCol13(Obj val1, Obj val3)  {throw Miscellanea.internalFail(this);}
   public TernRelIter getTernRelIterByCol23(Obj val2, Obj val3)  {throw Miscellanea.internalFail(this);}
 
+  //## REMOVE REMOVE REMOVE
   public long mantissa()                                {throw Miscellanea.internalFail(this);}
   public long decExp()                                  {throw Miscellanea.internalFail(this);}
 

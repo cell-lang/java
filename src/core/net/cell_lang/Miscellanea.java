@@ -87,11 +87,12 @@ class Miscellanea {
     return null;
   }
 
-  public static void implFail(String msg) {
+  public static RuntimeException implFail(String msg) {
     if (msg != null)
       System.err.println(msg + "\n");
     printCallStack();
     System.exit(1);
+    return null;
   }
 
   public static RuntimeException internalFail() {
@@ -128,6 +129,9 @@ class Miscellanea {
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
   static Random random = new Random(0);
 
   public static long randNat(long max) {
@@ -141,6 +145,17 @@ class Miscellanea {
 
   public static long getTickCount() {
     return System.currentTimeMillis();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static long mantissa(double x) {
+    throw implFail("_mantissa_() has not been implemented yet");
+  }
+
+  public static long decimalExponent(double x) {
+    throw implFail("_dec_expr_() has not been implemented yet");
   }
 
   ////////////////////////////////////////////////////////////////////////////
