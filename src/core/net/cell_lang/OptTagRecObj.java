@@ -54,6 +54,20 @@ abstract class OptTagRecObj extends Obj {
       return getInnerObj().cmp(other.getInnerObj());
   }
 
+
+  public int cmpTaggedObj(int otherTag, Obj otherObj) {
+    int tag = getTagId();
+    if (otherTag != tag)
+      return SymbTable.compSymbs(otherTag, tag);
+
+    int otherObjTypeId = otherObj.typeId();
+    if (otherObjTypeId != 6)
+      return otherObjTypeId < 6 ? 1 : -1;
+
+    //## THIS COULD BE OPTMIZED, BUT IT MAY NOT MATTER THAT MUCH
+    return otherObj.cmp(getInnerObj());
+  }
+
   // public int cmpOptTagRecObj(OptTagRecObj otherObj) {
   //   int tag = getTagId();
   //   int otherTag = otherObj.getTagId();
