@@ -102,8 +102,12 @@ class Miscellanea {
   public static RuntimeException internalFail(Obj obj) {
     System.err.println("Internal error!\n");
     printCallStack();
-    if (obj != null)
+    if (obj != null) {
       dumpVar("this", obj);
+      System.out.printf("this.getClass().getSimpleName() = %s\n", obj.getClass().getSimpleName());
+    }
+    Exception e = new RuntimeException();
+    e.printStackTrace();
     System.exit(1);
     return null;
   }
