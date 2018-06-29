@@ -95,35 +95,41 @@ String* create_error_msg(ParserError err, String filename) =
     unused_var = GetChar();
   ;
 
-  if run_typechecking:
-    errs = typecheck(prg);
-    if errs == []:
-      Print("The programs typechecks\n");
-      if wait_for_key:
-        unused_var = GetChar();
-      ;
-    else
-      Print("Error: the program does not typecheck\n\n");
-      // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
-      sorted_fds = sort_set(keys(errs), source_file($a) < source_file($b));
-      msgs = (create_error_msgs(fd, errs[fd]) : fd <- sorted_fds);
-      for m <- msgs:
-        for l <- m:
-          Print(l & "\n");
+  is_done = false;
+  let program = prg:
+    let typedefs = schema_and_typedefs:
+      if run_typechecking:
+        errs = typechecking_errors;
+        if errs == []:
+          Print("The programs typechecks\n");
+          if wait_for_key:
+            unused_var = GetChar();
+          ;
+        else
+          Print("Error: the program does not typecheck\n\n");
+          // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
+          sorted_fds = sort_set(keys(errs), source_file($a) < source_file($b));
+          msgs = (create_error_msgs(fd, errs[fd]) : fd <- sorted_fds);
+          for m <- msgs:
+            for l <- m:
+              Print(l & "\n");
+            ;
+            Print("\n");
+          ;
+          Print("Number of functions with typechecking errors: " & printed(|errs|) & "\n");
+          is_done = true;
         ;
-        Print("\n");
       ;
-      Print("Number of functions with typechecking errors: " & printed(|errs|) & "\n");
-      return [];
+
+      t5 = _ticks_(:any_value_will_do);
+
+      options = options(debug_mode: debug_mode, ignore_assertions: ignore_assertions);
+      code = if not is_done then just(compiled_program(options = options)) else nothing;
     ;
   ;
+  return [] if is_done;
+  code = value_unsafe(code);
 
-  t5 = _ticks_(:any_value_will_do);
-
-  options = options(debug_mode: debug_mode, ignore_assertions: ignore_assertions);
-  let program = prg:
-    code = compiled_program(typedefs = schema_and_typedefs, options = options);
-  ;
   t6 = _ticks_(:any_value_will_do);
   Print("Code generated\n");
   if wait_for_key:
