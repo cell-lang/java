@@ -22,7 +22,7 @@ class Miscellanea {
       if (ch > Character.MAX_VALUE)
         i++;
     }
-    return new TaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
+    return Builder.createTaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
 
     // int len = str.length();
     // Obj[] chars = new Obj[len];
@@ -33,7 +33,7 @@ class Miscellanea {
     //   chars[count++] = IntObj.get(ch);
     //   i += Char.isSurrogatePair(str, i) ? 2 : 1;
     // }
-    // return new TaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
+    // return Builder.createTaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
   }
 
   public static String objToStr(Obj str) {

@@ -119,6 +119,17 @@ class Builder {
     return new NeTernRelObj(col1, col2, col3);
   }
 
+  public static Obj createTaggedObj(int tag, Obj obj) {
+    if (obj.isInt())
+      return createTaggedIntObj(tag, obj.getLong());
+    else
+      return new TaggedObj(tag, obj);
+  }
+
+  public static TaggedIntObj createTaggedIntObj(int tag, long value) {
+    return new TaggedIntObj(tag, value);
+  }
+
   public static Obj buildConstIntSeq(byte[] vals) {
     return wrapSeq(vals);
   }

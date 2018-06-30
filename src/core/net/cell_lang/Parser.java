@@ -178,7 +178,7 @@ class Parser extends TokenStream {
       Obj innerObj = isRecord() ? parseRec() : parseSeq();
       if (innerObj.isSeq() && innerObj.getSize() == 1)
         innerObj = innerObj.getItem(0);
-      return new TaggedObj(symbObj.getSymbId(), innerObj);
+      return Builder.createTaggedObj(symbObj.getSymbId(), innerObj);
     }
     else
       return symbObj;

@@ -246,8 +246,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String native_mk_tagged_obj_code(ObjExpr tag, ObjExpr value, WriteObjVar var) {
     tag_expr = match (tag)
       object(<+> s?)  = symb_idx_name(s),
-      _               = tag;
-    return native_new_call(var, "TaggedObj", (tag_expr, value));
+      _               = native_expr(tag) & ".getSymbId()";
+    return match (value)
+      int_obj(e?) = native_static_call(var, "Builder.createTaggedIntObj", (tag_expr, e)),
+      _           = native_static_call(var, "Builder.createTaggedObj",    (tag_expr, value));
   }
 
 

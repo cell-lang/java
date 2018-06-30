@@ -457,7 +457,7 @@ String native_fn_name(ProcSymbol proc_symb) {
 
 
 String native_fn_name(ConvFnId) =
-  any_tag_rec_conv          = "convertGenericTaggedValue",
+  any_tag_obj_conv          = "convertGenericTaggedValue",
   tag_rec_conv(t?)          = "convertTaggedValue_" & upper_camel_case(t),
   tag_rec_repr_conv(t?, i?) = "convertTaggedValue_" & upper_camel_case(t) & "_" & printed(i);
 

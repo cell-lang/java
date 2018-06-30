@@ -13,10 +13,10 @@ class Parsing {
     try {
       Token[] tokens = Lexer.lex(bytes);
       Obj obj = Parser.parse(tokens);
-      return new TaggedObj(SymbTable.SuccessSymbId, obj);
+      return Builder.createTaggedObj(SymbTable.SuccessSymbId, obj);
     }
     catch (ParsingException e) {
-      return new TaggedObj(SymbTable.FailureSymbId, IntObj.get(e.errorOffset));
+      return Builder.createTaggedObj(SymbTable.FailureSymbId, IntObj.get(e.errorOffset));
     }
   }
 }

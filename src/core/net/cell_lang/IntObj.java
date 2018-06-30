@@ -55,7 +55,7 @@ class IntObj extends Obj {
   }
 
   protected int typeId() {
-    return 1;
+    return staticTypeId();
   }
 
   protected int internalCmp(Obj obj) {
@@ -70,6 +70,10 @@ class IntObj extends Obj {
 
   public static int compare(long n1, long n2) {
     return n1 == n2 ? 0 : (n1 < n2 ? 1 : -1);
+  }
+
+  public static int staticTypeId() {
+    return 1;
   }
 
   static IntObj[] byteObjs = new IntObj[256];

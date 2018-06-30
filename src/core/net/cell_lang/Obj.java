@@ -46,6 +46,7 @@ abstract class Obj implements Comparable<Obj> {
   public int     getTagId()                             {throw Miscellanea.internalFail(this);}
   public Obj     getTag()                               {throw Miscellanea.internalFail(this);}
   public Obj     getInnerObj()                          {throw Miscellanea.internalFail(this);}
+  public long    getInnerLong()                         {throw Miscellanea.internalFail(this);}
 
   public SeqOrSetIter getSeqOrSetIter()                 {throw Miscellanea.internalFail(this);}
   public BinRelIter   getBinRelIter()                   {throw Miscellanea.internalFail(this);}

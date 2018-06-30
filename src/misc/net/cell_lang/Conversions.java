@@ -26,7 +26,7 @@ class Conversions {
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       objs[i] = IntObj.get(cps[i]);
-    return new TaggedObj(SymbTable.StringSymbId, new MasterSeqObj(objs));
+    return Builder.createTaggedObj(SymbTable.StringSymbId, new MasterSeqObj(objs));
   }
 
   ////////////////////////////////////////////////////////////////////////////

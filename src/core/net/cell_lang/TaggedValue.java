@@ -55,6 +55,6 @@ class TaggedValue extends ValueBase {
   }
 
   public Obj asObj() {
-    return new TaggedObj(tagId, value.asObj());
+    return Builder.createTaggedObj(tagId, value.asObj());
   }
 }

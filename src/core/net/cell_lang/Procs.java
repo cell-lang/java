@@ -10,7 +10,7 @@ class Procs {
     try {
       byte[] content = Files.readAllBytes(Paths.get(fnameStr));
       Obj bytesObj = Builder.buildConstIntSeq(content);
-      return new TaggedObj(SymbTable.JustSymbId, bytesObj);
+      return Builder.createTaggedObj(SymbTable.JustSymbId, bytesObj);
     }
     catch (Exception e) {
       return SymbObj.get(SymbTable.NothingSymbId);
@@ -43,7 +43,7 @@ class Procs {
       ch = -1;
     }
     if (ch != -1)
-      return new TaggedObj(SymbTable.JustSymbId, IntObj.get(ch));
+      return Builder.createTaggedObj(SymbTable.JustSymbId, IntObj.get(ch));
     else
       return SymbObj.get(SymbTable.NothingSymbId);
   }

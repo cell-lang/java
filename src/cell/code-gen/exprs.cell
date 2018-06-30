@@ -205,11 +205,12 @@ String native_expr(IntNatOp expr, Bool parenthesized) =
 
 
 String native_get_int_val_expr(ObjExpr expr, Bool parenthesized) =
-  at()            = native_expr(expr.seq) & ".getLongAt(" & native_expr(expr.idx) & ")",
-  lookup_field()  = if expr.repr == just(:int) and expr.record :: OptTagRecExpr
-                      then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
-                      else native_expr(expr) & ".getLong()",
-  _               = native_expr(expr) & ".getLong()";
+  at()                = native_expr(expr.seq) & ".getLongAt(" & native_expr(expr.idx) & ")",
+  lookup_field()      = if expr.repr == just(:int) and expr.record :: OptTagRecExpr
+                          then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
+                          else native_expr(expr) & ".getLong()",
+  get_inner_obj(e?)   = native_expr(e) & ".getInnerLong()",
+  _                   = native_expr(expr) & ".getLong()";
 
 
 String native_expr(Int32Var var, Bool parenthesized) = native_var_ref_name(var);

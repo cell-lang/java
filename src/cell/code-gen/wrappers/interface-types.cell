@@ -170,7 +170,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       code = import_code(untagged_type, expr, next_action_prefix);
     ;
     tag = object(type_tag(inter_type));
-    instr = action_prefix & "new TaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
+    instr = action_prefix & "Builder.createTaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
     return (code | instr);
 
 
@@ -318,7 +318,7 @@ if action_prefix != "return ":
     out_var = "var_" & unique_id;
     code = import_code_ex(untagged_type(tagged_type), expr, "Obj " & out_var & " = ");
     tag = object(type_tag(tagged_type));
-    instr = action_prefix & "new TaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
+    instr = action_prefix & "Builder.createTaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
     return (code | instr);
   }
 }
