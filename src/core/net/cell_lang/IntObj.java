@@ -55,7 +55,7 @@ class IntObj extends Obj {
   }
 
   protected int typeId() {
-    return staticTypeId();
+    return staticTypeId;
   }
 
   protected int internalCmp(Obj obj) {
@@ -63,6 +63,8 @@ class IntObj extends Obj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+
+  static final int staticTypeId = 1;
 
   public static int hashCode(long n) {
     return ((int) (n >> 32)) ^ ((int) n);
@@ -72,8 +74,16 @@ class IntObj extends Obj {
     return n1 == n2 ? 0 : (n1 < n2 ? 1 : -1);
   }
 
-  public static int staticTypeId() {
-    return 1;
+  public static int compare(long n, Obj obj) {
+    int objTypeId = obj.typeId();
+    if (objTypeId == staticTypeId)
+      return compare(n, obj.getLong());
+    else
+      return staticTypeId < objTypeId ? 1 : -1;
+  }
+
+  public static int compare(Obj obj, long n) {
+    return -compare(n, obj);
   }
 
   static IntObj[] byteObjs = new IntObj[256];

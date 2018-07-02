@@ -44,6 +44,7 @@ class MasterSeqObj extends SeqObj {
   }
 
   public Obj getSlice(long first, long len) {
+    //## DON'T I NEED TO CHECK THAT BOTH first AND len ARE NONNEGATIVE?
     if (first + len > length)
       throw new IndexOutOfBoundsException();
     return new SliceObj(this, (int) first, (int) len);
