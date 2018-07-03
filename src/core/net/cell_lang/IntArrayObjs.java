@@ -75,18 +75,16 @@ abstract class IntArrayObjBase extends IntSeqObj {
   }
 
   public long[] getArray(long[] buffer) {
-    if (buffer == null || length != buffer.length) {
-      long[] trimmed = new long[length];
-      copy(trimmed);
-      longs = trimmed;
-      offset = 0;
+    if (longs == null) {
+      longs = new long[length];
+      copy(longs);
     }
     return longs;
   }
 
   public Obj[] getArray(Obj[] buffer) {
     if (objs == null) {
-      Obj[] objs = new Obj[length];
+      objs = new Obj[length];
       copy(objs);
     }
     return objs;
@@ -127,16 +125,14 @@ abstract class IntArrayObjBase extends IntSeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public void copy(long[] array, int logicalOffset) {
-    int offset = this.offset + logicalOffset;
+  public void copy(long[] array, int destOffset) {
     for (int i=0 ; i < length ; i++)
-      array[offset+i] = longs[i];
+      array[destOffset+i] = longs[offset+i];
   }
 
-  public void copy(Obj[] array, int logicalOffset) {
-    int offset = this.offset + logicalOffset;
+  public void copy(Obj[] array, int destOffset) {
     for (int i=0 ; i < length ; i++)
-      array[offset+i] = IntObj.get(longs[i]);
+      array[destOffset+i] = IntObj.get(longs[offset+i]);
   }
 }
 
@@ -277,16 +273,14 @@ class ByteArrayObjBase extends IntArrayObjBase {
     return sum;
   }
 
-  public void copy(long[] array, int logicalOffset) {
-    int offset = this.offset + logicalOffset;
+  public void copy(long[] array, int destOffset) {
     for (int i=0 ; i < length ; i++)
-      array[offset+i] = bytes[i];
+      array[destOffset+i] = bytes[offset+i];
   }
 
-  public void copy(Obj[] array, int logicalOffset) {
-    int offset = this.offset + logicalOffset;
+  public void copy(Obj[] array, int destOffset) {
     for (int i=0 ; i < length ; i++)
-      array[offset+i] = IntObj.get(bytes[i]);
+      array[destOffset+i] = IntObj.get(bytes[offset+i]);
   }
 }
 
@@ -359,16 +353,14 @@ class ShortArrayObjBase extends IntArrayObjBase {
     return sum;
   }
 
-  public void copy(long[] array, int logicalOffset) {
-    int offset = this.offset + logicalOffset;
+  public void copy(long[] array, int destOffset) {
     for (int i=0 ; i < length ; i++)
-      array[offset+i] = shorts[i];
+      array[destOffset+i] = shorts[offset+i];
   }
 
-  public void copy(Obj[] array, int logicalOffset) {
-    int offset = this.offset + logicalOffset;
+  public void copy(Obj[] array, int destOffset) {
     for (int i=0 ; i < length ; i++)
-      array[offset+i] = IntObj.get(shorts[i]);
+      array[destOffset+i] = IntObj.get(shorts[offset+i]);
   }
 }
 
@@ -441,16 +433,14 @@ class Int32ArrayObjBase extends IntArrayObjBase {
     return sum;
   }
 
-  public void copy(long[] array, int logicalOffset) {
-    int offset = this.offset + logicalOffset;
+  public void copy(long[] array, int destOffset) {
     for (int i=0 ; i < length ; i++)
-      array[offset+i] = ints[i];
+      array[destOffset+i] = ints[offset+i];
   }
 
-  public void copy(Obj[] array, int logicalOffset) {
-    int offset = this.offset + logicalOffset;
+  public void copy(Obj[] array, int destOffset) {
     for (int i=0 ; i < length ; i++)
-      array[offset+i] = IntObj.get(ints[i]);
+      array[destOffset+i] = IntObj.get(ints[offset+i]);
   }
 }
 

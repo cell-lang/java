@@ -33,6 +33,12 @@ abstract class IntSeqObj extends Obj {
     return IntObj.get(getLongAt(idx));
   }
 
+  public SeqOrSetIter getSeqOrSetIter() {
+    Obj[] items = new Obj[length];
+    copy(items);
+    return new SeqOrSetIter(items, 0, length-1);
+  }
+
   public Obj updatedAt(long idx, Obj obj) {
     if (idx < 0 | idx >= length)
       Miscellanea.softFail("Invalid sequence index");

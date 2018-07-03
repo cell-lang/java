@@ -108,8 +108,14 @@ abstract class SeqObj extends Obj {
     int minLen = length + seqLen;
     Obj[] newItems = new Obj[Math.max(4 * minLen, 32)];
     System.arraycopy(items, offset, newItems, 0, length);
-    SeqObj seqObj = (SeqObj) seq;
-    System.arraycopy(seqObj.items, seqObj.offset, newItems, length, seqObj.length);
+    if (seq instanceof SeqObj) {
+      SeqObj seqObj = (SeqObj) seq;
+      System.arraycopy(seqObj.items, seqObj.offset, newItems, length, seqObj.length);
+    }
+    else {
+      IntSeqObj seqObj = (IntSeqObj) seq;
+      seqObj.copy(newItems, length);
+    }
     return new MasterSeqObj(newItems, minLen);
   }
 

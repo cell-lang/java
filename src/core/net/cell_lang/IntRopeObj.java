@@ -75,7 +75,7 @@ class IntRopeObj extends IntSeqObj {
   }
 
   public IntSeqObj concat(IntSeqObj seq) {
-    return make(left, seq.concat(seq));
+    return make(left, right.concat(seq));
   }
 
   public int hashcodesSum() {
