@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 class Builder {
   public static Obj createSeq(ArrayList<Obj> objs) {
-    return new MasterSeqObj(objs.toArray(new Obj[objs.size()]));
+    return wrapSeq(objs.toArray(new Obj[objs.size()]));
   }
 
   public static Obj createSeq(Obj[] objs, long count) {
@@ -16,7 +16,7 @@ class Builder {
     Obj[] objsCopy = new Obj[(int) count];
     for (int i=0 ; i < count ; i++)
       objsCopy[i] = objs[i];
-    return new MasterSeqObj(objsCopy);
+    return wrapSeq(objsCopy);
   }
 
   public static Obj createSet(Obj[] objs) {
@@ -181,8 +181,16 @@ class Builder {
     return new MasterSeqObj(objs);
   }
 
-  public static Obj wrapSeq(Obj[] vals) {
-    return new MasterSeqObj(vals);
+  public static Obj wrapSeq(Obj[] objs) {
+    int len = objs.length;
+    for (int i=0 ; i < len ; i++)
+      if (!objs[i].isInt())
+        return new MasterSeqObj(objs);
+
+    long[] longs = new long[len];
+    for (int i=0 ; i < len ; i++)
+      longs[i] = objs[i].getLong();
+    return IntArrayObjs.create(longs);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -217,7 +225,14 @@ class Builder {
     return new MasterSeqObj(objs);
   }
 
-  public static Obj wrapSeq(Obj[] vals, int len) {
-    return new MasterSeqObj(vals, len);
+  public static Obj wrapSeq(Obj[] objs, int len) {
+    for (int i=0 ; i < len ; i++)
+      if (!objs[i].isInt())
+        return new MasterSeqObj(objs, len);
+
+    long[] longs = new long[len];
+    for (int i=0 ; i < len ; i++)
+      longs[i] = objs[i].getLong();
+    return IntArrayObjs.create(longs);
   }
 }

@@ -479,7 +479,7 @@ String* c_main_fn(Bool exit_on_soft_fail) = (
   "    cellArgs[i] = Miscellanea.strToObj(args[i]);",
   "  Env env = new Env();",
   "  Miscellanea.exitOnSoftFail = true;" if exit_on_soft_fail,
-  "  Obj res = Main_P(new MasterSeqObj(cellArgs), env);",
+  "  Obj res = Main_P(Builder.wrapSeq(cellArgs), env);",
   "  System.exit(res.isInt() ? (int) res.getLong() : 0);",
   "}"
 );

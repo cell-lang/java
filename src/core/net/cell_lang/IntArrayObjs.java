@@ -35,6 +35,11 @@ class IntArrayObjs {
   static IntArrayObj create(long[] data, int length) {
     return new IntArrayObj(Arrays.copyOf(data, length));
   }
+
+  static ByteArrayObj createUnsigned(byte[] data) {
+    //## BUG BUG BUG: IMPLEMENT
+    return new ByteArrayObj(data);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

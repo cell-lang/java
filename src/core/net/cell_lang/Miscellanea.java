@@ -14,15 +14,15 @@ import java.io.IOException;
 class Miscellanea {
   public static Obj strToObj(String str) {
     int len = str.length();
-    Obj[] chars = new Obj[len];
+    long[] chars = new long[len];
     int count = 0;
     for (int i=0 ; i < len ; i++) {
       int ch = str.codePointAt(i);
-      chars[count++] = IntObj.get(ch);
+      chars[count++] = ch;
       if (ch > Character.MAX_VALUE)
         i++;
     }
-    return Builder.createTaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
+    return Builder.createTaggedObj(SymbTable.StringSymbId, IntArrayObjs.create(chars, count));
 
     // int len = str.length();
     // Obj[] chars = new Obj[len];
@@ -33,7 +33,7 @@ class Miscellanea {
     //   chars[count++] = IntObj.get(ch);
     //   i += Char.isSurrogatePair(str, i) ? 2 : 1;
     // }
-    // return Builder.createTaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
+    // return Builder.createTaggedObj(SymbTable.StringSymbId, IntArrayObjs.create(chars, count));
   }
 
   public static String objToStr(Obj str) {

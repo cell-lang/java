@@ -9,7 +9,7 @@ class Procs {
     String fnameStr = fname.getString();
     try {
       byte[] content = Files.readAllBytes(Paths.get(fnameStr));
-      Obj bytesObj = Builder.buildConstIntSeq(content);
+      Obj bytesObj = IntArrayObjs.createUnsigned(content);
       return Builder.createTaggedObj(SymbTable.JustSymbId, bytesObj);
     }
     catch (Exception e) {
