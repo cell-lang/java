@@ -75,7 +75,10 @@ class Builder {
     if (count != 0) {
       Obj[][] normCols = Algs.sortUnique(col1, col2, (int) count);
       Obj[] normCol1 = normCols[0];
-      return new NeBinRelObj(normCol1, normCols[1], !Algs.sortedArrayHasDuplicates(normCol1));
+      if (Algs.sortedArrayHasDuplicates(normCol1))
+        return new NeBinRelObj(normCol1, normCols[1], false);
+      else
+        return new NeHashMapObj(normCol1, normCols[1]);
     }
     else
       return EmptyRelObj.singleton();
