@@ -6,6 +6,7 @@ import java.io.Writer;
 class TaggedObj extends Obj {
   int tag;
   Obj obj;
+  int hashcode = Integer.MIN_VALUE;
   int minPrintedSize = -1;
 
   public TaggedObj(int tag, Obj obj) {
@@ -73,7 +74,9 @@ class TaggedObj extends Obj {
   }
 
   public int hashCode() {
-    return ((int) tag) ^ obj.hashCode();
+    if (hashcode == Integer.MIN_VALUE)
+      hashcode = tag ^ obj.hashCode();
+    return hashcode;
   }
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {

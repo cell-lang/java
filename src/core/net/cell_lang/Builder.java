@@ -1,6 +1,7 @@
 package net.cell_lang;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 class Builder {
@@ -39,26 +40,38 @@ class Builder {
 
   public static Obj createMap(ArrayList<Obj> keys, ArrayList<Obj> vals) {
     Miscellanea._assert(keys.size() == vals.size());
-    return createMap(keys.toArray(new Obj[keys.size()]), vals.toArray(new Obj[vals.size()]), keys.size());
+    return createMap(keys.toArray(new Obj[keys.size()]), vals.toArray(new Obj[vals.size()]));
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals) {
-    return createMap(keys, vals, keys.length);
+    if (keys.length > 0)
+      return new NeHashMapObj(keys, vals);
+    else
+      return EmptyRelObj.singleton();
+
+    // return createMap(keys, vals, keys.length);
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals, long count) {
-    Obj binRel = createBinRel(keys, vals, count);
-    if (!binRel.isEmptyRel() && !binRel.isNeMap()) {
-      throw Miscellanea.softFail("Error: map contains duplicate keys");
-      // BinRelIter iter = binRel.getBinRelIter();
-      // //## REMOVE WHEN DONE
-      // while (!iter.done()) {
-      //   System.out.println(iter.get1().toString());
-      //   iter.next();
-      // }
-      // throw new RuntimeException();
-    }
-    return binRel;
+    if (count == 0)
+      return EmptyRelObj.singleton();
+    else if (count == keys.length)
+      return new NeHashMapObj(keys, vals);
+    else
+      return new NeHashMapObj(Arrays.copyOf(keys, (int) count), Arrays.copyOf(vals, (int) count));
+
+    // Obj binRel = createBinRel(keys, vals, count);
+    // if (!binRel.isEmptyRel() && !binRel.isNeMap()) {
+    //   throw Miscellanea.softFail("Error: map contains duplicate keys");
+    //   // BinRelIter iter = binRel.getBinRelIter();
+    //   // //## REMOVE WHEN DONE
+    //   // while (!iter.done()) {
+    //   //   System.out.println(iter.get1().toString());
+    //   //   iter.next();
+    //   // }
+    //   // throw new RuntimeException();
+    // }
+    // return binRel;
   }
 
   public static Obj createBinRel(ArrayList<Obj> col1, ArrayList<Obj> col2) {
