@@ -1,12 +1,12 @@
 package net.cell_lang;
 
 
-class SeqOrSetIter {
+class SetIter {
   Obj[] objs;
   int next;
   int last;
 
-  public SeqOrSetIter(Obj[] objs, int next, int last) {
+  public SetIter(Obj[] objs, int next, int last) {
     this.objs = objs;
     this.next = next;
     this.last = last;

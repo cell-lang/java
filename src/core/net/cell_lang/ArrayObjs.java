@@ -13,7 +13,7 @@ class ArrayObjs {
   }
 
   static NeSeqObj createRightPadded(Obj obj) {
-    PaddedArray.create(obj);
+    return PaddedArray.create(obj);
   }
 }
 
@@ -25,10 +25,10 @@ abstract class ArrayObjBase extends NeSeqObj {
   int   offset;
 
 
-  public Obj reverse() {
+  public SeqObj reverse() {
     int len = getSize();
-    int last = offset + length - 1;
-    Obj[] revData = new Obj[length];
+    int last = offset + len - 1;
+    Obj[] revObjs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       revObjs[i] = objs[last-i];
     return new ArrayObj(revObjs);
@@ -37,27 +37,33 @@ abstract class ArrayObjBase extends NeSeqObj {
   public Obj[] getArray(Obj[] buffer) {
     int len = getSize();
     if (objs.length != len) {
-      objs Arrays.copyOfRange(objs, offset, offset+len);
+      objs = Arrays.copyOfRange(objs, offset, offset+len);
       offset = 0;
     }
     return objs;
   }
 
-  public Obj getSlice(long first, long len) {
+  public SeqObj getSlice(long first, long len) {
     //## DON'T I NEED TO CHECK THAT BOTH first AND len ARE NONNEGATIVE?
     if (first + len > getSize())
       throw new IndexOutOfBoundsException();
     if (len == 0)
       return EmptySeqObj.singleton;
-    return new ArraySliceObj(null, longs, offset + (int) first, (int) len);
+    return new ArraySliceObj(null, objs, offset + (int) first, (int) len);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public void copy(int from, int count, Obj[] array, int destOffset) {
-    int srcOffset = offset + from;
+  public void copy(int first, int count, Obj[] array, int destOffset) {
+    int srcOffset = offset + first;
     for (int i=0 ; i < count ; i++)
       array[destOffset+i] = objs[srcOffset+i];
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  protected static long hashcode(Obj[] objs, int offset, int len) {
+    return objs[offset].data + (len > 2 ? objs[offset+len/2].data : 0) + (len > 1 ? objs[offset+len-1].data : 0);
   }
 }
 
@@ -65,15 +71,11 @@ abstract class ArrayObjBase extends NeSeqObj {
 ////////////////////////////////////////////////////////////////////////////////
 
 final class ArrayObj extends ArrayObjBase {
-  public ArrayObj(Obj[] data) {
-    int len = data.length;
-    long eltsData = data[0];
-    if (len > 1)
-      eltsData += data[len-1];
-    if (len > 2)
-      eltsData += data[len/2];
-    data = seqObjData(len, eltsData);
-    objs = data;
+  public ArrayObj(Obj[] objs) {
+    int len = objs.length;
+    long hashcode = hashcode(objs, 0, len);
+    data = seqObjData(len, hashcode);
+    this.objs = objs;
   }
 
   public Obj getObjAt(long idx) {
@@ -87,29 +89,27 @@ final class ArrayObj extends ArrayObjBase {
 final class ArraySliceObj extends ArrayObjBase {
   PaddedArray source;
 
-  public ArraySliceObj(PaddedArray source, Obj[] data, int offset, int length) {
-    long eltsData = data[offset];
-    if (length > 1)
-      eltsData += data[offset+length-1];
-    if (length > 2)
-      eltsData += data[offset+length/2];
-    data = seqObjData(len, eltsData);
-    objs = data;
+  public ArraySliceObj(PaddedArray source, Obj[] objs, int offset, int len) {
+    long hashcode = hashcode(objs, offset, len);
+    data = seqObjData(len, hashcode);
+    this.objs = objs;
     this.offset = offset;
+    this.source = source;
   }
 
-  public long getObjAt(long idx) {
-    if (idx >= 0 & idx < length)
-      return longs[offset + (int) idx];
+  public Obj getObjAt(long idx) {
+    int len = getSize();
+    if (idx >= 0 & idx < len)
+      return objs[offset + (int) idx];
     else
       throw new ArrayIndexOutOfBoundsException();
   }
 
-  public IntSeqObj append(long value) {
+  public NeSeqObj append(Obj obj) {
     if (source != null)
-      return source.append(offset+length, value);
+      return source.append(offset+getSize(), obj);
     else
-      return super.append(value);
+      return super.append(obj);
   }
 }
 
@@ -159,7 +159,7 @@ final class PaddedArray {
       // The next slot was already taken. This is supposed to happen only rarely
       Miscellanea._assert(idx < used & idx < buffer.length);
 
-      long[] newBuffer = new long[buffer.length];
+      Obj[] newBuffer = new Obj[buffer.length];
       for (int i=0 ; i < idx ; i++)
         newBuffer[i] = buffer[i];
       newBuffer[idx] = obj;

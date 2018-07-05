@@ -3,8 +3,8 @@ package net.cell_lang;
 
 abstract class NeIntSeqObj extends NeSeqObj {
   public SeqObj concat(Obj seq) {
-    if (seq instanceof IntSeqObj)
-      return concat((IntSeqObj) seq);
+    if (seq instanceof NeIntSeqObj)
+      return concat((NeIntSeqObj) seq);
     else
       super.concat(seq);
   }
@@ -18,7 +18,7 @@ abstract class NeIntSeqObj extends NeSeqObj {
         long elt = getLongAt(i);
         long otherElt = other.getLongAt(i);
         if (elt != otherElt)
-          return elt - otherElt;
+          return (int) (elt - otherElt);
       }
       return 0;
     }
@@ -28,6 +28,6 @@ abstract class NeIntSeqObj extends NeSeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public abstract NeIntSeqObj concat(IntSeqObj seq);
-  public abstract void copy(int from, int count, long[] buffer, int destOffset);
+  public abstract NeIntSeqObj concat(NeIntSeqObj seq);
+  public abstract void copy(int first, int count, long[] buffer, int destOffset);
 }

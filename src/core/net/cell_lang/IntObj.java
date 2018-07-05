@@ -23,7 +23,7 @@ class IntObj extends Obj {
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      writer.write(Long.toString(value));
+      writer.write(Long.toString(data));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -31,25 +31,25 @@ class IntObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return Long.toString(value).length();
+    return Long.toString(data).length();
   }
 
   public ValueBase getValue() {
-    return new IntValue(value);
+    return new IntValue(data);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  static IntObj[] byteObjs = new IntObj[384];
+  static IntObj[] smallIntObjs = new IntObj[384];
 
   static {
     for (int i=0 ; i < 384 ; i++)
-      byteObjs[i] = new IntObj(i - 128);
+      smallIntObjs[i] = new IntObj(i - 128);
   }
 
   public static IntObj get(long value) {
-    if (value >= -128 & value < 256)
-      IntObj obj = byteObjs[128 + (int) value];
+    if (value >= -128 & value < 256) {
+      IntObj obj = smallIntObjs[128 + (int) value];
       Miscellanea._assert(obj.data == value); //## REMOVE WHEN DONE
       return obj;
     }

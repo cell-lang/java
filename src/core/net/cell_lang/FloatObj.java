@@ -5,14 +5,14 @@ import java.io.Writer;
 
 final class FloatObj extends Obj {
   public FloatObj(double value) {
-    data = Double.longBitsToDouble(value);
+    data = Double.doubleToRawLongBits(value);
     Miscellanea._assert(getDouble() == value); //## REMOVE AFTER TESTING
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   public int extraData() {
-    return doubleObjExtraData();
+    return floatObjExtraData();
   }
 
   public int internalOrder(Obj other) {
@@ -23,7 +23,7 @@ final class FloatObj extends Obj {
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      writer.write(Double.toString(value));
+      writer.write(Double.toString(getDouble()));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -31,10 +31,10 @@ final class FloatObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return Double.toString(value).length();
+    return Double.toString(getDouble()).length();
   }
 
   public ValueBase getValue() {
-    return new FloatValue(value);
+    return new FloatValue(getDouble());
   }
 }

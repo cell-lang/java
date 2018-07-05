@@ -6,13 +6,15 @@ import java.io.Writer;
 
 final class SymbObj extends Obj {
   int minPrintedSize;
+  String string;
   SymbValue valueObj;
 
 
   public SymbObj(int id) {
     data = Long.MIN_VALUE + id;
     Miscellanea._assert(getSymbId() == id);
-    minPrintedSize = SymbTable.idxToStr(id).length();
+    string = SymbTable.idxToStr(id);
+    minPrintedSize = string.length();
     valueObj = new SymbValue(id);
   }
 
@@ -30,7 +32,7 @@ final class SymbObj extends Obj {
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      writer.write(SymbTable.idxToStr(id));
+      writer.write(string);
     }
     catch (Exception e) {
       throw new RuntimeException(e);

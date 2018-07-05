@@ -41,8 +41,8 @@ class IntArrayObjs {
     return new ByteArrayObj(data);
   }
 
-  static IntArrayObj createRightPadded(long value) {
-    return PaddedIntArray.make(value);
+  static IntArraySliceObj createRightPadded(long value) {
+    return PaddedIntArray.create(value);
   }
 }
 
@@ -55,7 +55,8 @@ abstract class IntArrayObjBase extends NeIntSeqObj {
   Obj[]  objs;
 
 
-  public Obj reverse() {
+  public SeqObj reverse() {
+    int length = getSize();
     int last = offset + length - 1;
     long[] revData = new long[length];
     for (int i=0 ; i < length ; i++)
@@ -65,33 +66,37 @@ abstract class IntArrayObjBase extends NeIntSeqObj {
 
   public long[] getArray(long[] buffer) {
     if (longs == null) {
+      int length = getSize();
       longs = new long[length];
-      copy(0, longs);
+      copy(0, length, longs, 0);
     }
     return longs;
   }
 
   public Obj[] getArray(Obj[] buffer) {
     if (objs == null) {
+      int length = getSize();
       objs = new Obj[length];
-      copy(0, objs);
+      copy(0, length, objs, 0);
     }
     return objs;
   }
 
-  public Obj getSlice(long first, long len) {
+  public SeqObj getSlice(long first, long len) {
     //## DON'T I NEED TO CHECK THAT BOTH first AND len ARE NONNEGATIVE?
-    if (first + len > length)
+    if (first + len > getSize())
       throw new IndexOutOfBoundsException();
+    if (len == 0)
+      return EmptySeqObj.singleton;
     return new IntArraySliceObj(null, longs, offset + (int) first, (int) len);
   }
 
-  public IntSeqObj append(long value) {
-    return IntRopeObj.make(this, PaddedIntArray.make(value));
+  public NeIntSeqObj append(long value) {
+    return IntRopeObj.create(this, PaddedIntArray.create(value));
   }
 
-  public IntSeqObj concat(IntSeqObj seq) {
-    return IntRopeObj.make(this, seq);
+  public NeIntSeqObj concat(NeIntSeqObj seq) {
+    return IntRopeObj.create(this, seq);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -107,7 +112,7 @@ abstract class IntArrayObjBase extends NeIntSeqObj {
         long elt = getLongAt(i);
         long otherElt = other.getLongAt(i);
         if (elt != otherElt)
-          return elt - otherElt;
+          return (int) (elt - otherElt);
       }
       return 0;
     }
@@ -117,14 +122,16 @@ abstract class IntArrayObjBase extends NeIntSeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public void copy(long[] array, int destOffset) {
-    for (int i=0 ; i < length ; i++)
-      array[destOffset+i] = longs[offset+i];
+  public void copy(int first, int count, long[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = longs[srcOffset+i];
   }
 
-  public void copy(Obj[] array, int destOffset) {
-    for (int i=0 ; i < length ; i++)
-      array[destOffset+i] = IntObj.get(longs[offset+i]);
+  public void copy(int first, int count, Obj[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = IntObj.get(longs[srcOffset+i]);
   }
 }
 
@@ -132,13 +139,11 @@ abstract class IntArrayObjBase extends NeIntSeqObj {
 ////////////////////////////////////////////////////////////////////////////////
 
 final class IntArrayObj extends IntArrayObjBase {
-  public IntArrayObj(long[] data) {
-    long eltsData
-    data = seqObjData(len, eltsData);
-  protected static long seqObjData(int length, long eltsData) {
-
-    super(data.length);
-    longs = data;
+  public IntArrayObj(long[] elts) {
+    int len = elts.length;
+    long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
+    data = seqObjData(len, hashcode);
+    longs = elts;
   }
 
   public long getLongAt(long idx) {
@@ -153,21 +158,24 @@ final class IntArraySliceObj extends IntArrayObjBase {
   PaddedIntArray source;
 
 
-  public IntArraySliceObj(PaddedIntArray source, long[] data, int offset, int length) {
-    super(data, offset, length);
+  public IntArraySliceObj(PaddedIntArray source, long[] elts, int offset, int len) {
+    long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
+    data = seqObjData(len, hashcode);
+    longs = elts;
+    this.offset = offset;
     this.source = source;
   }
 
   public long getLongAt(long idx) {
-    if (idx >= 0 & idx < length)
+    if (idx >= 0 & idx < getSize())
       return longs[offset + (int) idx];
     else
       throw new ArrayIndexOutOfBoundsException();
   }
 
-  public IntSeqObj append(long value) {
+  public NeIntSeqObj append(long value) {
     if (source != null)
-      return source.append(offset+length, value);
+      return source.append(offset+getSize(), value);
     else
       return super.append(value);
   }
@@ -185,7 +193,7 @@ final class PaddedIntArray {
     this.used = used;
   }
 
-  public static IntArraySliceObj make(long value) {
+  public static IntArraySliceObj create(long value) {
     long[] buffer = new long[32];
     buffer[0] = value;
     PaddedIntArray paddedArray = new PaddedIntArray(buffer, 1);
@@ -236,17 +244,8 @@ abstract class ByteArrayObjBase extends IntArrayObjBase {
   byte[] bytes;
 
 
-  protected ByteArrayObjBase(byte[] data) {
-    super(data.length);
-    bytes = data;
-  }
-
-  protected ByteArrayObjBase(byte[] data, int offset, int length) {
-    super(offset, length);
-    bytes = data;
-  }
-
-  public Obj reverse() {
+  public SeqObj reverse() {
+    int length = getSize();
     int last = offset + length - 1;
     byte[] revData = new byte[length];
     for (int i=0 ; i < length ; i++)
@@ -254,36 +253,37 @@ abstract class ByteArrayObjBase extends IntArrayObjBase {
     return new ByteArrayObj(revData);
   }
 
-  public Obj getSlice(long first, long len) {
+  public SeqObj getSlice(long first, long len) {
     //## DON'T I NEED TO CHECK THAT BOTH first AND len ARE NONNEGATIVE?
-    if (first + len > length)
+    if (first + len > getSize())
       throw new IndexOutOfBoundsException();
+    if (len == 0)
+      return EmptySeqObj.singleton;
     return new ByteArraySliceObj(bytes, offset + (int) first, (int) len);
   }
 
-  public int hashcodesSum() {
-    int sum = 0;
-    int end = offset + length;
-    for (int i=offset ; i < end ; i++)
-      sum += IntObj.hashCode(bytes[i]);
-    return sum;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void copy(int first, int count, long[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = bytes[srcOffset+i];
   }
 
-  public void copy(long[] array, int destOffset) {
-    for (int i=0 ; i < length ; i++)
-      array[destOffset+i] = bytes[offset+i];
-  }
-
-  public void copy(Obj[] array, int destOffset) {
-    for (int i=0 ; i < length ; i++)
-      array[destOffset+i] = IntObj.get(bytes[offset+i]);
+  public void copy(int first, int count, Obj[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = IntObj.get(bytes[srcOffset+i]);
   }
 }
 
 
 final class ByteArrayObj extends ByteArrayObjBase {
-  protected ByteArrayObj(byte[] data) {
-    super(data);
+  protected ByteArrayObj(byte[] elts) {
+    int len = elts.length;
+    long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
+    data = seqObjData(len, hashcode);
+    bytes = elts;
   }
 
   public long getLongAt(long idx) {
@@ -293,12 +293,15 @@ final class ByteArrayObj extends ByteArrayObjBase {
 
 
 final class ByteArraySliceObj extends ByteArrayObjBase {
-  public ByteArraySliceObj(byte[] data, int offset, int length) {
-    super(data, offset, length);
+  public ByteArraySliceObj(byte[] elts, int offset, int len) {
+    long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
+    data = seqObjData(len, hashcode);
+    bytes = elts;
+    this.offset = offset;
   }
 
   public long getLongAt(long idx) {
-    if (idx >= 0 & idx < length)
+    if (idx >= 0 & idx < getSize())
       return bytes[offset + (int) idx];
     else
       throw new ArrayIndexOutOfBoundsException();
@@ -312,21 +315,8 @@ abstract class ShortArrayObjBase extends IntArrayObjBase {
   short[] shorts;
 
 
-  protected ShortArrayObjBase(short[] data) {
-    super(data.length);
-    shorts = data;
-  }
-
-  protected ShortArrayObjBase(short[] data, int offset, int length) {
-    super(offset, length);
-    shorts = data;
-  }
-
-  public long getLongAt(long idx) {
-    return shorts[(int) idx];
-  }
-
-  public Obj reverse() {
+  public SeqObj reverse() {
+    int length = getSize();
     int last = offset + length - 1;
     short[] revData = new short[length];
     for (int i=0 ; i < length ; i++)
@@ -334,36 +324,37 @@ abstract class ShortArrayObjBase extends IntArrayObjBase {
     return new ShortArrayObj(revData);
   }
 
-  public Obj getSlice(long first, long len) {
+  public SeqObj getSlice(long first, long len) {
     //## DON'T I NEED TO CHECK THAT BOTH first AND len ARE NONNEGATIVE?
-    if (first + len > length)
+    if (first + len > getSize())
       throw new IndexOutOfBoundsException();
+    if (len == 0)
+      return EmptySeqObj.singleton;
     return new ShortArraySliceObj(shorts, offset + (int) first, (int) len);
   }
 
-  public int hashcodesSum() {
-    int sum = 0;
-    int end = offset + length;
-    for (int i=offset ; i < end ; i++)
-      sum += IntObj.hashCode(shorts[i]);
-    return sum;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void copy(int first, int count, long[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = shorts[srcOffset+i];
   }
 
-  public void copy(long[] array, int destOffset) {
-    for (int i=0 ; i < length ; i++)
-      array[destOffset+i] = shorts[offset+i];
-  }
-
-  public void copy(Obj[] array, int destOffset) {
-    for (int i=0 ; i < length ; i++)
-      array[destOffset+i] = IntObj.get(shorts[offset+i]);
+  public void copy(int first, int count, Obj[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = IntObj.get(shorts[srcOffset+i]);
   }
 }
 
 
 final class ShortArrayObj extends ShortArrayObjBase {
-  protected ShortArrayObj(short[] data) {
-    super(data);
+  protected ShortArrayObj(short[] elts) {
+    int len = elts.length;
+    long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
+    data = seqObjData(len, hashcode);
+    shorts = elts;
   }
 
   public long getLongAt(long idx) {
@@ -373,12 +364,15 @@ final class ShortArrayObj extends ShortArrayObjBase {
 
 
 final class ShortArraySliceObj extends ShortArrayObjBase {
-  public ShortArraySliceObj(short[] data, int offset, int length) {
-    super(data, offset, length);
+  public ShortArraySliceObj(short[] elts, int offset, int len) {
+    long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
+    data = seqObjData(len, hashcode);
+    shorts = elts;
+    this.offset = offset;
   }
 
   public long getLongAt(long idx) {
-    if (idx >= 0 & idx < length)
+    if (idx >= 0 & idx < getSize())
       return shorts[offset + (int) idx];
     else
       throw new ArrayIndexOutOfBoundsException();
@@ -392,21 +386,8 @@ abstract class Int32ArrayObjBase extends IntArrayObjBase {
   int[] ints;
 
 
-  protected Int32ArrayObjBase(int[] data) {
-    super(data.length);
-    ints = data;
-  }
-
-  protected Int32ArrayObjBase(int[] data, int offset, int length) {
-    super(offset, length);
-    ints = data;
-  }
-
-  public long getLongAt(long idx) {
-    return ints[(int) idx];
-  }
-
-  public Obj reverse() {
+  public SeqObj reverse() {
+    int length = getSize();
     int last = offset + length - 1;
     int[] revData = new int[length];
     for (int i=0 ; i < length ; i++)
@@ -414,36 +395,37 @@ abstract class Int32ArrayObjBase extends IntArrayObjBase {
     return new Int32ArrayObj(revData);
   }
 
-  public Obj getSlice(long first, long len) {
+  public SeqObj getSlice(long first, long len) {
     //## DON'T I NEED TO CHECK THAT BOTH first AND len ARE NONNEGATIVE?
-    if (first + len > length)
+    if (first + len > getSize())
       throw new IndexOutOfBoundsException();
+    if (len == 0)
+      return EmptySeqObj.singleton;
     return new Int32ArraySliceObj(ints, offset + (int) first, (int) len);
   }
 
-  public int hashcodesSum() {
-    int sum = 0;
-    int end = offset + length;
-    for (int i=offset ; i < end ; i++)
-      sum += IntObj.hashCode(ints[i]);
-    return sum;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void copy(int first, int count, long[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = ints[srcOffset+i];
   }
 
-  public void copy(long[] array, int destOffset) {
-    for (int i=0 ; i < length ; i++)
-      array[destOffset+i] = ints[offset+i];
-  }
-
-  public void copy(Obj[] array, int destOffset) {
-    for (int i=0 ; i < length ; i++)
-      array[destOffset+i] = IntObj.get(ints[offset+i]);
+  public void copy(int first, int count, Obj[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = IntObj.get(ints[srcOffset+i]);
   }
 }
 
 
 final class Int32ArrayObj extends Int32ArrayObjBase {
-  protected Int32ArrayObj(int[] data) {
-    super(data);
+  protected Int32ArrayObj(int[] elts) {
+    int len = elts.length;
+    long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
+    data = seqObjData(len, hashcode);
+    ints = elts;
   }
 
   public long getLongAt(long idx) {
@@ -453,12 +435,15 @@ final class Int32ArrayObj extends Int32ArrayObjBase {
 
 
 final class Int32ArraySliceObj extends Int32ArrayObjBase {
-  public Int32ArraySliceObj(int[] data, int offset, int length) {
-    super(data, offset, length);
+  public Int32ArraySliceObj(int[] elts, int offset, int len) {
+    long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
+    data = seqObjData(len, hashcode);
+    ints = elts;
+    this.offset = offset;
   }
 
   public long getLongAt(long idx) {
-    if (idx >= 0 & idx < length)
+    if (idx >= 0 & idx < getSize())
       return ints[offset + (int) idx];
     else
       throw new ArrayIndexOutOfBoundsException();

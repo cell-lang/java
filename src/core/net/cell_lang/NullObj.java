@@ -4,7 +4,7 @@ import java.io.Writer;
 
 
 final class NullObj extends Obj {
-  public static final singleton = new NullObj();
+  public static final NullObj singleton = new NullObj();
 
   private NullObj() {
 

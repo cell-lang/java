@@ -29,8 +29,8 @@ class NeSetObj extends Obj {
     return elts.length;
   }
 
-  public SeqOrSetIter getSeqOrSetIter() {
-    return new SeqOrSetIter(elts, 0, elts.length-1);
+  public SetIter getSetIter() {
+    return new SetIter(elts, 0, elts.length-1);
   }
 
   public Obj internalSort() {

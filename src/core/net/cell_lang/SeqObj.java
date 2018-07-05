@@ -14,7 +14,7 @@ abstract class SeqObj extends Obj {
     return getObjAt(idx).getDouble();
   }
 
-  public SeqObj append(boolean value) {
+  public NeSeqObj append(boolean value) {
     return append(SymbObj.get(value));
   }
 }

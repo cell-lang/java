@@ -1,8 +1,10 @@
 package net.cell_lang;
 
+import java.io.Writer;
+
 
 abstract class NeSeqObj extends SeqObj {
-  int minPrintedSize = -1;
+  private int minPrintedSize = -1;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -44,26 +46,26 @@ abstract class NeSeqObj extends SeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public SeqObj append(Obj obj) {
+  public NeSeqObj append(Obj obj) {
     if (obj.isInt())
-      append(obj.getLong());
+      return append(obj.getLong());
     else if (obj.isFloat())
-      append(obj.getFloat());
+      return append(obj.getDouble());
     else
       return RopeObj.create(this, ArrayObjs.createRightPadded(obj));
   }
 
-  public SeqObj append(long value) {
+  public NeSeqObj append(long value) {
     return RopeObj.create(this, IntArrayObjs.createRightPadded(value));
   }
 
-  public SeqObj append(double value) {
+  public NeSeqObj append(double value) {
     return RopeObj.create(this, FloatArrayObjs.createRightPadded(value));
   }
 
   public SeqObj concat(Obj seq) {
     if (seq.getSize() != 0)
-      return RopeObj.create(this, seq);
+      return RopeObj.create(this, (NeSeqObj) seq);
     else
       return this;
   }
@@ -84,7 +86,7 @@ abstract class NeSeqObj extends SeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public Obj updatedAt(long idx, Obj obj) {
+  public NeSeqObj updatedAt(long idx, Obj obj) {
     int len = getSize();
 
     if (idx < 0 | idx >= len)
@@ -94,7 +96,7 @@ abstract class NeSeqObj extends SeqObj {
     for (int i=0 ; i < len ; i++)
       newItems[i] = i == idx ? obj : getObjAt(i);
 
-    // return new MasterSeqObj(newItems);
+    return ArrayObjs.create(newItems);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -118,6 +120,8 @@ abstract class NeSeqObj extends SeqObj {
   //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+    int len = getSize();
+
     try {
       boolean breakLine = minPrintedSize() > maxLineLen;
 
@@ -133,7 +137,7 @@ abstract class NeSeqObj extends SeqObj {
           Miscellanea.writeIndentedNewLine(writer, indentLevel + 1);
       }
 
-      for (int i=0 ; i < length ; i++) {
+      for (int i=0 ; i < len ; i++) {
         if (i > 0) {
           writer.write(',');
           if (breakLine)
@@ -156,21 +160,37 @@ abstract class NeSeqObj extends SeqObj {
 
   public int minPrintedSize() {
     if (minPrintedSize == -1) {
-      minPrintedSize = 2 * length;
-      for (int i=0 ; i < length ; i++)
+      int len = getSize();
+      minPrintedSize = 2 * len;
+      for (int i=0 ; i < len ; i++)
         minPrintedSize += getObjAt(i).minPrintedSize();
     }
     return minPrintedSize;
   }
 
   public ValueBase getValue() {
-    ValueBase[] values = new ValueBase[length];
-    for (int i=0 ; i < length ; i++)
+    int len = getSize();
+    ValueBase[] values = new ValueBase[len];
+    for (int i=0 ; i < len ; i++)
       values[i] = getObjAt(i).getValue();
     return new SeqValue(values);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public abstract void copy(int from, int count, Obj[] buffer, int destOffset);
+  public int packedRanges(int minSize, int offset, int[] offsets, NeSeqObj[] ranges, int writeOffset) {
+    if (getSize() >= minSize) {
+      offsets[writeOffset] = offset;
+      ranges[writeOffset++] = this;
+    }
+    return writeOffset;
+  }
+
+  public int depth() {
+    return 0;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public abstract void copy(int first, int count, Obj[] buffer, int destOffset);
 }

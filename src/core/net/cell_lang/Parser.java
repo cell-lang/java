@@ -190,7 +190,7 @@ class Parser extends TokenStream {
     consume(TokenType.OpenBracket);
 
     if (tryConsuming(TokenType.CloseBracket))
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
 
     ArrayList<Obj> objs = new ArrayList<Obj>();
     do {

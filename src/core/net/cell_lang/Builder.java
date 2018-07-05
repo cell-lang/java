@@ -35,7 +35,7 @@ class Builder {
       return new NeSetObj(normObjs);
     }
     else
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
   }
 
   public static Obj createMap(ArrayList<Obj> keys, ArrayList<Obj> vals) {
@@ -47,14 +47,14 @@ class Builder {
     if (keys.length > 0)
       return new NeHashMapObj(keys, vals);
     else
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
 
     // return createMap(keys, vals, keys.length);
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals, long count) {
     if (count == 0)
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
     else if (count == keys.length)
       return new NeHashMapObj(keys, vals);
     else
@@ -94,7 +94,7 @@ class Builder {
         return new NeHashMapObj(normCol1, normCols[1]);
     }
     else
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
   }
 
   public static Obj createBinRel(Obj obj1, Obj obj2) {
@@ -121,7 +121,7 @@ class Builder {
       return new NeTernRelObj(normCols[0], normCols[1], normCols[2]);
     }
     else {
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
     }
   }
 
@@ -170,7 +170,7 @@ class Builder {
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       objs[i] = SymbObj.get(vals[i]);
-    return new MasterSeqObj(objs);
+    return ArrayObjs.create(objs);
   }
 
   public static Obj wrapSeq(byte[] vals) {
@@ -194,14 +194,14 @@ class Builder {
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       objs[i] = new FloatObj(vals[i]);
-    return new MasterSeqObj(objs);
+    return ArrayObjs.create(objs);
   }
 
   public static Obj wrapSeq(Obj[] objs) {
     int len = objs.length;
     for (int i=0 ; i < len ; i++)
       if (!objs[i].isInt())
-        return new MasterSeqObj(objs);
+        return ArrayObjs.create(objs);
 
     long[] longs = new long[len];
     for (int i=0 ; i < len ; i++)
@@ -215,7 +215,7 @@ class Builder {
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       objs[i] = SymbObj.get(vals[i]);
-    return new MasterSeqObj(objs);
+    return ArrayObjs.create(objs);
   }
 
   public static Obj wrapSeq(byte[] vals, int len) {
@@ -238,13 +238,13 @@ class Builder {
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       objs[i] = new FloatObj(vals[i]);
-    return new MasterSeqObj(objs);
+    return ArrayObjs.create(objs);
   }
 
   public static Obj wrapSeq(Obj[] objs, int len) {
     for (int i=0 ; i < len ; i++)
       if (!objs[i].isInt())
-        return new MasterSeqObj(objs, len);
+        return ArrayObjs.create(objs, len);
 
     long[] longs = new long[len];
     for (int i=0 ; i < len ; i++)

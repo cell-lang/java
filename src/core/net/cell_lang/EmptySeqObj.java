@@ -4,7 +4,7 @@ import java.io.Writer;
 
 
 final class EmptySeqObj extends SeqObj {
-  public static final singleton = new EmptySeqObj();
+  public static final EmptySeqObj singleton = new EmptySeqObj();
 
   private EmptySeqObj() {
     Miscellanea._assert(getSize() == 0);
@@ -40,32 +40,32 @@ final class EmptySeqObj extends SeqObj {
     return emptyByteArray;
   }
 
-  public SeqObj append(Obj obj) {
+  public NeSeqObj append(Obj obj) {
     if (obj.isInt())
-      return IntArrayObjs.createRightPadded(obj.getLong());
+      return append(obj.getLong());
     else if (obj.isFloat())
-      return FloatArrayObjs.createRightPadded(obj.getFloat());
+      return append(obj.getDouble());
     else
-      return GenArrayObjs.createRightPadded(obj);
+      return ArrayObjs.createRightPadded(obj);
   }
 
-  public SeqObj append(long value) {
-    return IntArrayObjs.createRightPadded(obj.getLong());
+  public NeSeqObj append(long value) {
+    return IntArrayObjs.createRightPadded(value);
   }
 
-  public SeqObj append(double value) {
-    return FloatArrayObjs.createRightPadded(obj.getFloat());
+  public NeSeqObj append(double value) {
+    return FloatArrayObjs.createRightPadded(value);
   }
 
   public SeqObj concat(Obj seq) {
-    return seq;
+    return (SeqObj) seq;
   }
 
   public SeqObj reverse() {
     return this;
   }
 
-  public SeqObj updatedAt(long idx, Obj obj) {
+  public NeSeqObj updatedAt(long idx, Obj obj) {
     throw Miscellanea.softFail("Invalid sequence index: " + Long.toString(idx));
   }
 
@@ -107,5 +107,4 @@ final class EmptySeqObj extends SeqObj {
   private static final Obj[]     emptyObjArray     = new Obj[0];
 
   private static final SeqValue valueObj = new SeqValue(new ValueBase[0]);
-  private static final SeqOrSetIter iter = new SeqOrSetIter(new Obj[0], 0, -1);
 }

@@ -4,7 +4,7 @@ import java.io.Writer;
 
 
 final class EmptyRelObj extends Obj {
-  public static final singleton = new EmptyRelObj();
+  public static final EmptyRelObj singleton = new EmptyRelObj();
 
   private EmptyRelObj() {
     Miscellanea._assert(getSize() == 0);
@@ -32,7 +32,7 @@ final class EmptyRelObj extends Obj {
     return false;
   }
 
-  public SeqOrSetIter getSeqOrSetIter() {
+  public SetIter getSetIter() {
     return iter1;
   }
 
@@ -76,8 +76,8 @@ final class EmptyRelObj extends Obj {
     return iter3;
   }
 
-  public Obj internalSort() {
-    return SeqObj.empty();
+  public SeqObj internalSort() {
+    return EmptySeqObj.singleton;
   }
 
   public Obj lookup(Obj key) {
@@ -117,7 +117,7 @@ final class EmptyRelObj extends Obj {
 
   private static final EmptyRelValue valueObj = new EmptyRelValue();
 
-  private static final SeqOrSetIter iter1 = new SeqOrSetIter(new Obj[0], 0, -1);
-  private static final BinRelIter   iter2 = new BinRelIter(new Obj[0], new Obj[0]);
-  private static final TernRelIter  iter3 = new TernRelIter(new Obj[0], new Obj[0], new Obj[0]);
+  private static final SetIter     iter1 = new SetIter(new Obj[0], 0, -1);
+  private static final BinRelIter  iter2 = new BinRelIter(new Obj[0], new Obj[0]);
+  private static final TernRelIter iter3 = new TernRelIter(new Obj[0], new Obj[0], new Obj[0]);
 }

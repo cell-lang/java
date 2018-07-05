@@ -20,7 +20,7 @@ abstract class Obj /*implements Comparable<Obj>*/ {
     return this instanceof SymbObj;
   }
 
-  public final boolean IsBool() {
+  public final boolean isBool() {
     if (isSymb()) {
       int symbId = getSymbId();
       return symbId == SymbTable.FalseSymbId | symbId == SymbTable.TrueSymbId;
@@ -84,21 +84,21 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   //////////////////////////////////////////////////////////////////////////////
 
   public final boolean isSymb(int id) {
-    return isSymb() && getSymb() == id;
+    return isSymb() && getSymbId() == id;
   }
 
   public final boolean isInt(long n) {
-    return isInt() && getInt() == n;
+    return isInt() && getLong() == n;
   }
 
   public final boolean isFloat(double x) {
-    return isFloat() && getFloat() == x;
+    return isFloat() && getDouble() == x;
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   public final int getSymbId() {
-    return data - Long.MIN_VALUE;
+    return (int) (data - Long.MIN_VALUE);
   }
 
   public final boolean getBool() {
@@ -114,11 +114,11 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   }
 
   public final int getSize() {
-    return (int) (data & 0x7FFFFFFF);
+    return (int) (data & 0x3FFFFFFF);
   }
 
   public final int getTagId() {
-    return
+    throw Miscellanea.internalFail(this);
   }
 
   public final Obj getTag() {
@@ -145,13 +145,13 @@ abstract class Obj /*implements Comparable<Obj>*/ {
     return internalOrder(other) == 0;
   }
 
-  public final boolean quickOrder(Obj other) {
+  public final int quickOrder(Obj other) {
     if (this == other)
       return 0;
 
     long otherData = other.data;
     if (data != otherData)
-      return data - otherData;
+      return (int) (data - otherData); //## DOES A NEGATIVE LONG STAY NEGATIVE WHEN TRUNCATED?
 
     int extraData = extraData();
     int otherExtraData = other.extraData();
@@ -166,7 +166,7 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
   // Can be negative
   public final int internalHashcode() {
-    return (int) ((data >>> 32) ^ (data & 0xFFFFFFFFL));
+    return (int) (((data >>> 32) ^ data) & 0xFFFFFFFFL);
   }
 
   // Called only when data != other.data and extraData() == other.extraData()
@@ -176,8 +176,12 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  protected static long seqObjData(int length, long eltsData) {
+  // 11 - 32 bit hash code - 30 bit size/length
+  protected static long seqObjData(int length, long hashcode) {
+    Miscellanea._assert((3 << 62) == -4611686018427387904L);
 
+    hashcode = ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
+    return (0b11 << 62) | (hashcode << 30) | length;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -201,47 +205,47 @@ abstract class Obj /*implements Comparable<Obj>*/ {
     return extraData < 16;
   }
 
-  protected static int blankObjExtra()        {return blankObjId;     }
-  protected static int nullObjExtra()         {return nullObjId;      }
-  protected static int symbObjExtra()         {return symbObjId;      }
-  protected static int intObjExtra()          {return intObjId;       }
-  protected static int floatObjExtra()        {return floatObjId;     }
-  protected static int emptySeqObjExtra()     {return emptySeqObjId;  }
-  protected static int emptyRelObjExtra()     {return emptyRelObjId;  }
-  protected static int inlineTagObjExtra()    {return inlineTagObjId; }
-  protected static int neSeqObjExtra()        {return neSeqObjId;     }
-  protected static int neSetObjExtra()        {return neSetObjId;     }
-  protected static int neBinRelObjExtra()     {return neBinRelObjId;  }
-  protected static int neTernRelObjExtra()    {return neTernRelObjId; }
-  protected static int refTagObjExtra()       {return refTagObjId;    }
+  protected static int blankObjExtraData()        {return blankObjId;     }
+  protected static int nullObjExtraData()         {return nullObjId;      }
+  protected static int symbObjExtraData()         {return symbObjId;      }
+  protected static int intObjExtraData()          {return intObjId;       }
+  protected static int floatObjExtraData()        {return floatObjId;     }
+  protected static int emptySeqObjExtraData()     {return emptySeqObjId;  }
+  protected static int emptyRelObjExtraData()     {return emptyRelObjId;  }
+  protected static int inlineTagObjExtraData()    {return inlineTagObjId; }
+  protected static int neSeqObjExtraData()        {return neSeqObjId;     }
+  protected static int neSetObjExtraData()        {return neSetObjId;     }
+  protected static int neBinRelObjExtraData()     {return neBinRelObjId;  }
+  protected static int neTernRelObjExtraData()    {return neTernRelObjId; }
+  protected static int refTagObjExtraData()       {return refTagObjId;    }
 
   //////////////////////////////////////////////////////////////////////////////
   ///////////////////////////// Sequence operations ////////////////////////////
 
-  public Obj     getObjAt(long idx)             {throw Miscellanea.internalFail(this);}
-  public boolean getBoolAt(long idx)            {throw Miscellanea.internalFail(this);}
-  public long    getLongAt(long idx)            {throw Miscellanea.internalFail(this);}
-  public double  getDoubleAt(long idx)          {throw Miscellanea.internalFail(this);}
+  public Obj     getObjAt(long idx)               {throw Miscellanea.internalFail(this);}
+  public boolean getBoolAt(long idx)              {throw Miscellanea.internalFail(this);}
+  public long    getLongAt(long idx)              {throw Miscellanea.internalFail(this);}
+  public double  getDoubleAt(long idx)            {throw Miscellanea.internalFail(this);}
 
-  public SeqObj getSlice(long first, long len)  {throw Miscellanea.internalFail(this);}
+  public SeqObj getSlice(long first, long len)    {throw Miscellanea.internalFail(this);}
 
-  public boolean[] getArray(boolean[] buffer)   {throw Miscellanea.internalFail(this);}
-  public long[]    getArray(long[] buffer)      {throw Miscellanea.internalFail(this);}
-  public double[]  getArray(double[] buffer)    {throw Miscellanea.internalFail(this);}
-  public Obj[]     getArray(Obj[] buffer)       {throw Miscellanea.internalFail(this);}
+  public boolean[] getArray(boolean[] buffer)     {throw Miscellanea.internalFail(this);}
+  public long[]    getArray(long[] buffer)        {throw Miscellanea.internalFail(this);}
+  public double[]  getArray(double[] buffer)      {throw Miscellanea.internalFail(this);}
+  public Obj[]     getArray(Obj[] buffer)         {throw Miscellanea.internalFail(this);}
 
-  public byte[] getUnsignedByteArray()          {throw Miscellanea.internalFail(this);}
+  public byte[] getUnsignedByteArray()            {throw Miscellanea.internalFail(this);}
 
-  public SeqObj reverse()                       {throw Miscellanea.internalFail(this);}
-  public SeqObj concat(Obj seq)                 {throw Miscellanea.internalFail(this);}
+  public SeqObj reverse()                         {throw Miscellanea.internalFail(this);}
+  public SeqObj concat(Obj seq)                   {throw Miscellanea.internalFail(this);}
 
-  public SeqObj append(Obj obj)                 {throw Miscellanea.internalFail(this);}
-  public SeqObj append(boolean value)           {throw Miscellanea.internalFail(this);}
-  public SeqObj append(long value)              {throw Miscellanea.internalFail(this);}
-  public SeqObj append(double value)            {throw Miscellanea.internalFail(this);}
+  public NeSeqObj append(Obj obj)                 {throw Miscellanea.internalFail(this);}
+  public NeSeqObj append(boolean value)           {throw Miscellanea.internalFail(this);}
+  public NeSeqObj append(long value)              {throw Miscellanea.internalFail(this);}
+  public NeSeqObj append(double value)            {throw Miscellanea.internalFail(this);}
 
   // Copy-on-write update
-  public SeqObj updatedAt(long idx, Obj value)  {throw Miscellanea.internalFail(this);}
+  public NeSeqObj updatedAt(long idx, Obj value)  {throw Miscellanea.internalFail(this);}
 
   //////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Set operations ///////////////////////////////
@@ -263,24 +267,13 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
   public void initAt(long i, Obj v) {throw Miscellanea.internalFail(this);}
 
-  public Obj negate() {
-    if (id == SymbTable.FalseSymbId)
-      return SymbObj.get(SymbTable.TrueSymbId);
-    if (id == SymbTable.TrueSymbId)
-      return SymbObj.get(SymbTable.FalseSymbId);
-    throw new UnsupportedOperationException();
-  }
-
-  public Obj getItem(long i) {
-    return getObjAt(i);
-  }
-
   public long mantissa() {throw Miscellanea.internalFail(this);}
   public long decExp()   {throw Miscellanea.internalFail(this);}
 
-  public SeqOrSetIter getSeqOrSetIter() {throw Miscellanea.internalFail(this);}
-
-  public void copyItems(Obj[] items, int offset)        {throw Miscellanea.internalFail(this);}
+  public int cmp(Obj other) {
+    int res = quickOrder(other);
+    return res < 0 ? -1 : (res > 0 ? 1 : 0);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
