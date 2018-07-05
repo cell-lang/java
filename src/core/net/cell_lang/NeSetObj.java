@@ -3,46 +3,58 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-
-class NeSetObj extends Obj {
+final class NeSetObj extends Obj {
   Obj[] elts;
   int minPrintedSize = -1;
 
   public NeSetObj(Obj[] elts) {
     Miscellanea._assert(elts.length > 0);
+
+    int size = elts.length;
+    long hashcode = 0;
+    for (int i=0 ; i < elts.length ; i++)
+      hashcode += elts[i].data;
+    data = setObjData(size, hashcode);
     this.elts = elts;
-  }
-
-  public boolean isSet() {
-    return true;
-  }
-
-  public boolean isNeSet() {
-    return true;
   }
 
   public boolean hasElem(Obj obj) {
     return Algs.binSearch(elts, obj) != -1;
   }
 
-  public int getSize() {
-    return elts.length;
-  }
-
   public SetIter getSetIter() {
     return new SetIter(elts, 0, elts.length-1);
   }
 
-  public Obj internalSort() {
-    return new MasterSeqObj(elts);
+  public SeqObj internalSort() {
+    return ArrayObjs.create(elts);
   }
 
-  public int hashCode() {
-    int hashcodesSum = 0;
-    for (int i=0 ; i < elts.length ; i++)
-      hashcodesSum += elts[i].hashCode();
-    return hashcodesSum ^ (int) elts.length;
+  public Obj randElem() {
+    return elts[0];
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int extraData() {
+    return neSetObjExtraData();
+  }
+
+  public int internalOrder(Obj other) {
+    Miscellanea._assert(getSize() == other.getSize());
+
+    NeSetObj otherSet = (NeSetObj) other;
+    int size = getSize();
+    Obj[] otherElts = otherSet.elts;
+    for (int i=0 ; i < size ; i++) {
+      int ord = elts[i].quickOrder(otherElts[i]);
+      if (ord != 0)
+        return ord;
+    }
+    return 0;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
@@ -98,30 +110,5 @@ class NeSetObj extends Obj {
     for (int i=0 ; i < size ; i++)
       values[i] = elts[i].getValue();
     return new NeSetValue(values);
-  }
-
-  protected int typeId() {
-    return 5;
-  }
-
-  protected int internalCmp(Obj other) {
-    return other.cmpNeSet(elts);
-  }
-
-  public int cmpNeSet(Obj[] otherElts) {
-    int len = elts.length;
-    int otherLen = otherElts.length;
-    if (otherLen != len)
-      return otherLen < len ? 1 : -1;
-    for (int i=0 ; i < len ; i++) {
-      int res = otherElts[i].cmp(elts[i]);
-      if (res != 0)
-        return res;
-    }
-    return 0;
-  }
-
-  public Obj randElem() {
-    return elts[0];
   }
 }

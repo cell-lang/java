@@ -31,7 +31,6 @@ final class TaggedObj extends Obj {
   }
 
   public int internalOrder(Obj other) {
-    Obj otherTagObj = (TaggedObj) other;
     int tag = getTagId();
     int otherTag = other.getTagId();
     if (tag != otherTag)

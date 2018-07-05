@@ -184,6 +184,12 @@ abstract class Obj /*implements Comparable<Obj>*/ {
     return (0b11 << 62) | (hashcode << 30) | length;
   }
 
+  // 11 - 32 bit hash code - 30 bit size
+  protected static long setObjData(int size, long hashcode) {
+    hashcode = ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
+    return (0b11 << 62) | (hashcode << 30) | size;
+  }
+
   // 11111111 - 32 bit hash code - 24 bit tag id
   protected static long tagObjData(int tag, long hashcode) {
     hashcode = ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
@@ -259,6 +265,7 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   public boolean hasElem(Obj obj)   {throw Miscellanea.internalFail(this);}
   public SetIter getSetIter()       {throw Miscellanea.internalFail(this);}
   public SeqObj  internalSort()     {throw Miscellanea.internalFail(this);}
+  public Obj     randElem()         {throw Miscellanea.internalFail(this);}
 
   //////////////////////////////////////////////////////////////////////////////
   /////////////////////////// Tagged obj operations ///////////////////////////
@@ -343,7 +350,6 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public Obj randElem() {throw Miscellanea.internalFail(this);}
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
