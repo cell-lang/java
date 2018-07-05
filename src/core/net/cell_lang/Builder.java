@@ -44,34 +44,34 @@ class Builder {
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals) {
-    if (keys.length > 0)
-      return new NeHashMapObj(keys, vals);
-    else
-      return EmptyRelObj.singleton;
+    // if (keys.length > 0)
+    //   return new NeHashMapObj(keys, vals);
+    // else
+    //   return EmptyRelObj.singleton;
 
-    // return createMap(keys, vals, keys.length);
+    return createMap(keys, vals, keys.length);
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals, long count) {
-    if (count == 0)
-      return EmptyRelObj.singleton;
-    else if (count == keys.length)
-      return new NeHashMapObj(keys, vals);
-    else
-      return new NeHashMapObj(Arrays.copyOf(keys, (int) count), Arrays.copyOf(vals, (int) count));
+    // if (count == 0)
+    //   return EmptyRelObj.singleton;
+    // else if (count == keys.length)
+    //   return new NeHashMapObj(keys, vals);
+    // else
+    //   return new NeHashMapObj(Arrays.copyOf(keys, (int) count), Arrays.copyOf(vals, (int) count));
 
-    // Obj binRel = createBinRel(keys, vals, count);
-    // if (!binRel.isEmptyRel() && !binRel.isNeMap()) {
-    //   throw Miscellanea.softFail("Error: map contains duplicate keys");
-    //   // BinRelIter iter = binRel.getBinRelIter();
-    //   // //## REMOVE WHEN DONE
-    //   // while (!iter.done()) {
-    //   //   System.out.println(iter.get1().toString());
-    //   //   iter.next();
-    //   // }
-    //   // throw new RuntimeException();
-    // }
-    // return binRel;
+    Obj binRel = createBinRel(keys, vals, count);
+    if (!binRel.isEmptyRel() && !binRel.isNeMap()) {
+      throw Miscellanea.softFail("Error: map contains duplicate keys");
+      // BinRelIter iter = binRel.getBinRelIter();
+      // //## REMOVE WHEN DONE
+      // while (!iter.done()) {
+      //   System.out.println(iter.get1().toString());
+      //   iter.next();
+      // }
+      // throw new RuntimeException();
+    }
+    return binRel;
   }
 
   public static Obj createBinRel(ArrayList<Obj> col1, ArrayList<Obj> col2) {
@@ -91,7 +91,8 @@ class Builder {
       if (Algs.sortedArrayHasDuplicates(normCol1))
         return new NeBinRelObj(normCol1, normCols[1], false);
       else
-        return new NeHashMapObj(normCol1, normCols[1]);
+        return new NeBinRelObj(normCol1, normCols[1], true);
+        // return new NeHashMapObj(normCol1, normCols[1]);
     }
     else
       return EmptyRelObj.singleton;
@@ -136,14 +137,7 @@ class Builder {
   }
 
   public static Obj createTaggedObj(int tag, Obj obj) {
-    if (obj.isInt())
-      return createTaggedIntObj(tag, obj.getLong());
-    else
-      return new TaggedObj(tag, obj);
-  }
-
-  public static TaggedIntObj createTaggedIntObj(int tag, long value) {
-    return new TaggedIntObj(tag, value);
+    return new TaggedObj(tag, obj);
   }
 
   public static Obj buildConstIntSeq(byte[] vals) {

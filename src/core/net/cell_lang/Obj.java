@@ -118,7 +118,7 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   }
 
   public final int getTagId() {
-    throw Miscellanea.internalFail(this);
+    return data & 0xFFFFFF;
   }
 
   public final Obj getTag() {
@@ -182,6 +182,12 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
     hashcode = ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
     return (0b11 << 62) | (hashcode << 30) | length;
+  }
+
+  // 11111111 - 32 bit hash code - 24 bit tag id
+  protected static long tagObjData(int tag, long hashcode) {
+    hashcode = ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
+    return (0xFF << 56) | (hashcode << 24) | (tag & 0xFFFFFF);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -255,6 +261,11 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   public SeqObj  internalSort()     {throw Miscellanea.internalFail(this);}
 
   //////////////////////////////////////////////////////////////////////////////
+  /////////////////////////// Tagged obj operations ///////////////////////////
+
+  public Obj  getInnerObj()   {throw Miscellanea.internalFail(this);}
+
+  //////////////////////////////////////////////////////////////////////////////
   ////////////////////////// OBSOLETE STUFF TO REMOVE //////////////////////////
 
   public long[] getLongArray() {
@@ -286,9 +297,6 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   public boolean hasField(int id)                       {throw Miscellanea.internalFail(this);}
   public boolean hasPair(Obj o1, Obj o2)                {throw Miscellanea.internalFail(this);}
   public boolean hasTriple(Obj o1, Obj o2, Obj o3)      {throw Miscellanea.internalFail(this);}
-
-  public Obj  getInnerObj()                             {throw Miscellanea.internalFail(this);}
-  public long getInnerLong()                            {throw Miscellanea.internalFail(this);}
 
   public BinRelIter  getBinRelIter()                    {throw Miscellanea.internalFail(this);}
   public TernRelIter getTernRelIter()                   {throw Miscellanea.internalFail(this);}
