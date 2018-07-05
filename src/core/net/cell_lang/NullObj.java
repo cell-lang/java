@@ -3,14 +3,11 @@ package net.cell_lang;
 import java.io.Writer;
 
 
+final class NullObj extends Obj {
+  public static final singleton = new NullObj();
 
-class NullObj extends Obj {
-  public boolean isNullObj() {
-    return true;
-  }
+  private NullObj() {
 
-  public int hashCode() {
-    throw new UnsupportedOperationException();
   }
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
@@ -23,20 +20,14 @@ class NullObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return "Null".length();
+    return 4;
   }
 
-  protected int typeId() {
-    return -1;
+  public int extraData() {
+    return nullObjExtraData();
   }
 
-  protected int internalCmp(Obj o) {
-    throw new UnsupportedOperationException();
-  }
-
-  static NullObj singleton = new NullObj();
-
-  public static NullObj singleton() {
-    return singleton;
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
   }
 }

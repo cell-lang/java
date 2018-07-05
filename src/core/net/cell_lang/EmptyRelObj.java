@@ -3,31 +3,14 @@ package net.cell_lang;
 import java.io.Writer;
 
 
+final class EmptyRelObj extends Obj {
+  public static final singleton = new EmptyRelObj();
 
-class EmptyRelObj extends Obj {
-  EmptyRelObj() {
-
+  private EmptyRelObj() {
+    Miscellanea._assert(getSize() == 0);
   }
 
-  public boolean isEmptyRel() {
-    return true;
-  }
-
-  public boolean isSet() {
-    return true;
-  }
-
-  public boolean isBinRel() {
-    return true;
-  }
-
-  public boolean isTernRel() {
-    return true;
-  }
-
-  public boolean isEq(Obj obj) {
-    return obj.isEmptyRel();
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public boolean hasElem(Obj obj) {
     return false;
@@ -47,10 +30,6 @@ class EmptyRelObj extends Obj {
 
   public boolean hasTriple(Obj obj1, Obj obj2, Obj obj3) {
     return false;
-  }
-
-  public int getSize() {
-    return 0;
   }
 
   public SeqOrSetIter getSeqOrSetIter() {
@@ -105,9 +84,17 @@ class EmptyRelObj extends Obj {
     throw Miscellanea.softFail("Key not found:", "collection", this, "key", key);
   }
 
-  public int hashCode() {
-    return 0; //## FIND BETTER VALUE
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int extraData() {
+    return emptyRelObjExtraData();
   }
+
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
@@ -123,24 +110,14 @@ class EmptyRelObj extends Obj {
   }
 
   public ValueBase getValue() {
-    return new EmptyRelValue();
+    return valueObj;
   }
 
-  protected int typeId() {
-    return 4;
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
-  protected int internalCmp(Obj other) {
-    return 0;
-  }
+  private static final EmptyRelValue valueObj = new EmptyRelValue();
 
-  static SeqOrSetIter iter1 = new SeqOrSetIter(new Obj[0], 0, -1);
-  static BinRelIter   iter2 = new BinRelIter(new Obj[0], new Obj[0]);
-  static TernRelIter  iter3 = new TernRelIter(new Obj[0], new Obj[0], new Obj[0]);
-
-  static EmptyRelObj singleton = new EmptyRelObj();
-
-  public static EmptyRelObj singleton() {
-    return singleton;
-  }
+  private static final SeqOrSetIter iter1 = new SeqOrSetIter(new Obj[0], 0, -1);
+  private static final BinRelIter   iter2 = new BinRelIter(new Obj[0], new Obj[0]);
+  private static final TernRelIter  iter3 = new TernRelIter(new Obj[0], new Obj[0], new Obj[0]);
 }

@@ -4,49 +4,29 @@ import java.io.Writer;
 
 
 
-class SymbObj extends Obj {
-  int id;
+final class SymbObj extends Obj {
+  int minPrintedSize;
+  SymbValue valueObj;
+
 
   public SymbObj(int id) {
-    this.id = id;
+    data = Long.MIN_VALUE + id;
+    Miscellanea._assert(getSymbId() == id);
+    minPrintedSize = SymbTable.idxToStr(id).length();
+    valueObj = new SymbValue(id);
   }
 
-  public boolean isSymb() {
-    return true;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int extraData() {
+    return symbObjExtraData();
   }
 
-  public boolean isSymb(int id) {
-    return this.id == id;
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
   }
 
-  public int getSymbId() {
-    return id;
-  }
-
-  public boolean getBool() {
-    if (id == SymbTable.FalseSymbId)
-      return false;
-    if (id == SymbTable.TrueSymbId)
-      return true;
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isEq(Obj obj) {
-    return obj.isSymb(id);
-  }
-
-  //## REMOVE REMOVE REMOVE
-  public Obj negate() {
-    if (id == SymbTable.FalseSymbId)
-      return SymbObj.get(SymbTable.TrueSymbId);
-    if (id == SymbTable.TrueSymbId)
-      return SymbObj.get(SymbTable.FalseSymbId);
-    throw new UnsupportedOperationException();
-  }
-
-  public int hashCode() {
-    return hashCode(id);
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
@@ -58,19 +38,11 @@ class SymbObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return SymbTable.idxToStr(id).length();
+    return minPrintedSize;
   }
 
   public ValueBase getValue() {
-    return new SymbValue(id);
-  }
-
-  protected int typeId() {
-    return 0;
-  }
-
-  protected int internalCmp(Obj other) {
-    return SymbTable.compSymbs(id, other.getSymbId());
+    return valueObj;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -79,15 +51,8 @@ class SymbObj extends Obj {
     return SymbTable.get(id);
   }
 
+  //## THIS COULD BE OPTIMIZED
   public static SymbObj get(boolean b) {
     return SymbTable.get(b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
-  }
-
-  public static int hashCode(int symbId) {
-    return symbId; //## BAD HASHCODE, IT'S NOT STABLE
-  }
-
-  public static int hashCode(boolean b) {
-    return b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId;
   }
 }

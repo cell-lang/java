@@ -1,0 +1,33 @@
+package net.cell_lang;
+
+
+abstract class NeIntSeqObj extends NeSeqObj {
+  public SeqObj concat(Obj seq) {
+    if (seq instanceof IntSeqObj)
+      return concat((IntSeqObj) seq);
+    else
+      super.concat(seq);
+  }
+
+  public int internalOrder(Obj other) {
+    if (other instanceof NeIntSeqObj) {
+      Miscellanea._assert(getSize() == other.getSize());
+
+      int len = getSize();
+      for (int i=0 ; i < len ; i++) {
+        long elt = getLongAt(i);
+        long otherElt = other.getLongAt(i);
+        if (elt != otherElt)
+          return elt - otherElt;
+      }
+      return 0;
+    }
+    else
+      super.internalOrder(other);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public abstract NeIntSeqObj concat(IntSeqObj seq);
+  public abstract void copy(int from, int count, long[] buffer, int destOffset);
+}

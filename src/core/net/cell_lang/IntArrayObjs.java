@@ -40,36 +40,20 @@ class IntArrayObjs {
     //## BUG BUG BUG: IMPLEMENT
     return new ByteArrayObj(data);
   }
+
+  static IntArrayObj createRightPadded(long value) {
+    return PaddedIntArray.make(value);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-abstract class IntArrayObjBase extends IntSeqObj {
+abstract class IntArrayObjBase extends NeIntSeqObj {
   int    offset;
   long[] longs;
   Obj[]  objs;
 
-
-  protected IntArrayObjBase(int length) {
-    super(length);
-  }
-
-  protected IntArrayObjBase(int offset, int length) {
-    super(length);
-    this.offset = offset;
-  }
-
-  protected IntArrayObjBase(long[] data) {
-    super(data.length);
-    this.longs = longs;
-  }
-
-  protected IntArrayObjBase(long[] data, int offset, int length) {
-    super(length);
-    this.longs = longs;
-    this.offset = offset;
-  }
 
   public Obj reverse() {
     int last = offset + length - 1;
@@ -82,7 +66,7 @@ abstract class IntArrayObjBase extends IntSeqObj {
   public long[] getArray(long[] buffer) {
     if (longs == null) {
       longs = new long[length];
-      copy(longs);
+      copy(0, longs);
     }
     return longs;
   }
@@ -90,20 +74,10 @@ abstract class IntArrayObjBase extends IntSeqObj {
   public Obj[] getArray(Obj[] buffer) {
     if (objs == null) {
       objs = new Obj[length];
-      copy(objs);
+      copy(0, objs);
     }
     return objs;
   }
-
-  // public SeqOrSetIter getSeqOrSetIter() {
-  //   return new SeqOrSetIter(items, 0, length-1);
-  // }
-
-  // public void initAt(long idx, Obj value) {
-  //   Miscellanea._assert(idx >= 0 & idx < length);
-  //   Miscellanea._assert(items[(int) idx] == null);
-  //   items[(int) idx] = value;
-  // }
 
   public Obj getSlice(long first, long len) {
     //## DON'T I NEED TO CHECK THAT BOTH first AND len ARE NONNEGATIVE?
@@ -113,19 +87,32 @@ abstract class IntArrayObjBase extends IntSeqObj {
   }
 
   public IntSeqObj append(long value) {
-      return IntRopeObj.make(this, PaddedIntArray.make(value));
+    return IntRopeObj.make(this, PaddedIntArray.make(value));
   }
 
   public IntSeqObj concat(IntSeqObj seq) {
     return IntRopeObj.make(this, seq);
   }
 
-  public int hashcodesSum() {
-    int sum = 0;
-    int end = offset + length;
-    for (int i=offset ; i < end ; i++)
-      sum += IntObj.hashCode(longs[i]);
-    return sum;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int internalOrder(Obj other) {
+    if (other instanceof IntArrayObjBase) {
+      Miscellanea._assert(getSize() == other.getSize());
+
+      IntArrayObjBase otherArray = (IntArrayObjBase) other;
+
+      int len = getSize();
+      for (int i=0 ; i < len ; i++) {
+        long elt = getLongAt(i);
+        long otherElt = other.getLongAt(i);
+        if (elt != otherElt)
+          return elt - otherElt;
+      }
+      return 0;
+    }
+    else
+      super.internalOrder(other);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -146,6 +133,10 @@ abstract class IntArrayObjBase extends IntSeqObj {
 
 final class IntArrayObj extends IntArrayObjBase {
   public IntArrayObj(long[] data) {
+    long eltsData
+    data = seqObjData(len, eltsData);
+  protected static long seqObjData(int length, long eltsData) {
+
     super(data.length);
     longs = data;
   }
@@ -185,7 +176,7 @@ final class IntArraySliceObj extends IntArrayObjBase {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class PaddedIntArray {
+final class PaddedIntArray {
   long[] buffer;
   int used;
 
@@ -241,7 +232,7 @@ class PaddedIntArray {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class ByteArrayObjBase extends IntArrayObjBase {
+abstract class ByteArrayObjBase extends IntArrayObjBase {
   byte[] bytes;
 
 
@@ -317,7 +308,7 @@ final class ByteArraySliceObj extends ByteArrayObjBase {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class ShortArrayObjBase extends IntArrayObjBase {
+abstract class ShortArrayObjBase extends IntArrayObjBase {
   short[] shorts;
 
 
@@ -397,7 +388,7 @@ final class ShortArraySliceObj extends ShortArrayObjBase {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class Int32ArrayObjBase extends IntArrayObjBase {
+abstract class Int32ArrayObjBase extends IntArrayObjBase {
   int[] ints;
 
 

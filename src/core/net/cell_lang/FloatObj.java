@@ -3,33 +3,23 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-
-class FloatObj extends Obj {
-  double value;
-
+final class FloatObj extends Obj {
   public FloatObj(double value) {
-    this.value = value;
+    data = Double.longBitsToDouble(value);
+    Miscellanea._assert(getDouble() == value); //## REMOVE AFTER TESTING
   }
 
-  public boolean isFloat() {
-    return true;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int extraData() {
+    return doubleObjExtraData();
   }
 
-  public boolean isFloat(double value) {
-    return this.value == value;
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
   }
 
-  public double getDouble() {
-    return value;
-  }
-
-  public boolean isEq(Obj obj) {
-    return obj.isFloat(value);
-  }
-
-  public int hashCode() {
-    return hashCode(value);
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
@@ -46,24 +36,5 @@ class FloatObj extends Obj {
 
   public ValueBase getValue() {
     return new FloatValue(value);
-  }
-
-  protected int typeId() {
-    return 2;
-  }
-
-  protected int internalCmp(Obj other) {
-    return compare(value, other.getDouble());
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  public static int hashCode(double x) {
-    long l = Double.doubleToLongBits(x);
-    return ((int) (l >> 32)) ^ ((int) l);
-  }
-
-  public static int compare(double x1, double x2) {
-    return x1 == x2 ? 0 : (x1 < x2 ? 1 : -1);
   }
 }
