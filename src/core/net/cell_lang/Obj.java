@@ -180,6 +180,10 @@ abstract class Obj /*implements Comparable<Obj>*/ {
     return Long.MIN_VALUE + id;
   }
 
+  protected static long boolObjData(boolean value) {
+    return Long.MIN_VALUE + (value ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
+  }
+
   protected static long floatObjData(double value) {
     return Double.doubleToRawLongBits(value);
   }
@@ -277,6 +281,8 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
   public byte[] getUnsignedByteArray()            {throw Miscellanea.internalFail(this);}
 
+  public SeqIter getSeqIter()                     {throw Miscellanea.internalFail(this);}
+
   public SeqObj reverse()                         {throw Miscellanea.internalFail(this);}
   public SeqObj concat(Obj seq)                   {throw Miscellanea.internalFail(this);}
 
@@ -332,7 +338,8 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   //////////////////////////////////////////////////////////////////////////////
   /////////////////////////// Tagged obj operations ///////////////////////////
 
-  public Obj getInnerObj() {throw Miscellanea.internalFail(this);}
+  public Obj  getInnerObj()  {throw Miscellanea.internalFail(this);}
+  public long getInnerLong() {throw Miscellanea.internalFail(this);}
 
   public boolean isSyntacticSugaredString() {return false;}
   public String getString() {throw Miscellanea.internalFail(this);}

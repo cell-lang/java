@@ -257,7 +257,7 @@ class TernaryTable {
 
   public Obj copy(int idx1, int idx2, int idx3) {
     if (count == 0)
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
 
     Obj[] objs1 = new Obj[count];
     Obj[] objs2 = new Obj[count];

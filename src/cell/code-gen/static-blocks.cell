@@ -320,7 +320,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   String* updater_creation_code(StaticBlock block) {
     var_ids = (bare_id(v) : v <- isort(keys(block.state_vars)));
-    init_vars_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton();" : id <- var_ids);
+    init_vars_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton;" : id <- var_ids);
 
     bool_vars_ids = isort(keys(block.nested_blocks));
     bool_vars_init_code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- bool_vars_ids);
@@ -356,7 +356,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   String* updater_reset_code(StaticBlock block) {
     var_ids = (bare_id(v) : v <- isort(keys(block.state_vars)));
-    vars_reset_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton();" : id <- var_ids);
+    vars_reset_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton;" : id <- var_ids);
 
     bool_vars_ids = isort(keys(block.nested_blocks));
     bool_vars_reset_code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- bool_vars_ids);

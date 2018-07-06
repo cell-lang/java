@@ -20,6 +20,10 @@ final class TaggedObj extends Obj {
     return obj;
   }
 
+  public long getInnerLong() {
+    return obj.getLong();
+  }
+
   public Obj lookupField(int id) {
     return obj.lookupField(id);
   }

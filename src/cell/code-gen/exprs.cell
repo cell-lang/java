@@ -1,8 +1,8 @@
 String native_expr(InlineObj) =
   object(<+> a?)    = "SymbObj.get(" & symb_idx_name(a) & ")",
   object(<*..*> n?) = "IntObj.get(" & printed(n) & "L)",
-  empty_seq         = "SeqObj.empty()",
-  empty_rel         = "EmptyRelObj.singleton()";
+  empty_seq         = "EmptySeqObj.singleton",
+  empty_rel         = "EmptyRelObj.singleton";
 
 
 String native_expr(StdObjVar var) = native_var_ref_name(var);
@@ -266,8 +266,8 @@ String native_expr(
   <ElemVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId, AnyAutoVar, AnyDBVar> var
 ) = native_var_ref_name(var);
 
-String native_expr(<blank_obj>) = "BlankObj.singleton()";
-String native_expr(<null_obj>) = "NullObj.singleton()";
+String native_expr(<blank_obj>) = "BlankObj.singleton";
+String native_expr(<null_obj>) = "NullObj.singleton";
 
 // String native_expr(ClsVar v) = native_var_ref_name(v);
 

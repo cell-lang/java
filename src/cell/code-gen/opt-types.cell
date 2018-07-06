@@ -32,10 +32,6 @@ implicit prg : CompiledPrg {
     // Actual labels array declaration
     body = (body | "", "int[] labels;") if has_opt_fields;
 
-    // // Mandatory labels hashcodes sum
-    // hash_exprs = ("SymbObj.hashCode(" & symb_idx_name(l) & ")" : l <- ord_mand_labels);
-    // body = (body | "", "static int staticHashSumPart = " & append(hash_exprs, " + ") & ";");
-
     // Methods
     reprs = [l -> fields(l, !!).repr : l <- labels];
     let tag = tag, ord_labels = ord_labels, opt_labels = opt_labels, reprs = reprs:
@@ -45,7 +41,8 @@ implicit prg : CompiledPrg {
         has_field_def,
         lookup_field_def,
         // hash_code_def(ord_mand_labels, ord_opt_labels),
-        internal_order_def(class_name, ord_opt_labels),
+        extra_data_def(idx),
+        internal_order_def(class_name, ord_mand_labels, ord_opt_labels),
         count_fields_def,
         get_labels_def(index)
       );
@@ -61,18 +58,11 @@ implicit prg : CompiledPrg {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Methods generation //////////////////////////////
 
-  // String* get_tag_id_def = (
-  //   "public int getTagId() {",
-  //   "  return " & symb_idx_name(tag) & ";",
-  //   "}"
-  // );
-
 implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Symbol -> LowLevelRepr] {
-
   String* finish_init_def(Symbol* ord_mand_labels, Symbol* ord_opt_labels) {
     if ord_mand_labels != ():
       hashcodes = (obj_data_expr(reprs(l, !!), opt_rec_field_name(l)) : l <- ord_mand_labels);
-      hashcodes_sum = join(hashcodes, " + ");
+      hashcodes_sum = append(hashcodes, " + ");
     else
       hashcodes_sum = "0";
     ;
@@ -82,22 +72,23 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
       "  long hashcode = " & hashcodes_sum & ";"
     );
 
-    if opt_opt_labels != ():
+    if ord_opt_labels != ():
       code = (code | "  int mask = 0;");
       for l @ i <- ord_opt_labels:
         code = code & (
           " if (" & set_check_expr(reprs(l, !!), l, "", false) & ") {",
-          "   hashcode += " obj_data_expr(reprs(l, !!), opt_rec_field_name(l)) & ";",
+          "   hashcode += " & obj_data_expr(reprs(l, !!), opt_rec_field_name(l)) & ";",
           "   mask |= 1 << " & printed(i) & ";",
           "}"
         );
       ;
+      mask = "mask";
     else
       mask = "0";
     ;
 
-    set_data_instr = "  data = optTagRecObjData(" symb_idx_name(tag) & ", hashcode, " & mask & ");";
-    return code | set_data_instr, "}");
+    set_data_instr = "  data = optTagRecObjData(" & symb_idx_name(tag) & ", hashcode, " & mask & ");";
+    return (code | set_data_instr, "}");
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -140,30 +131,6 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
 
   //////////////////////////////////////////////////////////////////////////////
 
-  // String* hash_code_def(Symbol* ord_mand_labels, Symbol* ord_opt_labels) {
-  //   hash_exprs = (hash_code_expr(reprs(l, !!), opt_rec_field_name(l)) : l <- ord_mand_labels);
-  //   if opt_labels != []:
-  //     body = ("int hashSum = staticHashSumPart + " & append(hash_exprs, " + ") & ";");
-  //     for l <- ord_opt_labels:
-  //       value_hash_expr = hash_code_expr(reprs(l, !!), opt_rec_field_name(l));
-  //       body = (body |
-  //         "if (" & set_check_expr(reprs(l, !!), l, "", false) & ")",
-  //         "  hashSum += SymbObj.hashCode(" & symb_idx_name(l) & ") + " & value_hash_expr & ";"
-  //       );
-  //     ;
-  //     body = (body | "return " & symb_idx_name(tag) & " ^ (hashSum ^ countFields());");
-  //   else
-  //     body = (
-  //       "int hashSum = staticHashSumPart + " & append(hash_exprs, " + ") & ";",
-  //       "return " & symb_idx_name(tag) & " ^ (hashSum ^ " & printed(|ord_labels|) & ");"
-  //     );
-  //   ;
-
-  //   return ("public int hashCode() {") & indent_lines(body) & ("}");
-  // }
-
-  //////////////////////////////////////////////////////////////////////////////
-
   String* extra_data_def(Int idx) = (
     "public int extraData() {",
     "  return optTagRecObjExtraData(" & printed(idx) & ");",
@@ -171,65 +138,54 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
   );
 
 
-  String* internal_order_def(String class_name, Symbol* ord_opt_labels) {
-    // if opt_labels != []:
-    //   body = (
-    //     "",
-    //     "    int len = countFields();",
-    //     "    int otherLen = otherOpt.countFields();",
-    //     "    if (len != otherLen)",
-    //     "      return len < otherLen ? 1 : -1;"
-    //   );
+  String* internal_order_def(String class_name, Symbol* ord_mand_labels, Symbol* ord_opt_labels) {
+    body = (class_name & " otherOpt = (" & class_name & ") other;");
 
-    //   for l @ i <- ord_opt_labels:
-    //     test_var_name = set_check_expr(reprs(l, !!), l, "", true);
-    //     unparenthesized_test_var_name = set_check_expr(reprs(l, !!), l, "", false);
-    //     other_test_var_name = set_check_expr(reprs(l, !!), l, "otherOpt.", true);
-    //     body = (body |
-    //       "",
-    //       "    if (" & test_var_name & " != " & other_test_var_name & ")",
-    //       "      return " & unparenthesized_test_var_name & " ? 1 : -1;" ## NOT SURE ABOUT THIS ONE
-    //     );
-    //   ;
-
-    //   body = (body | "", "    int res;") if opt_labels(ord_labels(0));
-
-    // else
-    //   body = ();
-    // ;
-
-    body = ();
-    for l @ i <- ord_labels:
-      repr = reprs(l, !!);
-      optional = opt_labels(l);
-      field_name = opt_rec_field_name(l);
-      comp_expr = comparison_expr(repr, field_name, "otherOpt." & field_name);
+    if ord_opt_labels != ():
       body = (body | "");
-      if i == |ord_labels| - 1 and not optional:
-        body = (body | "  return " & comp_expr & ";");
+      for l <- ord_opt_labels:
+        repr = reprs(l, !!);
+        test_expr = set_check_expr(repr, l, "", true);
+        other_test_expr = set_check_expr(repr, l, "otherOpt.", true);
+        body = (body | "Miscellanea._assert(" & test_expr & " == " & other_test_expr & ");");
+      ;
+    ;
+
+    for l @ i <- ord_mand_labels:
+      field_name = opt_rec_field_name(l);
+      comp_expr = comparison_expr(reprs(l, !!), field_name, "otherOpt." & field_name);
+      if i == |ord_labels| - 1:
+        body = (body | "return " & comp_expr & ";");
       else
-        maybe_var_type = if i == 0 and not optional then "int " else "";
-        field_code = (
+        maybe_var_type = if i == 0 then "int " else "";
+        body = (body |
+          "",
           maybe_var_type & "res = " & comp_expr & ";",
           "if (res != 0)",
           "  return res;"
         );
-        if optional:
-          test_var_name = set_check_expr(reprs(l, !!), l, "", false);
-          field_code = ("if (" & test_var_name & ") {") & indent_lines(field_code) & ("}");
-        ;
-        body = body & field_code;
       ;
     ;
 
-    body = (body | "", "return 0;") if opt_labels(rat(ord_labels, 0));
+    for l <- ord_opt_labels:
+      repr = reprs(l, !!);
+      field_name = opt_rec_field_name(l);
+      comp_expr = comparison_expr(repr, field_name, "otherOpt." & field_name);
+      test_var_name = set_check_expr(repr, l, "", false);
+      maybe_var_type = if ord_mand_labels == () then "int " else "";
+      body = (body |
+        "",
+        "if (" & test_var_name & ") {",
+        "  " & maybe_var_type & "res = " & comp_expr & ";",
+        "  if (res != 0)",
+        "    return res;",
+        "}"
+      );
+    ;
 
-    return (
-      "protected int internalOrder(Obj other) {",
-      "  " & class_name & " otherOpt = (" & class_name & ") other;"
-    ) & indent_lines(body) & (
-      "}"
-    );
+    body = (body | "", "return 0;") if ord_opt_labels != ();
+
+    return ("public int internalOrder(Obj other) {") & indent_lines(body) & ("}");
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -292,7 +248,7 @@ String native_obj_expr(LowLevelRepr repr, String expr) =
 
 
 String obj_data_expr(LowLevelRepr repr, String expr) =
-  bool    = "symbObjData(" & expr & ")",
+  bool    = "boolObjData(" & expr & ")",
   int     = expr,
   float   = "floatObjData(" & expr & ")",
   symbol  |
@@ -304,4 +260,4 @@ String comparison_expr(LowLevelRepr repr, String expr1, String expr2) =
   int     = "IntObj.compare(" & expr1 & ", " & expr2 & ")",
   float   = "FloatObj.compare(" & expr1 & ", " & expr2 & ")",
   symbol  |
-  object  = expr1 & ".cmp(" & expr2 & ")";
+  object  = expr1 & ".quickOrder(" & expr2 & ")";

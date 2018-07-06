@@ -140,6 +140,10 @@ class Builder {
     return new TaggedObj(tag, obj);
   }
 
+  public static Obj createTaggedIntObj(int tag, long value) {
+    return new TaggedObj(tag, IntObj.get(value));
+  }
+
   public static Obj buildConstIntSeq(byte[] vals) {
     return IntArrayObjs.create(vals);
   }

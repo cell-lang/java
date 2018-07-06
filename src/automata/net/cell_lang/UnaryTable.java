@@ -118,7 +118,7 @@ class UnaryTable {
 
   public Obj copy() {
     if (count == 0)
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
     Obj[] objs = new Obj[count];
     int next = 0;
     for (int i=0 ; i < bitmap.length ; i++) {

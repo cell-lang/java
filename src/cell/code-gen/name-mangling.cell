@@ -278,8 +278,8 @@ String native_var_type(BoolVar)           = "boolean";
 String native_var_type(FloatVar)          = "double";
 String native_var_type(OptTagRecVar var)  = opt_tag_rec_name(var.tag, var.index);
 
-String native_var_type(SeqItVar v)     = "SeqOrSetIter";
-String native_var_type(SetItVar v)     = "SeqOrSetIter";
+String native_var_type(SeqItVar v)     = "SeqIter";
+String native_var_type(SetItVar v)     = "SetIter";
 String native_var_type(BinRelItVar v)  = "BinRelIter";
 String native_var_type(TernRelItVar v) = "TernRelIter";
 String native_var_type(StreamVar v)    = "java.util.ArrayList<Obj>";
@@ -350,7 +350,7 @@ String pending_updates_var_type(Table table) {
 ////////////////////////////////////////////////////////////////////////////////
 
 String native_const(<blank, undefined> state) =
-  #(if state == :blank then "BlankObj" else "NullObj") & ".singleton()";
+  #(if state == :blank then "BlankObj" else "NullObj") & ".singleton";
 
 ////////////////////////////////////////////////////////////////////////////////
 

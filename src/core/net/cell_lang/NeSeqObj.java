@@ -46,6 +46,13 @@ abstract class NeSeqObj extends SeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  public SeqIter getSeqIter() {
+    Obj[] elts = getArray((Obj[]) null);
+    return new SeqIter(elts, 0, elts.length-1);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   public NeSeqObj append(Obj obj) {
     if (obj.isInt())
       return append(obj.getLong());

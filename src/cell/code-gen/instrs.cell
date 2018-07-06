@@ -10,9 +10,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     alloc_array()         = alloc_array_native_code(instr.var, instr.size),
     write_array()         = write_array_native_code(instr.var, instr.idx, instr.value),
     write_rec_field()     = write_rec_field_native_code(instr.var, instr.label, instr.value, instr.optional),
-    finish_init()         = native_expr(instr.var) & ".finishInit();",
-    get_seq_iter()        |
-    get_set_iter()        = (native_method_call(instr.var, instr.src, "getSeqOrSetIter", ())),
+    finish_init()         = (native_expr(instr.var) & ".finishInit();"),
+    get_seq_iter()        = (native_method_call(instr.var, instr.src, "getSeqIter", ())),
+    get_set_iter()        = (native_method_call(instr.var, instr.src, "getSetIter", ())),
     get_bin_rel_iter()    = (native_get_bin_rel_iter_code(instr.var, instr.src, instr.args)),
     get_tern_rel_iter()   = (native_get_tern_rel_iter_code(instr.var, instr.src, instr.args)),
     move_forward(v?)      = (native_method_call(v, "next", ())),
@@ -24,7 +24,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     set_rc_var()          = (native_code(instr.value, instr.var)),
     init_memb_var()       = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
     reset_memb_var()      = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
-    clear_loc_var(v?)     = (native_var_ref_name(v) & " = NullObj.singleton();"),
+    clear_loc_var(v?)     = (native_var_ref_name(v) & " = NullObj.singleton;"),
     terminate()           = { type_str = if instr.hard_fail then "_hard" else "soft";
                               return ("throw Miscellanea." & type_str & "Fail();");
                             },
