@@ -9,8 +9,8 @@ String native_expr(StdObjVar var) = native_var_ref_name(var);
 
 
 String native_expr(ObjNatOp expr) =
-  at()                = native_expr(expr.seq)    & ".getItem("     & native_expr(expr.idx) & ")",
-  lookup()            = native_expr(expr.rel)    & ".lookup("      & native_expr(expr.key) & ")",
+  at()                = native_expr(expr.seq)    & ".getObjAt(" & native_expr(expr.idx) & ")",
+  lookup()            = native_expr(expr.rel)    & ".lookup(" & native_expr(expr.key) & ")",
   lookup_field()      = native_lookup_field_expr(expr.record, expr.field, expr.repr),
   get_tag(e?)         = native_expr(e)           & ".getTag()",
   get_inner_obj(e?)   = native_expr(e)           & ".getInnerObj()",

@@ -10,6 +10,14 @@ final class BlankObj extends Obj {
 
   }
 
+  public int extraData() {
+    return blankObjExtraData();
+  }
+
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
+  }
+
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
       writer.write("Blank");
@@ -23,11 +31,7 @@ final class BlankObj extends Obj {
     return 5;
   }
 
-  public int extraData() {
-    return blankObjExtraData();
-  }
-
-  public int internalOrder(Obj other) {
+  public ValueBase getValue() {
     throw Miscellanea.internalFail(this);
   }
 }

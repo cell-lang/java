@@ -33,7 +33,7 @@ final class RopeObj extends NeSeqObj {
   public SeqObj reverse() {
     int len = getSize();
     int leftLen = left.getSize();
-    int rightLen = len - rightLen;
+    int rightLen = len - leftLen;
     Obj[] array = new Obj[len];
 
     right.copy(0, rightLen, array, 0);

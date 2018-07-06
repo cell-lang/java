@@ -5,7 +5,7 @@ import java.io.Writer;
 
 final class FloatObj extends Obj {
   public FloatObj(double value) {
-    data = Double.doubleToRawLongBits(value);
+    data = floatObjData(value);
     Miscellanea._assert(getDouble() == value); //## REMOVE AFTER TESTING
   }
 
@@ -36,5 +36,11 @@ final class FloatObj extends Obj {
 
   public ValueBase getValue() {
     return new FloatValue(getDouble());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static int compare(double x1, double x2) {
+    return (int) (floatObjData(x1) - floatObjData(x2));
   }
 }

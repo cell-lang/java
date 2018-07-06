@@ -117,7 +117,7 @@ abstract class IntArrayObjBase extends NeIntSeqObj {
       return 0;
     }
     else
-      super.internalOrder(other);
+      return super.internalOrder(other);
   }
 
   //////////////////////////////////////////////////////////////////////////////

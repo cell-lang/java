@@ -6,7 +6,7 @@ abstract class NeIntSeqObj extends NeSeqObj {
     if (seq instanceof NeIntSeqObj)
       return concat((NeIntSeqObj) seq);
     else
-      super.concat(seq);
+      return super.concat(seq);
   }
 
   public int internalOrder(Obj other) {
@@ -23,7 +23,7 @@ abstract class NeIntSeqObj extends NeSeqObj {
       return 0;
     }
     else
-      super.internalOrder(other);
+      return super.internalOrder(other);
   }
 
   //////////////////////////////////////////////////////////////////////////////

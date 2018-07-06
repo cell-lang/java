@@ -78,7 +78,7 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   }
 
   public final boolean isTagged() {
-    return this instanceof TaggedObj;
+    return this instanceof TaggedObj || this instanceof OptTagRecObj;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   }
 
   public final int getTagId() {
-    return data & 0xFFFFFF;
+    return (int) (data & 0xFFFFFF);
   }
 
   public final Obj getTag() {
@@ -176,60 +176,89 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  protected static long symbObjData(int id) {
+    return Long.MIN_VALUE + id;
+  }
+
+  protected static long floatObjData(double value) {
+    return Double.doubleToRawLongBits(value);
+  }
+
   // 11 - 32 bit hash code - 30 bit size/length
   protected static long seqObjData(int length, long hashcode) {
-    Miscellanea._assert((3 << 62) == -4611686018427387904L);
-
-    hashcode = ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
-    return (0b11 << 62) | (hashcode << 30) | length;
+    return (0b11 << 62) | (packedHashcode(hashcode) << 30) | length;
   }
 
   // 11 - 32 bit hash code - 30 bit size
   protected static long setObjData(int size, long hashcode) {
-    hashcode = ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
-    return (0b11 << 62) | (hashcode << 30) | size;
+    return (0b11 << 62) | (packedHashcode(hashcode) << 30) | size;
   }
 
-  // 11111111 - 32 bit hash code - 24 bit tag id
+  // 11 - 32 bit hash code - 30 bit size
+  protected static long binRelObjData(int size, long hashcode) {
+    return (0b11 << 62) | (packedHashcode(hashcode) << 30) | size;
+  }
+
+  // 11 - 32 bit hash code - 30 bit size
+  protected static long ternRelObjData(int size, long hashcode) {
+    return (0b11 << 62) | (packedHashcode(hashcode) << 30) | size;
+  }
+
+  // 16 bit 1 padding - 32 bit hash code - 16 bit tag id
   protected static long tagObjData(int tag, long hashcode) {
-    hashcode = ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
-    return (0xFF << 56) | (hashcode << 24) | (tag & 0xFFFFFF);
+    return (0xFFFF << 48) | (packedHashcode(hashcode) << 24) | (tag & 0xFFFF);
+  }
+
+  // 16 bit optional field mask - 32 bit hash code - 16 bit tag id
+  public static long optTagRecObjData(int tag, long hashcode, int optFieldsMask) {
+    return (((long) optFieldsMask) << 48) | (packedHashcode(hashcode) << 16) | (tag & 0xFFFF);
+  }
+
+  private static long packedHashcode(long hashcode) {
+    Miscellanea._assert((3 << 62) == -4611686018427387904L);
+    return ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private static final int blankObjId       = 0;
-  private static final int nullObjId        = 1;
-  private static final int symbObjId        = 2;
-  private static final int intObjId         = 3;
-  private static final int floatObjId       = 4;
-  private static final int emptySeqObjId    = 5;
-  private static final int emptyRelObjId    = 6;
-  private static final int inlineTagObjId   = 7;
+  private static final int blankObjId           = 0;
+  private static final int nullObjId            = 1;
+  private static final int symbObjId            = 2;
+  private static final int intObjId             = 3;
+  private static final int floatObjId           = 4;
+  private static final int emptySeqObjId        = 5;
+  private static final int emptyRelObjId        = 6;
+  private static final int inlineTagObjId       = 7;
 
-  private static final int neSeqObjId       = 16;
-  private static final int neSetObjId       = 17;
-  private static final int neBinRelObjId    = 18;
-  private static final int neTernRelObjId   = 19;
-  private static final int refTagObjId      = 20;
+  private static final int neSeqObjId           = 16;
+  private static final int neSetObjId           = 17;
+  private static final int neBinRelObjId        = 18;
+  private static final int neTernRelObjId       = 19;
+  private static final int refTagObjId          = 20;
+
+  private static final int optTagRecObjBaseId   = 21;
 
   static boolean isInlineObj(int extraData) {
     return extraData < 16;
   }
 
-  protected static int blankObjExtraData()        {return blankObjId;     }
-  protected static int nullObjExtraData()         {return nullObjId;      }
-  protected static int symbObjExtraData()         {return symbObjId;      }
-  protected static int intObjExtraData()          {return intObjId;       }
-  protected static int floatObjExtraData()        {return floatObjId;     }
-  protected static int emptySeqObjExtraData()     {return emptySeqObjId;  }
-  protected static int emptyRelObjExtraData()     {return emptyRelObjId;  }
-  protected static int inlineTagObjExtraData()    {return inlineTagObjId; }
-  protected static int neSeqObjExtraData()        {return neSeqObjId;     }
-  protected static int neSetObjExtraData()        {return neSetObjId;     }
-  protected static int neBinRelObjExtraData()     {return neBinRelObjId;  }
-  protected static int neTernRelObjExtraData()    {return neTernRelObjId; }
-  protected static int refTagObjExtraData()       {return refTagObjId;    }
+  protected static int blankObjExtraData()          {return blankObjId;         }
+  protected static int nullObjExtraData()           {return nullObjId;          }
+  protected static int symbObjExtraData()           {return symbObjId;          }
+  protected static int intObjExtraData()            {return intObjId;           }
+  protected static int floatObjExtraData()          {return floatObjId;         }
+  protected static int emptySeqObjExtraData()       {return emptySeqObjId;      }
+  protected static int emptyRelObjExtraData()       {return emptyRelObjId;      }
+  protected static int inlineTagObjExtraData()      {return inlineTagObjId;     }
+  protected static int neSeqObjExtraData()          {return neSeqObjId;         }
+  protected static int neSetObjExtraData()          {return neSetObjId;         }
+  protected static int neBinRelObjExtraData()       {return neBinRelObjId;      }
+  protected static int neTernRelObjExtraData()      {return neTernRelObjId;     }
+  protected static int refTagObjExtraData()         {return refTagObjId;        }
+
+  protected static int optTagRecObjExtraData(int idx) {
+    return idx + optTagRecObjBaseId;
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   ///////////////////////////// Sequence operations ////////////////////////////
@@ -268,102 +297,48 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   public Obj     randElem()         {throw Miscellanea.internalFail(this);}
 
   //////////////////////////////////////////////////////////////////////////////
-  /////////////////////////// Tagged obj operations ///////////////////////////
-
-  public Obj  getInnerObj()   {throw Miscellanea.internalFail(this);}
-
-  //////////////////////////////////////////////////////////////////////////////
-  ////////////////////////// OBSOLETE STUFF TO REMOVE //////////////////////////
-
-  public long[] getLongArray() {
-    return getArray((long[]) null);
-  }
-
-  public byte[] getByteArray() {
-    return getUnsignedByteArray();
-  }
-
-  public void initAt(long i, Obj v) {throw Miscellanea.internalFail(this);}
-
-  public long mantissa() {throw Miscellanea.internalFail(this);}
-  public long decExp()   {throw Miscellanea.internalFail(this);}
-
-  public int cmp(Obj other) {
-    int res = quickOrder(other);
-    return res < 0 ? -1 : (res > 0 ? 1 : 0);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
+  ///////////////////////// Binary relation operations /////////////////////////
 
   public boolean isNeMap()                              {return false;}
   public boolean isNeRecord()                           {return false;}
-  public boolean isSyntacticSugaredString()             {return false;}
 
   public boolean hasKey(Obj o)                          {throw Miscellanea.internalFail(this);}
   public boolean hasField(int id)                       {throw Miscellanea.internalFail(this);}
   public boolean hasPair(Obj o1, Obj o2)                {throw Miscellanea.internalFail(this);}
-  public boolean hasTriple(Obj o1, Obj o2, Obj o3)      {throw Miscellanea.internalFail(this);}
 
-  public BinRelIter  getBinRelIter()                    {throw Miscellanea.internalFail(this);}
-  public TernRelIter getTernRelIter()                   {throw Miscellanea.internalFail(this);}
+  public Obj lookup(Obj key)                            {throw Miscellanea.internalFail(this);}
+  public Obj lookupField(int id)                        {throw Miscellanea.internalFail(this);}
+
+  public BinRelIter getBinRelIter()                     {throw Miscellanea.internalFail(this);}
 
   public BinRelIter getBinRelIterByCol1(Obj obj)        {throw Miscellanea.internalFail(this);}
   public BinRelIter getBinRelIterByCol2(Obj obj)        {throw Miscellanea.internalFail(this);}
 
-  public TernRelIter getTernRelIterByCol1(Obj val)      {throw Miscellanea.internalFail(this);}
-  public TernRelIter getTernRelIterByCol2(Obj val)      {throw Miscellanea.internalFail(this);}
-  public TernRelIter getTernRelIterByCol3(Obj val)      {throw Miscellanea.internalFail(this);}
+  //////////////////////////////////////////////////////////////////////////////
+  ///////////////////////// Ternary relation operations ////////////////////////
+
+  public boolean hasTriple(Obj o1, Obj o2, Obj o3)              {throw Miscellanea.internalFail(this);}
+
+  public TernRelIter getTernRelIter()                           {throw Miscellanea.internalFail(this);}
+
+  public TernRelIter getTernRelIterByCol1(Obj val)              {throw Miscellanea.internalFail(this);}
+  public TernRelIter getTernRelIterByCol2(Obj val)              {throw Miscellanea.internalFail(this);}
+  public TernRelIter getTernRelIterByCol3(Obj val)              {throw Miscellanea.internalFail(this);}
 
   public TernRelIter getTernRelIterByCol12(Obj val1, Obj val2)  {throw Miscellanea.internalFail(this);}
   public TernRelIter getTernRelIterByCol13(Obj val1, Obj val3)  {throw Miscellanea.internalFail(this);}
   public TernRelIter getTernRelIterByCol23(Obj val2, Obj val3)  {throw Miscellanea.internalFail(this);}
 
-  public String getString()                             {throw Miscellanea.internalFail(this);}
+  //////////////////////////////////////////////////////////////////////////////
+  /////////////////////////// Tagged obj operations ///////////////////////////
 
-  public Obj lookup(Obj key)                            {throw Miscellanea.internalFail(this);}
-  public Obj lookupField(int id)                        {throw Miscellanea.internalFail(this);}
+  public Obj getInnerObj() {throw Miscellanea.internalFail(this);}
 
-  public int cmpSeq(Obj[] es, int o, int l)             {throw Miscellanea.internalFail(this);}
-  public int cmpNeSet(Obj[] es)                         {throw Miscellanea.internalFail(this);}
-  public int cmpNeBinRel(Obj[] c1, Obj[] c2)            {throw Miscellanea.internalFail(this);}
-  public int cmpNeTernRel(Obj[] c1, Obj[] c2, Obj[] c3) {throw Miscellanea.internalFail(this);}
-  public int cmpTaggedObj(int tag, Obj obj)             {throw Miscellanea.internalFail(this);}
-  public int cmpRecord(int[] ls, Obj[] vs)              {throw Miscellanea.internalFail(this);}
+  public boolean isSyntacticSugaredString() {return false;}
+  public String getString() {throw Miscellanea.internalFail(this);}
 
-  public ValueBase getValue()                           {throw Miscellanea.internalFail(this);}
-
-  public void dump() {
-    System.out.println("ERROR: NO DUMP AVAILABLE");
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
-
-  public abstract void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel);
-  public abstract int minPrintedSize();
-
-  // public abstract int hashCode();
-  // protected abstract int typeId();
-  // protected abstract int internalCmp(Obj o);
-
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
-
-
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
-
-  // public int compareTo(Obj other) {
-  //   return -internalOrder(other);
-  // }
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
   public String toString() {
     StringWriter writer = new StringWriter();
@@ -392,5 +367,37 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
   public Obj printed() {
     return Miscellanea.strToObj(toString());
+  }
+
+  public void dump() {
+    System.out.println("ERROR: NO DUMP AVAILABLE");
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public abstract void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel);
+  public abstract int minPrintedSize();
+  public abstract ValueBase getValue();
+
+  //////////////////////////////////////////////////////////////////////////////
+  ////////////////////////// OBSOLETE STUFF TO REMOVE //////////////////////////
+
+  public long[] getLongArray() {
+    return getArray((long[]) null);
+  }
+
+  public byte[] getByteArray() {
+    return getUnsignedByteArray();
+  }
+
+  public void initAt(long i, Obj v) {throw Miscellanea.internalFail(this);}
+
+  public long mantissa() {throw Miscellanea.internalFail(this);}
+  public long decExp()   {throw Miscellanea.internalFail(this);}
+
+  public int cmp(Obj other) {
+    int res = quickOrder(other);
+    return res < 0 ? -1 : (res > 0 ? 1 : 0);
   }
 }

@@ -132,7 +132,7 @@ class Parser extends TokenStream {
     consume(TokenType.OpenPar);
 
     if (tryConsuming(TokenType.ClosePar))
-      return SeqObj.empty();
+      return EmptySeqObj.singleton;
 
     ArrayList<Obj> elts = new ArrayList<Obj>();
     do {
@@ -177,7 +177,7 @@ class Parser extends TokenStream {
     if (nextIs(TokenType.OpenPar)) {
       Obj innerObj = isRecord() ? parseRec() : parseSeq();
       if (innerObj.isSeq() && innerObj.getSize() == 1)
-        innerObj = innerObj.getItem(0);
+        innerObj = innerObj.getObjAt(0);
       return Builder.createTaggedObj(symbObj.getSymbId(), innerObj);
     }
     else

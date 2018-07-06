@@ -11,7 +11,7 @@ final class SymbObj extends Obj {
 
 
   public SymbObj(int id) {
-    data = Long.MIN_VALUE + id;
+    data = symbObjData(id);
     Miscellanea._assert(getSymbId() == id);
     string = SymbTable.idxToStr(id);
     minPrintedSize = string.length();

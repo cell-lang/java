@@ -33,7 +33,7 @@ final class IntRopeObj extends NeIntSeqObj {
   public SeqObj reverse() {
     int len = getSize();
     int leftLen = left.getSize();
-    int rightLen = len - rightLen;
+    int rightLen = len - leftLen;
     long[] array = new long[len];
 
     right.copy(0, rightLen, array, 0);

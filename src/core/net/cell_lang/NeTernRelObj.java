@@ -4,7 +4,7 @@ import java.io.Writer;
 
 
 
-class NeTernRelObj extends Obj {
+final class NeTernRelObj extends Obj {
   Obj[] col1;
   Obj[] col2;
   Obj[] col3;
@@ -40,17 +40,16 @@ class NeTernRelObj extends Obj {
     Miscellanea._assert(col1 != null && col2 != null && col3 != null);
     Miscellanea._assert(col1.length == col2.length && col1.length == col3.length);
     Miscellanea._assert(col1.length > 0);
+
+    int size = col1.length;
+    long hashcode = 0;
+    for (int i=0 ; i < size ; i++)
+      hashcode += col1[i].data + col2[i].data + col3[i].data;
+    data = ternRelObjData(size, hashcode);
+
     this.col1 = col1;
     this.col2 = col2;
     this.col3 = col3;
-  }
-
-  public boolean isTernRel() {
-    return true;
-  }
-
-  public boolean isNeTernRel() {
-    return true;
   }
 
   public boolean hasTriple(Obj obj1, Obj obj2, Obj obj3) {
@@ -68,10 +67,6 @@ class NeTernRelObj extends Obj {
 
     int idx = Algs.binSearch(col3, first, count, obj3);
     return idx != -1;
-  }
-
-  public int getSize() {
-    return col1.length;
   }
 
   public TernRelIter getTernRelIter() {
@@ -128,12 +123,46 @@ class NeTernRelObj extends Obj {
     return new TernRelIter(col1, col2, col3, idxs231, first, first+count-1);
   }
 
-  public int hashCode() {
-    int hashcodesSum = 0;
-    for (int i=0 ; i < col1.length ; i++)
-      hashcodesSum += col1[i].hashCode() + col2[i].hashCode() + col3[i].hashCode();
-    return hashcodesSum ^ (int) col1.length;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int extraData() {
+    return neTernRelObjExtraData();
   }
+
+  public int internalOrder(Obj other) {
+    Miscellanea._assert(getSize() == other.getSize());
+
+    NeTernRelObj otherRel = (NeTernRelObj) other;
+    int size = getSize();
+
+    Obj[] col = col1;
+    Obj[] otherCol = otherRel.col1;
+    for (int i=0 ; i < size ; i++) {
+      int ord = col[i].quickOrder(otherCol[i]);
+      if (ord != 0)
+        return ord;
+    }
+
+    col = col2;
+    otherCol = otherRel.col2;
+    for (int i=0 ; i < size ; i++) {
+      int ord = col[i].quickOrder(otherCol[i]);
+      if (ord != 0)
+        return ord;
+    }
+
+    col = col3;
+    otherCol = otherRel.col3;
+    for (int i=0 ; i < size ; i++) {
+      int ord = col[i].quickOrder(otherCol[i]);
+      if (ord != 0)
+        return ord;
+    }
+
+    return 0;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
@@ -221,36 +250,5 @@ class NeTernRelObj extends Obj {
       values3[i] = col3[i].getValue();
     }
     return new NeTernRelValue(values1, values2, values3);
-  }
-
-  protected int typeId() {
-    return 7;
-  }
-
-  protected int internalCmp(Obj other) {
-    return other.cmpNeTernRel(col1, col2, col3);
-  }
-
-  public int cmpNeTernRel(Obj[] otherCol1, Obj[] otherCol2, Obj[] otherCol3) {
-    int len = col1.length;
-    int otherLen = otherCol1.length;
-    if (otherLen != len)
-      return otherLen < len ? 1 : -1;
-    for (int i=0 ; i < len ; i++) {
-      int res = otherCol1[i].cmp(col1[i]);
-      if (res != 0)
-        return res;
-    }
-    for (int i=0 ; i < len ; i++) {
-      int res = otherCol2[i].cmp(col2[i]);
-      if (res != 0)
-        return res;
-    }
-    for (int i=0 ; i < len ; i++) {
-      int res = otherCol3[i].cmp(col3[i]);
-      if (res != 0)
-        return res;
-    }
-    return 0;
   }
 }

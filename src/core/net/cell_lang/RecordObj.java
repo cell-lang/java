@@ -3,34 +3,38 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-class RecordObj extends Obj {
+class RecordObj extends NeBinRelObj {
   int[] labels;
-  Obj[] values;
-
-  NeBinRelObj binRelRepr;
 
 
+  //## HERE I SHOULD BE PASSING LABEL OBJECTS AS WELL...
   public RecordObj(int[] labels, Obj[] values) {
     Miscellanea._assert(labels.length > 0);
     for (int i=1 ; i < labels.length ; i++)
       Miscellanea._assert(SymbTable.compSymbs(labels[i-1], labels[i]) == 1);
 
+    int size = labels.length;
+    long hashcode = 0;
+    for (int i=0 ; i < size ; i++)
+      hashcode += symbObjData(labels[i]) + values[i].data;
+    data = binRelObjData(size, hashcode);
+
     this.labels = labels;
-    this.values = values;
+    col2 = values;
+    isMap = true;
   }
 
-
-  public boolean isBinRel() {
-    return true;
-  }
-
-  public boolean isNeBinRel() {
-    return true;
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public boolean isNeMap() {
     return true;
   }
+
+  public boolean isNeRecord() {
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public boolean hasKey(Obj obj) {
     return obj.isSymb() && hasField(obj.getSymbId());
@@ -45,110 +49,104 @@ class RecordObj extends Obj {
       return false;
     int keyId = obj1.getSymbId();
     int idx = getFieldIdx(obj1.getSymbId());
-    return idx != -1 && values[idx].compareTo(obj2) == 0;
-  }
-
-
-  public int getSize() {
-    return labels.length;
+    return idx != -1 && col2[idx].isEq(obj2);
   }
 
   public BinRelIter getBinRelIter() {
-    return asBinRel().getBinRelIter();
+    buildCol1();
+    return super.getBinRelIter();
   }
 
   public BinRelIter getBinRelIterByCol1(Obj obj) {
-    return asBinRel().getBinRelIterByCol1(obj);
+    buildCol1();
+    return super.getBinRelIterByCol1(obj);
   }
 
   public BinRelIter getBinRelIterByCol2(Obj obj) {
-    return asBinRel().getBinRelIterByCol2(obj);
+    buildCol1();
+    return super.getBinRelIterByCol2(obj);
   }
 
   public Obj lookup(Obj key) {
     if (key.isSymb()) {
       int idx = getFieldIdx(key.getSymbId());
       if (idx != -1)
-        return values[idx];
+        return col2[idx];
     }
     throw Miscellanea.softFail("Key not found:", "collection", this, "key", key);
   }
 
   public Obj lookupField(int symbId) {
-    return values[getFieldIdx(symbId)];
-  }
-
-  public int hashCode() {
-    int len = labels.length;
-    int hashcodesSum = 0;
-    for (int i=0 ; i < len ; i++)
-      hashcodesSum += SymbObj.hashCode(labels[i]) + values[i].hashCode();
-    return hashcodesSum ^ len;
-  }
-
-  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
-    asBinRel().print(writer, maxLineLen, newLine, indentLevel);
-  }
-
-  public int minPrintedSize() {
-    return asBinRel().minPrintedSize();
-  }
-
-  public ValueBase getValue() {
-    return asBinRel().getValue();
-  }
-
-  protected int typeId() {
-    return 6;
-  }
-
-  protected int internalCmp(Obj other) {
-    return other.cmpRecord(labels, values);
-  }
-
-  public int cmpRecord(int[] otherLabels, Obj[] otherValues) {
-    int len = labels.length;
-    int otherLen = otherLabels.length;
-    if (otherLen != len)
-      return otherLen < len ? 1 : -1;
-    for (int i=0 ; i < len ; i++) {
-      int res = SymbTable.compSymbs(otherLabels[i], labels[i]);
-      if (res != 0)
-        return res;
-    }
-    for (int i=0 ; i < len ; i++) {
-      int res = otherValues[i].cmp(values[i]);
-      if (res != 0)
-        return res;
-    }
-    return 0;
-  }
-
-  public int cmpNeBinRel(Obj[] otherCol1, Obj[] otherCol2) {
-    int len = labels.length;
-    int otherLen = otherCol1.length;
-    if (otherLen != len)
-      return otherLen < len ? 1 : -1;
-    for (int i=0 ; i < len ; i++) {
-      int res = otherCol1[i].cmp(SymbTable.get(labels[i]));
-      if (res != 0)
-        return res;
-    }
-    for (int i=0 ; i < len ; i++) {
-      int res = otherCol2[i].cmp(values[i]);
-      if (res != 0)
-        return res;
-    }
-    return 0;
-  }
-
-  public boolean isNeRecord() {
-    return true;
+    return col2[getFieldIdx(symbId)];
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  int getFieldIdx(int symbId) {
+  public int extraData() {
+    return neBinRelObjExtraData();
+  }
+
+  public int internalOrder(Obj other) {
+    Miscellanea._assert(getSize() == other.getSize());
+
+    Obj[] col, otherCol;
+    int size = getSize();
+    NeBinRelObj otherRel = (NeBinRelObj) other;
+
+    if (other instanceof RecordObj) {
+      RecordObj otherRecord = (RecordObj) other;
+
+      int[] otherLabels = otherRecord.labels;
+      if (labels != otherLabels)
+        for (int i=0 ; i < size ; i++) {
+          int res = SymbTable.compSymbs(labels[i], otherLabels[i]);
+          if (res != 0)
+            return res;
+        }
+    }
+    else {
+      buildCol1();
+
+      col = col1;
+      otherCol = otherRel.col1;
+      for (int i=0 ; i < size ; i++) {
+        int ord = col[i].quickOrder(otherCol[i]);
+        if (ord != 0)
+          return ord;
+      }
+    }
+
+    col = col2;
+    otherCol = otherRel.col2;
+    for (int i=0 ; i < size ; i++) {
+      int ord = col[i].quickOrder(otherCol[i]);
+      if (ord != 0)
+        return ord;
+    }
+
+    return 0;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+    buildCol1();
+    super.print(writer, maxLineLen, newLine, indentLevel);
+  }
+
+  public int minPrintedSize() {
+    buildCol1();
+    return super.minPrintedSize();
+  }
+
+  public ValueBase getValue() {
+    buildCol1();
+    return super.getValue();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private int getFieldIdx(int symbId) {
     int len = labels.length;
     for (int i=0 ; i < len ; i++)
       if (labels[i] == symbId)
@@ -156,14 +154,12 @@ class RecordObj extends Obj {
     return -1;
   }
 
-  NeBinRelObj asBinRel() {
-    if (binRelRepr == null) {
+  private void buildCol1() {
+    if (col1 == null) {
       int len = labels.length;
-      Obj[] labelObjs = new Obj[len];
+      col1 = new Obj[len];
       for (int i=0 ; i < len ; i++)
-        labelObjs[i] = SymbTable.get(labels[i]);
-      binRelRepr = new NeBinRelObj(labelObjs, values, true);
+        col1[i] = SymbTable.get(labels[i]);
     }
-    return binRelRepr;
   }
 }

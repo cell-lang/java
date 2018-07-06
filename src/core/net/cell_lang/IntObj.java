@@ -55,4 +55,8 @@ class IntObj extends Obj {
     }
     return new IntObj(value);
   }
+
+  public static int compare(long x1, long x2) {
+    return (int) (x1 - x2);
+  }
 }
