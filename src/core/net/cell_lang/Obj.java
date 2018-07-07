@@ -190,27 +190,27 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
   // 11 - 32 bit hash code - 30 bit size/length
   protected static long seqObjData(int length, long hashcode) {
-    return (0b11 << 62) | (packedHashcode(hashcode) << 30) | length;
+    return (3L << 62) | (packedHashcode(hashcode) << 30) | length;
   }
 
   // 11 - 32 bit hash code - 30 bit size
   protected static long setObjData(int size, long hashcode) {
-    return (0b11 << 62) | (packedHashcode(hashcode) << 30) | size;
+    return (3L << 62) | (packedHashcode(hashcode) << 30) | size;
   }
 
   // 11 - 32 bit hash code - 30 bit size
   protected static long binRelObjData(int size, long hashcode) {
-    return (0b11 << 62) | (packedHashcode(hashcode) << 30) | size;
+    return (3L << 62) | (packedHashcode(hashcode) << 30) | size;
   }
 
   // 11 - 32 bit hash code - 30 bit size
   protected static long ternRelObjData(int size, long hashcode) {
-    return (0b11 << 62) | (packedHashcode(hashcode) << 30) | size;
+    return (3L << 62) | (packedHashcode(hashcode) << 30) | size;
   }
 
   // 16 bit 1 padding - 32 bit hash code - 16 bit tag id
   protected static long tagObjData(int tag, long hashcode) {
-    return (0xFFFF << 48) | (packedHashcode(hashcode) << 24) | (tag & 0xFFFF);
+    return (0xFFFFL << 48) | (packedHashcode(hashcode) << 24) | (tag & 0xFFFF);
   }
 
   // 16 bit optional field mask - 32 bit hash code - 16 bit tag id
@@ -219,7 +219,6 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   }
 
   private static long packedHashcode(long hashcode) {
-    Miscellanea._assert((3 << 62) == -4611686018427387904L);
     return ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
   }
 
