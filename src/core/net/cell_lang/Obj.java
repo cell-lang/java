@@ -118,7 +118,7 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   }
 
   public final int getTagId() {
-    return (int) (data & 0xFFFFFF);
+    return (int) (data & 0xFFFF);
   }
 
   public final Obj getTag() {
