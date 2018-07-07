@@ -5,40 +5,40 @@ import java.util.Arrays;
 
 class IntArrayObjs {
   static ByteArrayObj create(byte[] data) {
-    return new ByteArrayObj(data);
+    return data.length != 0 ? new ByteArrayObj(data) : EmptySeqObj.singleton;
   }
 
   static ShortArrayObj create(short[] data) {
-    return new ShortArrayObj(data);
+    return data.length != 0 ? new ShortArrayObj(data) : EmptySeqObj.singleton;
   }
 
   static Int32ArrayObj create(int[] data) {
-    return new Int32ArrayObj(data);
+    return data.length != 0 ? new Int32ArrayObj(data) : EmptySeqObj.singleton;
   }
 
   static IntArrayObj create(long[] data) {
-    return new IntArrayObj(data);
+    return data.length != 0 ? new IntArrayObj(data) : EmptySeqObj.singleton;
   }
 
   static ByteArrayObj create(byte[] data, int length) {
-    return new ByteArrayObj(Arrays.copyOf(data, length));
+    return length != 0 ? new ByteArrayObj(Arrays.copyOf(data, length)) : EmptySeqObj.singleton;
   }
 
   static ShortArrayObj create(short[] data, int length) {
-    return new ShortArrayObj(Arrays.copyOf(data, length));
+    return length != 0 ? new ShortArrayObj(Arrays.copyOf(data, length)) : EmptySeqObj.singleton;
   }
 
   static Int32ArrayObj create(int[] data, int length) {
-    return new Int32ArrayObj(Arrays.copyOf(data, length));
+    return length != 0 ? new Int32ArrayObj(Arrays.copyOf(data, length)) : EmptySeqObj.singleton;
   }
 
   static IntArrayObj create(long[] data, int length) {
-    return new IntArrayObj(Arrays.copyOf(data, length));
+    return length != 0 ? new IntArrayObj(Arrays.copyOf(data, length)) : EmptySeqObj.singleton;
   }
 
   static ByteArrayObj createUnsigned(byte[] data) {
     //## BUG BUG BUG: IMPLEMENT
-    return new ByteArrayObj(data);
+    return data.length != 0 ? new ByteArrayObj(data) : EmptySeqObj.singleton;
   }
 
   static IntArraySliceObj createRightPadded(long value) {
