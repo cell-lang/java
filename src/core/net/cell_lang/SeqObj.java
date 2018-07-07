@@ -17,4 +17,12 @@ abstract class SeqObj extends Obj {
   public NeSeqObj append(boolean value) {
     return append(SymbObj.get(value));
   }
+
+  public NeSeqObj append(long value) {
+    return append(IntObj.get(value));
+  }
+
+  public NeSeqObj append(double value) {
+    return append(new FloatObj(value));
+  }
 }

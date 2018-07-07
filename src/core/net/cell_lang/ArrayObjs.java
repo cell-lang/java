@@ -15,6 +15,14 @@ class ArrayObjs {
   static NeSeqObj createRightPadded(Obj obj) {
     return PaddedArray.create(obj);
   }
+
+  static ArraySliceObj append(NeSeqObj seq, Obj obj) {
+    return PaddedArray.create(seq, obj);
+  }
+
+  static ArraySliceObj concat(NeSeqObj left, NeSeqObj right) {
+    return PaddedArray.create(left, right);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,13 +133,6 @@ final class PaddedArray {
     this.used = used;
   }
 
-  public static ArraySliceObj create(Obj obj) {
-    Obj[] buffer = new Obj[32];
-    buffer[0] = obj;
-    PaddedArray paddedArray = new PaddedArray(buffer, 1);
-    return paddedArray.slice(0, 1);
-  }
-
   public ArraySliceObj slice(int offset, int length) {
     return new ArraySliceObj(this, buffer, offset, length);
   }
@@ -145,9 +146,13 @@ final class PaddedArray {
       for (int i=0 ; i < len ; i++)
         newBuffer[i] = buffer[i];
       newBuffer[idx] = obj;
-      buffer = newBuffer;
-      used++;
-      return new ArraySliceObj(this, buffer, 0, used);
+      PaddedArray newArray = new PaddedArray(newBuffer, newLen);
+      return newArray.slice(0, newLen);
+
+      //## THINK ABOUT THIS. WOULD IT WORK?
+      // buffer = newBuffer;
+      // used++;
+      // return new ArraySliceObj(this, buffer, 0, used);
     }
     else if (idx == used) {
       // There's space for the new element
@@ -166,5 +171,83 @@ final class PaddedArray {
       PaddedArray newArray = new PaddedArray(newBuffer, idx+1);
       return newArray.slice(0, idx+1);
     }
+  }
+
+  public synchronized ArraySliceObj concat(int idx, NeSeqObj seq) {
+    int seqLen = seq.getSize();
+    int newLen = idx + seqLen;
+
+    if (newLen > buffer.length) {
+      // We run out of space, expanding the array buffer
+      int size = minBufferSize(newLen);
+      Obj[] newBuffer = new Obj[size];
+      for (int i=0 ; i < idx ; i++)
+        newBuffer[i] = buffer[i];
+      seq.copy(0, seqLen, newBuffer, idx);
+      PaddedArray newArray = new PaddedArray(newBuffer, newLen);
+      return newArray.slice(0, newLen);
+      //## THINK ABOUT THIS. WOULD IT WORK?
+      // buffer = newBuffer;
+      // used = newLen;
+      // return new ArraySliceObj(this, buffer, 0, used);
+    }
+    else if (idx == used) {
+      // There's space for the new elements
+      seq.copy(0, seqLen, buffer, idx);
+      used = newLen;
+      return new ArraySliceObj(this, buffer, 0, used);
+    }
+    else {
+      // The next slot was already taken. This is supposed to happen only rarely
+      Miscellanea._assert(idx < used & idx < buffer.length);
+
+      Obj[] newBuffer = new Obj[buffer.length];
+      for (int i=0 ; i < idx ; i++)
+        newBuffer[i] = buffer[i];
+      seq.copy(0, seqLen, newBuffer, idx);
+      PaddedArray newArray = new PaddedArray(newBuffer, newLen);
+      return newArray.slice(0, idx+1);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static ArraySliceObj create(Obj obj) {
+    Obj[] buffer = new Obj[32];
+    buffer[0] = obj;
+    PaddedArray paddedArray = new PaddedArray(buffer, 1);
+    return paddedArray.slice(0, 1);
+  }
+
+  public static ArraySliceObj create(NeSeqObj seq, Obj obj) {
+    int len = seq.getSize();
+    int size = minBufferSize(len+1);
+    Obj[] buffer = new Obj[size];
+    seq.copy(0, len, buffer, 0);
+    buffer[len] = obj;
+    PaddedArray paddedArray = new PaddedArray(buffer, len+1);
+    return paddedArray.slice(0, len+1);
+  }
+
+  public static ArraySliceObj create(NeSeqObj left, NeSeqObj right) {
+    int leftLen = left.getSize();
+    int rightLen = right.getSize();
+    int len = leftLen + rightLen;
+    int size = minBufferSize(len);
+    Obj[] buffer = new Obj[size];
+    left.copy(0, leftLen, buffer, 0);
+    right.copy(0, rightLen, buffer, leftLen);
+    PaddedArray paddedArray = new PaddedArray(buffer, len);
+    return paddedArray.slice(0, len);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static int minBufferSize(int len) {
+    int minSize = (5 * len) / 4;
+    int size = 32;
+    while (size < minSize)
+      size = 2 * size;
+    return size;
   }
 }

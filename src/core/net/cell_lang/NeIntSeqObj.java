@@ -2,11 +2,20 @@ package net.cell_lang;
 
 
 abstract class NeIntSeqObj extends NeSeqObj {
+  public NeSeqObj append(Obj obj) {
+    return obj.isInt() ? append(obj.getLong()) : super.append(obj);
+  }
+
+  public NeIntSeqObj append(long value) {
+    return IntArrayObjs.append(this, value);
+  }
+
   public SeqObj concat(Obj seq) {
-    if (seq instanceof NeIntSeqObj)
-      return concat((NeIntSeqObj) seq);
-    else
-      return super.concat(seq);
+    return seq instanceof NeIntSeqObj ? concat((NeIntSeqObj) seq) : super.concat(seq);
+  }
+
+  public NeIntSeqObj concat(NeIntSeqObj seq) {
+    return IntArrayObjs.concat(this, seq);
   }
 
   public int internalOrder(Obj other) {
@@ -28,6 +37,5 @@ abstract class NeIntSeqObj extends NeSeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public abstract NeIntSeqObj concat(NeIntSeqObj seq);
   public abstract void copy(int first, int count, long[] buffer, int destOffset);
 }

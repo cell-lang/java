@@ -54,27 +54,11 @@ abstract class NeSeqObj extends SeqObj {
   //////////////////////////////////////////////////////////////////////////////
 
   public NeSeqObj append(Obj obj) {
-    if (obj.isInt())
-      return append(obj.getLong());
-    else if (obj.isFloat())
-      return append(obj.getDouble());
-    else
-      return RopeObj.create(this, ArrayObjs.createRightPadded(obj));
-  }
-
-  public NeSeqObj append(long value) {
-    return RopeObj.create(this, IntArrayObjs.createRightPadded(value));
-  }
-
-  public NeSeqObj append(double value) {
-    return RopeObj.create(this, FloatArrayObjs.createRightPadded(value));
+    return ArrayObjs.append(this, obj);
   }
 
   public SeqObj concat(Obj seq) {
-    if (seq.getSize() != 0)
-      return RopeObj.create(this, (NeSeqObj) seq);
-    else
-      return this;
+    return seq.getSize() != 0 ? ArrayObjs.concat(this, (NeSeqObj) seq) : this;
   }
 
   //////////////////////////////////////////////////////////////////////////////
