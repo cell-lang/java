@@ -201,7 +201,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_set_from_array()         = native_static_call(var, "Builder.createSet",        (expr.array, value(expr.size) if expr.size != nothing)),
     mk_seq_from_stream()        = native_static_call(var, "Builder.createSeq",        (expr.stream)),
     mk_seq()                    = native_static_call(var, "Builder.createSeq",        (expr.elems, expr.size)),
-    mk_seq_from_array()         = native_static_call(var, "Builder.wrapSeq",          (expr.array, value(expr.size) if expr.size != nothing)),
+    mk_seq_from_array()         = native_static_call(var, "Builder.createSeq",        (expr.array, value(expr.size) if expr.size != nothing)),
     build_const_int_seq()       = native_build_const_int_seq_code(expr.seq_id, var),
     mk_map_from_streams()       = native_static_call(var, "Builder.createMap",        (expr.key_stream, expr.value_stream)),
     mk_map()                    = native_static_call(var, "Builder.createMap",        (expr.keys, expr.values, expr.size)),
@@ -239,7 +239,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String native_build_const_int_seq_code(Nat seq_id, ObjVar var) {
     type, len = item(int_seqs_types_and_lengths, seq_id);
     seq_name = const_int_seq_ref_name(seq_id);
-    return native_var_ref_name(var) & " = Builder.buildConstIntSeq(" & seq_name & ");";
+    return native_var_ref_name(var) & " = Builder.createSeq(" & seq_name & ");";
   }
 
   ///////////////////////////////////////////////////////////////////////////////

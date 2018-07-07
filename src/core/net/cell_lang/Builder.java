@@ -5,21 +5,6 @@ import java.util.Arrays;
 
 
 class Builder {
-  public static Obj createSeq(ArrayList<Obj> objs) {
-    return wrapSeq(objs.toArray(new Obj[objs.size()]));
-  }
-
-  public static Obj createSeq(Obj[] objs, long count) {
-    Miscellanea._assert(objs != null && count <= objs.length);
-    for (int i=0 ; i < count ; i++)
-      Miscellanea._assert(objs[i] != null);
-
-    Obj[] objsCopy = new Obj[(int) count];
-    for (int i=0 ; i < count ; i++)
-      objsCopy[i] = objs[i];
-    return wrapSeq(objsCopy);
-  }
-
   public static Obj createSet(Obj[] objs) {
     return createSet(objs, objs.length);
   }
@@ -144,26 +129,19 @@ class Builder {
     return new TaggedObj(tag, IntObj.get(value));
   }
 
-  public static Obj buildConstIntSeq(byte[] vals) {
-    return IntArrayObjs.create(vals);
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static Obj createSeq(ArrayList<Obj> objs) {
+    return createSeq(objs.toArray(new Obj[objs.size()]));
   }
 
-  public static Obj buildConstIntSeq(short[] vals) {
-    return IntArrayObjs.create(vals);
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
-  public static Obj buildConstIntSeq(int[] vals) {
-    return IntArrayObjs.create(vals);
-  }
+  public static Obj createSeq(boolean[] vals) {
+    if (vals.length == 0)
+      return EmptySeqObj.singleton;
 
-  public static Obj buildConstIntSeq(long[] vals) {
-    return IntArrayObjs.create(vals);
-  }
-
-
-  //## IMPLEMENT IMPLEMENT IMPLEMENT
-
-  public static Obj wrapSeq(boolean[] vals) {
     int len = vals.length;
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
@@ -171,31 +149,30 @@ class Builder {
     return ArrayObjs.create(objs);
   }
 
-  public static Obj wrapSeq(byte[] vals) {
-    return IntArrayObjs.create(vals);
+  public static Obj createSeq(byte[] vals) {
+    return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(short[] vals) {
-    return IntArrayObjs.create(vals);
+  public static Obj createSeq(short[] vals) {
+    return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(int[] vals) {
-    return IntArrayObjs.create(vals);
+  public static Obj createSeq(int[] vals) {
+    return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(long[] vals) {
-    return IntArrayObjs.create(vals);
+  public static Obj createSeq(long[] vals) {
+    return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(double[] vals) {
-    int len = vals.length;
-    Obj[] objs = new Obj[len];
-    for (int i=0 ; i < len ; i++)
-      objs[i] = new FloatObj(vals[i]);
-    return ArrayObjs.create(objs);
+  public static Obj createSeq(double[] vals) {
+    return vals.length != 0 ? FloatArrayObjs.create(vals) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(Obj[] objs) {
+  public static Obj createSeq(Obj[] objs) {
+    if (objs.length == 0)
+      return EmptySeqObj.singleton;
+
     int len = objs.length;
     for (int i=0 ; i < len ; i++)
       if (!objs[i].isInt())
@@ -209,37 +186,40 @@ class Builder {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static Obj wrapSeq(boolean[] vals, int len) {
+  public static Obj createSeq(boolean[] vals, int len) {
+    if (len == 0)
+      return EmptySeqObj.singleton;
+
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       objs[i] = SymbObj.get(vals[i]);
     return ArrayObjs.create(objs);
   }
 
-  public static Obj wrapSeq(byte[] vals, int len) {
-    return IntArrayObjs.create(vals, len);
+  public static Obj createSeq(byte[] vals, int len) {
+    return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(short[] vals, int len) {
-    return IntArrayObjs.create(vals, len);
+  public static Obj createSeq(short[] vals, int len) {
+    return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(int[] vals, int len) {
-    return IntArrayObjs.create(vals, len);
+  public static Obj createSeq(int[] vals, int len) {
+    return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(long[] vals, int len) {
-    return IntArrayObjs.create(vals, len);
+  public static Obj createSeq(long[] vals, int len) {
+    return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(double[] vals, int len) {
-    Obj[] objs = new Obj[len];
-    for (int i=0 ; i < len ; i++)
-      objs[i] = new FloatObj(vals[i]);
-    return ArrayObjs.create(objs);
+  public static Obj createSeq(double[] vals, int len) {
+    return len != 0 ? FloatArrayObjs.create(vals, len) : EmptySeqObj.singleton;
   }
 
-  public static Obj wrapSeq(Obj[] objs, int len) {
+  public static Obj createSeq(Obj[] objs, int len) {
+    if (objs.length == 0)
+      return EmptySeqObj.singleton;
+
     for (int i=0 ; i < len ; i++)
       if (!objs[i].isInt())
         return ArrayObjs.create(objs, len);

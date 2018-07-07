@@ -5,40 +5,49 @@ import java.util.Arrays;
 
 class IntArrayObjs {
   static ByteArrayObj create(byte[] data) {
-    return data.length != 0 ? new ByteArrayObj(data) : EmptySeqObj.singleton;
+    Miscellanea._assert(data.length > 0);
+    return new ByteArrayObj(data);
   }
 
   static ShortArrayObj create(short[] data) {
-    return data.length != 0 ? new ShortArrayObj(data) : EmptySeqObj.singleton;
+    Miscellanea._assert(data.length > 0);
+    return new ShortArrayObj(data);
   }
 
   static Int32ArrayObj create(int[] data) {
-    return data.length != 0 ? new Int32ArrayObj(data) : EmptySeqObj.singleton;
+    Miscellanea._assert(data.length > 0);
+    return new Int32ArrayObj(data);
   }
 
   static IntArrayObj create(long[] data) {
-    return data.length != 0 ? new IntArrayObj(data) : EmptySeqObj.singleton;
+    Miscellanea._assert(data.length > 0);
+    return new IntArrayObj(data);
   }
 
   static ByteArrayObj create(byte[] data, int length) {
-    return length != 0 ? new ByteArrayObj(Arrays.copyOf(data, length)) : EmptySeqObj.singleton;
+    Miscellanea._assert(length > 0);
+    return new ByteArrayObj(Arrays.copyOf(data, length));
   }
 
   static ShortArrayObj create(short[] data, int length) {
-    return length != 0 ? new ShortArrayObj(Arrays.copyOf(data, length)) : EmptySeqObj.singleton;
+    Miscellanea._assert(length > 0);
+    return new ShortArrayObj(Arrays.copyOf(data, length));
   }
 
   static Int32ArrayObj create(int[] data, int length) {
-    return length != 0 ? new Int32ArrayObj(Arrays.copyOf(data, length)) : EmptySeqObj.singleton;
+    Miscellanea._assert(length > 0);
+    return new Int32ArrayObj(Arrays.copyOf(data, length));
   }
 
   static IntArrayObj create(long[] data, int length) {
-    return length != 0 ? new IntArrayObj(Arrays.copyOf(data, length)) : EmptySeqObj.singleton;
+    Miscellanea._assert(length > 0);
+    return new IntArrayObj(Arrays.copyOf(data, length));
   }
 
   static ByteArrayObj createUnsigned(byte[] data) {
+    Miscellanea._assert(data.length > 0);
     //## BUG BUG BUG: IMPLEMENT
-    return data.length != 0 ? new ByteArrayObj(data) : EmptySeqObj.singleton;
+    return new ByteArrayObj(data);
   }
 
   static IntArraySliceObj createRightPadded(long value) {

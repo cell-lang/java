@@ -2,6 +2,10 @@ package net.cell_lang;
 
 
 abstract class NeIntSeqObj extends NeSeqObj {
+  public Obj getObjAt(long idx) {
+    return IntObj.get(getLongAt(idx));
+  }
+
   public NeSeqObj append(Obj obj) {
     return obj.isInt() ? append(obj.getLong()) : super.append(obj);
   }

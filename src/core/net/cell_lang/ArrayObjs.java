@@ -5,11 +5,13 @@ import java.util.Arrays;
 
 class ArrayObjs {
   static NeSeqObj create(Obj[] objs) {
-    return objs.length != 0 ? new ArrayObj(objs) : EmptySeqObj.singleton;
+    Miscellanea._assert(objs.length > 0);
+    return new ArrayObj(objs);
   }
 
   static NeSeqObj create(Obj[] objs, int length) {
-    return length != 0 ? new ArrayObj(Arrays.copyOf(objs, length)) : EmptySeqObj.singleton;
+    Miscellanea._assert(length > 0);
+    return new ArrayObj(Arrays.copyOf(objs, length));
   }
 
   static NeSeqObj createRightPadded(Obj obj) {
