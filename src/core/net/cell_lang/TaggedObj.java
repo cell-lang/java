@@ -35,11 +35,8 @@ final class TaggedObj extends Obj {
   }
 
   public int internalOrder(Obj other) {
-    int tag = getTagId();
-    int otherTag = other.getTagId();
-    if (tag != otherTag)
-      return tag - otherTag;
-    return obj.quickOrder(other);
+    Miscellanea._assert(getTagId() == other.getTagId());
+    return obj.quickOrder(((TaggedObj) other).obj);
   }
 
   //////////////////////////////////////////////////////////////////////////////
