@@ -282,7 +282,7 @@ final class PaddedIntArray {
         newBuffer[i] = buffer[i];
       seq.copy(0, seqLen, newBuffer, idx);
       PaddedIntArray newArray = new PaddedIntArray(newBuffer, newLen);
-      return newArray.slice(0, idx+1);
+      return newArray.slice(0, newLen);
     }
   }
 

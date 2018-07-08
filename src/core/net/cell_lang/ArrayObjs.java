@@ -121,6 +121,13 @@ final class ArraySliceObj extends ArrayObjBase {
     else
       return super.append(obj);
   }
+
+  public SeqObj concat(Obj seq) {
+    if (source != null && seq instanceof NeSeqObj)
+      return source.concat(offset+getSize(), (NeSeqObj) seq);
+    else
+      return super.concat(seq);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +215,7 @@ final class PaddedArray {
         newBuffer[i] = buffer[i];
       seq.copy(0, seqLen, newBuffer, idx);
       PaddedArray newArray = new PaddedArray(newBuffer, newLen);
-      return newArray.slice(0, idx+1);
+      return newArray.slice(0, newLen);
     }
   }
 
