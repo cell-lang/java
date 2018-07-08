@@ -464,9 +464,9 @@ class Algs {
     while (low <= high) {
       while (low <= last) {
         int idx = indexes[low];
-        int ord = major[idx].cmp(pivotMajor);
+        int ord = major[idx].compareTo(pivotMajor);
         if (ord == 0)
-          ord = minor[idx].cmp(pivotMinor);
+          ord = minor[idx].compareTo(pivotMinor);
 
         if (ord > 0) // Including all elements that are lower or equal than the pivot
           break;
@@ -479,9 +479,9 @@ class Algs {
 
       while (high >= first) {
         int idx = indexes[high];
-        int ord = major[idx].cmp(pivotMajor);
+        int ord = major[idx].compareTo(pivotMajor);
         if (ord == 0)
-          ord = minor[idx].cmp(pivotMinor);
+          ord = minor[idx].compareTo(pivotMinor);
 
         if (ord <= 0) // Including only elements that are greater than the pivot
           break;
@@ -535,11 +535,11 @@ class Algs {
     while (low <= high) {
       while (low <= last) {
         int idx = indexes[low];
-        int ord = ord1[idx].cmp(pivotOrd1);
+        int ord = ord1[idx].compareTo(pivotOrd1);
         if (ord == 0)
-          ord = ord2[idx].cmp(pivotOrd2);
+          ord = ord2[idx].compareTo(pivotOrd2);
         if (ord == 0)
-          ord = ord3[idx].cmp(pivotOrd3);
+          ord = ord3[idx].compareTo(pivotOrd3);
 
         if (ord > 0) // Including all elements that are lower or equal than the pivot
           break;
@@ -552,11 +552,11 @@ class Algs {
 
       while (high >= first) {
         int idx = indexes[high];
-        int ord = ord1[idx].cmp(pivotOrd1);
+        int ord = ord1[idx].compareTo(pivotOrd1);
         if (ord == 0)
-          ord = ord2[idx].cmp(pivotOrd2);
+          ord = ord2[idx].compareTo(pivotOrd2);
         if (ord == 0)
-          ord = ord3[idx].cmp(pivotOrd3);
+          ord = ord3[idx].compareTo(pivotOrd3);
 
         if (ord <= 0) // Including only elements that are greater than the pivot
           break;

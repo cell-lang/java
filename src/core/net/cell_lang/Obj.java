@@ -5,7 +5,7 @@ import java.io.StringWriter;
 import java.io.OutputStreamWriter;
 
 
-abstract class Obj /*implements Comparable<Obj>*/ {
+abstract class Obj implements Comparable<Obj> {
   public long data;
 
   public final boolean isBlankObj() {
@@ -142,7 +142,9 @@ abstract class Obj /*implements Comparable<Obj>*/ {
     if (extraData != otherExtraData)
       return false;
 
-    return internalOrder(other) == 0;
+    int res = internalOrder(other);
+    Miscellanea._assert(res >= -1 & res <= 1);
+    return res == 0;
   }
 
   public final int quickOrder(Obj other) {
@@ -151,17 +153,19 @@ abstract class Obj /*implements Comparable<Obj>*/ {
 
     long otherData = other.data;
     if (data != otherData)
-      return (int) (data - otherData); //## DOES A NEGATIVE LONG STAY NEGATIVE WHEN TRUNCATED?
+      return data < otherData ? -1 : 1;
 
     int extraData = extraData();
     int otherExtraData = other.extraData();
     if (extraData != otherExtraData)
-      return extraData - otherExtraData;
+      return extraData < otherExtraData ? -1 : 1;
 
     if (isInlineObj(extraData))
       return 0;
 
-    return internalOrder(other);
+    int res = internalOrder(other);
+    Miscellanea._assert(res >= -1 & res <= 1);
+    return res;
   }
 
   // Can be negative
@@ -193,6 +197,11 @@ abstract class Obj /*implements Comparable<Obj>*/ {
     return (3L << 62) | (packedHashcode(hashcode) << 30) | length;
   }
 
+// -4611685948634169343 : 11 00000000000000000000000001000001 000000000000000000000000000001
+// -4611685947560427519 : 11 00000000000000000000000001000010 000000000000000000000000000001
+// -4611685946486685695 : 11 00000000000000000000000001000011 000000000000000000000000000001
+// -4611685945412943871 : 11 00000000000000000000000001000100 000000000000000000000000000001
+
   // 11 - 32 bit hash code - 30 bit size
   protected static long setObjData(int size, long hashcode) {
     return (3L << 62) | (packedHashcode(hashcode) << 30) | size;
@@ -212,6 +221,15 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   protected static long tagObjData(int tag, long hashcode) {
     return (0xFFFFL << 48) | (packedHashcode(hashcode) << 24) | (tag & 0xFFFF);
   }
+
+
+// "D" -> ("d", d, 3) : -281474708275197 / 1111111111111111 00000000000000000001000000000000 0000000000000011
+// "A" -> ("a", a, 0) : -281474691497981 / 1111111111111111 00000000000000000001000100000000 0000000000000011
+// "B" -> ("b", b, 1) : -281474691497981 / 1111111111111111 00000000000000000001000100000000 0000000000000011
+// "C" -> ("c", c, 2) : -281474691497981 / 1111111111111111 00000000000000000001000100000000 0000000000000011
+
+
+
 
   // 16 bit optional field mask - 32 bit hash code - 16 bit tag id
   public static long optTagRecObjData(int tag, long hashcode, int optFieldsMask) {
@@ -402,8 +420,11 @@ abstract class Obj /*implements Comparable<Obj>*/ {
   public long mantissa() {throw Miscellanea.internalFail(this);}
   public long decExp()   {throw Miscellanea.internalFail(this);}
 
-  public int cmp(Obj other) {
-    int res = quickOrder(other);
-    return res < 0 ? -1 : (res > 0 ? 1 : 0);
+  public final int compareTo(Obj other) {
+    return quickOrder(other);
+  }
+
+  public final int cmp(Obj other) {
+    return -quickOrder(other);
   }
 }
