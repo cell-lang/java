@@ -57,6 +57,6 @@ class IntObj extends Obj {
   }
 
   public static int compare(long x1, long x2) {
-    return (int) (x1 - x2);
+    return x1 == x2 ? 0 : (x1 < x2 ? -1 : 1);
   }
 }

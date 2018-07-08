@@ -41,6 +41,6 @@ final class FloatObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public static int compare(double x1, double x2) {
-    return (int) (floatObjData(x1) - floatObjData(x2));
+    return IntObj.compare(floatObjData(x1), floatObjData(x2));
   }
 }
