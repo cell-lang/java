@@ -217,7 +217,7 @@ class Builder {
   }
 
   public static Obj createSeq(Obj[] objs, int len) {
-    if (objs.length == 0)
+    if (len == 0)
       return EmptySeqObj.singleton;
 
     for (int i=0 ; i < len ; i++)

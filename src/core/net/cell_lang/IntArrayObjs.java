@@ -182,6 +182,13 @@ final class IntArraySliceObj extends IntArrayObjBase {
       throw new ArrayIndexOutOfBoundsException();
   }
 
+  public long[] getArray(long[] buffer) {
+    int length = getSize();
+    long[] copy = new long[length];
+    copy(0, length, copy, 0);
+    return copy;
+  }
+
   public NeIntSeqObj append(long value) {
     return source != null ? source.append(offset+getSize(), value) : super.append(value);
   }
