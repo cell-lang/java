@@ -142,14 +142,14 @@ final class PaddedArray {
   public synchronized ArraySliceObj append(int idx, Obj obj) {
     if (idx == buffer.length) {
       // We run out of space, expanding the array buffer
-      int len = buffer.length;
-      int newLen = 2 * len;
-      Obj[] newBuffer = new Obj[newLen];
-      for (int i=0 ; i < len ; i++)
+      int size = buffer.length;
+      int newSize = 2 * size;
+      Obj[] newBuffer = new Obj[newSize];
+      for (int i=0 ; i < size ; i++)
         newBuffer[i] = buffer[i];
       newBuffer[idx] = obj;
-      PaddedArray newArray = new PaddedArray(newBuffer, newLen);
-      return newArray.slice(0, newLen);
+      PaddedArray newArray = new PaddedArray(newBuffer, idx+1);
+      return newArray.slice(0, idx+1);
 
       //## THINK ABOUT THIS. WOULD IT WORK?
       // buffer = newBuffer;

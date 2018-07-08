@@ -31,7 +31,7 @@ abstract class NeIntSeqObj extends NeSeqObj {
         long elt = getLongAt(i);
         long otherElt = other.getLongAt(i);
         if (elt != otherElt)
-          return (int) (elt - otherElt);
+          return elt < otherElt ? -1 : 1;
       }
       return 0;
     }

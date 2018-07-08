@@ -121,7 +121,7 @@ abstract class IntArrayObjBase extends NeIntSeqObj {
         long elt = getLongAt(i);
         long otherElt = other.getLongAt(i);
         if (elt != otherElt)
-          return (int) (elt - otherElt);
+          return elt < otherElt ? -1 : 1;
       }
       return 0;
     }
@@ -210,14 +210,14 @@ final class PaddedIntArray {
   public synchronized IntArraySliceObj append(int idx, long value) {
     if (idx == buffer.length) {
       // We run out of space, expanding the array buffer
-      int len = buffer.length;
-      int newLen = 2 * len;
-      long[] newBuffer = new long[newLen];
-      for (int i=0 ; i < len ; i++)
+      int size = buffer.length;
+      int newSize = 2 * size;
+      long[] newBuffer = new long[newSize];
+      for (int i=0 ; i < size ; i++)
         newBuffer[i] = buffer[i];
       newBuffer[idx] = value;
-      PaddedIntArray newArray = new PaddedIntArray(newBuffer, newLen);
-      return newArray.slice(0, newLen);
+      PaddedIntArray newArray = new PaddedIntArray(newBuffer, idx+1);
+      return newArray.slice(0, idx+1);
       //## THINK ABOUT THIS. WOULD IT WORK?
       // buffer = newBuffer;
       // used++;
