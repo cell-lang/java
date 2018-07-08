@@ -101,7 +101,7 @@ String* create_error_msg(ParserError err, String filename) =
       if run_typechecking:
         errs = typechecking_errors;
         if errs == []:
-          Print("The programs typechecks\n");
+          Print("The program typechecks\n");
           if wait_for_key:
             unused_var = GetChar();
           ;
