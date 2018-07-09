@@ -7,13 +7,10 @@ import java.io.Writer;
 class IntObj extends Obj {
   IntObj(long value) {
     data = value;
+    extraData = intObjExtraData();
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return intObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     throw Miscellanea.internalFail(this);

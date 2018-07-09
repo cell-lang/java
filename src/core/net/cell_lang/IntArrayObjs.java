@@ -152,6 +152,7 @@ final class IntArrayObj extends IntArrayObjBase {
     int len = elts.length;
     long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     longs = elts;
   }
 
@@ -170,6 +171,7 @@ final class IntArraySliceObj extends IntArrayObjBase {
   public IntArraySliceObj(PaddedIntArray source, long[] elts, int offset, int len) {
     long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     longs = elts;
     this.offset = offset;
     this.source = source;
@@ -372,6 +374,7 @@ final class ByteArrayObj extends ByteArrayObjBase {
     int len = elts.length;
     long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     bytes = elts;
   }
 
@@ -385,6 +388,7 @@ final class ByteArraySliceObj extends ByteArrayObjBase {
   public ByteArraySliceObj(byte[] elts, int offset, int len) {
     long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     bytes = elts;
     this.offset = offset;
   }
@@ -443,6 +447,7 @@ final class ShortArrayObj extends ShortArrayObjBase {
     int len = elts.length;
     long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     shorts = elts;
   }
 
@@ -456,6 +461,7 @@ final class ShortArraySliceObj extends ShortArrayObjBase {
   public ShortArraySliceObj(short[] elts, int offset, int len) {
     long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     shorts = elts;
     this.offset = offset;
   }
@@ -514,6 +520,7 @@ final class Int32ArrayObj extends Int32ArrayObjBase {
     int len = elts.length;
     long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     ints = elts;
   }
 
@@ -527,6 +534,7 @@ final class Int32ArraySliceObj extends Int32ArrayObjBase {
   public Int32ArraySliceObj(int[] elts, int offset, int len) {
     long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     ints = elts;
     this.offset = offset;
   }

@@ -7,7 +7,7 @@ final class EmptyRelObj extends Obj {
   public static final EmptyRelObj singleton = new EmptyRelObj();
 
   private EmptyRelObj() {
-    Miscellanea._assert(getSize() == 0);
+    extraData = emptyRelObjExtraData();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -85,10 +85,6 @@ final class EmptyRelObj extends Obj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return emptyRelObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     throw Miscellanea.internalFail(this);

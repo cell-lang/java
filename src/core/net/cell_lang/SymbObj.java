@@ -12,6 +12,7 @@ final class SymbObj extends Obj {
 
   public SymbObj(int id) {
     data = symbObjData(id);
+    extraData = symbObjExtraData();
     Miscellanea._assert(getSymbId() == id);
     string = SymbTable.idxToStr(id);
     minPrintedSize = string.length();
@@ -19,10 +20,6 @@ final class SymbObj extends Obj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return symbObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     throw Miscellanea.internalFail(this);

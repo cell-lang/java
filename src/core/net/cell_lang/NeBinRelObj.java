@@ -21,6 +21,7 @@ class NeBinRelObj extends Obj {
     for (int i=0 ; i < size ; i++)
       hashcode += col1[i].data + col2[i].data;
     data = binRelObjData(size, hashcode);
+    extraData = neBinRelObjExtraData();
 
     this.col1 = col1;
     this.col2 = col2;
@@ -119,10 +120,6 @@ class NeBinRelObj extends Obj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return neBinRelObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     Miscellanea._assert(getSize() == other.getSize());

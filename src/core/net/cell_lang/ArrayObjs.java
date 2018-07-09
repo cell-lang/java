@@ -85,6 +85,7 @@ final class ArrayObj extends ArrayObjBase {
     int len = objs.length;
     long hashcode = hashcode(objs, 0, len);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     this.objs = objs;
   }
 
@@ -102,6 +103,7 @@ final class ArraySliceObj extends ArrayObjBase {
   public ArraySliceObj(PaddedArray source, Obj[] objs, int offset, int len) {
     long hashcode = hashcode(objs, offset, len);
     data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
     this.objs = objs;
     this.offset = offset;
     this.source = source;

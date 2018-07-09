@@ -7,11 +7,7 @@ final class BlankObj extends Obj {
   public static final BlankObj singleton = new BlankObj();
 
   private BlankObj() {
-
-  }
-
-  public int extraData() {
-    return blankObjExtraData();
+    extraData = blankObjExtraData();
   }
 
   public int internalOrder(Obj other) {

@@ -7,7 +7,7 @@ final class EmptySeqObj extends SeqObj {
   public static final EmptySeqObj singleton = new EmptySeqObj();
 
   private EmptySeqObj() {
-    Miscellanea._assert(getSize() == 0);
+    extraData = emptySeqObjExtraData();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -70,10 +70,6 @@ final class EmptySeqObj extends SeqObj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return emptySeqObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     throw Miscellanea.internalFail(this);

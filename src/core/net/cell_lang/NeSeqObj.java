@@ -92,10 +92,6 @@ abstract class NeSeqObj extends SeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public int extraData() {
-    return neSeqObjExtraData();
-  }
-
   public int internalOrder(Obj other) {
     Miscellanea._assert(other instanceof NeSeqObj && getSize() == other.getSize());
 

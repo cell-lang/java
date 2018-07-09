@@ -18,6 +18,7 @@ class RecordObj extends NeBinRelObj {
     for (int i=0 ; i < size ; i++)
       hashcode += symbObjData(labels[i]) + values[i].data;
     data = binRelObjData(size, hashcode);
+    extraData = neBinRelObjExtraData();
 
     this.labels = labels;
     col2 = values;
@@ -81,10 +82,6 @@ class RecordObj extends NeBinRelObj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return neBinRelObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     Miscellanea._assert(getSize() == other.getSize());

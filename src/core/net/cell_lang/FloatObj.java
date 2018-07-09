@@ -6,14 +6,10 @@ import java.io.Writer;
 final class FloatObj extends Obj {
   public FloatObj(double value) {
     data = floatObjData(value);
-    Miscellanea._assert(getDouble() == value); //## REMOVE AFTER TESTING
+    extraData = floatObjExtraData();
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return floatObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     throw Miscellanea.internalFail(this);

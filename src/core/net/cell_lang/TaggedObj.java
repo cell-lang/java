@@ -9,6 +9,7 @@ final class TaggedObj extends Obj {
 
   public TaggedObj(int tag, Obj obj) {
     data = tagObjData(tag, obj.data);
+    extraData = refTagObjExtraData();
     this.obj = obj;
   }
 
@@ -29,10 +30,6 @@ final class TaggedObj extends Obj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return refTagObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     Miscellanea._assert(getTagId() == other.getTagId());

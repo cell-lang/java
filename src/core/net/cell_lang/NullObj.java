@@ -7,11 +7,7 @@ final class NullObj extends Obj {
   public static final NullObj singleton = new NullObj();
 
   private NullObj() {
-
-  }
-
-  public int extraData() {
-    return nullObjExtraData();
+    extraData = nullObjExtraData();
   }
 
   public int internalOrder(Obj other) {

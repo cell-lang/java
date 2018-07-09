@@ -36,12 +36,9 @@ implicit prg : CompiledPrg {
     reprs = [l -> fields(l, !!).repr : l <- labels];
     let tag = tag, ord_labels = ord_labels, opt_labels = opt_labels, reprs = reprs:
       methods_defs = (
-        // get_tag_id_def,
-        finish_init_def(ord_mand_labels, ord_opt_labels),
+        finish_init_def(ord_mand_labels, ord_opt_labels, idx),
         has_field_def,
         lookup_field_def,
-        // hash_code_def(ord_mand_labels, ord_opt_labels),
-        extra_data_def(idx),
         internal_order_def(class_name, ord_mand_labels, ord_opt_labels),
         count_fields_def,
         get_labels_def(index)
@@ -59,7 +56,7 @@ implicit prg : CompiledPrg {
 ////////////////////////////// Methods generation //////////////////////////////
 
 implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Symbol -> LowLevelRepr] {
-  String* finish_init_def(Symbol* ord_mand_labels, Symbol* ord_opt_labels) {
+  String* finish_init_def(Symbol* ord_mand_labels, Symbol* ord_opt_labels, Nat idx) {
     if ord_mand_labels != ():
       hashcodes = (obj_data_expr(reprs(l, !!), opt_rec_field_name(l)) : l <- ord_mand_labels);
       hashcodes_sum = append(hashcodes, " + ");
@@ -88,7 +85,9 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
     ;
 
     set_data_instr = "  data = optTagRecObjData(" & symb_idx_name(tag) & ", hashcode, " & mask & ");";
-    return (code | set_data_instr, "}");
+    set_extra_data_instr = "  extraData = optTagRecObjExtraData(" & printed(idx) & ");";
+
+    return (code | set_data_instr, set_extra_data_instr, "}");
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -130,13 +129,6 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  String* extra_data_def(Int idx) = (
-    "public int extraData() {",
-    "  return optTagRecObjExtraData(" & printed(idx) & ");",
-    "}"
-  );
-
 
   String* internal_order_def(String class_name, Symbol* ord_mand_labels, Symbol* ord_opt_labels) {
     body = (class_name & " otherOpt = (" & class_name & ") other;");

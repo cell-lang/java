@@ -46,6 +46,7 @@ final class NeTernRelObj extends Obj {
     for (int i=0 ; i < size ; i++)
       hashcode += col1[i].data + col2[i].data + col3[i].data;
     data = ternRelObjData(size, hashcode);
+    extraData = neTernRelObjExtraData();
 
     this.col1 = col1;
     this.col2 = col2;
@@ -124,10 +125,6 @@ final class NeTernRelObj extends Obj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return neTernRelObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     Miscellanea._assert(getSize() == other.getSize());

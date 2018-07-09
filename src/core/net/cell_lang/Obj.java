@@ -6,6 +6,7 @@ import java.io.OutputStreamWriter;
 
 
 abstract class Obj implements Comparable<Obj> {
+  public int extraData;
   public long data;
 
   public final boolean isBlankObj() {
@@ -134,17 +135,14 @@ abstract class Obj implements Comparable<Obj> {
     if (data != other.data)
       return false;
 
-    int extraData = extraData();
-    if (isInlineObj(extraData))
+    if (isInlineObj())
       return true;
 
-    int otherExtraData = other.extraData();
+    int otherExtraData = other.extraData;
     if (extraData != otherExtraData)
       return false;
 
-    int res = internalOrder(other);
-    Miscellanea._assert(res >= -1 & res <= 1);
-    return res == 0;
+    return internalOrder(other) == 0;
   }
 
   public final int quickOrder(Obj other) {
@@ -155,28 +153,18 @@ abstract class Obj implements Comparable<Obj> {
     if (data != otherData)
       return data < otherData ? -1 : 1;
 
-    int extraData = extraData();
-    int otherExtraData = other.extraData();
+    int otherExtraData = other.extraData;
     if (extraData != otherExtraData)
       return extraData < otherExtraData ? -1 : 1;
 
-    if (isInlineObj(extraData))
+    if (isInlineObj())
       return 0;
 
-    int res = internalOrder(other);
-    Miscellanea._assert(res >= -1 & res <= 1);
-    return res;
+    return internalOrder(other);
   }
 
-  // Can be negative
-  public final int internalHashcode() {
-    return (int) (((data >>> 32) ^ data) & 0xFFFFFFFFL);
-  }
-
-  // Called only when data != other.data and extraData() == other.extraData()
+  // Called only when data == other.data and extraData == other.extraData
   public abstract int internalOrder(Obj other);
-
-  public abstract int extraData();
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -259,7 +247,7 @@ abstract class Obj implements Comparable<Obj> {
 
   private static final int optTagRecObjBaseId   = 21;
 
-  static boolean isInlineObj(int extraData) {
+  boolean isInlineObj() {
     return extraData < 16;
   }
 

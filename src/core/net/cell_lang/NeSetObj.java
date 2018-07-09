@@ -15,6 +15,7 @@ final class NeSetObj extends Obj {
     for (int i=0 ; i < elts.length ; i++)
       hashcode += elts[i].data;
     data = setObjData(size, hashcode);
+    extraData = neSetObjExtraData();
     this.elts = elts;
   }
 
@@ -35,10 +36,6 @@ final class NeSetObj extends Obj {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  public int extraData() {
-    return neSetObjExtraData();
-  }
 
   public int internalOrder(Obj other) {
     Miscellanea._assert(getSize() == other.getSize());
