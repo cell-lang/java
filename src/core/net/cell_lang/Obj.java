@@ -135,12 +135,12 @@ abstract class Obj implements Comparable<Obj> {
     if (data != other.data)
       return false;
 
-    if (isInlineObj())
-      return true;
-
     int otherExtraData = other.extraData;
     if (extraData != otherExtraData)
       return false;
+
+    if (isInlineObj())
+      return true;
 
     return internalOrder(other) == 0;
   }
