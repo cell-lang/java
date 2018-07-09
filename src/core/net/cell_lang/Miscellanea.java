@@ -12,6 +12,10 @@ import java.io.IOException;
 
 
 class Miscellanea {
+  public static void performProcessEndActions() {
+
+  }
+
   public static Obj strToObj(String str) {
     int len = str.length();
     long[] chars = new long[len];

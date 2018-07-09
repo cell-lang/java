@@ -21,26 +21,55 @@ class Algs {
     return binSearch(objs, 0, objs.length, obj);
   }
 
+  public static long[] binSearchLengths = new long[100];
+  public static long[] binSearchCounts = new long[100];
+
+
+  public static void printStats() {
+    double count = 0;
+    for (int i=0 ; i < 100 ; i++)
+      count += binSearchCounts[i];
+
+    System.out.println();
+
+    // for (int i=0 ; i < 100 ; i++) {
+    //   System.out.printf("%8d", Algs.binSearchLengths[i]);
+    //   if ((i+1) % 10 == 0)
+    //     System.out.println();
+    // }
+    // System.out.println();
+
+    for (int i=0 ; i < 100 ; i++) {
+      System.out.printf("%8d", Algs.binSearchCounts[i]);
+      if ((i+1) % 10 == 0)
+        System.out.println();
+    }
+    System.out.println();
+
+    for (int i=0 ; i < 100 ; i++) {
+      System.out.printf("%8.3f", 100 * (Algs.binSearchCounts[i] / count));
+      if ((i+1) % 10 == 0)
+        System.out.println();
+    }
+    System.out.println();
+  }
+
   public static int binSearch(Obj[] objs, int first, int count, Obj obj) {
+    binSearchLengths[objs.length < 100 ? objs.length : 99]++;
+    binSearchCounts[count < 100 ? count : 99]++;
+
     int low = first;
     int high = first + count - 1;
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      switch (objs[mid].cmp(obj)) {
-        case -1:
-          // objs[mid] > obj
-          high = mid - 1;
-          break;
-
-        case 0:
-          return mid;
-
-        case 1:
-          // objs[mid] < obj
-          low = mid + 1;
-          break;
-      }
+      int res = obj.quickOrder(objs[mid]);
+      if (res == -1)
+        high = mid - 1; // objs[mid] > obj
+      else if (res == 1)
+        low = mid + 1;  // objs[mid] < obj
+      else
+        return mid;
     }
 
     return -1;
