@@ -76,8 +76,8 @@ class Builder {
       if (Algs.sortedArrayHasDuplicates(normCol1))
         return new NeBinRelObj(normCol1, normCols[1], false);
       else
-        return new NeBinRelObj(normCol1, normCols[1], true);
-        // return new NeHashMapObj(normCol1, normCols[1]);
+        // return new NeBinRelObj(normCol1, normCols[1]);
+        return new NeHashMapObj(normCol1, normCols[1]);
     }
     else
       return EmptyRelObj.singleton;
