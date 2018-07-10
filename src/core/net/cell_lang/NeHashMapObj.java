@@ -35,7 +35,7 @@ final class NeHashMapObj extends NeBinRelObj {
 
     for (int i=0 ; i < len ; i++) {
       Obj key = keys[i];
-      int hashcode = Utils.hashcode(key.data, key.extraData);
+      int hashcode = key.hashcode();
       int index = hashcode % len;
       if (index < 0)
         index = -index;
@@ -49,7 +49,7 @@ final class NeHashMapObj extends NeBinRelObj {
   //////////////////////////////////////////////////////////////////////////////
 
   public boolean hasKey(Obj key) {
-    int hashcode = Utils.hashcode(key.data, key.extraData);
+    int hashcode = key.hashcode();
     int index = hashcode % hashtable.length;
     if (index < 0)
       index = -index;
@@ -64,7 +64,7 @@ final class NeHashMapObj extends NeBinRelObj {
   }
 
   public boolean hasPair(Obj key, Obj value) {
-    int hashcode = Utils.hashcode(key.data, key.extraData);
+    int hashcode = key.hashcode();
     int index = hashcode % hashtable.length;
     if (index < 0)
       index = -index;
@@ -79,7 +79,7 @@ final class NeHashMapObj extends NeBinRelObj {
   }
 
   public BinRelIter getBinRelIterByCol1(Obj key) {
-    int hashcode = Utils.hashcode(key.data, key.extraData);
+    int hashcode = key.hashcode();
     int index = hashcode % hashtable.length;
     if (index < 0)
       index = -index;
@@ -94,7 +94,7 @@ final class NeHashMapObj extends NeBinRelObj {
   }
 
   public Obj lookup(Obj key) {
-    int hashcode = Utils.hashcode(key.data, key.extraData);
+    int hashcode = key.hashcode();
     int index = hashcode % hashtable.length;
     if (index < 0)
       index = -index;

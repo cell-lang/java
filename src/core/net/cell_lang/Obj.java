@@ -166,6 +166,10 @@ abstract class Obj implements Comparable<Obj> {
   // Called only when data == other.data and extraData == other.extraData
   public abstract int internalOrder(Obj other);
 
+  public int hashcode() {
+    return Utils.jenkinsHash((int) (data >>> 32), (int) data, extraData);
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   protected static long symbObjData(int id) {
