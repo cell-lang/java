@@ -13,7 +13,32 @@ import java.io.IOException;
 
 class Miscellanea {
   public static void performProcessEndActions() {
+    // double count = 0;
+    // for (int i=0 ; i < 100 ; i++)
+    //   count += binSearchCounts[i];
 
+    // System.out.println();
+
+    // // for (int i=0 ; i < 100 ; i++) {
+    // //   System.out.printf("%8d", Algs.binSearchLengths[i]);
+    // //   if ((i+1) % 10 == 0)
+    // //     System.out.println();
+    // // }
+    // // System.out.println();
+
+    // for (int i=0 ; i < 100 ; i++) {
+    //   System.out.printf("%8d", Algs.binSearchCounts[i]);
+    //   if ((i+1) % 10 == 0)
+    //     System.out.println();
+    // }
+    // System.out.println();
+
+    // for (int i=0 ; i < 100 ; i++) {
+    //   System.out.printf("%8.3f", 100 * (Algs.binSearchCounts[i] / count));
+    //   if ((i+1) % 10 == 0)
+    //     System.out.println();
+    // }
+    // System.out.println();
   }
 
   public static Obj strToObj(String str) {
