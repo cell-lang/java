@@ -6,12 +6,12 @@ import java.util.Arrays;
 class Algs {
   static void checkIsOrdered(Obj[] objs) {
     for (int i=1 ; i < objs.length ; i++) {
-      int cmp = objs[i-1].cmp(objs[i]);
-      if (cmp != 1) {
+      int ord = objs[i-1].quickOrder(objs[i]);
+      if (ord != -1) {
         System.out.println("*****************************************");
         System.out.println(objs[i-1].toString());
         System.out.println(objs[i].toString());
-        System.out.printf("%d", cmp);
+        System.out.printf("%d", ord);
         throw new RuntimeException();
       }
     }
@@ -86,52 +86,41 @@ class Algs {
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      switch (objs[mid].cmp(obj)) {
-        case -1:
-          // objs[mid] > obj
-          upperBound = high = mid - 1;
-          break;
+      int ord = obj.quickOrder(objs[mid]);
+      if (ord == -1) {
+        upperBound = high = mid - 1; // objs[mid] > obj
+      }
+      else if (ord == 1) {
+        lowerBound = low = mid + 1; // objs[mid] < obj
+      }
+      else {
+        if (mid == offset || !objs[mid-1].isEq(obj)) {
+          first = mid;
+          low = lowerBound;
+          high = upperBound;
 
-        case 0:
-          if (mid == offset || !objs[mid-1].isEq(obj)) {
-            first = mid;
-            low = lowerBound;
-            high = upperBound;
-
-            while (low <= high) {
-              mid = (int) (((long) low + (long) high) / 2);
-              switch (objs[mid].cmp(obj)) {
-                case -1:
-                  // objs[mid] > obj
-                  high = mid - 1;
-                  break;
-
-                case 0:
-                  if (mid == upperBound || !objs[mid+1].isEq(obj)) {
-                    return new int[] {first, mid - first + 1};
-                  }
-                  else
-                    low = mid + 1;
-                  break;
-
-                case 1:
-                  // objs[mid] < obj
-                  low = mid + 1;
-                  break;
-              }
+          while (low <= high) {
+            mid = (int) (((long) low + (long) high) / 2);
+            ord = obj.quickOrder(objs[mid]);
+            if (ord == -1) {
+              high = mid - 1; // objs[mid] > obj
             }
-
-            // We're not supposed to ever get here.
-            throw new UnsupportedOperationException();
+            else if (ord == 1) {
+              low = mid + 1; // objs[mid] < obj
+            }
+            else {
+              if (mid == upperBound || !objs[mid+1].isEq(obj))
+                return new int[] {first, mid - first + 1};
+              else
+                low = mid + 1;
+            }
           }
-          else
-            high = mid - 1;
-          break;
 
-        case 1:
-          // objs[mid] < obj
-          lowerBound = low = mid + 1;
-          break;
+          // We're not supposed to ever get here.
+          throw new UnsupportedOperationException();
+        }
+        else
+          high = mid - 1;
       }
     }
 
