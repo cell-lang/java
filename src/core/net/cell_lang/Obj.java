@@ -401,8 +401,4 @@ abstract class Obj implements Comparable<Obj> {
   public final int compareTo(Obj other) {
     return quickOrder(other);
   }
-
-  public final int cmp(Obj other) {
-    return -quickOrder(other);
-  }
 }

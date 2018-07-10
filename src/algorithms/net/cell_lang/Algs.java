@@ -230,70 +230,66 @@ class Algs {
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
       int midIdx = idxs[mid];
-      int res = major[midIdx].cmp(majorVal);
-      if (res == 0) {
-        res = minor[midIdx].cmp(minorVal);
+
+      int ord = majorVal.quickOrder(major[midIdx]);
+      if (ord == 0)
+        ord = minorVal.quickOrder(minor[midIdx]);
+
+      if (ord == -1) {
+        // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
+        upperBound = high = mid - 1;
       }
-      switch (res) {
-        case -1:
-          // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
-          upperBound = high = mid - 1;
-          break;
+      else if (ord == 1) {
+        // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
+        lowerBound = low = mid + 1;
+      }
+      else {
+        boolean isFirst = mid == offset;
+        if (!isFirst) {
+          int prevIdx = idxs[mid-1];
+          isFirst = !major[prevIdx].isEq(majorVal) || !minor[prevIdx].isEq(minorVal);
+        }
 
-        case 0:
-          boolean isFirst = mid == offset;
-          if (!isFirst) {
-            int prevIdx = idxs[mid-1];
-            isFirst = !major[prevIdx].isEq(majorVal) || !minor[prevIdx].isEq(minorVal);
-          }
-          if (isFirst) {
-            int first = mid;
-            low = lowerBound;
-            high = upperBound;
+        if (isFirst) {
+          int first = mid;
+          low = lowerBound;
+          high = upperBound;
 
-            while (low <= high) {
-              mid = (int) (((long) low + (long) high) / 2);
-              midIdx = idxs[mid];
-              res = major[midIdx].cmp(majorVal);
-              if (res == 0)
-                res = minor[midIdx].cmp(minorVal);
-              switch (res) {
-                case -1:
-                  // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
-                  high = mid - 1;
-                  break;
+          while (low <= high) {
+            mid = (int) (((long) low + (long) high) / 2);
+            midIdx = idxs[mid];
 
-                case 0:
-                  boolean isLast = mid == upperBound;
-                  if (!isLast) {
-                    int nextIdx = idxs[mid+1];
-                    isLast = !major[nextIdx].isEq(majorVal) || !minor[nextIdx].isEq(minorVal);
-                  }
-                  if (isLast) {
-                    return new int[] {first, mid - first + 1};
-                  }
-                  else
-                    low = mid + 1;
-                  break;
+            ord = majorVal.quickOrder(major[midIdx]);
+            if (ord == 0)
+              ord = minorVal.quickOrder(minor[midIdx]);
 
-                case 1:
-                  // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
-                  low = mid + 1;
-                  break;
-              }
+            if (ord == -1) {
+              // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
+              high = mid - 1;
             }
-
-            // We're not supposed to ever get here.
-            throw new UnsupportedOperationException();
+            else if (ord == 1) {
+              // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
+              low = mid + 1;
+            }
+            else {
+              boolean isLast = mid == upperBound;
+              if (!isLast) {
+                int nextIdx = idxs[mid+1];
+                isLast = !major[nextIdx].isEq(majorVal) || !minor[nextIdx].isEq(minorVal);
+              }
+              if (isLast) {
+                return new int[] {first, mid - first + 1};
+              }
+              else
+                low = mid + 1;
+            }
           }
-          else
-            high = mid - 1;
-          break;
 
-        case 1:
-          // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
-          lowerBound = low = mid + 1;
-          break;
+          // We're not supposed to ever get here.
+          throw new UnsupportedOperationException();
+        }
+        else
+          high = mid - 1;
       }
     }
 
