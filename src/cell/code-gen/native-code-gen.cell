@@ -480,6 +480,7 @@ String* c_main_fn(Bool exit_on_soft_fail) = (
   "  Env env = new Env();",
   "  Miscellanea.exitOnSoftFail = true;" if exit_on_soft_fail,
   "  Obj res = Main_P(Builder.createSeq(cellArgs), env);",
+  "  Miscellanea.performProcessEndActions();",
   "  System.exit(res.isInt() ? (int) res.getLong() : 0);",
   "}"
 );
