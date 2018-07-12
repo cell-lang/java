@@ -29,33 +29,13 @@ class Builder {
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals) {
-    // if (keys.length > 0)
-    //   return new NeHashMapObj(keys, vals);
-    // else
-    //   return EmptyRelObj.singleton;
-
     return createMap(keys, vals, keys.length);
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals, long count) {
-    // if (count == 0)
-    //   return EmptyRelObj.singleton;
-    // else if (count == keys.length)
-    //   return new NeHashMapObj(keys, vals);
-    // else
-    //   return new NeHashMapObj(Arrays.copyOf(keys, (int) count), Arrays.copyOf(vals, (int) count));
-
     Obj binRel = createBinRel(keys, vals, count);
-    if (!binRel.isEmptyRel() && !binRel.isNeMap()) {
+    if (!binRel.isEmptyRel() && !binRel.isNeMap())
       throw Miscellanea.softFail("Error: map contains duplicate keys");
-      // BinRelIter iter = binRel.getBinRelIter();
-      // //## REMOVE WHEN DONE
-      // while (!iter.done()) {
-      //   System.out.println(iter.get1().toString());
-      //   iter.next();
-      // }
-      // throw new RuntimeException();
-    }
     return binRel;
   }
 
@@ -73,11 +53,8 @@ class Builder {
     if (count != 0) {
       Obj[][] normCols = Algs.sortUnique(col1, col2, (int) count);
       Obj[] normCol1 = normCols[0];
-      if (Algs.sortedArrayHasDuplicates(normCol1))
-        return new NeBinRelObj(normCol1, normCols[1], false);
-      else
-        // return new NeBinRelObj(normCol1, normCols[1]);
-        return new NeHashMapObj(normCol1, normCols[1]);
+      boolean isMap = !Algs.sortedArrayHasDuplicates(normCol1);
+      return new NeBinRelObj(normCol1, normCols[1], isMap);
     }
     else
       return EmptyRelObj.singleton;
