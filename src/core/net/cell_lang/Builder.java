@@ -24,17 +24,37 @@ class Builder {
   }
 
   public static Obj createMap(ArrayList<Obj> keys, ArrayList<Obj> vals) {
+    Miscellanea._assert(keys.size() == vals.size());
     return createMap(keys.toArray(new Obj[keys.size()]), vals.toArray(new Obj[vals.size()]));
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals) {
+    // if (keys.length > 0)
+    //   return new NeHashMapObj(keys, vals);
+    // else
+    //   return EmptyRelObj.singleton;
+
     return createMap(keys, vals, keys.length);
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals, long count) {
+    // if (count == 0)
+    //   return EmptyRelObj.singleton;
+    // else if (count == keys.length)
+    //   return new NeHashMapObj(keys, vals);
+    // else
+    //   return new NeHashMapObj(Arrays.copyOf(keys, (int) count), Arrays.copyOf(vals, (int) count));
+
     Obj binRel = createBinRel(keys, vals, count);
     if (!binRel.isEmptyRel() && !binRel.isNeMap()) {
       throw Miscellanea.softFail("Error: map contains duplicate keys");
+      // BinRelIter iter = binRel.getBinRelIter();
+      // //## REMOVE WHEN DONE
+      // while (!iter.done()) {
+      //   System.out.println(iter.get1().toString());
+      //   iter.next();
+      // }
+      // throw new RuntimeException();
     }
     return binRel;
   }
@@ -50,39 +70,25 @@ class Builder {
 
   public static Obj createBinRel(Obj[] col1, Obj[] col2, long count) {
     Miscellanea._assert(count <= col1.length & count <= col2.length);
-
-    if (count == 0)
-      return EmptyRelObj.singleton;
-
-    Objs12 sorter = new Objs12(col1, col2);
-    long[] hashIdxs = sorter.sortedLeftHashIdxPairs(0, (int) count);
-    // The returned size is negated if it's not a map
-    int size = sorter.clearDuplicatesAndCheckMap(hashIdxs);
-    boolean isMap = size >= 0;
-    if (size < 0)
-      size = -size;
-
-    Obj[] normCol1 = new Obj[size];
-    Obj[] normCol2 = new Obj[size];
-    int[] hashes = new int[size];
-
-    int writeIdx = 0;
-    for (int i=0 ; i < count ; i++) {
-      long hashIdx = hashIdxs[i];
-      if (hashIdx != -1) {
-        int idx = (int) hashIdx;
-        normCol1[writeIdx] = col1[idx];
-        normCol2[writeIdx] = col2[idx];
-        hashes[writeIdx++] = (int) (hashIdx >>> 32);
-      }
+    if (count != 0) {
+      Obj[][] normCols = Algs.sortUnique(col1, col2, (int) count);
+      Obj[] normCol1 = normCols[0];
+      if (Algs.sortedArrayHasDuplicates(normCol1))
+        return new NeBinRelObj(normCol1, normCols[1], false);
+      else
+        // return new NeBinRelObj(normCol1, normCols[1]);
+        return new NeHashMapObj(normCol1, normCols[1]);
     }
-    Miscellanea._assert(writeIdx == size);
-
-    return isMap ? new NeMapObj(normCol1, normCol2, hashes) : new NonMapNeBinRelObj(normCol1, normCol2, hashes);
+    else
+      return EmptyRelObj.singleton;
   }
 
   public static Obj createBinRel(Obj obj1, Obj obj2) {
-    return new NeMapObj(new Obj[] {obj1}, new Obj[] {obj2}, new int[] {obj1.hashcode()});
+    Obj[] col1 = new Obj[1];
+    Obj[] col2 = new Obj[1];
+    col1[0] = obj1;
+    col2[0] = obj2;
+    return new NeBinRelObj(col1, col2, true);
   }
 
   public static Obj createTernRel(ArrayList<Obj> col1, ArrayList<Obj> col2, ArrayList<Obj> col3) {

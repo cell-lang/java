@@ -172,17 +172,6 @@ abstract class Obj implements Comparable<Obj> {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  //## FIND BETTER PLACE
-  protected static int hashcode(Obj[] objs) {
-    int len = objs.length;
-    int hashcode = 0;
-    for (int i=0 ; i < len ; i++)
-      hashcode += objs[i].hashcode();
-    return hashcode;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
   protected static long symbObjData(int id) {
     return Long.MIN_VALUE + id;
   }

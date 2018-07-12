@@ -56,6 +56,6 @@ class NeBinRelValue extends ValueBase {
       col1[i] = this.col1[i].asObj();
       col2[i] = this.col2[i].asObj();
     }
-    return Builder.createBinRel(col1, col2);
+    return new NeBinRelObj(col1, col2, isMap);
   }
 }
