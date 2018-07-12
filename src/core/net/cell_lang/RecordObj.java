@@ -3,7 +3,7 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-class RecordObj extends NeBinRelObj {
+final class RecordObj extends NeBinRelObj {
   int[] labels;
 
 
@@ -22,7 +22,6 @@ class RecordObj extends NeBinRelObj {
 
     this.labels = labels;
     col2 = values;
-    isMap = true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -59,8 +58,13 @@ class RecordObj extends NeBinRelObj {
   }
 
   public BinRelIter getBinRelIterByCol1(Obj obj) {
+    if (!obj.isSymb())
+      return nullIter;
+    int idx = getFieldIdx(obj.getSymbId());
+    if (idx == -1)
+      return nullIter;
     buildCol1();
-    return super.getBinRelIterByCol1(obj);
+    return new BinRelIter(col1, col2, idx, idx);
   }
 
   public BinRelIter getBinRelIterByCol2(Obj obj) {

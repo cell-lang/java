@@ -3,29 +3,23 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-class NeBinRelObj extends Obj {
-  Obj[] col1;
-  Obj[] col2;
-  int[] revIdxs;
-  boolean isMap;
+abstract class NeBinRelObj extends Obj {
+  public Obj[] col1;
+  public Obj[] col2;
+  public int[] col1Hashes;
+  long[] revHashIdxs;
   int minPrintedSize = -1;
 
+  static protected final BinRelIter nullIter = new BinRelIter(new Obj[0], new Obj[0]);
 
-  public NeBinRelObj(Obj[] col1, Obj[] col2, boolean isMap) {
-    Miscellanea._assert(col1 != null && col2 != null);
-    Miscellanea._assert(col1.length > 0);
-    Miscellanea._assert(col1.length == col2.length);
 
-    int size = col1.length;
-    long hashcode = 0;
-    for (int i=0 ; i < size ; i++)
-      hashcode += col1[i].data + col2[i].data;
-    data = binRelObjData(size, hashcode);
+  protected NeBinRelObj(Obj[] col1, Obj[] col2, int[] col1Hashes) {
+    data = binRelObjData(col1.length, Utils.int32Sum(col1Hashes) + hashcode(col2));
     extraData = neBinRelObjExtraData();
 
     this.col1 = col1;
     this.col2 = col2;
-    this.isMap = isMap;
+    this.col1Hashes = col1Hashes;
   }
 
   protected NeBinRelObj() {
@@ -34,12 +28,8 @@ class NeBinRelObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean isNeMap() {
-    return isMap;
-  }
-
   public boolean isNeRecord() {
-    if (!isMap)
+    if (!isNeMap())
       return false;
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
@@ -50,12 +40,6 @@ class NeBinRelObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean hasKey(Obj obj) {
-    Miscellanea._assert(isMap);
-
-    return Algs.binSearch(col1, obj) != -1;
-  }
-
   public boolean hasField(int symbId) {
     int len = col1.length;
     for (int i=0 ; i < len ; i++)
@@ -64,50 +48,29 @@ class NeBinRelObj extends Obj {
     return false;
   }
 
-  public boolean hasPair(Obj obj1, Obj obj2) {
-    if (isMap) {
-      int idx = Algs.binSearch(col1, obj1);
-      return idx != -1 && col2[idx].isEq(obj2);
-    }
-    else {
-      int[] firstAndCount = Algs.binSearchRange(col1, 0, col1.length, obj1);
-      int first = firstAndCount[0];
-      int count = firstAndCount[1];
-      if (count == 0)
-        return false;
-      int idx = Algs.binSearch(col2, first, count, obj2);
-      return idx != -1;
-    }
-  }
-
   public BinRelIter getBinRelIter() {
     return new BinRelIter(col1, col2);
   }
 
-  public BinRelIter getBinRelIterByCol1(Obj obj) {
-    int[] firstAndCount = Algs.binSearchRange(col1, 0, col1.length, obj);
-    int first = firstAndCount[0];
-    int count = firstAndCount[1];
-    return new BinRelIter(col1, col2, first, first+count-1);
-  }
-
   public BinRelIter getBinRelIterByCol2(Obj obj) {
-    if (revIdxs == null)
-      revIdxs = Algs.sortedIndexes(col2, col1);
-    int[] firstAndCount = Algs.binSearchRange(revIdxs, col2, obj);
-    int first = firstAndCount[0];
-    int count = firstAndCount[1];
-    return new BinRelIter(col1, col2, revIdxs, first, first+count-1);
-  }
+    if (revHashIdxs == null) {
+      Objs12 sorter = new Objs12(col2, col1);
+      revHashIdxs = sorter.sortedLeftHashIdxPairs(0, col1.length);
+    }
 
-  public Obj lookup(Obj key) {
-    int idx = Algs.binSearch(col1, key);
+    int idx = Objs12.lookupFirst(obj, revHashIdxs, col2);
     if (idx == -1)
-      throw Miscellanea.softFail("Key not found:", "collection", this, "key", key);
-    if (!isMap)
-      if ((idx > 0 && col1[idx-1].isEq(key)) || (idx+1 < col1.length && col1[idx+1].isEq(key)))
-        throw Miscellanea.softFail("Key not found:", "collection", this, "key", key);
-    return col2[idx];
+      return nullIter;
+    int count = 1 + Objs12.countEqUpward(idx + 1, obj, revHashIdxs, col2);
+
+    Obj[] slice1 = new Obj[count];
+    Obj[] slice2 = new Obj[count];
+    for (int i=0 ; i < count ; i++) {
+      int directIdx = (int) revHashIdxs[idx+i];
+      slice1[i] = col1[directIdx];
+      slice2[i] = obj;
+    }
+    return new BinRelIter(slice1, slice2, 0, count-1);
   }
 
   public Obj lookupField(int symbId) {
@@ -155,6 +118,7 @@ class NeBinRelObj extends Obj {
     try {
       int len = col1.length;
       boolean isRec = isNeRecord();
+      boolean isMap = isNeMap();
       boolean breakLine = minPrintedSize() > maxLineLen;
       String argSep = isMap ? (isRec ? ":" : " ->") : ",";
       String entrySep = isMap ? "," : ";";
@@ -239,6 +203,7 @@ class NeBinRelObj extends Obj {
     if (minPrintedSize == -1) {
       int len = col1.length;
       boolean isRec = isNeRecord();
+      boolean isMap = isNeMap();
       minPrintedSize = (2 + (isMap & !isRec ? 4 : 2)) * len + ((!isMap & len == 1) ? 1 : 0);
       for (int i=0 ; i < len ; i++)
         minPrintedSize += col1[i].minPrintedSize() + col2[i].minPrintedSize();
@@ -254,6 +219,6 @@ class NeBinRelObj extends Obj {
       values1[i] = col1[i].getValue();
       values2[i] = col2[i].getValue();
     }
-    return new NeBinRelValue(values1, values2, isMap);
+    return new NeBinRelValue(values1, values2, isNeMap());
   }
 }

@@ -14,4 +14,12 @@ class Utils {
     c= c - a;  c = c - b;  c = c^ (b >>> 15);
     return c;
   }
+
+  public static int int32Sum(int[] xs) {
+    int len = xs.length;
+    int sum = 0;
+    for (int i=0 ; i < len ; i++)
+      sum += xs[i];
+    return sum;
+  }
 }
