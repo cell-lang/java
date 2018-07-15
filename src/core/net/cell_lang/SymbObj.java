@@ -19,10 +19,6 @@ final class SymbObj extends Obj {
     valueObj = new SymbValue(id);
   }
 
-  public Obj tagged(int tagId) {
-    return PackedObj.get(PackedObj.tag(tagId, PackedObj.packSymb(getSymbId())));
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   public int internalOrder(Obj other) {

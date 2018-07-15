@@ -7,19 +7,11 @@ final class TaggedObj extends Obj {
   Obj obj;
   int minPrintedSize = -1;
 
-  private TaggedObj(int tag, Obj obj) {
+  public TaggedObj(int tag, Obj obj) {
     data = tagObjData(tag, obj.data);
     extraData = refTagObjExtraData();
     this.obj = obj;
   }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  public static Obj get(int tag, Obj obj) {
-    return new TaggedObj(tag, obj);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
 
   public boolean hasField(int id) {
     return obj.hasField(id);

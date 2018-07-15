@@ -98,14 +98,12 @@ class Builder {
     return new NeTernRelObj(col1, col2, col3);
   }
 
-  //## REMOVE ONCE DONE
   public static Obj createTaggedObj(int tag, Obj obj) {
-    return obj.tagged(tag);
+    return new TaggedObj(tag, obj);
   }
 
-  //## REMOVE ONCE DONE
   public static Obj createTaggedIntObj(int tag, long value) {
-    return IntObj.get(value).tagged(tag);
+    return new TaggedObj(tag, IntObj.get(value));
   }
 
   //////////////////////////////////////////////////////////////////////////////

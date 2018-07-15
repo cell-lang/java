@@ -79,7 +79,7 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final boolean isTagged() {
-    return this instanceof TaggedObj || this instanceof OptTagRecObj || this instanceof PackedObj;
+    return this instanceof TaggedObj || this instanceof OptTagRecObj;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ abstract class Obj implements Comparable<Obj> {
   //////////////////////////////////////////////////////////////////////////////
 
   public final int getSymbId() {
-    return PackedObj.getSymbId(data);
+    return (int) (data - Long.MIN_VALUE);
   }
 
   public final boolean getBool() {
@@ -107,7 +107,6 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final long getLong() {
-    // Miscellanea._assert(isInt());
     return data;
   }
 
@@ -125,10 +124,6 @@ abstract class Obj implements Comparable<Obj> {
 
   public final Obj getTag() {
     return SymbTable.get(getTagId());
-  }
-
-  public long getPackedValue() {
-    return data;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -178,11 +173,11 @@ abstract class Obj implements Comparable<Obj> {
   //////////////////////////////////////////////////////////////////////////////
 
   protected static long symbObjData(int id) {
-    return PackedObj.packSymb(id);
+    return Long.MIN_VALUE + id;
   }
 
   protected static long boolObjData(boolean value) {
-    return symbObjData(value ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
+    return Long.MIN_VALUE + (value ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
   }
 
   protected static long floatObjData(double value) {
@@ -343,13 +338,6 @@ abstract class Obj implements Comparable<Obj> {
 
   public boolean isSyntacticSugaredString() {return false;}
   public String getString() {throw Miscellanea.internalFail(this);}
-
-  //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Obj tagged(int tagId) {
-    return TaggedObj.get(tagId, this);
-  }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
