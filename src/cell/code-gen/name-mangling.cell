@@ -26,6 +26,14 @@
 //  Z
 
 
+String native_var_name(LocPackedObjVar var) =
+  packed_obj_var(<+> s?)    = printed(s) & "_Vp",
+  packed_obj_var(<*..*> n?) = "p" & printed(n);
+
+
+String native_var_name(PackedObjArg var) = "a" & printed(untag(var));
+
+
 String native_var_name(LocOptTagRecVar var) =
   match (var.id)
     <+>     = printed(var.id) & "_Vr_" & printed(var.tag),
@@ -60,8 +68,8 @@ String symb_idx_name(SymbObj symb) =
 String native_var_decl_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v) = native_var_name(v, false);
 String native_var_ref_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v)  = native_var_name(v, true);
 
-String native_var_decl_name(<OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v) = native_var_name(v);
-String native_var_ref_name(<OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v)  = native_var_name(v);
+String native_var_decl_name(<PackedObjVar, OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v) = native_var_name(v);
+String native_var_ref_name(<PackedObjVar, OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v)  = native_var_name(v);
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -72,12 +80,20 @@ String native_var_decl_name(MembIntVectVar v) =
 /////////////////////////////////////////////////////////////////////////////////////
 
 String native_var_name(VecVar v)          = "vec_" & printed(v.id);
-String native_var_name(ArrayVar var)      = "y" & printed(var.id) & "_" & native_type(var.repr);
 String native_var_name(SeqItVar v)        = "seq_it_" & printed(bare_id_2(v));
 String native_var_name(SetItVar v)        = "set_it_" & printed(bare_id_2(v));
 String native_var_name(BinRelItVar v)     = "bin_rel_it_" & printed(bare_id_2(v));
 String native_var_name(TernRelItVar v)    = "tern_rel_it_" & printed(bare_id_2(v));
 String native_var_name(StreamVar v)       = "stream_" & printed(bare_id_2(v));
+
+
+String native_var_name(ArrayVar var) {
+  suffix = match (var.repr)
+    packed_obj  = "packed",
+    _           = native_type(var.repr);
+  return "y" & printed(var.id) & "_" & suffix;
+}
+
 
 String native_var_name(TableItVar v) {
   prefix = match (v.arity)
@@ -276,6 +292,7 @@ String native_var_type(Int32Var)          = "int";
 String native_var_type(MembIntVectVar)    = "long[]";
 String native_var_type(BoolVar)           = "boolean";
 String native_var_type(FloatVar)          = "double";
+String native_var_type(PackedObjVar)      = "long";
 String native_var_type(OptTagRecVar var)  = opt_tag_rec_name(var.tag, var.index);
 
 String native_var_type(SeqItVar v)     = "SeqIter";
@@ -291,30 +308,30 @@ String native_var_type(ArrayVar v)     = native_elt_type(v) & "[]";
 String native_elt_type(ArrayVar var) = native_type(var.repr);
 
 String native_type(LowLevelEltRepr) =
-  bool      = "boolean",
-  int8      = "byte",
-  int16     = "short",
-  int32     = "int",
-  int       = "long",
-  float     = "double",
-  symbol    |
-  object    = "Obj",
-  array()   = undefined;
+  bool        = "boolean",
+  int8        = "byte",
+  int16       = "short",
+  int32       = "int",
+  int         = "long",
+  float       = "double",
+  packed_obj  = "long",
+  object      = "Obj",
+  array()     = undefined;
 
 
 String native_type(OptTagRecRepr repr) = opt_tag_rec_name(repr.tag, repr.index);
 
 
 Bool is_nullable(LowLevelEltRepr) =
-  bool      |
-  int8      |
-  int16     |
-  int32     |
-  int       |
-  float     = false,
-  symbol    |
-  object    = true,
-  array()   = undefined;
+  bool        |
+  int8        |
+  int16       |
+  int32       |
+  int         |
+  float       |
+  packed_obj  = false,
+  object      = true,
+  array()     = undefined;
 
 Bool is_nullable(OptTagRecRepr) = true;
 
