@@ -12,32 +12,26 @@ String native_expr(ObjNatOp expr) =
   at()                = native_expr(expr.seq)    & ".getObjAt(" & native_expr(expr.idx) & ")",
   lookup()            = native_expr(expr.rel)    & ".lookup(" & native_expr(expr.key) & ")",
   lookup_field()      = native_lookup_field_expr(expr.record, expr.field, expr.repr),
-  get_tag(e?)         = native_get_tag_expr(e),
+  get_tag(e?)         = native_expr(e)           & ".getTag()",
   get_inner_obj(e?)   = native_expr(e)           & ".getInnerObj()",
   get_curr_obj(v?)    = native_var_ref_name(v)   & ".get()",
   rand_elem(e?)       = native_expr(e)           & ".randElem()",
   bool_obj(e?)        = "SymbObj.get(" & native_expr(e, true) & " ? " & symb_idx_name(true) & " : " & symb_idx_name(false) & ")",
   int_obj(e?)         = "IntObj.get("  & native_expr(e) & ")",
   float_obj(e?)       = "new FloatObj(" & native_expr(e) & ")",
-  packed_obj_obj(e?)  = "PackedObj.get(" & native_expr(e) & ")",
   to_symb(e?)         = "Parsing.parseSymb(" & native_expr(e) & ")",
   get_curr_arg()      = native_get_curr_arg_expr(expr.var, expr.arg);
-
-
-String native_get_tag_expr(ObjExpr expr) =
-  packed_obj_obj(e?)  = "PackedObj.getTagId(" & native_expr(e) & ")",
-  _                   = native_expr(expr) & ".getTag()";
 
 
 String native_lookup_field_expr(ObjExpr record, SymbObj field, Maybe[LowLevelRepr] repr) {
   if record :: OptTagRecExpr and repr != nothing:
     expr_str = native_expr(record) & "." & opt_rec_field_name(untag(field));
     return match (value(repr))
-      bool        = "SymbObj.get(" & expr_str & ")",
-      int         = "IntObj.get(" & expr_str & ")",
-      float       = "new FloatObj(" & expr_str & ")",
-      packed_obj  = "PackedObj.get(" & expr_str & ")",
-      object      = expr_str;
+      bool    = "SymbObj.get(" & expr_str & ")",
+      int     = "IntObj.get(" & expr_str & ")",
+      float   = "new FloatObj(" & expr_str & ")",
+      symbol  |
+      object  = expr_str;
   ;
 
   return native_expr(record) & ".lookupField(" & symb_idx_name(field) & ")";
@@ -63,9 +57,6 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
   return match (expr)
     true                  = "true",
     false                 = "false",
-
-    is_symb(packed_obj_obj(e?))       = "PackedObj.isSymb(" & native_expr(e) & ")",
-    is_tagged_obj(packed_obj_obj(e?)) = "PackedObj.isTagged(" & native_expr(e) & ")",
 
     is_symb(e?)           = native_expr(e) & ".isSymb()",
     is_int(e?)            = native_expr(e) & ".isInt()",
@@ -141,11 +132,6 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   lookup_field(),     object(true)      = if expr1.repr == just(:bool) and expr1.record :: OptTagRecExpr
                                             then native_expr(expr1.record) & "." & opt_rec_field_name(untag(expr1.field))
                                             else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
-
-  // packed_obj_obj(e1?), packed_obj_obj(e2) =
-
-  get_tag(packed_obj_obj(e?)), object(<+> s?) = parenthesize("PackedObj.getTagId(" & native_expr(e) & ") == " & symb_idx_name(s), parenthesized),
-  object(<+> s?), get_tag(packed_obj_obj(e?)) = parenthesize("PackedObj.getTagId(" & native_expr(e) & ") == " & symb_idx_name(s), parenthesized),
 
   get_tag(e?),        object(<+> s?)    = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
   object(<+> s?),     get_tag(e?)       = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
@@ -265,27 +251,6 @@ String native_expr(FloatLit literal, Bool parenthesized) {
   res = "-" & res if literal.negative;
   res = res & "e" & printed(literal.dec_exp) if literal.dec_exp != 0;
   return res;
-}
-
-
-String native_expr(PackedObjExpr expr, Bool parenthesized) = native_expr(expr);
-
-
-String native_expr(PackedObjExpr expr) {
-  return match (expr)
-    packed_obj_var()      |
-    packed_obj_arg()      = native_var_ref_name(expr),
-    packed_obj_value(e?)  = native_packed_obj_value_expr(e);
-
-
-  String native_packed_obj_value_expr(ObjExpr expr) =
-    lookup_field()      = if expr.repr == just(:packed_obj) and expr.record :: OptTagRecExpr
-                            then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
-                            else native_expr(expr) & ".getPackedValue()",
-    get_tag(e?)         = "PackedObj.packSymb(" & native_expr(e) & ".getTagId())",
-    get_inner_obj(e?)   = "PackedObj.getInnerObj(" & native_expr(packed_obj_value(e)) & ")",
-    object(<+> s?)      = "PackedObj.packSymb(" & symb_idx_name(s) & ")",
-    _                   = native_expr(expr) & ".getPackedValue()";
 }
 
 

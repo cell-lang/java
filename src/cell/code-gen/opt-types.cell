@@ -232,24 +232,24 @@ String set_check_expr(LowLevelRepr repr, Symbol label, String path, Bool parenth
 
 
 String native_obj_expr(LowLevelRepr repr, String expr) =
-  bool        = "SymbObj.get(" & expr & ")",
-  int         = "IntObj.get(" & expr & ")",
-  float       = "new FloatObj(" & expr & ")",
-  packed_obj  = "PackedObj.get(" & expr & ")",
-  object      = expr;
+  bool    = "SymbObj.get(" & expr & ")",
+  int     = "IntObj.get(" & expr & ")",
+  float   = "new FloatObj(" & expr & ")",
+  symbol  |
+  object  = expr;
 
 
 String obj_data_expr(LowLevelRepr repr, String expr) =
-  bool        = "boolObjData(" & expr & ")",
-  int         = expr,
-  float       = "floatObjData(" & expr & ")",
-  packed_obj  = expr,
-  object      = expr & ".data";
+  bool    = "boolObjData(" & expr & ")",
+  int     = expr,
+  float   = "floatObjData(" & expr & ")",
+  symbol  |
+  object  = expr & ".data";
 
 
 String comparison_expr(LowLevelRepr repr, String expr1, String expr2) =
-  bool        = "SymbTable.compBools(" & expr1 & ", " & expr2 & ")",
-  int         = "IntObj.compare(" & expr1 & ", " & expr2 & ")",
-  float       = "FloatObj.compare(" & expr1 & ", " & expr2 & ")",
-  packed_obj  = "PackedObj.compare(" & expr1 & ", " & expr2 & ")",
-  object      = expr1 & ".quickOrder(" & expr2 & ")";
+  bool    = "SymbTable.compBools(" & expr1 & ", " & expr2 & ")",
+  int     = "IntObj.compare(" & expr1 & ", " & expr2 & ")",
+  float   = "FloatObj.compare(" & expr1 & ", " & expr2 & ")",
+  symbol  |
+  object  = expr1 & ".quickOrder(" & expr2 & ")";

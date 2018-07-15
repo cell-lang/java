@@ -360,15 +360,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     if cached:
       is_real_const = pd.cached? and pd.impl_args == [];
-      cache_var_name = #(if is_real_const then "" else "env.") & memo_var_name(pd.name);
+      cache_var_name = if is_real_const then fn_name & "__CV" else "env." & memo_var_name(pd.name);
       needs_set_flag = is_real_const and pd.ret_val_repr? and not is_nullable(pd.ret_val_repr);
-      set_flag_name = cache_var_name & "s";
+      set_flag_name = if needs_set_flag then fn_name & "__CI" else "???"; ## UGLY UGLY UGLY
       ret_type_name = ret_type_str(pd);
-
-      expr_to_cache = fn_name & suffix & "(env)";
-      expr_to_cache = cast_to_obj(pd, expr_to_cache) if not is_real_const;
-      expr_from_cache = cache_var_name;
-      expr_from_cache = cast_from_obj(pd, expr_from_cache) if not is_real_const;
+      cast = if ret_type_name != "Obj" then " (" & ret_type_name & ")" else "";
 
       wrapper_code = (
         "",
@@ -379,40 +375,16 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         "static " & ret_type_name & " " & fn_name & "(" & args_list_str & ") {",
         "  if (" & cache_var_name & " == null)" if not needs_set_flag,
         "  if (!" & set_flag_name & ") {" if needs_set_flag,
-        "    " & cache_var_name & " = " & expr_to_cache & ";",
+        "    " & cache_var_name & " = " & fn_name & suffix & "(env);",
         "    " & set_flag_name & " = true;" if needs_set_flag,
         "  }" if needs_set_flag,
-        "  return " & expr_from_cache & ";",
+        "  return" & cast & " " & cache_var_name & ";",
         "}"
       );
       code = code & wrapper_code;
     ;
 
     return code;
-
-
-    String cast_to_obj(ObjProcDef proc, String expr) =
-      match (proc.ret_val_repr)
-        bool                = "SymbObj.get(" & expr & ")",
-        int                 = "IntObj.get(" & expr & ")",
-        float               = "new FloatObj(" & expr & ")",
-        packed_obj          = "PackedObj.get(" & expr & ")",
-        object              |
-        opt_tag_rec_repr()  = expr;
-
-
-    String cast_from_obj(ObjProcDef proc, String expr) =
-      match (proc.ret_val_repr)
-        bool                = expr & ".getBool()",
-        int                 = expr & ".getLong()",
-        float               = expr & ".getDouble()",
-        packed_obj          = expr & ".getPackedValue()",
-        object              = expr,
-        opt_tag_rec_repr()  = "(" & native_type(proc.ret_val_repr) & ") " & expr;
-
-
-    String cast_to_obj(BoolProcDef, String) = undefined;
-    String cast_from_obj(BoolProcDef, String) = undefined;
 
 
     Nat arity(ProcDef pd) =
@@ -462,8 +434,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 ////////////////////////////////////////////////////////////////////////////////
 
 type EncodInst  = blank_obj, ObjExpr, ElemVar, PendingInputVar, VecVar, ArrayVar, BoolExpr, IntExpr,
-                  Int32Expr, FloatExpr, PackedObjExpr, ItVar, StreamVar, AnyClsVar, AnyRelVar,
-                  AnyValueStoreId, AnyAutoVar, AnyDBVar;
+                  Int32Expr, FloatExpr, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId,
+                  AnyAutoVar, AnyDBVar;
 
 
 String native_code(EncodInst enc) = native_expr(enc);

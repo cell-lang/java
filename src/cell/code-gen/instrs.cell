@@ -20,8 +20,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     set_bvar()            |
     set_ivar()            |
     set_ivar32()          |
-    set_fvar()            |
-    set_pvar()            = (native_assignment_code(instr.var, instr.value)),
+    set_fvar()            = (native_assignment_code(instr.var, instr.value)),
     set_rc_var()          = (native_code(instr.value, instr.var)),
     init_memb_var()       = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
     reset_memb_var()      = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
@@ -180,10 +179,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   ## TERMIMATE AN OUTER LOOP, THAT BREAK WILL TERMINATE THE SWITCH/CASE INSTEAD.
   String* native_symb_switch_code(ObjExpr value, [+([+SymbObj], Instr+)] cases, Instr* else, Maybe[Nat] block_id) {
     value_str = match (value)
-      packed_obj_obj(e?)          = "PackedObj.getSymbId(" & native_expr(e) & ")",
-      get_tag(packed_obj_obj(e?)) = "PackedObj.getTagId(" & native_expr(e) & ")",
-      get_tag(tag_obj?)           = native_expr(tag_obj) & ".getTagId()",
-      _                           = native_expr(value) & ".getSymbId()";
+      get_tag(tag_obj?)   = native_expr(tag_obj) & ".getTagId()",
+      _                   = native_expr(value) & ".getSymbId()";
 
     body_code = (
       ("" if i > 0) &
