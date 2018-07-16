@@ -23,7 +23,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "static {"
     );
 
-    for i <= |symbs| / 100:
+    for i < #(|symbs| + 99) / 100:
       code = (code | "  populateEmbeddedSymbols" & printed(i) & "();");
     ;
     code = (code | "};", "", "");
