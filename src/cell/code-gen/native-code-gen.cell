@@ -10,7 +10,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       is_last  = mod(i, 100) == 99 or i == |symbs| - 1;
 
       code = (code | "static void populateEmbeddedSymbols" & printed(i / 100) & "() {") if is_first;
-      code = (code | "  embeddedSymbols[" & printed(i) & "] = \"" & _str_(bare_obj(s)) & "\";");
+      code = (code | "  embeddedSymbols[" & printed(i) & "] = \"" & _print_(bare_obj(s)) & "\";");
       code = (code | "}", "", "") if is_last;
     ;
 
@@ -122,6 +122,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       ),
 
       indent_lines(code & proc_code & ("", "") & int_seqs_code & ("", "") & symbs_seqs_code & decl_types_conv_functs),
+
+      indent_lines(custom_parser),
 
       indent_lines(c_main_fn(debug_mode)) if has_main,
 
@@ -398,7 +400,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     String* gen_args_list(ObjProcDef pd) {
       args = (native_var_type(v) & " " & native_var_decl_name(v) : v <- pd.args);
       cls_args = ("Lambda " & native_var_decl_name(a.var) : a <- pd.cls_args);
-      return (args & cls_args | "Env env");
+      args_list = args & cls_args;
+      args_list = (args_list | "Env env") if not pd.name :: ConvFnId;
+      return args_list;
     }
 
     String* gen_args_list(BoolProcDef pd) = ("Obj " & native_var_decl_name(fn_arg(n)) : n < arity(pd));
@@ -469,6 +473,36 @@ String native_assignment_code(Encodable var, Encodable value) =
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+
+String* custom_parser = (
+  "",
+  "",
+  "final static class Parser extends net.cell_lang.Parser {",
+  "  Parser(Token[] tokens) {",
+  "    super(tokens);",
+  "  }",
+  "",
+  "  Obj createTaggedObj(int tagId, Obj obj) {",
+  "    return convertGenericTaggedValue(SymbObj.get(tagId), obj);",
+  "  }",
+  "}",
+  "",
+  "",
+  "public static Obj parse(Obj text) {",
+  "  byte[] bytes = text.getInnerObj().getByteArray();",
+  "  try {",
+  "    Token[] tokens = Lexer.lex(bytes);",
+  "    Parser parser = new Parser(tokens);",
+  "    Obj obj = parser.parseObj();",
+  "    parser.checkEof();",
+  "    return Builder.createTaggedObj(SymbTable.SuccessSymbId, obj);",
+  "  }",
+  "  catch (ParsingException e) {",
+  "    return Builder.createTaggedObj(SymbTable.FailureSymbId, IntObj.get(e.errorOffset));",
+  "  }",
+  "}"
+);
+
 
 String* c_main_fn(Bool exit_on_soft_fail) = (
   "",

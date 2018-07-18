@@ -73,14 +73,7 @@ class TokenStream {
 }
 
 
-class Parser extends TokenStream {
-  public static Obj parse(Token[] tokens) {
-    Parser parser = new Parser(tokens);
-    Obj obj = parser.parseObj();
-    parser.checkEof();
-    return obj;
-  }
-
+abstract class Parser extends TokenStream {
   Parser(Token[] tokens) {
     super(tokens);
   }
@@ -178,11 +171,13 @@ class Parser extends TokenStream {
       Obj innerObj = isRecord() ? parseRec() : parseSeq();
       if (innerObj.isSeq() && innerObj.getSize() == 1)
         innerObj = innerObj.getObjAt(0);
-      return Builder.createTaggedObj(symbObj.getSymbId(), innerObj);
+      return createTaggedObj(symbObj.getSymbId(), innerObj);
     }
     else
       return symbObj;
   }
+
+  abstract Obj createTaggedObj(int tagId, Obj obj);
 
   ////////////////////////////////////////////////////////////////////////////////
 

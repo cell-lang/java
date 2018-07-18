@@ -220,8 +220,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     join_seqs()                 = native_method_call(var, expr.left, "concat",        (expr.right)),
     rev_seq()                   = native_method_call(var, expr.seq,  "reverse",       ()),
     internal_sort()             = native_method_call(var, expr.set,  "internalSort",  ()),
-    symb_to_str(e?)             = native_method_call(var, e,         "printed",       ()),
-    parse_value()               = native_static_call(var, "Parsing.parse",            (expr.value)),
+    parse_value()               = native_static_call(var, "parse",                    (expr.value)),
     print_value()               = native_method_call(var, expr.value,"printed",       ()),
     _                           = auto_expr_native_code(expr, var);
 
@@ -265,7 +264,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, AnyTypeExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
     cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
-    args_list = (args & cls_args_refs | "env");
+    args_list = args & cls_args_refs;
+    args_list = (args_list | "env") if not name :: ConvFnId;
     name_str = native_fn_name(name);
     call_code = if var != nothing
       then native_static_call(value(var), name_str, args_list)

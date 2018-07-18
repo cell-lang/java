@@ -2,19 +2,19 @@ package net.cell_lang;
 
 
 class Conversions {
-  public static Obj convertText(String text) {
-    int len = text.length();
-    byte[] bytes = new byte[len];
-    for (int i=0 ; i < len ; i++) {
-      char ch = text.charAt(i);
-      if (ch > 255)
-        throw new ParsingException(i);
-      bytes[i] = (byte) ch;
-    }
+  // public static Obj convertText(String text) {
+  //   int len = text.length();
+  //   byte[] bytes = new byte[len];
+  //   for (int i=0 ; i < len ; i++) {
+  //     char ch = text.charAt(i);
+  //     if (ch > 255)
+  //       throw new ParsingException(i);
+  //     bytes[i] = (byte) ch;
+  //   }
 
-    Token[] tokens = Lexer.lex(bytes);
-    return Parser.parse(tokens);
-  }
+  //   Token[] tokens = Lexer.lex(bytes);
+  //   return Parser.parse(tokens);
+  // }
 
   public static Value exportAsValue(Obj obj) {
     return obj.getValue();

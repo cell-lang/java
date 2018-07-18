@@ -19,7 +19,6 @@ String native_expr(ObjNatOp expr) =
   bool_obj(e?)        = "SymbObj.get(" & native_expr(e, true) & " ? " & symb_idx_name(true) & " : " & symb_idx_name(false) & ")",
   int_obj(e?)         = "IntObj.get("  & native_expr(e) & ")",
   float_obj(e?)       = "new FloatObj(" & native_expr(e) & ")",
-  to_symb(e?)         = "Parsing.parseSymb(" & native_expr(e) & ")",
   get_curr_arg()      = native_get_curr_arg_expr(expr.var, expr.arg);
 
 
