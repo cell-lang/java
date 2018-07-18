@@ -44,10 +44,10 @@ class IntArrayObjs {
     return new IntArrayObj(Arrays.copyOf(data, length));
   }
 
-  static ByteArrayObj createUnsigned(byte[] data) {
+  static UnsignedByteArrayObj createUnsigned(byte[] data) {
     Miscellanea._assert(data.length > 0);
     //## BUG BUG BUG: IMPLEMENT
-    return new ByteArrayObj(data);
+    return new UnsignedByteArrayObj(data);
   }
 
   static IntArraySliceObj createRightPadded(long value) {
@@ -396,6 +396,95 @@ final class ByteArraySliceObj extends ByteArrayObjBase {
   public long getLongAt(long idx) {
     if (idx >= 0 & idx < getSize())
       return bytes[offset + (int) idx];
+    else
+      throw new ArrayIndexOutOfBoundsException();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+abstract class UnsignedByteArrayObjBase extends IntArrayObjBase {
+  byte[] bytes;
+
+
+  public SeqObj reverse() {
+    int length = getSize();
+    int last = offset + length - 1;
+    byte[] revData = new byte[length];
+    for (int i=0 ; i < length ; i++)
+      revData[i] = bytes[last-i];
+    return new UnsignedByteArrayObj(revData);
+  }
+
+  public SeqObj getSlice(long first, long len) {
+    //## DON'T I NEED TO CHECK THAT BOTH first AND len ARE NONNEGATIVE?
+    if (first + len > getSize())
+      throw new IndexOutOfBoundsException();
+    if (len == 0)
+      return EmptySeqObj.singleton;
+    return new UnsignedByteArraySliceObj(bytes, offset + (int) first, (int) len);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void copy(int first, int count, long[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = unsigned(bytes[srcOffset+i]);
+  }
+
+  public void copy(int first, int count, Obj[] array, int destOffset) {
+    int srcOffset = offset + first;
+    for (int i=0 ; i < count ; i++)
+      array[destOffset+i] = IntObj.get(unsigned(bytes[srcOffset+i]));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  protected static int unsigned(byte b) {
+    return b & 0xFF;
+  }
+}
+
+
+final class UnsignedByteArrayObj extends UnsignedByteArrayObjBase {
+  protected UnsignedByteArrayObj(byte[] elts) {
+    int len = elts.length;
+    long hashcode = unsigned(elts[0]);
+    if (len > 1) {
+      hashcode += unsigned(elts[len-1]);
+      if (len > 2)
+        hashcode += unsigned(elts[len/2]);
+    }
+    data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
+    bytes = elts;
+  }
+
+  public long getLongAt(long idx) {
+    return unsigned(bytes[(int) idx]);
+  }
+}
+
+
+final class UnsignedByteArraySliceObj extends UnsignedByteArrayObjBase {
+  public UnsignedByteArraySliceObj(byte[] elts, int offset, int len) {
+    long hashcode = unsigned(elts[offset]);
+    if (len > 1) {
+      hashcode += unsigned(elts[offset+len-1]);
+      if (len > 2)
+        hashcode += unsigned(elts[offset+len/2]);
+    }
+    data = seqObjData(len, hashcode);
+    extraData = neSeqObjExtraData();
+    bytes = elts;
+    this.offset = offset;
+  }
+
+  public long getLongAt(long idx) {
+    if (idx >= 0 & idx < getSize())
+      return unsigned(bytes[offset + (int) idx]);
     else
       throw new ArrayIndexOutOfBoundsException();
   }
