@@ -171,7 +171,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       ("case " & printed(i) & ":") & indent_lines((native_code(c, block_id) | "break;", ""))
       : c @ i <- cases
     );
-    return ("switch ((int) (" & native_expr(value) & ")) {") & indent_lines(join(cases_code)) & ("}");
+    default_code = ("default:", "  throw Miscellanea._hardFail();");
+    switch_body = join(cases_code) & default_code;
+    return ("switch ((int) (" & native_expr(value) & ")) {") & indent_lines(switch_body) & ("}");
   }
 
 

@@ -410,10 +410,10 @@ String node_update_method_name(AutoSymbol auto_type,  BlockNodeId node_id) = nod
 String queue_update_method_name(AutoSymbol auto_type, BlockNodeId node_id) = node_specific_method_name_prefix(node_id, auto_type) & "_invalidate";
 
 String node_specific_method_name_prefix(BlockNodeId id, AutoSymbol auto) =
-  std_block_node_id(a?)   = native_name(auto) & "_" & _print_(a) & "_N",
-  cond_node_id(n?)        = native_name(auto) & "_cond_node_" & printed(n),
-  nested_auto_node_id(a?) = native_name(auto) & "_" & _print_(a) & "_Na",
-  nested_auto_input_id()  = native_name(auto) & "_" & _print_(id.auto) & "_Na_" & _print_(id.input);
+  std_block_node_id(a?)   = _print_(a) & "_N",
+  cond_node_id(n?)        = "cond_node_" & printed(n),
+  nested_auto_node_id(a?) = _print_(a) & "_Na",
+  nested_auto_input_id()  = _print_(id.auto) & "_Na_" & _print_(id.input);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

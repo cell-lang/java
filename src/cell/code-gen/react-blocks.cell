@@ -20,8 +20,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     ;
     vars_decls = (vars_decls | "") if vars_decls != ();
 
-    all_loc_vars = vars_to_declare(block.apply_code, undefined) &
-                   union([vars_to_declare(c, undefined) : id, c <- block.nodes_update_code]);
+    ## THERE MIGHT BE A BUG HERE
+    all_loc_vars = vars_to_declare(block.apply_code, []) &
+                   union([vars_to_declare(c, []) : id, c <- block.nodes_update_code]);
     aux_vars = [v : v <- all_loc_vars, v :: AuxVar] & [curr_time if has_time_rules];
     aux_vars_decls = (var_decl(v) : v <- isort(aux_vars));
     aux_vars_decls = (aux_vars_decls | "") if aux_vars != ();
@@ -78,7 +79,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       gen_input_setter(block.name, id, i, queue_input_updates) : id @ i <- block.ord_inputs
     );
 
-    user_def_methods_code = [gen_user_def_method(block.name, id, m.code) : id, m <- block.methods];
+    user_def_methods_code = [gen_user_def_method(block.name, id, m.args_vars, m.code) : id, m <- block.methods];
 
     const_data = [gen_const_data(block.name, c) : c <- block.const_data];
 
@@ -144,10 +145,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     append((printed(l) & "L" : l <- const.lengths), ", ") & "}; // CONSTANT";
 
 
-  String* gen_user_def_method(AutoSymbol block_name, MethodId name, Instr* body) {
-    args_str = append(("Obj " & native_var_decl_name(fn_arg(i)) & ", " : i < name.arity));
+  String* gen_user_def_method(AutoSymbol block_name, MethodId name, Maybe[StdVar]* args, Instr* body) {
+    final_args = (if a != nothing then value(a) else fn_arg(i) : a @ i <- args);
+    args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- final_args));
     sgn = "public Obj " & user_def_method_name(block_name, name) & "(" & args_str & "Env env)";
-    vars_decls = gen_vars_decls(body, []);
+    vars_decls = gen_vars_decls(body, [value(a) : a <~ args, a != nothing]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn & " {") & indent_lines(body_text) & ("}");
   }
