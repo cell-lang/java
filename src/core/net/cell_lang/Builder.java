@@ -147,18 +147,33 @@ class Builder {
   }
 
   public static Obj createSeq(Obj[] objs) {
-    if (objs.length == 0)
+    int len = objs.length;
+    if (len == 0)
       return EmptySeqObj.singleton;
 
-    int len = objs.length;
-    for (int i=0 ; i < len ; i++)
-      if (!objs[i].isInt())
-        return ArrayObjs.create(objs);
+    if (objs[0].isInt()) {
+      for (int i=1 ; i < len ; i++)
+        if (!objs[i].isInt())
+          return ArrayObjs.create(objs);
 
-    long[] longs = new long[len];
-    for (int i=0 ; i < len ; i++)
-      longs[i] = objs[i].getLong();
-    return IntArrayObjs.create(longs);
+      long[] longs = new long[len];
+      for (int i=0 ; i < len ; i++)
+        longs[i] = objs[i].getLong();
+      return IntArrayObjs.create(longs);
+    }
+
+    if (objs[0].isFloat()) {
+      for (int i=1 ; i < len ; i++)
+        if (!objs[i].isFloat())
+          return ArrayObjs.create(objs);
+
+      double[] doubles = new double[len];
+      for (int i=0 ; i < len ; i++)
+        doubles[i] = objs[i].getDouble();
+      return FloatArrayObjs.create(doubles);
+    }
+
+    return ArrayObjs.create(objs);
   }
 
   //////////////////////////////////////////////////////////////////////////////

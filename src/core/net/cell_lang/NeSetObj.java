@@ -27,6 +27,10 @@ final class NeSetObj extends Obj {
     return new SetIter(elts, 0, elts.length-1);
   }
 
+  public Obj[] getArray(Obj[] buffer) {
+    return elts;
+  }
+
   public SeqObj internalSort() {
     return ArrayObjs.create(elts);
   }

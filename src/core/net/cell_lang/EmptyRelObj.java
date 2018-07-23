@@ -36,6 +36,10 @@ final class EmptyRelObj extends Obj {
     return iter1;
   }
 
+  public Obj[] getArray(Obj[] buffer) {
+    return emptyObjArray;
+  }
+
   public BinRelIter getBinRelIter() {
     return iter2;
   }
@@ -112,6 +116,8 @@ final class EmptyRelObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   private static final EmptyRelValue valueObj = new EmptyRelValue();
+
+  private static final Obj[] emptyObjArray = new Obj[0];
 
   private static final SetIter     iter1 = new SetIter(new Obj[0], 0, -1);
   private static final BinRelIter  iter2 = new BinRelIter(new Obj[0], new Obj[0]);

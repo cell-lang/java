@@ -214,7 +214,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_tern_rel()               = native_static_call(var, "Builder.createTernRel",    (expr.cols | expr.size)),
     mk_tern_rel_from_arrays()   = native_static_call(var, "Builder.createTernRel",    (expr.col1, expr.col2, expr.col3, value(expr.size) if expr.size != nothing)),
     mk_tagged_obj()             = native_mk_tagged_obj_code(expr.tag, expr.obj, var),
-    mk_array()                  = native_new_call(var, "MasterSeqObj",                (expr.size)),
     mk_record()                 = native_mk_record_code(expr.fields, var),
     get_seq_slice()             = native_method_call(var, expr.seq,  "getSlice",      (expr.idx_first, expr.len)),
     append_to_seq()             = native_method_call(var, expr.seq,  "append",        (expr.new_elem)),

@@ -1,5 +1,7 @@
 package net.cell_lang;
 
+import java.util.Arrays;
+
 
 class Conversions {
   public static Obj convertText(String text) {
@@ -28,15 +30,45 @@ class Conversions {
   ////////////////////////////////////////////////////////////////////////////
 
   public static boolean[] toBoolArray(Obj obj) {
-    return obj.getArray((boolean[]) null);
+    if (obj.isSeq()) {
+      boolean[] array = obj.getArray((boolean[]) null);
+      return Arrays.copyOf(array, array.length);
+    }
+
+    Obj[] elts = obj.getArray((Obj[]) null);
+    int len = elts.length;
+    boolean[] bools = new boolean[len];
+    for (int i=0 ; i < len ; i++)
+      bools[i] = elts[i].getBool();
+    return bools;
   }
 
   public static long[] toLongArray(Obj obj) {
-    return obj.getArray((long[]) null);
+    if (obj.isSeq()) {
+      long[] array = obj.getArray((long[]) null);
+      return Arrays.copyOf(array, array.length);
+    }
+
+    Obj[] elts = obj.getArray((Obj[]) null);
+    int len = elts.length;
+    long[] longs = new long[len];
+    for (int i=0 ; i < len ; i++)
+      longs[i] = elts[i].getLong();
+    return longs;
   }
 
   public static double[] toDoubleArray(Obj obj) {
-    return obj.getArray((double[]) null);
+    if (obj.isSeq()) {
+      double[] array = obj.getArray((double[]) null);
+      return Arrays.copyOf(array, array.length);
+    }
+
+    Obj[] elts = obj.getArray((Obj[]) null);
+    int len = elts.length;
+    double[] doubles = new double[len];
+    for (int i=0 ; i < len ; i++)
+      doubles[i] = elts[i].getLong();
+    return doubles;
   }
 
   public static String[] toSymbolArray(Obj obj) {
