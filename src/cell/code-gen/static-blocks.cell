@@ -16,7 +16,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     set_state_entry_point_code = set_state_entry_point(block.name);
 
-    update_entry_point_code = if block.updates_code(main_handler, *)
+    update_entry_point_code = if block.updates(main_handler, *)
       then update_entry_point(block.name)
       else ();
 
@@ -28,8 +28,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     // aux_cleanup_decl, aux_cleanup_impl = aux_struct_cleanup_code(block);
 
-    methods_code = [native_user_def_method_code(block.name, id, m.code) : id, m <- block.methods];
-    updates_code = [native_update_code(block.name, id, b) : id, b <- block.updates_code];
+    methods_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.methods];
+    updates_code = [native_update_code(block.name, id, u.args_vars, u.body) : id, u <- block.updates];
 
     class_name = native_name(block.name);
 
@@ -400,19 +400,20 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* native_user_def_method_code(DBSymbol block_name, MethodId method_id, Instr* body) {
-    args_str = append(("Obj " & native_var_decl_name(fn_arg(i)) & ", " : i < method_id.arity));
+  String* native_user_def_method_code(DBSymbol block_name, MethodId method_id, Maybe[StdVar]* args, Instr* body) {
+    final_args = (if a != nothing then value(a) else fn_arg(i) : a @ i <- args);
+    args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- final_args));
     sgn = "public Obj " & user_def_method_name(block_name, method_id) & "(" & args_str & "Env env) {";
-    vars_decls = gen_vars_decls(body, []);
+    vars_decls = gen_vars_decls(body, [value(a) : a <~ args, a != nothing]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn) & indent_lines(body_text) & ("}");
   }
 
 
-  String* native_update_code(DBSymbol block_name, UpdateId update_id, Instr* body) {
-    args_strs = ("Obj " & native_var_decl_name(fn_arg(i)) & ", " : i < arity(update_id));
-    sgn = "public void " & update_name(block_name, update_id) & "(" & append(args_strs) & aux_struct_c_name(block_name) & " updater, Env env) {";
-    vars_decls = gen_vars_decls(body, []);
+  String* native_update_code(DBSymbol block_name, UpdateId update_id, <StdVar, FnArg>* args, Instr* body) {
+    args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- args));
+    sgn = "public void " & update_name(block_name, update_id) & "(" & args_str & aux_struct_c_name(block_name) & " updater, Env env) {";
+    vars_decls = gen_vars_decls(body, [a : a <~ args, a :: StdVar]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn) & indent_lines(body_text) & ("}");
   }

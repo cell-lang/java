@@ -23,8 +23,7 @@ class Conversions {
 
   public static Obj stringToObj(String str) {
     int[] cps = Miscellanea.codePoints(str);
-    Int32ArrayObj obj = IntArrayObjs.create(cps);
-    return Builder.createTaggedObj(SymbTable.StringSymbId, obj);
+    return Builder.createTaggedObj(SymbTable.StringSymbId, Builder.createSeq(cps));
   }
 
   ////////////////////////////////////////////////////////////////////////////
