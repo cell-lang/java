@@ -557,7 +557,7 @@ if action_prefix != "return ":
         "Obj[] " & buffer_var & " = " & expr_var & ".getArray((Obj[]) null);",
         "for (int " & idx_var & " = 0 ; " & idx_var & " < " & size_var & " ; " & idx_var & "++) {",
         "  Obj " & elt_var & " = " & buffer_var & "[" & idx_var & "];"
-      ) & indent_lines(export_code(elem_type, elt_var, array_var & "[" & idx_var & "++] = ")) & (
+      ) & indent_lines(export_code(elem_type, elt_var, array_var & "[" & idx_var & "] = ")) & (
         "}",
         action_prefix & array_var & ";"
       );

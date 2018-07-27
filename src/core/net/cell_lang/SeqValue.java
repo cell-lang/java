@@ -25,6 +25,6 @@ class SeqValue extends ValueBase {
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
       objs[i] = values[i].asObj();
-    return ArrayObjs.create(objs);
+    return Builder.createSeq(objs);
   }
 }
