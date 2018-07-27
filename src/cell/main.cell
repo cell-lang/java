@@ -123,7 +123,11 @@ String* create_error_msg(ParserError err, String filename) =
 
       t5 = _ticks_(:any_value_will_do);
 
-      options = options(debug_mode: debug_mode, ignore_assertions: ignore_assertions);
+      options = options(
+        debug_mode: debug_mode,
+        ignore_assertions: ignore_assertions,
+        max_opt_fields_in_opt_rec: 16
+      );
       code = if not is_done then just(compiled_program(options = options)) else nothing;
     ;
   ;
