@@ -51,7 +51,7 @@ class Miscellanea {
       if (ch > Character.MAX_VALUE)
         i++;
     }
-    return Builder.createTaggedObj(SymbTable.StringSymbId, IntArrayObjs.create(chars, count));
+    return Builder.createTaggedObj(SymbTable.StringSymbId, Builder.createSeq(chars, count));
 
     // int len = str.length();
     // Obj[] chars = new Obj[len];
