@@ -9,16 +9,17 @@ abstract class Obj implements Comparable<Obj> {
   public int extraData;
   public long data;
 
+
   public final boolean isBlankObj() {
-    return this == BlankObj.singleton;
+    return extraData == blankObjExtraData();
   }
 
   public final boolean isNullObj() {
-    return this == NullObj.singleton;
+    return extraData == nullObjExtraData();
   }
 
   public final boolean isSymb() {
-    return this instanceof SymbObj;
+    return extraData == symbObjExtraData();
   }
 
   public final boolean isBool() {
@@ -31,27 +32,27 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final boolean isInt() {
-    return this instanceof IntObj;
+    return extraData == intObjExtraData();
   }
 
   public final boolean isFloat() {
-    return this instanceof FloatObj;
+    return extraData == floatObjExtraData();
   }
 
   public final boolean isSeq() {
-    return this instanceof SeqObj;
+    return isEmptySeq() | isNeSeq();
   }
 
   public final boolean isEmptySeq() {
-    return this == EmptySeqObj.singleton;
+    return extraData == emptySeqObjExtraData();
   }
 
   public final boolean isNeSeq() {
-    return this instanceof NeSeqObj;
+    return extraData == neSeqObjExtraData();
   }
 
   public final boolean isEmptyRel() {
-    return this == EmptyRelObj.singleton;
+    return extraData == emptyRelObjExtraData();
   }
 
   public final boolean isSet() {
@@ -59,7 +60,7 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final boolean isNeSet() {
-    return this instanceof NeSetObj;
+    return extraData == neSetObjExtraData();
   }
 
   public final boolean isBinRel() {
@@ -67,7 +68,7 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final boolean isNeBinRel() {
-    return this instanceof NeBinRelObj;
+    return extraData == neBinRelObjExtraData();
   }
 
   public final boolean isTernRel() {
@@ -75,11 +76,11 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final boolean isNeTernRel() {
-    return this instanceof NeTernRelObj;
+    return extraData == neTernRelObjExtraData();
   }
 
   public final boolean isTagged() {
-    return this instanceof TaggedObj || this instanceof OptTagRecObj;
+    return extraData >= refTagObjId;
   }
 
   //////////////////////////////////////////////////////////////////////////////
