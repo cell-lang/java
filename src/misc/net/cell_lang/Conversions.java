@@ -14,7 +14,7 @@ class Conversions {
       bytes[i] = (byte) ch;
     }
 
-    return Generated.parse(bytes);
+    return Generated.parse(bytes).getInnerObj();
   }
 
   public static Value exportAsValue(Obj obj) {
