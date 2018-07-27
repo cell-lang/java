@@ -99,7 +99,7 @@ abstract class Obj implements Comparable<Obj> {
   //////////////////////////////////////////////////////////////////////////////
 
   public final int getSymbId() {
-    return (int) (data - Long.MIN_VALUE);
+    return (int) data;
   }
 
   public final boolean getBool() {
@@ -115,7 +115,7 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final int getSize() {
-    return (int) (data & 0x3FFFFFFF);
+    return (int) data;
   }
 
   public final int getTagId() {
@@ -173,49 +173,50 @@ abstract class Obj implements Comparable<Obj> {
   //////////////////////////////////////////////////////////////////////////////
 
   protected static long symbObjData(int id) {
-    return Long.MIN_VALUE + id;
+    return id;
   }
 
   protected static long boolObjData(boolean value) {
-    return Long.MIN_VALUE + (value ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
+    return value ? SymbTable.TrueSymbId : SymbTable.FalseSymbId;
   }
 
   protected static long floatObjData(double value) {
     return Double.doubleToRawLongBits(value);
   }
 
-  // 11 - 32 bit hash code - 30 bit size/length
+  // 32 bit hash code - 32 bit size/length
+  private static long collObjData(int size, long hashcode) {
+    return packedHashcode(hashcode) | size;
+  }
+
   protected static long seqObjData(int length, long hashcode) {
-    return (3L << 62) | (packedHashcode(hashcode) << 30) | length;
+    return collObjData(length, hashcode);
   }
 
-  // 11 - 32 bit hash code - 30 bit size
   protected static long setObjData(int size, long hashcode) {
-    return (3L << 62) | (packedHashcode(hashcode) << 30) | size;
+    return collObjData(size, hashcode);
   }
 
-  // 11 - 32 bit hash code - 30 bit size
   protected static long binRelObjData(int size, long hashcode) {
-    return (3L << 62) | (packedHashcode(hashcode) << 30) | size;
+    return collObjData(size, hashcode);
   }
 
-  // 11 - 32 bit hash code - 30 bit size
   protected static long ternRelObjData(int size, long hashcode) {
-    return (3L << 62) | (packedHashcode(hashcode) << 30) | size;
+    return collObjData(size, hashcode);
   }
 
-  // 16 bit 1 padding - 32 bit hash code - 16 bit tag id
+  // 32 bit hash code - 16 bit 0 padding - 16 bit tag id
   protected static long tagObjData(int tag, long hashcode) {
-    return (0xFFFFL << 48) | (packedHashcode(hashcode) << 24) | (tag & 0xFFFF);
+    return packedHashcode(hashcode) | (tag & 0xFFFF);
   }
 
-  // 16 bit optional field mask - 32 bit hash code - 16 bit tag id
+  // 32 bit hash code - 16 bit optional field mask - 16 bit tag id
   public static long optTagRecObjData(int tag, long hashcode, int optFieldsMask) {
-    return (((long) optFieldsMask) << 48) | (packedHashcode(hashcode) << 16) | (tag & 0xFFFF);
+    return packedHashcode(hashcode) | (((long) optFieldsMask) << 16) | (tag & 0xFFFF);
   }
 
   private static long packedHashcode(long hashcode) {
-    return ((hashcode >>> 32) ^ hashcode) & 0xFFFFFFFFL;
+    return (hashcode ^ (hashcode << 32)) & ~0xFFFFFFFFL;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -227,7 +228,6 @@ abstract class Obj implements Comparable<Obj> {
   private static final int floatObjId           = 4;
   private static final int emptySeqObjId        = 5;
   private static final int emptyRelObjId        = 6;
-  private static final int inlineTagObjId       = 7;
 
   private static final int neSeqObjId           = 16;
   private static final int neSetObjId           = 17;
@@ -248,7 +248,7 @@ abstract class Obj implements Comparable<Obj> {
   protected static int floatObjExtraData()          {return floatObjId;         }
   protected static int emptySeqObjExtraData()       {return emptySeqObjId;      }
   protected static int emptyRelObjExtraData()       {return emptyRelObjId;      }
-  protected static int inlineTagObjExtraData()      {return inlineTagObjId;     }
+
   protected static int neSeqObjExtraData()          {return neSeqObjId;         }
   protected static int neSetObjExtraData()          {return neSetObjId;         }
   protected static int neBinRelObjExtraData()       {return neBinRelObjId;      }
