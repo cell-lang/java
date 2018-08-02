@@ -3,6 +3,7 @@
 ../compiler/src/stdlib/printing.cell
 ../compiler/src/stdlib/algorithms.cell
 ../compiler/src/stdlib/trie.cell
+../compiler/src/stdlib/text.cell
 
 
 // Type definitions
@@ -92,11 +93,6 @@
 
 ../compiler/src/F-code-generation/cg.cell
 ../compiler/src/F-code-generation/utils.cell
-../compiler/src/F-code-generation/expressions.cell
-../compiler/src/F-code-generation/statements.cell
-../compiler/src/F-code-generation/clauses.cell
-../compiler/src/F-code-generation/eval-misc.cell
-../compiler/src/F-code-generation/pattern-matching.cell
 ../compiler/src/F-code-generation/type-membership.cell
 ../compiler/src/F-code-generation/databases.cell
 ../compiler/src/F-code-generation/automata.cell
@@ -105,17 +101,28 @@
 ../compiler/src/F-code-generation/auto-nodes.cell
 ../compiler/src/F-code-generation/auto-nodes-gen.cell
 ../compiler/src/F-code-generation/auto-nodes-code-gen.cell
+../compiler/src/F-code-generation/opt-utils.cell
+../compiler/src/F-code-generation/alt-expr.cell
+../compiler/src/F-code-generation/expr-opt.cell
+../compiler/src/F-code-generation/expr-code-gen.cell
+../compiler/src/F-code-generation/low-level-signs.cell
+../compiler/src/F-code-generation/ad-hoc-records.cell
+../compiler/src/F-code-generation/conversion.cell
+../compiler/src/F-code-generation/stmt-code-gen.cell
+../compiler/src/F-code-generation/pattern-matching.cell
+../compiler/src/F-code-generation/yield-actions.cell
 
 ../compiler/src/G-code-optimization/dead-code-removal.cell
 
 src/cell/code-gen/auto-instrs.cell
 src/cell/code-gen/exprs.cell
+src/cell/code-gen/instrs.cell
 src/cell/code-gen/inter-lang-utils.cell
 src/cell/code-gen/name-mangling.cell
 src/cell/code-gen/native-code-gen.cell
+src/cell/code-gen/opt-types.cell
 src/cell/code-gen/react-blocks.cell
 src/cell/code-gen/static-blocks.cell
-
 src/cell/code-gen/wrappers/interface-types.cell
 src/cell/code-gen/wrappers/naming.cell
 src/cell/code-gen/wrappers/reactive.cell

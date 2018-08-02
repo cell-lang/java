@@ -2,35 +2,43 @@
 
 ################################################################################
 
+src_ArrayObjs               = 'core/net/cell_lang/ArrayObjs.java'
 src_BinRelIter              = 'core/net/cell_lang/BinRelIter.java'
 src_BlankObj                = 'core/net/cell_lang/BlankObj.java'
 src_Builder                 = 'core/net/cell_lang/Builder.java'
+src_Canonical               = 'core/net/cell_lang/Canonical.java'
 src_EmptyRelObj             = 'core/net/cell_lang/EmptyRelObj.java'
 src_EmptyRelValue           = 'core/net/cell_lang/EmptyRelValue.java'
+src_EmptySeqObj             = 'core/net/cell_lang/EmptySeqObj.java'
+src_FloatArrayObjs          = 'core/net/cell_lang/FloatArrayObjs.java'
 src_FloatObj                = 'core/net/cell_lang/FloatObj.java'
 src_FloatValue              = 'core/net/cell_lang/FloatValue.java'
 src_Hacks                   = 'core/net/cell_lang/Hacks.java'
+src_IntArrayObjs            = 'core/net/cell_lang/IntArrayObjs.java'
 src_IntObj                  = 'core/net/cell_lang/IntObj.java'
 src_IntValue                = 'core/net/cell_lang/IntValue.java'
 src_Lexer                   = 'core/net/cell_lang/Lexer.java'
-src_MasterSeqObj            = 'core/net/cell_lang/MasterSeqObj.java'
 src_Miscellanea             = 'core/net/cell_lang/Miscellanea.java'
 src_NeBinRelObj             = 'core/net/cell_lang/NeBinRelObj.java'
 src_NeBinRelValue           = 'core/net/cell_lang/NeBinRelValue.java'
+src_NeFloatSeqObj           = 'core/net/cell_lang/NeFloatSeqObj.java'
+src_NeIntSeqObj             = 'core/net/cell_lang/NeIntSeqObj.java'
+src_NeSeqObj                = 'core/net/cell_lang/NeSeqObj.java'
 src_NeSetObj                = 'core/net/cell_lang/NeSetObj.java'
 src_NeSetValue              = 'core/net/cell_lang/NeSetValue.java'
 src_NeTernRelObj            = 'core/net/cell_lang/NeTernRelObj.java'
 src_NeTernRelValue          = 'core/net/cell_lang/NeTernRelValue.java'
 src_NullObj                 = 'core/net/cell_lang/NullObj.java'
 src_Obj                     = 'core/net/cell_lang/Obj.java'
+src_OptTagRecObj            = 'core/net/cell_lang/OptTagRecObj.java'
 src_Parser                  = 'core/net/cell_lang/Parser.java'
 src_ParsingException        = 'core/net/cell_lang/ParsingException.java'
-src_Parsing                 = 'core/net/cell_lang/Parsing.java'
 src_Procs                   = 'core/net/cell_lang/Procs.java'
+src_RecordObj               = 'core/net/cell_lang/RecordObj.java'
+src_SeqIter                 = 'core/net/cell_lang/SeqIter.java'
 src_SeqObj                  = 'core/net/cell_lang/SeqObj.java'
-src_SeqOrSetIter            = 'core/net/cell_lang/SeqOrSetIter.java'
 src_SeqValue                = 'core/net/cell_lang/SeqValue.java'
-src_SliceObj                = 'core/net/cell_lang/SliceObj.java'
+src_SetIter                 = 'core/net/cell_lang/SetIter.java'
 src_SymbObj                 = 'core/net/cell_lang/SymbObj.java'
 src_SymbTable               = 'core/net/cell_lang/SymbTable.java'
 src_SymbValue               = 'core/net/cell_lang/SymbValue.java'
@@ -39,6 +47,7 @@ src_TaggedValue             = 'core/net/cell_lang/TaggedValue.java'
 src_TernRelIter             = 'core/net/cell_lang/TernRelIter.java'
 src_Token                   = 'core/net/cell_lang/Token.java'
 src_TokenType               = 'core/net/cell_lang/TokenType.java'
+src_Utils                   = 'core/net/cell_lang/Utils.java'
 src_ValueBase               = 'core/net/cell_lang/ValueBase.java'
 src_Value                   = 'core/net/cell_lang/Value.java'
 
@@ -70,35 +79,43 @@ src_WrappingUtils           = 'misc/net/cell_lang/WrappingUtils.java'
 ################################################################################
 
 std_sources = [
+  src_ArrayObjs,
   src_BinRelIter,
   src_BlankObj,
   src_Builder,
+  src_Canonical,
   src_EmptyRelObj,
   src_EmptyRelValue,
+  src_EmptySeqObj,
+  src_FloatArrayObjs,
   src_FloatObj,
   src_FloatValue,
   src_Hacks,
+  src_IntArrayObjs,
   src_IntObj,
   src_IntValue,
   src_Lexer,
-  src_MasterSeqObj,
   src_Miscellanea,
   src_NeBinRelObj,
   src_NeBinRelValue,
+  src_NeFloatSeqObj,
+  src_NeIntSeqObj,
+  src_NeSeqObj,
   src_NeSetObj,
   src_NeSetValue,
   src_NeTernRelObj,
   src_NeTernRelValue,
   src_NullObj,
   src_Obj,
+  src_OptTagRecObj,
   src_Parser,
   src_ParsingException,
-  src_Parsing,
   src_Procs,
+  src_RecordObj,
+  src_SeqIter,
   src_SeqObj,
-  src_SeqOrSetIter,
   src_SeqValue,
-  src_SliceObj,
+  src_SetIter,
   src_SymbObj,
   src_SymbTable,
   src_SymbValue,
@@ -107,6 +124,7 @@ std_sources = [
   src_TernRelIter,
   src_Token,
   src_TokenType,
+  src_Utils,
   src_ValueBase,
   # src_Value,
 

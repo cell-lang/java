@@ -170,7 +170,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       code = import_code(untagged_type, expr, next_action_prefix);
     ;
     tag = object(type_tag(inter_type));
-    instr = action_prefix & "new TaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
+    instr = action_prefix & "Builder.createTaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
     return (code | instr);
 
 
@@ -204,7 +204,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       record()      |
       union()       = undefined, // They are supposed to always be declared
       named()       = import_code_ex(named_interface_types_defs(it, !!), expr, action_prefix),
-      seq(t?)       = array_import_code(t, expr, action_prefix, "new MasterSeqObj"),
+      seq(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSeq"),
       set(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSet"),
       tagged()      = tagged_value_import_code(it, expr, action_prefix),
       generic       = if treat_generic_as_value
@@ -283,7 +283,7 @@ if action_prefix != "return ":
     field_vars = ("field" & printed(i) & "_" & unique_id : t @ i <- types);
     fields_code = (import_code_ex(t, expr & ".item" & printed(i+1), "Obj " & field_vars(i) & " = ") : t @ i <- types);
 
-    tuple_instr = action_prefix & "new MasterSeqObj(new Obj[] {" & append(field_vars, ", ") & "});";
+    tuple_instr = action_prefix & "Builder.createSeq(new Obj[] {" & append(field_vars, ", ") & "});";
 
     return (join(fields_code) | tuple_instr);
   }
@@ -318,7 +318,7 @@ if action_prefix != "return ":
     out_var = "var_" & unique_id;
     code = import_code_ex(untagged_type(tagged_type), expr, "Obj " & out_var & " = ");
     tag = object(type_tag(tagged_type));
-    instr = action_prefix & "new TaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
+    instr = action_prefix & "Builder.createTaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
     return (code | instr);
   }
 }
@@ -516,7 +516,7 @@ if action_prefix != "return ":
 
     asgnm_code = join(({
         asgnm_text = tuple_var & ".item" & printed(i+1) & " = ";
-        return export_code(t, expr & ".getItem(" & printed(i) & ")", asgnm_text);
+        return export_code(t, expr & ".getObjAt(" & printed(i) & ")", asgnm_text);
       } : t @ i <- types
     ));
 
@@ -545,7 +545,8 @@ if action_prefix != "return ":
       expr_var = "expr" & unique_id;
       size_var = "size" & unique_id;
       array_var = "array" & unique_id;
-      iter_var = "iter" & unique_id;
+      buffer_var = "buffer" & unique_id;
+      elt_var = "elt" & unique_id;
       idx_var = "idx" & unique_id;
       out_elem_type = return_value_type(elem_type);
 
@@ -553,13 +554,11 @@ if action_prefix != "return ":
         "Obj " & expr_var & " = " & expr & ";",
         "int " & size_var & " = " & expr_var & ".getSize();",
         out_elem_type & "[] " & array_var & " = new " & array_new_expr(elem_type, size_var) & ";",
-        "SeqOrSetIter " & iter_var & " = " & expr_var & ".getSeqOrSetIter();",
-        "int " & idx_var & " = 0;",
-        "while (!" & iter_var & ".done()) {"
-      ) & indent_lines(export_code(elem_type, iter_var & ".get()", array_var & "[" & idx_var & "++] = ")) & (
-        "  " & iter_var & ".next();",
+        "Obj[] " & buffer_var & " = " & expr_var & ".getArray((Obj[]) null);",
+        "for (int " & idx_var & " = 0 ; " & idx_var & " < " & size_var & " ; " & idx_var & "++) {",
+        "  Obj " & elt_var & " = " & buffer_var & "[" & idx_var & "];"
+      ) & indent_lines(export_code(elem_type, elt_var, array_var & "[" & idx_var & "] = ")) & (
         "}",
-        "Miscellanea._assert(" & idx_var & " == " & size_var & ");",
         action_prefix & array_var & ";"
       );
     }

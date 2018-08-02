@@ -9,11 +9,8 @@ class Procs {
     String fnameStr = fname.getString();
     try {
       byte[] content = Files.readAllBytes(Paths.get(fnameStr));
-      short[] shorts = new short[content.length];
-      for (int i=0 ; i < content.length ; i++)
-        shorts[i] = (short) (((int) content[i]) & 0xFF);
-      Obj bytesObj = Builder.buildConstIntSeq(shorts);
-      return new TaggedObj(SymbTable.JustSymbId, bytesObj);
+      Obj bytesObj = IntArrayObjs.createUnsigned(content);
+      return Builder.createTaggedObj(SymbTable.JustSymbId, bytesObj);
     }
     catch (Exception e) {
       return SymbObj.get(SymbTable.NothingSymbId);
@@ -46,7 +43,7 @@ class Procs {
       ch = -1;
     }
     if (ch != -1)
-      return new TaggedObj(SymbTable.JustSymbId, IntObj.get(ch));
+      return Builder.createTaggedObj(SymbTable.JustSymbId, IntObj.get(ch));
     else
       return SymbObj.get(SymbTable.NothingSymbId);
   }

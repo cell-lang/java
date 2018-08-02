@@ -3,7 +3,6 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-
 class NeBinRelObj extends Obj {
   Obj[] col1;
   Obj[] col2;
@@ -11,29 +10,49 @@ class NeBinRelObj extends Obj {
   boolean isMap;
   int minPrintedSize = -1;
 
+
   public NeBinRelObj(Obj[] col1, Obj[] col2, boolean isMap) {
     Miscellanea._assert(col1 != null && col2 != null);
     Miscellanea._assert(col1.length > 0);
     Miscellanea._assert(col1.length == col2.length);
+
+    int size = col1.length;
+    long hashcode = 0;
+    for (int i=0 ; i < size ; i++)
+      hashcode += col1[i].data + col2[i].data;
+    data = binRelObjData(size, hashcode);
+    extraData = neBinRelObjExtraData();
+
     this.col1 = col1;
     this.col2 = col2;
     this.isMap = isMap;
   }
 
-  public boolean isBinRel() {
-    return true;
+  protected NeBinRelObj() {
+
   }
 
-  public boolean isNeBinRel() {
-    return true;
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public boolean isNeMap() {
     return isMap;
   }
 
+  public boolean isNeRecord() {
+    if (!isMap)
+      return false;
+    int len = col1.length;
+    for (int i=0 ; i < len ; i++)
+      if (!col1[i].isSymb())
+        return false;
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   public boolean hasKey(Obj obj) {
     Miscellanea._assert(isMap);
+
     return Algs.binSearch(col1, obj) != -1;
   }
 
@@ -59,10 +78,6 @@ class NeBinRelObj extends Obj {
       int idx = Algs.binSearch(col2, first, count, obj2);
       return idx != -1;
     }
-  }
-
-  public int getSize() {
-    return col1.length;
   }
 
   public BinRelIter getBinRelIter() {
@@ -104,12 +119,41 @@ class NeBinRelObj extends Obj {
     throw Miscellanea.internalFail(this);
   }
 
-  public int hashCode() {
-    int hashcodesSum = 0;
-    for (int i=0 ; i < col1.length ; i++)
-      hashcodesSum += col1[i].hashCode() + col2[i].hashCode();
-    return hashcodesSum ^ (int) col1.length;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int internalOrder(Obj other) {
+    Miscellanea._assert(getSize() == other.getSize());
+
+    if (other instanceof RecordObj)
+      return -other.internalOrder(this);
+
+    NeBinRelObj otherRel = (NeBinRelObj) other;
+    int size = getSize();
+
+    Obj[] col = col1;
+    Obj[] otherCol = otherRel.col1;
+    for (int i=0 ; i < size ; i++) {
+      int ord = col[i].quickOrder(otherCol[i]);
+      if (ord != 0)
+        return ord;
+    }
+
+    col = col2;
+    otherCol = otherRel.col2;
+    for (int i=0 ; i < size ; i++) {
+      int ord = col[i].quickOrder(otherCol[i]);
+      if (ord != 0)
+        return ord;
+    }
+
+    return 0;
   }
+
+  public TypeCode getTypeCode() {
+    return TypeCode.NE_BIN_REL;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
@@ -217,39 +261,9 @@ class NeBinRelObj extends Obj {
     return new NeBinRelValue(values1, values2, isMap);
   }
 
-  protected int typeId() {
-    return 6;
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
-  protected int internalCmp(Obj other) {
-    return other.cmpNeBinRel(col1, col2);
-  }
-
-  public int cmpNeBinRel(Obj[] otherCol1, Obj[] otherCol2) {
-    int len = col1.length;
-    int otherLen = otherCol1.length;
-    if (otherLen != len)
-      return otherLen < len ? 1 : -1;
-    for (int i=0 ; i < len ; i++) {
-      int res = otherCol1[i].cmp(col1[i]);
-      if (res != 0)
-        return res;
-    }
-    for (int i=0 ; i < len ; i++) {
-      int res = otherCol2[i].cmp(col2[i]);
-      if (res != 0)
-        return res;
-    }
-    return 0;
-  }
-
-  public boolean isNeRecord() {
-    if (!isMap)
-      return false;
-    int len = col1.length;
-    for (int i=0 ; i < len ; i++)
-      if (!col1[i].isSymb())
-        return false;
-    return true;
+  Obj[] getCol1() {
+    return col1;
   }
 }

@@ -1,10 +1,4 @@
-implicit {
-  debug_mode                      : Bool,
-  sorted_cls_defs                 : ClsDef*,
-  int_seqs_types_and_lengths      : (String, Nat)*,
-  cached_semi_consts_by_impl_arg  : [ImplArg -> [+FnId]];
-
-
+implicit prg : CompiledPrg, debug_mode : Bool {
   String auto_expr_native_code(RefObjExpr expr, WriteObjVar var) =
     copy_state()              = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
     copy_table()              = native_copy_table_code(var, expr.relvar, expr.table, expr.perm),
@@ -33,7 +27,7 @@ implicit {
 
     auto_pre_init()       = (native_new_call(instr.var, native_name(instr.type), ("env"))),
     auto_cleanup()        = (), //(native_method_call(instr.var, cleanup_method_name(instr.type), ())),
-    clear_input()         = (native_method_call(if instr.var? then instr.var else "this", input_set_method_name(instr.type, instr.input), ("NullObj.singleton()"))),
+    clear_input()         = (native_method_call(if instr.var? then instr.var else "this", input_set_method_name(instr.type, instr.input), ("NullObj.singleton"))),
     auto_update_node()    = (native_method_call("this", node_update_method_name(instr.type, instr.node), (instr.time_var if instr.time_var?, "env"))),
 
     set_input()           = (native_method_call(instr.var, input_set_method_name(instr.type, instr.input), (instr.value))),
@@ -80,7 +74,7 @@ implicit {
   ) & indent_lines(native_code(body, block_id)) & (
     "}",
     "catch (Exception e) {",
-    "  " & native_var_ref_name(var) & " = NullObj.singleton();",
+    "  " & native_var_ref_name(var) & " = NullObj.singleton;",
     "}"
   );
 

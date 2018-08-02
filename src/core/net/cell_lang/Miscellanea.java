@@ -12,28 +12,21 @@ import java.io.IOException;
 
 
 class Miscellanea {
+  public static void performProcessEndActions() {
+
+  }
+
   public static Obj strToObj(String str) {
     int len = str.length();
-    Obj[] chars = new Obj[len];
+    long[] chars = new long[len];
     int count = 0;
     for (int i=0 ; i < len ; i++) {
       int ch = str.codePointAt(i);
-      chars[count++] = IntObj.get(ch);
+      chars[count++] = ch;
       if (ch > Character.MAX_VALUE)
         i++;
     }
-    return new TaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
-
-    // int len = str.length();
-    // Obj[] chars = new Obj[len];
-    // int count = 0;
-    // int i = 0;
-    // while (i < len) {
-    //   int ch = Char.convertToUtf32(str, i);
-    //   chars[count++] = IntObj.get(ch);
-    //   i += Char.isSurrogatePair(str, i) ? 2 : 1;
-    // }
-    // return new TaggedObj(SymbTable.StringSymbId, new MasterSeqObj(chars, count));
+    return Builder.createTaggedObj(SymbTable.StringSymbId, Builder.createSeq(chars, count));
   }
 
   public static String objToStr(Obj str) {
@@ -56,7 +49,8 @@ class Miscellanea {
   }
 
   public static RuntimeException softFail(String msg) {
-    System.err.println(msg);
+    if (exitOnSoftFail)
+      System.err.println(msg);
     return softFail();
   }
 
@@ -73,17 +67,25 @@ class Miscellanea {
     return softFail();
   }
 
+  //## REMOVE ONCE THE NEW CODE GENERATOR IS READY
   public static Obj hardFail() {
     printCallStack();
     System.exit(1);
     return null;
   }
 
-  public static void implFail(String msg) {
+  public static RuntimeException _hardFail() {
+    printCallStack();
+    System.exit(1);
+    return null;
+  }
+
+  public static RuntimeException implFail(String msg) {
     if (msg != null)
       System.err.println(msg + "\n");
     printCallStack();
     System.exit(1);
+    return null;
   }
 
   public static RuntimeException internalFail() {
@@ -93,8 +95,12 @@ class Miscellanea {
   public static RuntimeException internalFail(Obj obj) {
     System.err.println("Internal error!\n");
     printCallStack();
-    if (obj != null)
+    if (obj != null) {
       dumpVar("this", obj);
+      System.out.printf("this.getClass().getSimpleName() = %s\n", obj.getClass().getSimpleName());
+    }
+    Exception e = new RuntimeException();
+    e.printStackTrace();
     System.exit(1);
     return null;
   }
@@ -106,6 +112,10 @@ class Miscellanea {
       System.out.printf("\nAssertion failed: %s\nFile: %s, line: %d\n\n\n", text, file, line);
   }
 
+  public static void printFailReachedMsg(String file, int line) {
+    System.out.printf("\nFail statement reached. File: %s, line: %d\n\n\n", file, line);
+  }
+
   public static void dumpVar(String name, Obj obj) {
     try {
       String str = printedObjOrFilename(obj, true);
@@ -115,6 +125,9 @@ class Miscellanea {
 
     }
   }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
 
   static Random random = new Random(0);
 
@@ -129,6 +142,17 @@ class Miscellanea {
 
   public static long getTickCount() {
     return System.currentTimeMillis();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static long mantissa(double x) {
+    throw implFail("_mantissa_() has not been implemented yet");
+  }
+
+  public static long decimalExponent(double x) {
+    throw implFail("_dec_expr_() has not been implemented yet");
   }
 
   ////////////////////////////////////////////////////////////////////////////

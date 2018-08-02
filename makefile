@@ -2,36 +2,14 @@ SRC-FILES=$(shell ls src/cell/*.cell src/cell/code-gen/*.cell src/cell/code-gen/
 RUNTIME-FILES=$(shell ls src/core/net/cell_lang/*.java src/automata/net/cell_lang/*.java)
 
 ################################################################################
-###################### Level 3 AST -> Java code generator ######################
-
-tmp/codegen.cpp: $(SRC-FILES)
-	cellc projects/codegen.txt
-	rm -rf tmp/*
-	# ../build/bin/ren-fns < generated.cpp > tmp/cellc-java.cpp
-	# echo >> tmp/cellc-java.cpp
-	# echo >> tmp/cellc-java.cpp
-	# cat ../build/src/hacks.cpp >> tmp/cellc-java.cpp
-	mv generated.cpp tmp/codegen.cpp
-
-codegen: tmp/codegen.cpp
-	g++ -O1 tmp/codegen.cpp -o codegen
-
-codegen-dbg: tmp/codegen.cpp
-	g++ -ggdb -DNDEBUG tmp/codegen.cpp -o codegen
-
-tmp/codegen.cs: $(SRC-FILES)
-	cellc-cs.exe projects/codegen.txt
-	rm -rf tmp/*
-	mv generated.cs tmp/codegen.cs
-
-codegen.exe: tmp/codegen.cs
-	mcs -nowarn:219 tmp/codegen.cs -out:codegen.exe
 
 codegen.jar: $(SRC-FILES) $(RUNTIME-FILES)
 	java -jar bin/cellc-java.jar projects/codegen.txt
 	javac -d tmp/codegen/ Generated.java
 	mv Generated.java tmp/codegen.java
 	jar cfe codegen.jar net.cell_lang.Generated -C tmp/codegen/ net/
+
+################################################################################
 
 cellc-java: $(SRC-FILES) $(RUNTIME-FILES)
 	cellc projects/compiler-no-runtime.txt
@@ -78,22 +56,6 @@ cellcd-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 
 ################################################################################
 ################################################################################
-
-full-compiler:
-	rm -f runtime/* bin/cellc-java.jar bin/cellcd-java.jar
-	bin/build-runtime-src-file.py src/ runtime/runtime-sources.cell runtime/runtime-sources-empty.cell
-	bin/cellc-java projects/compiler.txt
-	bin/apply-hacks < Generated.java > tmp/cellc-java.java
-	mv Generated.java tmp/
-	javac -d tmp/ tmp/cellc-java.java
-	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
-	rm -rf tmp/*
-	bin/cellc-java -d projects/compiler.txt
-	bin/apply-hacks < Generated.java > tmp/cellc-java.java
-	mv Generated.java tmp/
-	javac -g -d tmp/ tmp/cellc-java.java
-	jar cfe cellcd-java.jar net.cell_lang.Generated -C tmp net/
-	mv cellc-java.jar cellcd-java.jar bin/
 
 compiler-test-loop:
 	rm -f runtime/*

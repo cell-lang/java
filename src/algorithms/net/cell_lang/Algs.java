@@ -6,12 +6,12 @@ import java.util.Arrays;
 class Algs {
   static void checkIsOrdered(Obj[] objs) {
     for (int i=1 ; i < objs.length ; i++) {
-      int cmp = objs[i-1].cmp(objs[i]);
-      if (cmp != 1) {
+      int ord = objs[i-1].quickOrder(objs[i]);
+      if (ord != -1) {
         System.out.println("*****************************************");
         System.out.println(objs[i-1].toString());
         System.out.println(objs[i].toString());
-        System.out.printf("%d", cmp);
+        System.out.printf("%d", ord);
         throw new RuntimeException();
       }
     }
@@ -27,20 +27,13 @@ class Algs {
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      switch (objs[mid].cmp(obj)) {
-        case -1:
-          // objs[mid] > obj
-          high = mid - 1;
-          break;
-
-        case 0:
-          return mid;
-
-        case 1:
-          // objs[mid] < obj
-          low = mid + 1;
-          break;
-      }
+      int res = obj.quickOrder(objs[mid]);
+      if (res == -1)
+        high = mid - 1; // objs[mid] > obj
+      else if (res == 1)
+        low = mid + 1;  // objs[mid] < obj
+      else
+        return mid;
     }
 
     return -1;
@@ -57,52 +50,41 @@ class Algs {
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      switch (objs[mid].cmp(obj)) {
-        case -1:
-          // objs[mid] > obj
-          upperBound = high = mid - 1;
-          break;
+      int ord = obj.quickOrder(objs[mid]);
+      if (ord == -1) {
+        upperBound = high = mid - 1; // objs[mid] > obj
+      }
+      else if (ord == 1) {
+        lowerBound = low = mid + 1; // objs[mid] < obj
+      }
+      else {
+        if (mid == offset || !objs[mid-1].isEq(obj)) {
+          first = mid;
+          low = lowerBound;
+          high = upperBound;
 
-        case 0:
-          if (mid == offset || !objs[mid-1].isEq(obj)) {
-            first = mid;
-            low = lowerBound;
-            high = upperBound;
-
-            while (low <= high) {
-              mid = (int) (((long) low + (long) high) / 2);
-              switch (objs[mid].cmp(obj)) {
-                case -1:
-                  // objs[mid] > obj
-                  high = mid - 1;
-                  break;
-
-                case 0:
-                  if (mid == upperBound || !objs[mid+1].isEq(obj)) {
-                    return new int[] {first, mid - first + 1};
-                  }
-                  else
-                    low = mid + 1;
-                  break;
-
-                case 1:
-                  // objs[mid] < obj
-                  low = mid + 1;
-                  break;
-              }
+          while (low <= high) {
+            mid = (int) (((long) low + (long) high) / 2);
+            ord = obj.quickOrder(objs[mid]);
+            if (ord == -1) {
+              high = mid - 1; // objs[mid] > obj
             }
-
-            // We're not supposed to ever get here.
-            throw new UnsupportedOperationException();
+            else if (ord == 1) {
+              low = mid + 1; // objs[mid] < obj
+            }
+            else {
+              if (mid == upperBound || !objs[mid+1].isEq(obj))
+                return new int[] {first, mid - first + 1};
+              else
+                low = mid + 1;
+            }
           }
-          else
-            high = mid - 1;
-          break;
 
-        case 1:
-          // objs[mid] < obj
-          lowerBound = low = mid + 1;
-          break;
+          // We're not supposed to ever get here.
+          throw new UnsupportedOperationException();
+        }
+        else
+          high = mid - 1;
       }
     }
 
@@ -124,52 +106,41 @@ class Algs {
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      switch (objs[idxs[mid]].cmp(obj)) {
-        case -1:
-          // objs[idxs[mid]] > obj
-          upperBound = high = mid - 1;
-          break;
+      int ord = obj.quickOrder(objs[idxs[mid]]);
+      if (ord == -1) {
+        upperBound = high = mid - 1; // objs[idxs[mid]] > obj
+      }
+      else if (ord == 1) {
+        lowerBound = low = mid + 1; // objs[idxs[mid]] < obj
+      }
+      else {
+        if (mid == offset || !objs[idxs[mid-1]].isEq(obj)) {
+          int first = mid;
+          low = lowerBound;
+          high = upperBound;
 
-        case 0:
-          if (mid == offset || !objs[idxs[mid-1]].isEq(obj)) {
-            int first = mid;
-            low = lowerBound;
-            high = upperBound;
-
-            while (low <= high) {
-              mid = (int) (((long) low + (long) high) / 2);
-              switch (objs[idxs[mid]].cmp(obj)) {
-                case -1:
-                  // objs[idxs[mid]] > obj
-                  high = mid - 1;
-                  break;
-
-                case 0:
-                  if (mid == upperBound || !objs[idxs[mid+1]].isEq(obj)) {
-                    return new int[] {first, mid - first + 1};
-                  }
-                  else
-                    low = mid + 1;
-                  break;
-
-                case 1:
-                  // objs[idxs[mid]] < obj
-                  low = mid + 1;
-                  break;
-              }
+          while (low <= high) {
+            mid = (int) (((long) low + (long) high) / 2);
+            ord = obj.quickOrder(objs[idxs[mid]]);
+            if (ord == -1) {
+              high = mid - 1; // objs[idxs[mid]] > obj
             }
-
-            // We're not supposed to ever get here.
-            throw new UnsupportedOperationException();
+            else if (ord == 1) {
+              low = mid + 1; // objs[idxs[mid]] < obj
+            }
+            else {
+              if (mid == upperBound || !objs[idxs[mid+1]].isEq(obj))
+                return new int[] {first, mid - first + 1};
+              else
+                low = mid + 1;
+            }
           }
-          else
-            high = mid - 1;
-          break;
 
-        case 1:
-          // objs[idxs[mid]] < obj
-          lowerBound = low = mid + 1;
-          break;
+          // We're not supposed to ever get here.
+          throw new UnsupportedOperationException();
+        }
+        else
+          high = mid - 1;
       }
     }
 
@@ -189,58 +160,51 @@ class Algs {
 
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
-      int res = major[mid].cmp(majorVal);
-      if (res == 0)
-        res = minor[mid].cmp(minorVal);
-      switch (res) {
-        case -1:
-          // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
-          upperBound = high = mid - 1;
-          break;
+      int ord = majorVal.quickOrder(major[mid]);
+      if (ord == 0)
+        ord = minorVal.quickOrder(minor[mid]);
+      if (ord == -1) {
+        // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
+        upperBound = high = mid - 1;
+      }
+      else if (ord == 1) {
+        // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
+        lowerBound = low = mid + 1;
+      }
+      else {
+        if (mid == offset || (!major[mid-1].isEq(majorVal) || !minor[mid-1].isEq(minorVal))) {
+          int first = mid;
+          low = lowerBound;
+          high = upperBound;
 
-        case 0:
-          if (mid == offset || (!major[mid-1].isEq(majorVal) || !minor[mid-1].isEq(minorVal))) {
-            int first = mid;
-            low = lowerBound;
-            high = upperBound;
+          while (low <= high) {
+            mid = (int) (((long) low + (long) high) / 2);
 
-            while (low <= high) {
-              mid = (int) (((long) low + (long) high) / 2);
-              res = major[mid].cmp(majorVal);
-              if (res == 0)
-                res = minor[mid].cmp(minorVal);
-              switch (res) {
-                case -1:
-                  // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
-                  high = mid - 1;
-                  break;
+            ord = majorVal.quickOrder(major[mid]);
+            if (ord == 0)
+              ord = minorVal.quickOrder(minor[mid]);
 
-                case 0:
-                  if (mid == upperBound || (!major[mid+1].isEq(majorVal) || !minor[mid+1].isEq(minorVal))) {
-                    return new int[] {first, mid - first + 1};
-                  }
-                  else
-                    low = mid + 1;
-                  break;
-
-                case 1:
-                  // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
-                  low = mid + 1;
-                  break;
-              }
+            if (ord == -1) {
+              // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
+              high = mid - 1;
             }
-
-            // We're not supposed to ever get here.
-            throw new UnsupportedOperationException();
+            else if (ord == 1) {
+              // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
+              low = mid + 1;
+            }
+            else {
+              if (mid == upperBound || (!major[mid+1].isEq(majorVal) || !minor[mid+1].isEq(minorVal)))
+                return new int[] {first, mid - first + 1};
+              else
+                low = mid + 1;
+            }
           }
-          else
-            high = mid - 1;
-          break;
 
-        case 1:
-          // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
-          lowerBound = low = mid + 1;
-          break;
+          // We're not supposed to ever get here.
+          throw new UnsupportedOperationException();
+        }
+        else
+          high = mid - 1;
       }
     }
 
@@ -260,70 +224,66 @@ class Algs {
     while (low <= high) {
       int mid = (int) (((long) low + (long) high) / 2);
       int midIdx = idxs[mid];
-      int res = major[midIdx].cmp(majorVal);
-      if (res == 0) {
-        res = minor[midIdx].cmp(minorVal);
+
+      int ord = majorVal.quickOrder(major[midIdx]);
+      if (ord == 0)
+        ord = minorVal.quickOrder(minor[midIdx]);
+
+      if (ord == -1) {
+        // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
+        upperBound = high = mid - 1;
       }
-      switch (res) {
-        case -1:
-          // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
-          upperBound = high = mid - 1;
-          break;
+      else if (ord == 1) {
+        // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
+        lowerBound = low = mid + 1;
+      }
+      else {
+        boolean isFirst = mid == offset;
+        if (!isFirst) {
+          int prevIdx = idxs[mid-1];
+          isFirst = !major[prevIdx].isEq(majorVal) || !minor[prevIdx].isEq(minorVal);
+        }
 
-        case 0:
-          boolean isFirst = mid == offset;
-          if (!isFirst) {
-            int prevIdx = idxs[mid-1];
-            isFirst = !major[prevIdx].isEq(majorVal) || !minor[prevIdx].isEq(minorVal);
-          }
-          if (isFirst) {
-            int first = mid;
-            low = lowerBound;
-            high = upperBound;
+        if (isFirst) {
+          int first = mid;
+          low = lowerBound;
+          high = upperBound;
 
-            while (low <= high) {
-              mid = (int) (((long) low + (long) high) / 2);
-              midIdx = idxs[mid];
-              res = major[midIdx].cmp(majorVal);
-              if (res == 0)
-                res = minor[midIdx].cmp(minorVal);
-              switch (res) {
-                case -1:
-                  // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
-                  high = mid - 1;
-                  break;
+          while (low <= high) {
+            mid = (int) (((long) low + (long) high) / 2);
+            midIdx = idxs[mid];
 
-                case 0:
-                  boolean isLast = mid == upperBound;
-                  if (!isLast) {
-                    int nextIdx = idxs[mid+1];
-                    isLast = !major[nextIdx].isEq(majorVal) || !minor[nextIdx].isEq(minorVal);
-                  }
-                  if (isLast) {
-                    return new int[] {first, mid - first + 1};
-                  }
-                  else
-                    low = mid + 1;
-                  break;
+            ord = majorVal.quickOrder(major[midIdx]);
+            if (ord == 0)
+              ord = minorVal.quickOrder(minor[midIdx]);
 
-                case 1:
-                  // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
-                  low = mid + 1;
-                  break;
-              }
+            if (ord == -1) {
+              // major[mid] > majorVal | (major[mid] == majorVal & minor[mid] > minorVal)
+              high = mid - 1;
             }
-
-            // We're not supposed to ever get here.
-            throw new UnsupportedOperationException();
+            else if (ord == 1) {
+              // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
+              low = mid + 1;
+            }
+            else {
+              boolean isLast = mid == upperBound;
+              if (!isLast) {
+                int nextIdx = idxs[mid+1];
+                isLast = !major[nextIdx].isEq(majorVal) || !minor[nextIdx].isEq(minorVal);
+              }
+              if (isLast) {
+                return new int[] {first, mid - first + 1};
+              }
+              else
+                low = mid + 1;
+            }
           }
-          else
-            high = mid - 1;
-          break;
 
-        case 1:
-          // major[mid] < majorVal | (major[mid] == majorVal) & minor[mid] < minorVal)
-          lowerBound = low = mid + 1;
-          break;
+          // We're not supposed to ever get here.
+          throw new UnsupportedOperationException();
+        }
+        else
+          high = mid - 1;
       }
     }
 

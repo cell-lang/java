@@ -3,36 +3,50 @@ package net.cell_lang;
 import java.util.ArrayList;
 
 
-class ByteStream {
-  byte[] bytes;
+class CodePointStream {
+  public interface Source {
+    long get(int idx);
+  }
+
+  Source src;
   int offset;
   int length;
-  byte nextByte;
+  int nextChar;
   int checkpoint;
 
   final byte EOF = -1;
 
-  protected ByteStream(byte[] bytes) {
-    this.bytes = bytes;
-    length = bytes.length;
-    nextByte = bytes.length > 0 ? bytes[0] : EOF;
+  protected CodePointStream(Source src, int len) {
+    this.src = src;
+    length = len;
+    nextChar = length > 0 ? getChar(0) : EOF;
   }
 
   protected final String string(int first, int len) {
-    return new String(bytes, first, len);
+    char[] chs = new char[len];
+    for (int i=0 ; i < len ; i++)
+      chs[i] = (char) src.get(first+i);
+    return new String(chs);
   }
 
-  protected final byte read() {
-    failHereIf(nextByte == EOF);
+  private final int getChar(int idx) {
+    long ch = src.get(idx);
+    if (ch < 0 | ch > 0x10FFFF)
+      failHere();
+    return (int) ch;
+  }
+
+  protected final int read() {
+    failHereIf(nextChar == EOF);
     offset++;
-    byte result = nextByte;
-    nextByte = offset < length ? bytes[offset] : EOF;
+    int result = nextChar;
+    nextChar = offset < length ? getChar(offset) : EOF;
     return result;
   }
 
-  protected final byte peek() {
-    failHereIf(nextByte == EOF);
-    return nextByte;
+  protected final long peek() {
+    failHereIf(nextChar == EOF);
+    return nextChar;
   }
 
   protected final void setCheckpoint() {
@@ -41,7 +55,7 @@ class ByteStream {
 
   protected final void rewind() {
     offset = checkpoint;
-    nextByte = offset < length ? bytes[offset] : EOF;
+    nextChar = offset < length ? getChar(offset) : EOF;
   }
 
   protected final int offset() {
@@ -60,50 +74,50 @@ class ByteStream {
   }
 
   protected void consumeWhiteSpace() {
-    while (isWhiteSpace(nextByte))
+    while (isWhiteSpace(nextChar))
       read();
   }
 
   protected final boolean nextIs(char ch) {
-    return nextByte == ch;
+    return nextChar == ch;
   }
 
   protected final boolean nextIsDigit() {
-    return isDigit(nextByte);
+    return isDigit(nextChar);
   }
 
   protected final boolean nextIsHex() {
-    return isHex(nextByte);
+    return isHex(nextChar);
   }
 
   protected final boolean nextIsLower() {
-    return isLower(nextByte);
+    return isLower(nextChar);
   }
 
   protected final boolean nextIsAlphaNum() {
-    return isAlphaNum(nextByte);
+    return isAlphaNum(nextChar);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   protected final void checkNextIs(char ch) {
-    failHereIf(nextByte != ch);
+    failHereIf(nextChar != ch);
   }
 
   protected final void checkNextIsDigit() {
-    failHereIf(!isDigit(nextByte));
+    failHereIf(!isDigit(nextChar));
   }
 
   protected final void checkNextIsHex() {
-    failHereIf(!isHex(nextByte));
+    failHereIf(!isHex(nextChar));
   }
 
   protected final void checkNextIsAlphaNum() {
-    failHereIf(!isAlphaNum(nextByte));
+    failHereIf(!isAlphaNum(nextChar));
   }
 
   protected final void checkNextIsPrintable() {
-    failHereIf(!isPrintable(nextByte));
+    failHereIf(!isPrintable(nextChar));
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -119,46 +133,46 @@ class ByteStream {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  static boolean isDigit(byte ch) {
+  static boolean isDigit(int ch) {
     return ch >= '0' & ch <= '9';
   }
 
-  static boolean isHex(byte ch) {
+  static boolean isHex(int ch) {
     return (ch >= '0' & ch <= '9') | (ch >= 'a' & ch <= 'z');
   }
 
-  static boolean isLower(byte ch) {
+  static boolean isLower(int ch) {
     return ch >= 'a' & ch <= 'z';
   }
 
-  static boolean isAlphaNum(byte ch) {
+  static boolean isAlphaNum(int ch) {
     return isDigit(ch) | isLower(ch);
   }
 
-  static boolean isPrintable(byte ch) {
+  static boolean isPrintable(int ch) {
     return ch >= ' ' & ch <= '~';
   }
 
-  static boolean isWhiteSpace(byte ch) {
+  static boolean isWhiteSpace(int ch) {
     return ch == ' ' | ch == '\t' | ch == '\n' | ch == '\r';
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static int hexDigitValue(byte ch) {
-    return isDigit(ch) ? ch - '0' : ch - 'a';
+  public static int hexDigitValue(int ch) {
+    return (int) (isDigit(ch) ? ch - '0' : ch - 'a');
   }
 }
 
 
-class Lexer extends ByteStream {
-  public static Token[] lex(byte[] bytes) {
-    Lexer lexer = new Lexer(bytes);
+class Lexer extends CodePointStream {
+  public static Token[] lex(Source src, int len) {
+    Lexer lexer = new Lexer(src, len);
     return lexer.lex();
   }
 
-  Lexer(byte[] bytes) {
-    super(bytes);
+  Lexer(Source src, int len) {
+    super(src, len);
   }
 
   long readNat() {
@@ -230,9 +244,9 @@ class Lexer extends ByteStream {
 
     int strLen = 0;
     for ( ; ; ) {
-      checkNextIsPrintable();
+      // checkNextIsPrintable();
 
-      byte ch = read();
+      int ch = read();
 
       if (ch == '"')
         break;
@@ -258,7 +272,7 @@ class Lexer extends ByteStream {
     for (int i=0 ; i < strLen ; i++) {
       char ch = (char) read();
       if (ch == '\\') {
-        byte nextChar = read();
+        int nextChar = read();
         if (nextChar == '\\' | nextChar == '"') {
           // Nothing to do here
         }

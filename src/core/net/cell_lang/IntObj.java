@@ -5,41 +5,26 @@ import java.io.Writer;
 
 
 class IntObj extends Obj {
-  long value;
-
   IntObj(long value) {
-    this.value = value;
+    data = value;
+    extraData = intObjExtraData();
   }
 
-  public static IntObj get(long value) {
-    if (value >= 0 & value < 256)
-      return byteObjs[(int) value];
-    return new IntObj(value);
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
   }
 
-  public boolean isInt() {
-    return true;
+  public TypeCode getTypeCode() {
+    return TypeCode.INTEGER;
   }
 
-  public boolean isInt(long value) {
-    return this.value == value;
-  }
-
-  public long getLong() {
-    return value;
-  }
-
-  public boolean isEq(Obj obj) {
-    return obj.isInt(value);
-  }
-
-  public int hashCode() {
-    return ((int) (value >> 32)) ^ ((int) value);
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      writer.write(Long.toString(value));
+      writer.write(Long.toString(data));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -47,26 +32,32 @@ class IntObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return Long.toString(value).length();
+    return Long.toString(data).length();
   }
 
   public ValueBase getValue() {
-    return new IntValue(value);
+    return new IntValue(data);
   }
 
-  protected int typeId() {
-    return 1;
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
-  protected int internalCmp(Obj obj) {
-    long otherValue = obj.getLong();
-    return value == otherValue ? 0 : (value < otherValue ? 1 : -1);
-  }
-
-  static IntObj[] byteObjs = new IntObj[256];
+  static IntObj[] smallIntObjs = new IntObj[384];
 
   static {
-    for (int i=0 ; i < byteObjs.length ; i++)
-      byteObjs[i] = new IntObj(i);
+    for (int i=0 ; i < 384 ; i++)
+      smallIntObjs[i] = new IntObj(i - 128);
+  }
+
+  public static IntObj get(long value) {
+    if (value >= -128 & value < 256) {
+      IntObj obj = smallIntObjs[128 + (int) value];
+      Miscellanea._assert(obj.data == value); //## REMOVE WHEN DONE
+      return obj;
+    }
+    return new IntObj(value);
+  }
+
+  public static int compare(long x1, long x2) {
+    return x1 == x2 ? 0 : (x1 < x2 ? -1 : 1);
   }
 }

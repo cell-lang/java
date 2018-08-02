@@ -35,6 +35,6 @@ class EmptyRelValue extends ValueBase {
   }
 
   public Obj asObj() {
-    return EmptyRelObj.singleton();
+    return EmptyRelObj.singleton;
   }
 }

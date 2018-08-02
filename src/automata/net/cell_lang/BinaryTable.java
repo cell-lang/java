@@ -126,7 +126,7 @@ class BinaryTable {
     int count = table1.count;
 
     if (count == 0)
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
 
     Obj[] objs1 = new Obj[count];
     Obj[] objs2 = new Obj[count];

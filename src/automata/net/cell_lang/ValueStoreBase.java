@@ -3,7 +3,7 @@ package net.cell_lang;
 
 class ValueStoreBase {
   protected Obj[] slots;
-  protected int[] hashcodes; //## WAS int
+  protected int[] hashcodes;
   protected int[] hashtable;
   protected int[] buckets;
   protected int   count = 0;
@@ -48,7 +48,7 @@ class ValueStoreBase {
   public int lookupValue(Obj value) {
     if (count == 0)
       return -1;
-    int hashcode = value.hashCode(); //## WAS int
+    int hashcode = value.hashcode();
     int hashIdx = Integer.remainderUnsigned(hashcode, hashtable.length);
     int idx = hashtable[hashIdx];
     while (idx != -1) {
@@ -70,13 +70,13 @@ class ValueStoreBase {
   }
 
   public void insert(Obj value, int slotIdx) {
-    insert(value, value.hashCode(), slotIdx);
+    insert(value, value.hashcode(), slotIdx);
   }
 
   public void insert(Obj value, int hashcode, int slotIdx) {
     Miscellanea._assert(slots != null && slotIdx < slots.length);
     Miscellanea._assert(slots[slotIdx] == null);
-    Miscellanea._assert(hashcode == value.hashCode());
+    Miscellanea._assert(hashcode == value.hashcode());
 
     slots[slotIdx] = value;
     hashcodes[slotIdx] = hashcode;

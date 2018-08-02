@@ -3,14 +3,19 @@ package net.cell_lang;
 import java.io.Writer;
 
 
+final class BlankObj extends Obj {
+  public static final BlankObj singleton = new BlankObj();
 
-class BlankObj extends Obj {
-  public boolean isBlankObj() {
-    return true;
+  private BlankObj() {
+    extraData = blankObjExtraData();
   }
 
-  public int hashCode() {
-    throw new UnsupportedOperationException();
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
+  }
+
+  public TypeCode getTypeCode() {
+    throw Miscellanea.internalFail(this);
   }
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
@@ -23,20 +28,10 @@ class BlankObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return "Blank".length();
+    return 5;
   }
 
-  protected int typeId() {
-    return -2;
-  }
-
-  protected int internalCmp(Obj o) {
-    throw new UnsupportedOperationException();
-  }
-
-  static BlankObj singleton = new BlankObj();
-
-  public static BlankObj singleton() {
-    return singleton;
+  public ValueBase getValue() {
+    throw Miscellanea.internalFail(this);
   }
 }

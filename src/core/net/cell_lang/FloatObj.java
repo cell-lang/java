@@ -3,38 +3,27 @@ package net.cell_lang;
 import java.io.Writer;
 
 
-
-class FloatObj extends Obj {
-  double value;
-
+final class FloatObj extends Obj {
   public FloatObj(double value) {
-    this.value = value;
+    data = floatObjData(value);
+    extraData = floatObjExtraData();
   }
 
-  public boolean isFloat() {
-    return true;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
   }
 
-  public boolean isFloat(double value) {
-    return this.value == value;
+  public TypeCode getTypeCode() {
+    return TypeCode.FLOAT;
   }
 
-  public double getDouble() {
-    return value;
-  }
-
-  public boolean isEq(Obj obj) {
-    return obj.isFloat(value);
-  }
-
-  public int hashCode() {
-    long longVal = Double.doubleToLongBits(value);
-    return ((int) (longVal >> 32)) ^ ((int) longVal);
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      writer.write(Double.toString(value));
+      writer.write(Double.toString(getDouble()));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -42,19 +31,16 @@ class FloatObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return Double.toString(value).length();
+    return Double.toString(getDouble()).length();
   }
 
   public ValueBase getValue() {
-    return new FloatValue(value);
+    return new FloatValue(getDouble());
   }
 
-  protected int typeId() {
-    return 2;
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
-  protected int internalCmp(Obj other) {
-    double otherValue = other.getDouble();
-    return value == otherValue ? 0 : (value < otherValue ? 1 : -1);
+  public static int compare(double x1, double x2) {
+    return IntObj.compare(floatObjData(x1), floatObjData(x2));
   }
 }

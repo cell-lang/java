@@ -86,7 +86,11 @@ Bool is_reserved(String id) {
       ;
     ;
   ;
-  return in(id, keywords_and_literals) or in(id, runtime_classes) or in(id, standard_generated_classes);
+
+  return in(id, keywords_and_literals) or
+         in(id, runtime_classes) or
+         in(id, runtime_interfaces) or
+         in(id, standard_generated_classes);
 }
 
 
@@ -160,29 +164,57 @@ Bool is_reserved(String id) {
 ];
 
 
+[String] runtime_interfaces = ["Value"];
+
+
 [String] runtime_classes = [
   "Algs",
+  "ArrayObjBase",
+  "ArrayObj",
+  "ArrayObjs",
+  "ArraySliceObj",
   "BinaryTable",
   "BinaryTableUpdater",
   "BinRelIter",
   "BlankObj",
   "Builder",
+  "ByteArrayObjBase",
+  "ByteArrayObj",
+  "ByteArraySliceObj",
   "ByteStream",
   "Conversions",
   "EmptyRelObj",
   "EmptyRelValue",
+  "EmptySeqObj",
+  "FloatArrayObjBase",
+  "FloatArrayObj",
+  "FloatArrayObjs",
+  "FloatArraySliceObj",
   "FloatObj",
   "FloatValue",
   "Hacks",
   "Index",
+  "Int32ArrayObjBase",
+  "Int32ArrayObj",
+  "Int32ArraySliceObj",
+  "IntArrayObjBase",
+  "IntArrayObj",
+  "IntArrayObjs",
+  "IntArraySliceObj",
   "IntObj",
+  "Ints12",
+  "Ints123",
+  "Ints21",
+  "Ints231",
+  "Ints312",
   "IntValue",
-  "Iter",
   "Lexer",
-  "MasterSeqObj",
   "Miscellanea",
   "NeBinRelObj",
   "NeBinRelValue",
+  "NeFloatSeqObj",
+  "NeIntSeqObj",
+  "NeSeqObj",
   "NeSetObj",
   "NeSetValue",
   "NeTernRelObj",
@@ -190,16 +222,23 @@ Bool is_reserved(String id) {
   "NullObj",
   "Obj",
   "OneWayBinTable",
+  "OptTagRecObj",
   "OverflowTable",
+  "PaddedArray",
+  "PaddedFloatArray",
+  "PaddedIntArray",
   "Pair",
   "Parser",
-  "Parsing",
   "ParsingException",
   "Procs",
+  "RecordObj",
+  "SeqIter",
   "SeqObj",
-  "SeqOrSetIter",
   "SeqValue",
-  "SliceObj",
+  "SetIter",
+  "ShortArrayObjBase",
+  "ShortArrayObj",
+  "ShortArraySliceObj",
   "SymbObj",
   "SymbTable",
   "SymbValue",
@@ -213,7 +252,11 @@ Bool is_reserved(String id) {
   "Triplet",
   "UnaryTable",
   "UnaryTableUpdater",
-  "Value",
+  "UnitTests",
+  "UnsignedByteArrayObjBase",
+  "UnsignedByteArrayObj",
+  "UnsignedByteArraySliceObj",
+  "Utils",
   "ValueBase",
   "ValueStore",
   "ValueStoreBase",

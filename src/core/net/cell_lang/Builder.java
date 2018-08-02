@@ -1,24 +1,10 @@
 package net.cell_lang;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 class Builder {
-  public static Obj createSeq(ArrayList<Obj> objs) {
-    return new MasterSeqObj(objs.toArray(new Obj[objs.size()]));
-  }
-
-  public static Obj createSeq(Obj[] objs, long count) {
-    Miscellanea._assert(objs != null && count <= objs.length);
-    for (int i=0 ; i < count ; i++)
-      Miscellanea._assert(objs[i] != null);
-
-    Obj[] objsCopy = new Obj[(int) count];
-    for (int i=0 ; i < count ; i++)
-      objsCopy[i] = objs[i];
-    return new MasterSeqObj(objsCopy);
-  }
-
   public static Obj createSet(Obj[] objs) {
     return createSet(objs, objs.length);
   }
@@ -34,25 +20,22 @@ class Builder {
       return new NeSetObj(normObjs);
     }
     else
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
   }
 
   public static Obj createMap(ArrayList<Obj> keys, ArrayList<Obj> vals) {
     Miscellanea._assert(keys.size() == vals.size());
-    return createMap(keys.toArray(new Obj[keys.size()]), vals.toArray(new Obj[vals.size()]), keys.size());
+    return createMap(keys.toArray(new Obj[keys.size()]), vals.toArray(new Obj[vals.size()]));
+  }
+
+  public static Obj createMap(Obj[] keys, Obj[] vals) {
+    return createMap(keys, vals, keys.length);
   }
 
   public static Obj createMap(Obj[] keys, Obj[] vals, long count) {
     Obj binRel = createBinRel(keys, vals, count);
-    if (!binRel.isEmptyRel() && !binRel.isNeMap()) {
-      BinRelIter iter = binRel.getBinRelIter();
-      //## REMOVE WHEN DONE
-      while (!iter.done()) {
-        System.out.println(iter.get1().toString());
-        iter.next();
-      }
-      throw new RuntimeException();
-    }
+    if (!binRel.isEmptyRel() && !binRel.isNeMap())
+      throw Miscellanea.softFail("Error: map contains duplicate keys");
     return binRel;
   }
 
@@ -61,15 +44,20 @@ class Builder {
     return createBinRel(col1.toArray(new Obj[col1.size()]), col2.toArray(new Obj[col2.size()]), col1.size());
   }
 
+  public static Obj createBinRel(Obj[] col1, Obj[] col2) {
+    return createBinRel(col1, col2, col1.length);
+  }
+
   public static Obj createBinRel(Obj[] col1, Obj[] col2, long count) {
     Miscellanea._assert(count <= col1.length & count <= col2.length);
     if (count != 0) {
       Obj[][] normCols = Algs.sortUnique(col1, col2, (int) count);
       Obj[] normCol1 = normCols[0];
-      return new NeBinRelObj(normCol1, normCols[1], !Algs.sortedArrayHasDuplicates(normCol1));
+      boolean isMap = !Algs.sortedArrayHasDuplicates(normCol1);
+      return new NeBinRelObj(normCol1, normCols[1], isMap);
     }
     else
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
   }
 
   public static Obj createBinRel(Obj obj1, Obj obj2) {
@@ -85,6 +73,10 @@ class Builder {
     return createTernRel(col1.toArray(new Obj[col1.size()]), col2.toArray(new Obj[col2.size()]), col3.toArray(new Obj[col3.size()]), col1.size());
   }
 
+  public static Obj createTernRel(Obj[] col1, Obj[] col2, Obj[] col3) {
+    return createTernRel(col1, col2, col3, col1.length);
+  }
+
   public static Obj createTernRel(Obj[] col1, Obj[] col2, Obj[] col3, long count) {
     Miscellanea._assert(count <= col1.length && count <= col2.length && count <= col3.length);
     if (col1.length != 0) {
@@ -92,7 +84,7 @@ class Builder {
       return new NeTernRelObj(normCols[0], normCols[1], normCols[2]);
     }
     else {
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
     }
   }
 
@@ -106,35 +98,127 @@ class Builder {
     return new NeTernRelObj(col1, col2, col3);
   }
 
-  public static Obj buildConstIntSeq(byte[] vals) {
-    int len = vals.length;
-    Obj[] objs = new Obj[len];
-    for (int i=0 ; i < len ; i++)
-      objs[i] = IntObj.get(vals[i]);
-    return new MasterSeqObj(objs);
+  public static Obj createTaggedObj(int tag, Obj obj) {
+    return new TaggedObj(tag, obj);
   }
 
-  public static Obj buildConstIntSeq(short[] vals) {
-    int len = vals.length;
-    Obj[] objs = new Obj[len];
-    for (int i=0 ; i < len ; i++)
-      objs[i] = IntObj.get(vals[i]);
-    return new MasterSeqObj(objs);
+  public static Obj createTaggedIntObj(int tag, long value) {
+    return new TaggedObj(tag, IntObj.get(value));
   }
 
-  public static Obj buildConstIntSeq(int[] vals) {
-    int len = vals.length;
-    Obj[] objs = new Obj[len];
-    for (int i=0 ; i < len ; i++)
-      objs[i] = IntObj.get(vals[i]);
-    return new MasterSeqObj(objs);
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static Obj createSeq(ArrayList<Obj> objs) {
+    return createSeq(objs.toArray(new Obj[objs.size()]));
   }
 
-  public static Obj buildConstIntSeq(long[] vals) {
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static Obj createSeq(boolean[] vals) {
+    if (vals.length == 0)
+      return EmptySeqObj.singleton;
+
     int len = vals.length;
     Obj[] objs = new Obj[len];
     for (int i=0 ; i < len ; i++)
-      objs[i] = IntObj.get(vals[i]);
-    return new MasterSeqObj(objs);
+      objs[i] = SymbObj.get(vals[i]);
+    return ArrayObjs.create(objs);
+  }
+
+  public static Obj createSeq(byte[] vals) {
+    return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(short[] vals) {
+    return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(int[] vals) {
+    return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(long[] vals) {
+    return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(double[] vals) {
+    return vals.length != 0 ? FloatArrayObjs.create(vals) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(Obj[] objs) {
+    int len = objs.length;
+    if (len == 0)
+      return EmptySeqObj.singleton;
+
+    if (objs[0].isInt()) {
+      for (int i=1 ; i < len ; i++)
+        if (!objs[i].isInt())
+          return ArrayObjs.create(objs);
+
+      long[] longs = new long[len];
+      for (int i=0 ; i < len ; i++)
+        longs[i] = objs[i].getLong();
+      return IntArrayObjs.create(longs);
+    }
+
+    if (objs[0].isFloat()) {
+      for (int i=1 ; i < len ; i++)
+        if (!objs[i].isFloat())
+          return ArrayObjs.create(objs);
+
+      double[] doubles = new double[len];
+      for (int i=0 ; i < len ; i++)
+        doubles[i] = objs[i].getDouble();
+      return FloatArrayObjs.create(doubles);
+    }
+
+    return ArrayObjs.create(objs);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static Obj createSeq(boolean[] vals, int len) {
+    if (len == 0)
+      return EmptySeqObj.singleton;
+
+    Obj[] objs = new Obj[len];
+    for (int i=0 ; i < len ; i++)
+      objs[i] = SymbObj.get(vals[i]);
+    return ArrayObjs.create(objs);
+  }
+
+  public static Obj createSeq(byte[] vals, int len) {
+    return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(short[] vals, int len) {
+    return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(int[] vals, int len) {
+    return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(long[] vals, int len) {
+    return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(double[] vals, int len) {
+    return len != 0 ? FloatArrayObjs.create(vals, len) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeq(Obj[] objs, int len) {
+    if (len == 0)
+      return EmptySeqObj.singleton;
+
+    for (int i=0 ; i < len ; i++)
+      if (!objs[i].isInt())
+        return ArrayObjs.create(objs, len);
+
+    long[] longs = new long[len];
+    for (int i=0 ; i < len ; i++)
+      longs[i] = objs[i].getLong();
+    return IntArrayObjs.create(longs);
   }
 }

@@ -4,60 +4,36 @@ import java.io.Writer;
 
 
 
-class SymbObj extends Obj {
-  int id;
+final class SymbObj extends Obj {
+  String string;
+  int minPrintedSize;
+  SymbValue valueObj;
+
 
   public SymbObj(int id) {
-    this.id = id;
+    data = symbObjData(id);
+    extraData = symbObjExtraData();
+    Miscellanea._assert(getSymbId() == id);
+    string = SymbTable.idxToStr(id);
+    minPrintedSize = string.length();
+    valueObj = new SymbValue(id);
   }
 
-  public static SymbObj get(int id) {
-    return SymbTable.get(id);
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
   }
 
-  public static SymbObj get(boolean b) {
-    return SymbTable.get(b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
+  public TypeCode getTypeCode() {
+    return TypeCode.SYMBOL;
   }
 
-  public boolean isSymb() {
-    return true;
-  }
-
-  public boolean isSymb(int id) {
-    return this.id == id;
-  }
-
-  public int getSymbId() {
-    return id;
-  }
-
-  public boolean getBool() {
-    if (id == SymbTable.FalseSymbId)
-      return false;
-    if (id == SymbTable.TrueSymbId)
-      return true;
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isEq(Obj obj) {
-    return obj.isSymb(id);
-  }
-
-  public Obj negate() {
-    if (id == SymbTable.FalseSymbId)
-      return SymbObj.get(SymbTable.TrueSymbId);
-    if (id == SymbTable.TrueSymbId)
-      return SymbObj.get(SymbTable.FalseSymbId);
-    throw new UnsupportedOperationException();
-  }
-
-  public int hashCode() {
-    return (int) id; //## BAD HASHCODE, IT'S NOT STABLE
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
-      writer.write(SymbTable.idxToStr(id));
+      writer.write(string);
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -65,18 +41,21 @@ class SymbObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return SymbTable.idxToStr(id).length();
+    return minPrintedSize;
   }
 
   public ValueBase getValue() {
-    return new SymbValue(id);
+    return valueObj;
   }
 
-  protected int typeId() {
-    return 0;
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static SymbObj get(int id) {
+    return SymbTable.get(id);
   }
 
-  protected int internalCmp(Obj other) {
-    return SymbTable.compSymbs(id, other.getSymbId());
+  //## THIS COULD BE OPTIMIZED
+  public static SymbObj get(boolean b) {
+    return SymbTable.get(b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
   }
 }

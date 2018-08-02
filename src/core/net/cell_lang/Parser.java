@@ -73,14 +73,7 @@ class TokenStream {
 }
 
 
-class Parser extends TokenStream {
-  public static Obj parse(Token[] tokens) {
-    Parser parser = new Parser(tokens);
-    Obj obj = parser.parseObj();
-    parser.checkEof();
-    return obj;
-  }
-
+abstract class Parser extends TokenStream {
   Parser(Token[] tokens) {
     super(tokens);
   }
@@ -132,7 +125,7 @@ class Parser extends TokenStream {
     consume(TokenType.OpenPar);
 
     if (tryConsuming(TokenType.ClosePar))
-      return SeqObj.empty();
+      return EmptySeqObj.singleton;
 
     ArrayList<Obj> elts = new ArrayList<Obj>();
     do {
@@ -177,12 +170,14 @@ class Parser extends TokenStream {
     if (nextIs(TokenType.OpenPar)) {
       Obj innerObj = isRecord() ? parseRec() : parseSeq();
       if (innerObj.isSeq() && innerObj.getSize() == 1)
-        innerObj = innerObj.getItem(0);
-      return new TaggedObj(symbObj.getSymbId(), innerObj);
+        innerObj = innerObj.getObjAt(0);
+      return createTaggedObj(symbObj.getSymbId(), innerObj);
     }
     else
       return symbObj;
   }
+
+  abstract Obj createTaggedObj(int tagId, Obj obj);
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -190,7 +185,7 @@ class Parser extends TokenStream {
     consume(TokenType.OpenBracket);
 
     if (tryConsuming(TokenType.CloseBracket))
-      return EmptyRelObj.singleton();
+      return EmptyRelObj.singleton;
 
     ArrayList<Obj> objs = new ArrayList<Obj>();
     do {

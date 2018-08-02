@@ -12,14 +12,14 @@ implicit prg : CompiledPrg, block : ReactBlock {
 
   String safe_setter_name(Symbol input_signal) {
     name = "set" & upper_camel_case(input_signal);
-    name = "set" & capitalize(_str_(input_signal), true) if in(name, duplicate_names);
+    name = "set" & capitalize(_print_(input_signal), true) if in(name, duplicate_names);
     name = "_" & name if has_conflicts(name);
     return name;
   }
 
   String safe_name(Symbol signal) {
     name = safe_lower_camel_case(signal);
-    name = capitalize(_str_(signal), true) if in(name, duplicate_names); ## MOVE THIS TO A NEW FUNCTION utils IN.cell
+    name = capitalize(_print_(signal), true) if in(name, duplicate_names); ## MOVE THIS TO A NEW FUNCTION IN utils.cell
     name = "_" & name if has_conflicts(name);
     return name;
   }
@@ -39,7 +39,7 @@ implicit prg : CompiledPrg, block : ReactBlock {
     name = safe_lower_camel_case(symbol);
     // We first check if this conflicts with other method names
     duplicate_method_names = duplicate_method_names; //## BAD
-    name = capitalize(_str_(symbol), true) if duplicate_method_names(name, arity);
+    name = capitalize(_print_(symbol), true) if duplicate_method_names(name, arity);
     // Now we've to deal with conflicts with inputs, outputs and reserved_names
     name = "__" & name if in(name, inputs_and_outputs_names) or has_conflicts(name);
     return name;

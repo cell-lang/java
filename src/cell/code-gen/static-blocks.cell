@@ -1,10 +1,4 @@
-implicit {
-  debug_mode                      : Bool,
-  sorted_cls_defs                 : ClsDef*,
-  int_seqs_types_and_lengths      : (String, Nat)*,
-  cached_semi_consts_by_impl_arg  : [ImplArg -> [+FnId]];
-
-
+implicit prg : CompiledPrg, debug_mode : Bool {
   String* native_static_block_decl(StaticBlock block) {
     links_decls = (native_name(l) & " *linkedAuto" & printed(i) & ";" : l @ i <- block.links);
     state_vars_decls = ["public Obj " & native_var_decl_name(v) & ";" : v, unused_var <- block.state_vars];
@@ -22,7 +16,7 @@ implicit {
 
     set_state_entry_point_code = set_state_entry_point(block.name);
 
-    update_entry_point_code = if block.updates_code(main_handler, *)
+    update_entry_point_code = if block.updates(main_handler, *)
       then update_entry_point(block.name)
       else ();
 
@@ -34,8 +28,8 @@ implicit {
 
     // aux_cleanup_decl, aux_cleanup_impl = aux_struct_cleanup_code(block);
 
-    methods_code = [native_user_def_method_code(block.name, id, m.code) : id, m <- block.methods];
-    updates_code = [native_update_code(block.name, id, b) : id, b <- block.updates_code];
+    methods_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.methods];
+    updates_code = [native_update_code(block.name, id, u.args_vars, u.body) : id, u <- block.updates];
 
     class_name = native_name(block.name);
 
@@ -89,7 +83,7 @@ implicit {
         return native_var_ref_name(v) & " = new " & native_table_type(t) & "(" & arg_list & ");";
       } : v, t <- isort(tables)
     );
-    vars_decl = gen_vars_decls(init_code);
+    vars_decl = gen_vars_decls(init_code, []);
     vars_decl = vars_decl & ("") if vars_decl != ();
     body = vars_decl & links_init_code & tables_init_code & native_code(init_code, nothing);
     link_args = append((native_name(l) & " linkedAuto" & printed(i) & ", " : l @ i <- links));
@@ -108,7 +102,7 @@ implicit {
 
 
   String* native_copy_state_code(DBSymbol name, Instr* code) {
-    vars_decls = gen_vars_decls(code);
+    vars_decls = gen_vars_decls(code, []);
     body = vars_decls & ("" if vars_decls != ()) & native_code(code, nothing);
     sgn = "public Obj " & copy_state_proc_name(name) & "() {";
     return (sgn) & indent_lines(body) & ("}");
@@ -117,7 +111,7 @@ implicit {
 
   String* native_set_state_code(DBSymbol name, Instr* code) {
     //aux_struct_init_call = native_method_call("this", aux_struct_init_proc_name(name), ());
-    vars_decls = gen_vars_decls(code);
+    vars_decls = gen_vars_decls(code, []);
     //body = vars_decls & ("" if vars_decls != (), aux_struct_init_call) & native_code(code, nothing);
     body = vars_decls & native_code(code, nothing);
     sgn = "public void " & set_state_proc_name(name) & "(Obj a0, " & aux_struct_c_name(name) & " updater) {";
@@ -326,7 +320,7 @@ implicit {
 
   String* updater_creation_code(StaticBlock block) {
     var_ids = (bare_id(v) : v <- isort(keys(block.state_vars)));
-    init_vars_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton();" : id <- var_ids);
+    init_vars_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton;" : id <- var_ids);
 
     bool_vars_ids = isort(keys(block.nested_blocks));
     bool_vars_init_code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- bool_vars_ids);
@@ -362,7 +356,7 @@ implicit {
 
   String* updater_reset_code(StaticBlock block) {
     var_ids = (bare_id(v) : v <- isort(keys(block.state_vars)));
-    vars_reset_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton();" : id <- var_ids);
+    vars_reset_code = (native_var_ref_name(pending_state_var(id)) & " = BlankObj.singleton;" : id <- var_ids);
 
     bool_vars_ids = isort(keys(block.nested_blocks));
     bool_vars_reset_code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- bool_vars_ids);
@@ -406,19 +400,20 @@ implicit {
   }
 
 
-  String* native_user_def_method_code(DBSymbol block_name, MethodId method_id, Instr* body) {
-    args_str = append(("Obj " & native_var_decl_name(fn_arg(i)) & ", " : i < method_id.arity));
+  String* native_user_def_method_code(DBSymbol block_name, MethodId method_id, Maybe[StdVar]* args, Instr* body) {
+    final_args = (if a != nothing then value(a) else fn_arg(i) : a @ i <- args);
+    args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- final_args));
     sgn = "public Obj " & user_def_method_name(block_name, method_id) & "(" & args_str & "Env env) {";
-    vars_decls = gen_vars_decls(body);
+    vars_decls = gen_vars_decls(body, [value(a) : a <~ args, a != nothing]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn) & indent_lines(body_text) & ("}");
   }
 
 
-  String* native_update_code(DBSymbol block_name, UpdateId update_id, Instr* body) {
-    args_strs = ("Obj " & native_var_decl_name(fn_arg(i)) & ", " : i < arity(update_id));
-    sgn = "public void " & update_name(block_name, update_id) & "(" & append(args_strs) & aux_struct_c_name(block_name) & " updater, Env env) {";
-    vars_decls = gen_vars_decls(body);
+  String* native_update_code(DBSymbol block_name, UpdateId update_id, <StdVar, FnArg>* args, Instr* body) {
+    args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- args));
+    sgn = "public void " & update_name(block_name, update_id) & "(" & args_str & aux_struct_c_name(block_name) & " updater, Env env) {";
+    vars_decls = gen_vars_decls(body, [a : a <~ args, a :: StdVar]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn) & indent_lines(body_text) & ("}");
   }

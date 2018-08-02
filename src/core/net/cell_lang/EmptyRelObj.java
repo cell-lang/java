@@ -3,31 +3,14 @@ package net.cell_lang;
 import java.io.Writer;
 
 
+final class EmptyRelObj extends Obj {
+  public static final EmptyRelObj singleton = new EmptyRelObj();
 
-class EmptyRelObj extends Obj {
-  EmptyRelObj() {
-
+  private EmptyRelObj() {
+    extraData = emptyRelObjExtraData();
   }
 
-  public boolean isEmptyRel() {
-    return true;
-  }
-
-  public boolean isSet() {
-    return true;
-  }
-
-  public boolean isBinRel() {
-    return true;
-  }
-
-  public boolean isTernRel() {
-    return true;
-  }
-
-  public boolean isEq(Obj obj) {
-    return obj.isEmptyRel();
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
   public boolean hasElem(Obj obj) {
     return false;
@@ -49,12 +32,12 @@ class EmptyRelObj extends Obj {
     return false;
   }
 
-  public int getSize() {
-    return 0;
+  public SetIter getSetIter() {
+    return iter1;
   }
 
-  public SeqOrSetIter getSeqOrSetIter() {
-    return iter1;
+  public Obj[] getArray(Obj[] buffer) {
+    return emptyObjArray;
   }
 
   public BinRelIter getBinRelIter() {
@@ -97,17 +80,25 @@ class EmptyRelObj extends Obj {
     return iter3;
   }
 
-  public Obj internalSort() {
-    return SeqObj.empty();
+  public SeqObj internalSort() {
+    return EmptySeqObj.singleton;
   }
 
   public Obj lookup(Obj key) {
     throw Miscellanea.softFail("Key not found:", "collection", this, "key", key);
   }
 
-  public int hashCode() {
-    return 0; //## FIND BETTER VALUE
+  //////////////////////////////////////////////////////////////////////////////
+
+  public int internalOrder(Obj other) {
+    throw Miscellanea.internalFail(this);
   }
+
+  public TypeCode getTypeCode() {
+    return TypeCode.EMPTY_REL;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
     try {
@@ -123,24 +114,16 @@ class EmptyRelObj extends Obj {
   }
 
   public ValueBase getValue() {
-    return new EmptyRelValue();
+    return valueObj;
   }
 
-  protected int typeId() {
-    return 4;
-  }
+  //////////////////////////////////////////////////////////////////////////////
 
-  protected int internalCmp(Obj other) {
-    return 0;
-  }
+  private static final EmptyRelValue valueObj = new EmptyRelValue();
 
-  static SeqOrSetIter iter1 = new SeqOrSetIter(new Obj[0], 0, -1);
-  static BinRelIter   iter2 = new BinRelIter(new Obj[0], new Obj[0]);
-  static TernRelIter  iter3 = new TernRelIter(new Obj[0], new Obj[0], new Obj[0]);
+  private static final Obj[] emptyObjArray = new Obj[0];
 
-  static EmptyRelObj singleton = new EmptyRelObj();
-
-  public static EmptyRelObj singleton() {
-    return singleton;
-  }
+  private static final SetIter     iter1 = new SetIter(new Obj[0], 0, -1);
+  private static final BinRelIter  iter2 = new BinRelIter(new Obj[0], new Obj[0]);
+  private static final TernRelIter iter3 = new TernRelIter(new Obj[0], new Obj[0], new Obj[0]);
 }

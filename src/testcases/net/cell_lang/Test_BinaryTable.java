@@ -109,7 +109,7 @@ class Test_BinaryTable {
       BinaryTable.Iter it = table.getIter1(i);
       count = 0;
       while (!it.done()) {
-        list[count++] = it.getField2();
+        list[count++] = it.get2();
         it.next();
       }
       actualValues = Arrays.copyOf(list, count);
@@ -143,7 +143,7 @@ class Test_BinaryTable {
       count = 0;
       BinaryTable.Iter it = table.getIter2(j);
       while (!it.done()) {
-        list[count++] = it.getField1();
+        list[count++] = it.get1();
         it.next();
       }
       actualValues = Arrays.copyOf(list, count);

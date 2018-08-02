@@ -32,17 +32,15 @@ class UnaryTableUpdater {
     int size = value.getSize();
     insertCount = size;
     insertList = new int[size];
-    SeqOrSetIter it = value.getSeqOrSetIter();
+    Obj[] elts = value.getArray((Obj[]) null);
+    Miscellanea._assert(elts.length == size);
     for (int i=0 ; i < size ; i++) {
-      Miscellanea._assert(!it.done());
-      Obj val = it.get();
+      Obj val = elts[i];
       int surr = store.lookupValueEx(val);
       if (surr == -1)
         surr = store.insert(val);
       insertList[i] = surr;
-      it.next();
     }
-    Miscellanea._assert(it.done());
   }
 
   public void delete(long value) {
