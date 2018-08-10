@@ -9,7 +9,10 @@ class Procs {
     String fnameStr = fname.getString();
     try {
       byte[] content = Files.readAllBytes(Paths.get(fnameStr));
-      Obj bytesObj = Builder.buildConstIntSeq(content);
+      short[] shorts = new short[content.length];
+      for (int i=0 ; i < content.length ; i++)
+        shorts[i] = (short) (((int) content[i]) & 0xFF);
+      Obj bytesObj = Builder.buildConstIntSeq(shorts);
       return new TaggedObj(SymbTable.JustSymbId, bytesObj);
     }
     catch (Exception e) {

@@ -237,7 +237,7 @@ if action_prefix != "return ":
     for t @ i <- isort(types):
       type_name = input_types_names(t, !!);
       code = code & (
-        #(if i > 0 then "else " else "") & "if (" & expr & " instanceof " & type_name & ") {",
+        {if i > 0 then "else " else ""} & "if (" & expr & " instanceof " & type_name & ") {",
         "  " & type_name & " " & in_var & " = (" & type_name & ") " & expr & ";",
         "  " & local_action & decl_type_import_funct_name(type_name) & "(" & in_var & ");",
         "}"
@@ -457,7 +457,7 @@ if action_prefix != "return ":
         only_type = only(values(symbol_type_map));
         symbs_code = (action_prefix & output_types_names(only_type, !!) & ".singleton;");
       ;
-      symbs_code = ("if (" & expr & ".isSymb()) {") & indent_lines(symbs_code) & ("}") if tag_type_map != [];
+      symbs_code = ("if (" & expr & ".isSymb()) {",) & indent_lines(symbs_code) & ("}") if tag_type_map != [];
       code = code & symbs_code;
     ;
 

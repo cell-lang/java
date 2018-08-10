@@ -221,7 +221,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     auto_class_name = auto_class_name(block = block);
 
     docs = (
-      "class " & auto_class_name & " {"
+      "class " & auto_class_name & " {",
     ) & indent_lines(enums_docs) & (
       "",
       "  " & auto_class_name & "();",

@@ -258,9 +258,9 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
       out = (return_value_type(t, types_names) : t @ i <- untag(type));
     max_len = max((length(t) : t <- types));
     spaces = (string((ascii_space : i < max_len - length(t))) : t <- types);
-    body = (#(if doc_only then "" else "public ") & t & spaces(i) & " item" & printed(i+1) & ";" : t @ i <- types);
+    body = ({if doc_only then "" else "public "} & t & spaces(i) & " item" & printed(i+1) & ";" : t @ i <- types);
     body = body & to_string_method if not doc_only;
-    header = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
+    header = {if doc_only then "" else "public "} & "class " & name_and_parents_decl(false) & " {";
     return (header) & indent_lines(body) & ("}");
   }
 
@@ -273,11 +273,11 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     max_len = max([length(t) : unused_var, t <- fields]);
     body = ({
         spaces = string((ascii_space : unused_var < max_len - length(t)));
-        return #(if doc_only then "" else "public ") & t & spaces & " " & field_names(l, !!) & ";";
+        return {if doc_only then "" else "public "} & t & spaces & " " & field_names(l, !!) & ";";
       } : l, t <- isort(fields)
     );
     body = body & to_string_method if not doc_only;
-    header = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
+    header = {if doc_only then "" else "public "} & "class " & name_and_parents_decl(false) & " {";
     return (header) & indent_lines(body) & ("}");
   }
 
@@ -288,9 +288,9 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
   String* type_decl_or_doc(TaggedInterType type) {
     untagged = untagged_type(type);
     if untagged :: <NamedInterType, UnionInterType> and in(untagged, declared_types):
-      body = (#(if doc_only then "" else "public ") & types_names(untagged, !!) & " inner;");
+      body = ({if doc_only then "" else "public "} & types_names(untagged, !!) & " inner;");
       body = body & to_string_method if not doc_only;
-      first_line = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
+      first_line = {if doc_only then "" else "public "} & "class " & name_and_parents_decl(false) & " {";
       return (first_line) & indent_lines(body) & ("}");
     else
       return untagged_type_decl_or_doc(untagged);
@@ -304,9 +304,9 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
       type_name = match (direction)
         in  = input_arg_type(inter_type),
         out = return_value_type(inter_type, types_names);
-      body = (#(if doc_only then "" else "public ") & type_name & " inner;");
+      body = ({if doc_only then "" else "public "} & type_name & " inner;");
       body = body & to_string_method if not doc_only;
-      header = #(if doc_only then "" else "public ") & "class " & name_and_parents_decl(false) & " {";
+      header = {if doc_only then "" else "public "} & "class " & name_and_parents_decl(false) & " {";
       return (header) & indent_lines(body) & ("}");
     }
   }

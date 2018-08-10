@@ -28,7 +28,7 @@ String* create_error_msg(ParserError err, String filename) =
 
 
 [String -> String*] Compile(
-  [String -> Nat*] src_files, Bool include_runtime, Bool run_typechecking, Bool ignore_assertions,
+  [String -> Byte*] src_files, Bool include_runtime, Bool run_typechecking, Bool ignore_assertions,
   Bool debug_mode, Bool print_intermediate, Bool print_times, Bool wait_for_key
 ) {
   t0 = _ticks_(:any_value_will_do);
