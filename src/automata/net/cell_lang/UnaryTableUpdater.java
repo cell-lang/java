@@ -1,5 +1,7 @@
 package net.cell_lang;
 
+import java.util.Arrays;
+
 
 class UnaryTableUpdater {
   static int[] emptyArray = new int[0];
@@ -12,6 +14,8 @@ class UnaryTableUpdater {
 
   int insertCount = 0;
   int[] insertList = emptyArray;
+
+  boolean prepared = false;
 
   UnaryTable table;
   ValueStoreUpdater store;
@@ -112,5 +116,105 @@ class UnaryTableUpdater {
       deleteList = emptyArray;
     if (insertList.length > 1024)
       insertList = emptyArray;
+
+    prepared = false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void prepare() {
+    if (!prepared) {
+      prepared = true;
+      Arrays.sort(deleteList, 0, deleteCount);
+      Arrays.sort(insertList, 0, insertCount);
+    }
+  }
+
+  public boolean contains(int surr) {
+    prepare();
+
+    if (Arrays.binarySearch(insertList, 0, insertCount, surr) != -1)
+      return true;
+
+    if (Arrays.binarySearch(deleteList, 0, deleteCount, surr) != -1)
+      return false;
+
+    return table.contains(surr);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean checkDeletedKeys(UnaryTableUpdater source) {
+    prepare();
+
+    for (int i=0 ; i < deleteCount ; i++) {
+      int surr = deleteList[i];
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+        if (source.contains(surr))
+          return false;
+    }
+
+    return true;
+  }
+
+  public boolean checkDeletedKeys_1(BinaryTableUpdater source) {
+    prepare();
+
+    for (int i=0 ; i < deleteCount ; i++) {
+      int surr = deleteList[i];
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+        if (source.contains1(surr))
+          return false;
+    }
+
+    return true;
+  }
+
+  public boolean checkDeletedKeys_2(BinaryTableUpdater source) {
+    prepare();
+
+    for (int i=0 ; i < deleteCount ; i++) {
+      int surr = deleteList[i];
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+        if (source.contains2(surr))
+          return false;
+    }
+
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  // unary_rel_1(x) -> unary_rel_2(x);
+  public boolean checkForeignKeys(UnaryTableUpdater target) {
+    // Checking that every new elements satisfies the foreign key
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains(insertList[i]))
+        return false;
+
+    // Checking that no elements were invalidated by a deletion on the target table
+    return target.checkDeletedKeys(this);
+  }
+
+  // unary_rel(x) -> binary_rel(x, _);
+  public boolean checkForeignKeys_1(BinaryTableUpdater target) {
+    // Checking that every new elements satisfies the foreign key
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains1(insertList[i]))
+        return false;
+
+    // Checking that no elements were invalidated by a deletion on the target table
+    return target.checkDeletedKeys_1(this);
+  }
+
+  // unary_rel(x) -> binary_rel(_, x);
+  public boolean checkForeignKeys_2(BinaryTableUpdater target) {
+    // Checking that every new elements satisfies the foreign key
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains2(insertList[i]))
+        return false;
+
+    // Checking that no elements were invalidated by a deletion on the target table
+    return target.checkDeletedKeys_2(this);
   }
 }

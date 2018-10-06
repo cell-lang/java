@@ -113,7 +113,7 @@ class TernaryTableUpdater {
     }
   }
 
-  public boolean checkUpdates_12() {
+  public boolean checkKeys_12() {
     if (insertCount == 0)
       return true;
 
@@ -143,11 +143,11 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkUpdates_12_3() {
+  public boolean checkKeys_12_3() {
     if (insertCount == 0)
       return true;
 
-    if (!checkUpdates_12())
+    if (!checkKeys_12())
       return false;
 
     Ints312.sort(deleteList, deleteCount);
@@ -176,11 +176,11 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkUpdates_12_23() {
+  public boolean checkKeys_12_23() {
     if (insertCount == 0)
       return true;
 
-    if (!checkUpdates_12())
+    if (!checkKeys_12())
       return false;
 
     Ints231.sort(deleteList, deleteCount);
@@ -209,11 +209,11 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkUpdates_12_23_31() {
+  public boolean checkKeys_12_23_31() {
     if (insertCount == 0)
       return true;
 
-    if (!checkUpdates_12_23())
+    if (!checkKeys_12_23())
       return false;
 
     Ints312.sort(deleteList, deleteCount);

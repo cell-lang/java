@@ -10,6 +10,9 @@ class BinaryTableUpdater {
   int insertCount = 0;
   int[] insertList = emptyArray;
 
+  enum Ord {ORD_NONE, ORD_12, ORD_21};
+  Ord currOrd = Ord.ORD_NONE;
+
   BinaryTable table;
   ValueStoreUpdater store1;
   ValueStoreUpdater store2;
@@ -64,64 +67,6 @@ class BinaryTableUpdater {
     insertList = Miscellanea.array2Append(insertList, insertCount++, value1, value2);
   }
 
-  public boolean checkUpdates_1() {
-    if (insertCount == 0)
-      return true;
-
-    Ints12.sort(deleteList, deleteCount);
-    Ints12.sort(insertList, insertCount);
-
-    int prev1 = -1;
-    int prev2 = -1;
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int curr1 = insertList[2 * i];
-      int curr2 = insertList[2 * i + 1];
-
-      if (curr1 == prev1 & curr2 != prev2)
-        return false;
-
-      if (!Ints12.contains1(deleteList, deleteCount, curr1) && table.contains1(curr1))
-        return false;
-
-      prev1 = curr1;
-      prev2 = curr2;
-    }
-
-    return true;
-  }
-
-  public boolean checkUpdates_1_2() {
-    if (insertCount == 0)
-      return true;
-
-    if (!checkUpdates_1())
-      return false;
-
-    Ints21.sort(deleteList, deleteCount);
-    Ints21.sort(insertList, insertCount);
-
-    int prev1 = -1;
-    int prev2 = -1;
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int curr1 = insertList[2 * i];
-      int curr2 = insertList[2 * i + 1];
-
-      if (curr2 == prev2 & curr1 != prev1)
-        return false;
-
-
-      if (!Ints21.contains2(deleteList, deleteCount, curr2) && table.contains2(curr2))
-        return false;
-
-      prev1 = curr1;
-      prev2 = curr2;
-    }
-
-    return true;
-  }
-
   public void apply() {
     for (int i=0 ; i < deleteCount ; i++) {
       int field1 = deleteList[2 * i];
@@ -156,6 +101,8 @@ class BinaryTableUpdater {
     }
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   public void reset() {
     deleteCount = 0;
     insertCount = 0;
@@ -164,7 +111,203 @@ class BinaryTableUpdater {
       deleteList = emptyArray;
     if (insertList.length > 2 * 1024)
       insertList = emptyArray;
+
+    currOrd = Ord.ORD_NONE;
   }
+
+  public void prepare12() {
+    if (currOrd != Ord.ORD_12) {
+      Ints12.sort(deleteList, deleteCount);
+      Ints12.sort(insertList, insertCount);
+      currOrd = Ord.ORD_12;
+    }
+  }
+
+  public void prepare21() {
+    if (currOrd != Ord.ORD_21) {
+      Ints21.sort(deleteList, deleteCount);
+      Ints21.sort(insertList, insertCount);
+      currOrd = Ord.ORD_21;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean contains(int surr1, int surr2) {
+    prepare12();
+
+    if (Ints12.contains(insertList, insertCount, surr1, surr2))
+      return true;
+
+    if (Ints12.contains(deleteList, deleteCount, surr1, surr2))
+      return false;
+
+    return table.contains(surr1, surr2);
+  }
+
+  public boolean contains1(int surr1) {
+    prepare12();
+
+    if (Ints12.contains1(insertList, insertCount, surr1))
+      return true;
+
+    if (!table.contains1(surr1))
+      return false;
+
+    int idx = Ints12.indexFirst(deleteList, deleteCount, surr1);
+    if (idx == -1)
+      return true;
+    int count = Ints12.count1(deleteList, deleteCount, surr1, idx);
+
+    //## BAD: THIS IS VERY INEFFICIENT IF THERE'S A LOT OF ENTRIES WHOSE FIRST ARGUMENT IS surr1
+    int[] vals2 = table.lookupByCol1(surr1);
+
+    for (int i=0 ; i < vals2.length ; i++)
+      // Elements in range [idx, idx+count) are sorted in both orders,
+      // since the left value is always the same
+      if (!Ints21.contains2(deleteList, idx, count, vals2[i]))
+        return true;
+
+    return false;
+  }
+
+  public boolean contains2(int surr2) {
+    prepare21();
+
+    if (Ints21.contains2(insertList, insertCount, surr2))
+      return true;
+
+    if (!table.contains2(surr2))
+      return false;
+
+    int idx = Ints21.indexFirst(deleteList, deleteCount, surr2);
+    if (idx == -1)
+      return true;
+    int count = Ints21.count2(deleteList, deleteCount, surr2, idx);
+
+    //## BAD: THIS IS VERY INEFFICIENT IF THERE'S A LOT OF ENTRIES WHOSE SECOND ARGUMENT IS surr2
+    int[] vals1 = table.lookupByCol2(surr2);
+
+    for (int i=0 ; i < vals1.length ; i++)
+      // Elements in range [idx, idx+count) are sorted in both orders,
+      // since the right value is always the same
+      if (!Ints12.contains1(deleteList, idx, count, vals1[i]))
+        return true;
+
+    return false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean checkKeys_1() {
+    if (insertCount == 0)
+      return true;
+
+    prepare12();
+
+    int prev1 = -1;
+    int prev2 = -1;
+
+    for (int i=0 ; i < insertCount ; i++) {
+      int curr1 = insertList[2 * i];
+      int curr2 = insertList[2 * i + 1];
+
+      if (curr1 == prev1 & curr2 != prev2)
+        return false;
+
+      if (!Ints12.contains1(deleteList, deleteCount, curr1) && table.contains1(curr1))
+        return false;
+
+      prev1 = curr1;
+      prev2 = curr2;
+    }
+
+    return true;
+  }
+
+  public boolean checkKeys_1_2() {
+    if (insertCount == 0)
+      return true;
+
+    if (!checkKeys_1())
+      return false;
+
+    prepare21();
+
+    int prev1 = -1;
+    int prev2 = -1;
+
+    for (int i=0 ; i < insertCount ; i++) {
+      int curr1 = insertList[2 * i];
+      int curr2 = insertList[2 * i + 1];
+
+      if (curr2 == prev2 & curr1 != prev1)
+        return false;
+
+
+      if (!Ints21.contains2(deleteList, deleteCount, curr2) && table.contains2(curr2))
+        return false;
+
+      prev1 = curr1;
+      prev2 = curr2;
+    }
+
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean checkDeletedKeys_1(UnaryTableUpdater source) {
+    prepare12();
+
+    for (int i=0 ; i < deleteCount ; i++) {
+      int surr1 = deleteList[2 * i];
+      if (!Ints12.contains1(insertList, insertCount, surr1))
+        if (source.contains(surr1))
+          return false;
+    }
+
+    return true;
+  }
+
+  public boolean checkDeletedKeys_2(UnaryTableUpdater source) {
+    prepare21();
+
+    for (int i=0 ; i < deleteCount ; i++) {
+      int surr2 = deleteList[2 * i + 1];
+      if (!Ints21.contains2(insertList, insertCount, surr2))
+        if (source.contains(surr2))
+          return false;
+    }
+
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  // bin_rel(a, _) -> unary_rel(a);
+  public boolean checkForeignKeys_1(UnaryTableUpdater target) {
+    // Checking that every new entry satisfies the foreign key
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains(insertList[2*i]))
+        return false;
+
+    // Checking that no entries were invalidated by a deletion on the target table
+    return target.checkDeletedKeys_1(this);
+  }
+
+  // bin_rel(_, b) -> unary_rel(b);
+  public boolean checkForeignKeys_2(UnaryTableUpdater target) {
+    // Checking that every new entry satisfies the foreign key
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains(insertList[2*i+1]))
+        return false;
+
+    // Checking that no entries were invalidated by a deletion on the target table
+    return target.checkDeletedKeys_2(this);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public void dump(boolean flipped) {
     System.out.print("deleteList =");

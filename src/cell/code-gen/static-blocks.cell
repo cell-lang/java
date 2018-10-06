@@ -186,33 +186,45 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       : v, t <- block.tables, t.keys != []
     ]);
 
+    foreign_keys = isort(block.foreign_keys);
+    foreign_keys_check_code = ({
+      origin = pending_updates_var_ref_name(k.origin);
+      target = pending_updates_var_ref_name(k.target);
+      method = foreign_key_check_method_name(k.type);
+      return "ok &= " & native_method_call(origin, method, (target));
+    } : k <- foreign_keys);
+
     nested_blocks_check_code = isort([
       "ok &= " & native_method_call(v, updates_check_proc_name(t), (aux_struct_var_ref_name(v)))
       : v, t <- block.nested_blocks
     ]);
 
-    body = ("boolean ok = true;") & tables_check_code & nested_blocks_check_code & ("return ok;");
+    body = ("boolean ok = true;") & tables_check_code & foreign_keys_check_code &
+           nested_blocks_check_code & ("return ok;");
 
     sgn = "public boolean " & updates_check_proc_name(block.name) &  "(" & aux_struct_c_name(block.name) & " updater) {";
     return (sgn) & indent_lines(body) & ("}");
 
 
     [NzNat -> [[[+Nat]] -> String]] fn_names = [
-      // 1 -> [[] -> "unary_table_updates_check"],
       2 -> [
-        // []                        -> "binary_table_updates_check",
-        [[0]]                     -> "checkUpdates_1",
-        [[1]]                     -> "checkUpdates_2",
-        [[0], [1]]                -> "checkUpdates_1_2"
+        [[0]]                     -> "checkKeys_1",
+        [[1]]                     -> "checkKeys_2",
+        [[0], [1]]                -> "checkKeys_1_2"
       ],
       3 -> [
-        // []                        -> "ternary_table_updates_check",
-        [[0, 1]]                  -> "checkUpdates_12",
-        [[0, 1], [2]]             -> "checkUpdates_12_3",
-        [[0, 1], [1, 2]]          -> "checkUpdates_12_23",
-        [[0, 1], [1, 2], [2, 0]]  -> "checkUpdates_12_23_31"
+        [[0, 1]]                  -> "checkKeys_12",
+        [[0, 1], [2]]             -> "checkKeys_12_3",
+        [[0, 1], [1, 2]]          -> "checkKeys_12_23",
+        [[0, 1], [1, 2], [2, 0]]  -> "checkKeys_12_23_31"
       ]
     ];
+
+
+    String foreign_key_check_method_name(ForeignKeyType) =
+      unary_unary       = "checkForeignKeys",
+      unary_binary(i?)  = "checkForeignKeys_" & printed(i+1),
+      binary_unary(i?)  = "checkForeignKeys_" & printed(i+1);
   }
 
 

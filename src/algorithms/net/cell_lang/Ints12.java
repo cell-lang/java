@@ -72,9 +72,36 @@ class Ints12 {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static boolean contains1(int[] array, int size, int val1) {
+  public static boolean contains(int[] array, int size, int val1, int val2) {
     int low = 0;
     int high = size - 1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      switch (ordCheck(mid, val1, val2, array)) {
+        case -1: // mid < target range
+          low = mid + 1;
+          break;
+
+        case 0: // mid in target range
+          return true;
+
+        case 1: // mid > target range
+          high = mid - 1;
+          break;
+      }
+    }
+
+    return false;
+  }
+
+  public static boolean contains1(int[] array, int size, int val1) {
+    return contains1(array, 0, size, val1);
+  }
+
+  public static boolean contains1(int[] array, int offset, int count, int val1) {
+    int low = offset;
+    int high = offset + count - 1;
 
     while (low <= high) {
       int mid = low + (high - low) / 2;
@@ -95,6 +122,58 @@ class Ints12 {
     return false;
   }
 
+  public static int indexFirst(int[] array, int size, int val1) {
+    int low = 0;
+    int high = size - 1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      switch (rangeStartCheck1(mid, val1, array)) {
+        case -1: // mid < target range start
+          low = mid + 1;
+          break;
+
+        case 0: // mid == target range start
+          return mid;
+
+        case 1: // mid > target range start
+          high = mid - 1;
+          break;
+      }
+    }
+
+    return -1;
+  }
+
+  private static int rangeEndExclusive(int[] array, int size, int val1, int offset) {
+    int low = offset;
+    int high = size - 1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      switch (rangeEndCheck1(mid, val1, array, size)) {
+        case -1: // mid < target range end
+          low = mid + 1;
+          break;
+
+        case 0: // mid == target range end
+          return mid + 1;
+
+        case 1: // mid > target range end
+          high = mid - 1;
+          break;
+      }
+    }
+
+    return offset;
+  }
+
+  public static int count1(int[] array, int size, int val1, int offset) {
+    int count = rangeEndExclusive(array, size, val1, offset) - offset;
+    Miscellanea._assert(count == Ints12_Ref.count1(array, size, val1, offset));
+    return count;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   static boolean isGreater(int idx1, int idx2, int[] array) {
@@ -109,6 +188,21 @@ class Ints12 {
     return elem1 > elem2;
   }
 
+  static int ordCheck(int idx, int val1, int val2, int[] array) {
+    int offset = 2 * idx;
+    int val = array[offset];
+    if (val < val1)
+      return -1;
+    if (val > val1)
+      return 1;
+    val = array[offset + 1];
+    if (val < val2)
+      return -1;
+    if (val > val2)
+      return 1;
+    return 0;
+  }
+
   static int rangeCheck1(int idx, int val1, int[] array) {
     int offset = 2 * idx;
     int val = array[offset];
@@ -117,5 +211,45 @@ class Ints12 {
     if (val > val1)
       return 1;
     return 0;
+  }
+
+  static int rangeStartCheck1(int idx, int val1, int[] array) {
+    int offset = 2 * idx;
+    int val = array[offset];
+    if (val < val1)
+      return -1;
+    if (val > val1)
+      return 1;
+    if (idx == 0)
+      return 0;
+    int prevVal = array[offset-2];
+    return prevVal == val ? 1 : 0;
+  }
+
+  static int rangeEndCheck1(int idx, int val1, int[] array, int size) {
+    int offset = 2 * idx;
+    int val = array[offset];
+    if (val < val1)
+      return -1;
+    if (val > val1)
+      return 1;
+    if (idx == size - 1)
+      return 0;
+    int nextVal = array[offset+2];
+    return nextVal == val ? -1 : 0;
+  }
+}
+
+
+class Ints12_Ref {
+  public static int count1(int[] array, int size, int val1, int offset) {
+    int count = 0;
+    for (int i=offset ; i < size ; i++) {
+      int val = array[2 * i];
+      if (val != val1)
+        break;
+      count++;
+    }
+    return count;
   }
 }
