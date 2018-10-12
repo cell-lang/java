@@ -6,7 +6,7 @@ class Ints12 {
     sort(array, 0, size-1);
   }
 
-  static void sort(int[] array, int first, int last) {
+  private static void sort(int[] array, int first, int last) {
     if (first >= last)
       return;
 
@@ -59,7 +59,7 @@ class Ints12 {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  static void swap(int idx1, int idx2, int[] array) {
+  private static void swap(int idx1, int idx2, int[] array) {
     int offset1 = 2 * idx1;
     int offset2 = 2 * idx2;
     int tmp0 = array[offset1];
@@ -145,6 +145,12 @@ class Ints12 {
     return -1;
   }
 
+  public static int count1(int[] array, int size, int val1, int offset) {
+    return rangeEndExclusive(array, size, val1, offset) - offset;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   private static int rangeEndExclusive(int[] array, int size, int val1, int offset) {
     int low = offset;
     int high = size - 1;
@@ -168,15 +174,27 @@ class Ints12 {
     return offset;
   }
 
-  public static int count1(int[] array, int size, int val1, int offset) {
-    int count = rangeEndExclusive(array, size, val1, offset) - offset;
-    Miscellanea._assert(count == Ints12_Ref.count1(array, size, val1, offset));
-    return count;
+  private static int rangeStartCheck1(int idx, int val1, int[] array) {
+    int ord = rangeCheck1(idx, val1, array);
+    if (ord != 0 | idx == 0)
+      return ord;
+    ord = rangeCheck1(idx-1, val1, array);
+    Miscellanea._assert(ord == 0 | ord == 1);
+    return ord == 1 ? 0 : -1;
+  }
+
+  private static int rangeEndCheck1(int idx, int val1, int[] array, int size) {
+    int ord = rangeCheck1(idx, val1, array);
+    if (ord != 0 | idx == size-1)
+      return ord;
+    ord = rangeCheck1(idx+1, val1, array);
+    Miscellanea._assert(ord == 0 | ord == -1);
+    return ord == -1 ? 0 : 1;
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  static boolean isGreater(int idx1, int idx2, int[] array) {
+  private static boolean isGreater(int idx1, int idx2, int[] array) {
     int offset1 = 2 * idx1;
     int offset2 = 2 * idx2;
     int elem1 = array[offset1];
@@ -188,7 +206,7 @@ class Ints12 {
     return elem1 > elem2;
   }
 
-  static int ordCheck(int idx, int val1, int val2, int[] array) {
+  private static int ordCheck(int idx, int val1, int val2, int[] array) {
     int offset = 2 * idx;
     int val = array[offset];
     if (val < val1)
@@ -203,7 +221,7 @@ class Ints12 {
     return 0;
   }
 
-  static int rangeCheck1(int idx, int val1, int[] array) {
+  private static int rangeCheck1(int idx, int val1, int[] array) {
     int offset = 2 * idx;
     int val = array[offset];
     if (val < val1)
@@ -211,45 +229,5 @@ class Ints12 {
     if (val > val1)
       return 1;
     return 0;
-  }
-
-  static int rangeStartCheck1(int idx, int val1, int[] array) {
-    int offset = 2 * idx;
-    int val = array[offset];
-    if (val < val1)
-      return -1;
-    if (val > val1)
-      return 1;
-    if (idx == 0)
-      return 0;
-    int prevVal = array[offset-2];
-    return prevVal == val ? 1 : 0;
-  }
-
-  static int rangeEndCheck1(int idx, int val1, int[] array, int size) {
-    int offset = 2 * idx;
-    int val = array[offset];
-    if (val < val1)
-      return -1;
-    if (val > val1)
-      return 1;
-    if (idx == size - 1)
-      return 0;
-    int nextVal = array[offset+2];
-    return nextVal == val ? -1 : 0;
-  }
-}
-
-
-class Ints12_Ref {
-  public static int count1(int[] array, int size, int val1, int offset) {
-    int count = 0;
-    for (int i=offset ; i < size ; i++) {
-      int val = array[2 * i];
-      if (val != val1)
-        break;
-      count++;
-    }
-    return count;
   }
 }

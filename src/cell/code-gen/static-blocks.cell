@@ -222,9 +222,15 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
     String foreign_key_check_method_name(ForeignKeyType) =
-      unary_unary       = "checkForeignKeys",
-      unary_binary(i?)  = "checkForeignKeys_" & printed(i+1),
-      binary_unary(i?)  = "checkForeignKeys_" & printed(i+1);
+      unary_unary             = "checkForeignKeys",
+      unary_binary(i?)        = "checkForeignKeys_" & printed(i+1),
+      unary_ternary(i?)       = "checkForeignKeys_" & printed(i+1),
+
+      binary_unary(i?)        = "checkForeignKeys_" & printed(i+1),
+      binary_ternary(i?, j?)  = "checkForeignKeys_" & printed(i+1) & printed(j+1),
+
+      ternary_unary(i?)       = "checkForeignKeys_" & printed(i+1),
+      ternary_binary(j?, i?)  = "checkForeignKeys_" & printed(i+1) & printed(j+1);
   }
 
 
