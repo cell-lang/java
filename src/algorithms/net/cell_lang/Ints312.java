@@ -160,7 +160,7 @@ class Ints312 {
   }
 
   public static int count13(int[] array, int size, int val1, int val3, int offset) {
-    return rangeEndExclusive31(val1, val3, offset, array, size);
+    return rangeEndExclusive31(val3, val1, offset, array, size) - offset;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -206,8 +206,8 @@ class Ints312 {
     if (ord != 0 | idx == 0)
       return ord;
     ord = rangeCheck3(idx-1, val3, array);
-    Miscellanea._assert(ord == 0 | ord == 1);
-    return ord == 1 ? 0 : -1;
+    Miscellanea._assert(ord == 0 | ord == -1);
+    return ord == -1 ? 0 : 1;
   }
 
   private static int rangeEndCheck3(int idx, int val3, int[] array, int size) {
@@ -215,8 +215,8 @@ class Ints312 {
     if (ord != 0 | idx == size-1)
       return ord;
     ord = rangeCheck3(idx+1, val3, array);
-    Miscellanea._assert(ord == 0 | ord == -1);
-    return ord == -1 ? 0 : 1;
+    Miscellanea._assert(ord == 0 | ord == 1);
+    return ord == 1 ? 0 : -1;
   }
 
   private static int rangeStartCheck31(int idx, int val3, int val1, int[] array) {
@@ -224,8 +224,8 @@ class Ints312 {
     if (ord != 0 | idx == 0)
       return ord;
     ord = rangeCheck31(idx-1, val3, val1, array);
-    Miscellanea._assert(ord == 0 | ord == 1);
-    return ord == 1 ? 0 : -1;
+    Miscellanea._assert(ord == 0 | ord == -1);
+    return ord == -1 ? 0 : 1;
   }
 
   private static int rangeEndCheck31(int idx, int val3, int val1, int[] array, int size) {
@@ -233,8 +233,8 @@ class Ints312 {
     if (ord != 0 | idx == size-1)
       return ord;
     ord = rangeCheck31(idx+1, val3, val1, array);
-    Miscellanea._assert(ord == 0 | ord == -1);
-    return ord == -1 ? 0 : 1;
+    Miscellanea._assert(ord == 0 | ord == 1);
+    return ord == 1 ? 0 : -1;
   }
 
   //////////////////////////////////////////////////////////////////////////////

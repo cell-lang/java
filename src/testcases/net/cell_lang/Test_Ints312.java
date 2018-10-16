@@ -10,14 +10,15 @@ public class Test_Ints312 {
 
   public static void run() {
     for (int i=0 ; i < 100000 ; i++) {
-      runRandomTest();
+      int[] array = runRandomSortTest();
+      TestSearches_Ints312.run(array, 1000);
       if ((i + 1) % 100 == 0)
         System.out.print('.');
     }
     System.out.println();
   }
 
-  static void runRandomTest() {
+  static int[] runRandomSortTest() {
     int len = rand.nextInt(200);
     int[] array = new int[3 * len];
 
@@ -80,6 +81,8 @@ public class Test_Ints312 {
         System.exit(1);
       }
     }
+
+    return array;
   }
 
   static int[] sort312(int[] array, int len) {
@@ -135,5 +138,72 @@ public class Test_Ints312 {
       return prev1 < curr1;
 
     return prev2 <= curr2;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+class TestSearches_Ints312 {
+  static void run(int[] array, int range) {
+    int len = array.length / 3;
+    int[] counts3 = buildCounts3(array, range);
+    int[][] counts13 = buildCounts13(array, range);
+
+    // contains3/3, indexFirst3, count3
+    for (int i=0 ; i < range ; i++) {
+      int count = counts3[i];
+      if (count != 0) {
+        check(Ints312.contains3(array, len, i));
+        int idx = Ints312.indexFirst3(array, len, i);
+        check(idx != -1);
+        check(Ints312.count3(array, len, i, idx) == count);
+      }
+      else {
+        check(!Ints312.contains3(array, len, i));
+        check(Ints312.indexFirst3(array, len, i) == -1);
+      }
+    }
+
+    // contains23/4, indexFirst23, count23
+    for (int i=0 ; i < range ; i++)
+      for (int j=0 ; j < range ; j++) {
+        int count = counts13[i][j];
+        if (count != 0) {
+          check(Ints312.contains13(array, len, i, j));
+          int idx = Ints312.indexFirst31(array, len, j, i);
+          check(idx != -1);
+          check(Ints312.count13(array, len, i, j, idx) == count);
+        }
+        else {
+          check(!Ints312.contains13(array, len, i, j));
+          check(Ints312.indexFirst31(array, len, j, i) == -1);
+        }
+      }
+
+    //## TODO: contains3/4, contains13/5
+    // boolean contains1(int[] array, int offset, int count, int val1)
+    // boolean contains23(int[] array, int offset, int count, int val1, int val2)
+  }
+
+  static int[] buildCounts3(int[] array, int size) {
+    int[] counts = new int[size];
+    for (int i=0 ; i < array.length ; i += 3)
+      counts[array[i+2]]++;
+    return counts;
+  }
+
+  static int[][] buildCounts13(int[] array, int size) {
+    int[][] counts = new int[size][];
+    for (int i=0 ; i < size ; i++)
+      counts[i] = new int[size];
+    for (int i=0 ; i < array.length ; i += 3)
+      counts[array[i]][array[i+2]]++;
+    return counts;
+  }
+
+  static void check(boolean cond) {
+    if (!cond)
+      throw new RuntimeException();
   }
 }
