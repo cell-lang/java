@@ -154,7 +154,7 @@ class BinaryTableUpdater {
     if (!table.contains1(surr1))
       return false;
 
-    int idx = Ints12.indexFirst(deleteList, deleteCount, surr1);
+    int idx = Ints12.indexFirst1(deleteList, deleteCount, surr1);
     if (idx == -1)
       return true;
     int count = Ints12.count1(deleteList, deleteCount, surr1, idx);
@@ -180,7 +180,7 @@ class BinaryTableUpdater {
     if (!table.contains2(surr2))
       return false;
 
-    int idx = Ints21.indexFirst(deleteList, deleteCount, surr2);
+    int idx = Ints21.indexFirst2(deleteList, deleteCount, surr2);
     if (idx == -1)
       return true;
     int count = Ints21.count2(deleteList, deleteCount, surr2, idx);

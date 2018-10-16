@@ -122,7 +122,7 @@ class Ints12 {
     return false;
   }
 
-  public static int indexFirst(int[] array, int size, int val1) {
+  public static int indexFirst1(int[] array, int size, int val1) {
     int low = 0;
     int high = size - 1;
 
@@ -179,8 +179,8 @@ class Ints12 {
     if (ord != 0 | idx == 0)
       return ord;
     ord = rangeCheck1(idx-1, val1, array);
-    Miscellanea._assert(ord == 0 | ord == 1);
-    return ord == 1 ? 0 : -1;
+    Miscellanea._assert(ord == 0 | ord == -1);
+    return ord == -1 ? 0 : 1;
   }
 
   private static int rangeEndCheck1(int idx, int val1, int[] array, int size) {
@@ -188,8 +188,10 @@ class Ints12 {
     if (ord != 0 | idx == size-1)
       return ord;
     ord = rangeCheck1(idx+1, val1, array);
-    Miscellanea._assert(ord == 0 | ord == -1);
-    return ord == -1 ? 0 : 1;
+    if (!(ord == 0 | ord == 1))
+      System.out.printf("\n");
+    Miscellanea._assert(ord == 0 | ord == 1);
+    return ord == 1 ? 0 : -1;
   }
 
   //////////////////////////////////////////////////////////////////////////////

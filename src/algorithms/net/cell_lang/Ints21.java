@@ -122,7 +122,7 @@ class Ints21 {
     return false;
   }
 
-  public static int indexFirst(int[] array, int size, int val2) {
+  public static int indexFirst2(int[] array, int size, int val2) {
     int low = 0;
     int high = size - 1;
 
@@ -179,8 +179,8 @@ class Ints21 {
     if (ord != 0 | idx == 0)
       return ord;
     ord = rangeCheck2(idx-1, val2, array);
-    Miscellanea._assert(ord == 0 | ord == 1);
-    return ord == 1 ? 0 : -1;
+    Miscellanea._assert(ord == 0 | ord == -1);
+    return ord == -1 ? 0 : 1;
   }
 
   private static int rangeEndCheck2(int idx, int val2, int[] array, int size) {
@@ -188,8 +188,8 @@ class Ints21 {
     if (ord != 0 | idx == size-1)
       return ord;
     ord = rangeCheck2(idx+1, val2, array);
-    Miscellanea._assert(ord == 0 | ord == -1);
-    return ord == -1 ? 0 : 1;
+    Miscellanea._assert(ord == 0 | ord == 1);
+    return ord == 1 ? 0 : -1;
   }
 
   //////////////////////////////////////////////////////////////////////////////
