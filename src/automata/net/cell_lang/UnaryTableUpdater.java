@@ -133,10 +133,10 @@ class UnaryTableUpdater {
   public boolean contains(int surr) {
     prepare();
 
-    if (Arrays.binarySearch(insertList, 0, insertCount, surr) != -1)
+    if (Arrays.binarySearch(insertList, 0, insertCount, surr) >= 0)
       return true;
 
-    if (Arrays.binarySearch(deleteList, 0, deleteCount, surr) != -1)
+    if (Arrays.binarySearch(deleteList, 0, deleteCount, surr) >= 0)
       return false;
 
     return table.contains(surr);
@@ -149,7 +149,7 @@ class UnaryTableUpdater {
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
         if (source.contains(surr))
           return false;
     }
@@ -162,7 +162,7 @@ class UnaryTableUpdater {
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
         if (source.contains1(surr))
           return false;
     }
@@ -175,7 +175,7 @@ class UnaryTableUpdater {
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
         if (source.contains2(surr))
           return false;
     }
@@ -188,7 +188,7 @@ class UnaryTableUpdater {
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
         if (source.contains1(surr))
           return false;
     }
@@ -201,7 +201,7 @@ class UnaryTableUpdater {
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
         if (source.contains2(surr))
           return false;
     }
@@ -214,7 +214,7 @@ class UnaryTableUpdater {
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) == -1)
+      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
         if (source.contains3(surr))
           return false;
     }
