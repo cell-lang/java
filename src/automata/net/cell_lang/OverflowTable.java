@@ -157,7 +157,7 @@ class OverflowTable {
       int tag = content >>> 29;
       int payload = content & PayloadMask;
       if (tag == 0) {
-        check(payload < 1000, "payload < 1000");
+        check(payload < 1000, "payload < 1000"); //## THIS SHOULD BE REMOVED ONCE DONE...
         actualCount++;
       }
       else {
@@ -695,15 +695,15 @@ class OverflowTable {
     }
 
     inserted[0] = true;
-    if (value3 == EmptyMarker) {
-      // Easy case: the last slot is available
+    if (value2 == EmptyMarker) {
+      // Easy case: the third slot is available
       // We store the new value there, and return the same handle
-      slots[block4Idx+3] = value;
+      slots[block4Idx+2] = value;
       return handle;
     }
-    else if (value2 == EmptyMarker) {
-      // Another easy case: the last but one slot is available
-      slots[block4Idx+2] = value;
+    else if (value3 == EmptyMarker) {
+      // Another easy case: the last slot is available
+      slots[block4Idx+3] = value;
       return handle;
     }
     else {
@@ -882,7 +882,7 @@ class OverflowTable {
           return handle;
         }
       }
-      Miscellanea._assert(false); //## CONTROL FLOW CAN NEVER MAKE IT HERE...
+      throw Miscellanea.internalFail(); //## CONTROL FLOW CAN NEVER MAKE IT HERE...
     }
 
     // The block is full, if the new value is not a duplicate
