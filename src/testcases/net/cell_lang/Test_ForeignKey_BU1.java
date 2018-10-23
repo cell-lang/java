@@ -245,7 +245,7 @@ class Test_ForeignKey_BU1 {
               check(target.contains(surr1) == inTarget);
 
               if (surr2 == -1) {
-                check(!inSource & inTarget);
+                check(!inSource);
                 continue;
               }
 

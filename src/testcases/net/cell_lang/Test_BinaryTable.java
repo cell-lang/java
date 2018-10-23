@@ -2,6 +2,7 @@ package net.cell_lang;
 
 import java.util.Random;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 
 class Test_BinaryTable {
@@ -163,6 +164,103 @@ class Test_BinaryTable {
         System.out.printf("%d/%d ", actual, expected);
       }
       System.out.println();
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void run2() {
+    ArrayList<Integer> badValues = new ArrayList<Integer>();
+    for (int i=0 ; i <= 16 ; i++)
+      badValues.add(15 * i);
+
+    BinaryTable table = new BinaryTable(null, null);
+
+    for (int i=0 ; i < badValues.size() ; i++) {
+      if (i == badValues.size() - 1)
+        System.out.print("");
+
+      int surrI = badValues.get(i);
+
+      table.insert(0, surrI);
+
+      for (int j=0 ; j <= i ; j++) {
+        int surrJ = badValues.get(j);
+        if (!table.contains(0, surrJ)) {
+          System.out.printf("ERROR FOUND: i = %d, @i = %d, j = %d, @j = %d\n", i, surrI, j, surrJ);
+          boolean res = table.contains(0, surrJ);
+          System.exit(1);
+        }
+      }
+
+      int[] surrs = table.lookupByCol1(0);
+      Arrays.sort(surrs);
+      int[] inputs = new int[i+1];
+      for (int j=0 ; j <= i ; j++)
+        inputs[j] = badValues.get(j);
+      if (!Arrays.equals(inputs, surrs)) {
+        System.out.printf("Found bug: i = %d, @i = %d\n", i, surrI);
+        for (int j=0 ; j < inputs.length ; j++)
+          System.out.printf(" %3d", inputs[j]);
+        System.out.println();
+        for (int j=0 ; j < surrs.length ; j++)
+          System.out.printf(" %3d", surrs[j]);
+        System.out.println();
+        surrs = table.lookupByCol1(0);
+        System.exit(1);
+      }
+    }
+  }
+
+  static void run3() {
+    BinaryTable table1 = new BinaryTable(null, null);
+    BinaryTable table2 = new BinaryTable(null, null);
+
+    for (int i=0 ; i < 10000 ; i++) {
+      table1.insert(0, i);
+      table2.insert(i, 0);
+
+      for (int j=0 ; j <= i ; j++) {
+        if (!table1.contains(0, j)) {
+          System.out.printf("ERROR FOUND (1): i = %d, j = %d\n", i, j);
+          System.exit(1);
+        }
+
+        if (!table1.contains2(j)) {
+          System.out.printf("ERROR FOUND (2): i = %d, j = %d\n", i, j);
+          System.exit(1);
+        }
+
+        if (!table2.contains(j, 0)) {
+          System.out.printf("ERROR FOUND (3): i = %d, j = %d\n", i, j);
+          System.exit(1);
+        }
+
+        if (!table2.contains1(j)) {
+          System.out.printf("ERROR FOUND (4): i = %d, j = %d\n", i, j);
+          System.exit(1);
+        }
+      }
+
+      int[] surrs = table1.lookupByCol1(0);
+      Arrays.sort(surrs);
+      if (surrs.length != i + 1) {
+        System.out.printf("ERROR (5)!\n");
+        System.exit(1);
+      }
+      for (int k=0 ; k <= i ; k++)
+        if (surrs[k] != k) {
+          System.out.printf("Found bug: i = %d, k = %d\n", i, k);
+          // for (int j=0 ; j < inputs.length ; j++)
+          //   System.out.printf(" %3d", inputs[j]);
+          // System.out.println();
+          for (int j=0 ; j < surrs.length ; j++)
+            System.out.printf(" %3d", surrs[j]);
+          System.out.println();
+          surrs = table1.lookupByCol1(0);
+          System.exit(1);
+        }
     }
   }
 }
