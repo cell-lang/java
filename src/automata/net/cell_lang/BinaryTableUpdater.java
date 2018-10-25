@@ -273,11 +273,28 @@ class BinaryTableUpdater {
   public boolean checkDeletedKeys_2(UnaryTableUpdater source) {
     prepare21();
 
-    for (int i=0 ; i < deleteCount ; i++) {
+    for (int i=0 ; i < deleteCount ; ) {
       int surr2 = deleteList[2 * i + 1];
-      if (!Ints21.contains2(insertList, insertCount, surr2))
-        if (source.contains(surr2))
+      if (!Ints21.contains2(insertList, insertCount, surr2) && source.contains(surr2)) {
+        int count = table.count2(surr2);
+        Miscellanea._assert(count > 0);
+
+        int surr1 = deleteList[2 * i];
+        int deleteCount2 = table.contains(surr1, surr2) ? 1 : 0;
+        for (i++ ; i < deleteCount && deleteList[2*i+1] == surr2 ; i++) {
+          int currSurr1 = deleteList[2 * i];
+          if (currSurr1 != surr1) {
+            surr1 = currSurr1;
+            if (table.contains(surr1, surr2))
+              deleteCount2++;
+          }
+        }
+
+        if (deleteCount2 == count)
           return false;
+      }
+      else
+        i++;
     }
 
     return true;

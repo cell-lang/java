@@ -66,6 +66,14 @@ class BinaryTable {
     return table2.containsKey(surr2);
   }
 
+  public int count1(int surr1) {
+    return table1.count(surr1);
+  }
+
+  public int count2(int surr2) {
+    return table2.count(surr2);
+  }
+
   public int[] lookupByCol1(int surr) {
     return table1.lookup(surr);
   }

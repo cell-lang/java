@@ -82,6 +82,15 @@ class OneWayBinTable {
     return surrs;
   }
 
+  public int count(int surr) {
+    if (surr >= column.length)
+      return 0;
+    int code = column[surr];
+    if (code == OverflowTable.EmptyMarker)
+      return 0;
+    return overflowTable.count(code);
+  }
+
   public void insert(int surr1, int surr2) {
     int size = column.length;
     if (surr1 >= size) {
