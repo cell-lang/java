@@ -211,6 +211,61 @@ class TernaryTable {
     return false;
   }
 
+  public boolean count12Eq(int arg1, int arg2, int expCount) {
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx)) {
+      if (field1OrNext(idx) == arg1 & field2OrEmptyMarker(idx) == arg2) {
+        count++;
+        if (count > expCount)
+          return false;
+      }
+    }
+    return count == expCount;
+  }
+
+  public boolean count1Eq(int arg1, int expCount) {
+    if (index1 == null)
+      buildIndex1();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg1);
+    for (int idx = index1.head(hashcode) ; idx != Empty ; idx = index1.next(idx))
+      if (field1OrNext(idx) == arg1) {
+        count++;
+        if (count > expCount)
+          return false;
+      }
+    return count == expCount;
+  }
+
+  public boolean count2Eq(int arg2, int expCount) {
+    if (index2 == null)
+      buildIndex2();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg2);
+    for (int idx = index2.head(hashcode) ; idx != Empty ; idx = index2.next(idx))
+      if (field2OrEmptyMarker(idx) == arg2) {
+        count++;
+        if (count > expCount)
+          return false;
+      }
+    return count == expCount;
+  }
+
+  public boolean count3Eq(int arg3, int expCount) {
+    if (index3 == null)
+      buildIndex3();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg3);
+    for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
+      if (field3(idx) == arg3) {
+        count++;
+        if (count > expCount)
+          return false;
+      }
+    return count == expCount;
+  }
+
   public Iter getIter() {
     return new Iter(Empty, Empty, Empty, 0, Iter.Type.F123, this);
   }

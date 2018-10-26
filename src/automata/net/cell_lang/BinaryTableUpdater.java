@@ -318,42 +318,14 @@ class BinaryTableUpdater {
     return true;
   }
 
-  public boolean checkDeletedKeys_12(TernaryTableUpdater source, boolean flip) {
+  public boolean checkDeletedKeys_12(TernaryTableUpdater source) {
     prepare12();
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr1 = deleteList[2 * i];
       int surr2 = deleteList[2 * i + 1];
       if (!Ints12.contains(insertList, insertCount, surr1, surr2))
-        if (source.contains12(flip ? surr2 : surr1, flip ? surr1 : surr2))
-          return false;
-    }
-
-    return true;
-  }
-
-  public boolean checkDeletedKeys_23(TernaryTableUpdater source, boolean flip) {
-    prepare12();
-
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr1 = deleteList[2 * i];
-      int surr2 = deleteList[2 * i + 1];
-      if (!Ints12.contains(insertList, insertCount, surr1, surr2))
-        if (source.contains23(flip ? surr2 : surr1, flip ? surr1 : surr2))
-          return false;
-    }
-
-    return true;
-  }
-
-  public boolean checkDeletedKeys_13(TernaryTableUpdater source, boolean flip) {
-    prepare12();
-
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr1 = deleteList[2 * i];
-      int surr2 = deleteList[2 * i + 1];
-      if (!Ints12.contains(insertList, insertCount, surr1, surr2))
-        if (source.contains13(flip ? surr2 : surr1, flip ? surr1 : surr2))
+        if (source.contains12(surr1, surr2))
           return false;
     }
 
@@ -392,62 +364,7 @@ class BinaryTableUpdater {
         return false;
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_12(this, false);
-  }
-
-  // bin_rel(a, b) -> ternary_rel(b, a, _)
-  public boolean checkForeignKeys_21(TernaryTableUpdater target) {
-    // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains12(insertList[2*i+1], insertList[2*i]))
-        return false;
-
-    // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_12(this, true);
-  }
-
-  // bin_rel(a, b) -> ternary_rel(a, _, b)
-  public boolean checkForeignKeys_13(TernaryTableUpdater target) {
-    // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains13(insertList[2*i], insertList[2*i+2]))
-        return false;
-
-    // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_13(this, false);
-  }
-
-  // bin_rel(a, b) -> ternary_rel(b, _, a)
-  public boolean checkForeignKeys_31(TernaryTableUpdater target) {
-    // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains13(insertList[2*i+2], insertList[2*i]))
-        return false;
-
-    // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_13(this, true);
-  }
-
-  // bin_rel(a, b) -> ternary_rel(_, a, b)
-  public boolean checkForeignKeys_23(TernaryTableUpdater target) {
-    // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains23(insertList[2*i+1], insertList[2*i+2]))
-        return false;
-
-    // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_23(this, false);
-  }
-
-  // bin_rel(a, b) -> ternary_rel(_, b, a)
-  public boolean checkForeignKeys_32(TernaryTableUpdater target) {
-    // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains23(insertList[2*i+2], insertList[2*i+1]))
-        return false;
-
-    // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_23(this, true);
+    return target.checkDeletedKeys_12(this);
   }
 
   //////////////////////////////////////////////////////////////////////////////

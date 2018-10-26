@@ -492,11 +492,28 @@ class TernaryTableUpdater {
   public boolean checkDeletedKeys_1(UnaryTableUpdater source) {
     prepare123();
 
-    for (int i=0 ; i < deleteCount ; i++) {
+    for (int i=0 ; i < deleteCount ; ) {
       int surr1 = deleteList[3 * i];
-      if (!Ints123.contains1(insertList, insertCount, surr1))
-        if (source.contains(surr1))
+      if (!Ints123.contains1(insertList, insertCount, surr1) && source.contains(surr1)) {
+        Miscellanea._assert(source.contains(surr1));
+        int surr2 = deleteList[3 * i + 1];
+        int surr3 = deleteList[3 * i + 2];
+        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
+        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 ; i++) {
+          int currSurr2 = deleteList[3 * i + 1];
+          int currSurr3 = deleteList[3 * i + 2];
+          if (currSurr2 != surr2 | currSurr3 != surr3) {
+            surr2 = currSurr2;
+            surr3 = currSurr3;
+            if (table.contains(surr1, surr2, surr3))
+              removedCount++;
+          }
+        }
+        if (table.count1Eq(surr1, removedCount))
           return false;
+      }
+      else
+        i++;
     }
     return true;
   }
@@ -504,11 +521,28 @@ class TernaryTableUpdater {
   public boolean checkDeletedKeys_2(UnaryTableUpdater source) {
     prepare231();
 
-    for (int i=0 ; i < deleteCount ; i++) {
+    for (int i=0 ; i < deleteCount ; ) {
       int surr2 = deleteList[3 * i + 1];
-      if (!Ints231.contains2(insertList, insertCount, surr2))
-        if (source.contains(surr2))
+      if (!Ints231.contains2(insertList, insertCount, surr2) && source.contains(surr2)) {
+        Miscellanea._assert(source.contains(surr2));
+        int surr1 = deleteList[3 * i];
+        int surr3 = deleteList[3 * i + 2];
+        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
+        for (i++ ; i < deleteCount && deleteList[3*i+1] == surr2 ; i++) {
+          int currSurr1 = deleteList[3 * i];
+          int currSurr3 = deleteList[3 * i + 2];
+          if (currSurr1 != surr1 | currSurr3 != surr3) {
+            surr1 = currSurr1;
+            surr3 = currSurr3;
+            if (table.contains(surr1, surr2, surr3))
+              removedCount++;
+          }
+        }
+        if (table.count2Eq(surr2, removedCount))
           return false;
+      }
+      else
+        i++;
     }
     return true;
   }
@@ -516,53 +550,56 @@ class TernaryTableUpdater {
   public boolean checkDeletedKeys_3(UnaryTableUpdater source) {
     prepare312();
 
-    for (int i=0 ; i < deleteCount ; i++) {
+    for (int i=0 ; i < deleteCount ; ) {
       int surr3 = deleteList[3 * i + 2];
-      if (!Ints312.contains3(insertList, insertCount, surr3))
-        if (source.contains(surr3))
+      if (!Ints312.contains3(insertList, insertCount, surr3) && source.contains(surr3)) {
+        Miscellanea._assert(source.contains(surr3));
+        int surr1 = deleteList[3 * i];
+        int surr2 = deleteList[3 * i + 1];
+        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
+        for (i++ ; i < deleteCount && deleteList[3*i+2] == surr3 ; i++) {
+          int currSurr1 = deleteList[3 * i];
+          int currSurr2 = deleteList[3 * i + 1];
+          if (currSurr1 != surr1 | currSurr2 != surr2) {
+            surr1 = currSurr1;
+            surr2 = currSurr2;
+            if (table.contains(surr1, surr2, surr3))
+              removedCount++;
+          }
+        }
+        if (table.count3Eq(surr3, removedCount))
           return false;
+      }
+      else
+        i++;
     }
+
     return true;
   }
 
-  public boolean checkDeletedKeys_12(BinaryTableUpdater source, boolean flip) {
+  public boolean checkDeletedKeys_12(BinaryTableUpdater source) {
     prepare123();
 
     for (int i=0 ; i < deleteCount ; i++) {
       int offset = 3 * i;
       int surr1 = deleteList[offset];
       int surr2 = deleteList[offset + 1];
-      if (!Ints123.contains12(insertList, insertCount, surr1, surr2))
-        if (source.contains(flip ? surr2 : surr1, flip ? surr1 : surr2))
+      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && source.contains(surr1, surr2)) {
+        int surr3 = deleteList[3 * i + 2];
+        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
+        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
+          int currSurr3 = deleteList[3 * i + 2];
+          if (currSurr3 != surr3) {
+            surr3 = currSurr3;
+            if (table.contains(surr1, surr2, surr3))
+              removedCount++;
+          }
+        }
+        if (table.count12Eq(surr1, surr2, removedCount))
           return false;
-    }
-    return true;
-  }
-
-  public boolean checkDeletedKeys_13(BinaryTableUpdater source, boolean flip) {
-    prepare312();
-
-    for (int i=0 ; i < deleteCount ; i++) {
-      int offset = 3 * i;
-      int surr1 = deleteList[offset];
-      int surr3 = deleteList[offset + 1];
-      if (!Ints312.contains13(insertList, insertCount, surr1, surr3))
-        if (source.contains(flip ? surr3 : surr1, flip ? surr1 : surr3))
-          return false;
-    }
-    return true;
-  }
-
-  public boolean checkDeletedKeys_23(BinaryTableUpdater source, boolean flip) {
-    prepare231();
-
-    for (int i=0 ; i < deleteCount ; i++) {
-      int offset = 3 * i;
-      int surr2 = deleteList[offset + 1];
-      int surr3 = deleteList[offset + 2];
-      if (!Ints231.contains23(insertList, insertCount, surr2, surr3))
-        if (source.contains(flip ? surr3 : surr2, flip ? surr2 : surr3))
-          return false;
+      }
+      else
+        i++;
     }
     return true;
   }
@@ -608,46 +645,6 @@ class TernaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i], insertList[3*i+1]))
         return false;
-    return target.checkDeletedKeys_12(this, false);
-  }
-
-  // tern_rel(b, a, _) -> binary_rel(a, b)
-  public boolean checkForeignKeys_21(BinaryTableUpdater target) {
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertList[3*i+1], insertList[3*i]))
-        return false;
-    return target.checkDeletedKeys_12(this, true);
-  }
-
-  // tern_rel(a, _, b) -> binary_rel(a, b)
-  public boolean checkForeignKeys_13(BinaryTableUpdater target) {
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertList[3*i], insertList[3*i+2]))
-        return false;
-    return target.checkDeletedKeys_13(this, false);
-  }
-
-  // tern_rel(b, _, a) -> binary_rel(a, b)
-  public boolean checkForeignKeys_31(BinaryTableUpdater target) {
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertList[3*i+2], insertList[3*i]))
-        return false;
-    return target.checkDeletedKeys_13(this, true);
-  }
-
-  // tern_rel(_, a, b) -> binary_rel(a, b)
-  public boolean checkForeignKeys_23(BinaryTableUpdater target) {
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertList[3*i+1], insertList[3*i+2]))
-        return false;
-    return target.checkDeletedKeys_23(this, false);
-  }
-
-  // tern_rel(_, b, a) -> binary_rel(a, b)
-  public boolean checkForeignKeys_32(BinaryTableUpdater target) {
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertList[3*i+2], insertList[3*i+1]))
-        return false;
-    return target.checkDeletedKeys_23(this, true);
+    return target.checkDeletedKeys_12(this);
   }
 }
