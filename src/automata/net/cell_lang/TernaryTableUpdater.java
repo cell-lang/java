@@ -580,7 +580,7 @@ class TernaryTableUpdater {
   public boolean checkDeletedKeys_12(BinaryTableUpdater source) {
     prepare123();
 
-    for (int i=0 ; i < deleteCount ; i++) {
+    for (int i=0 ; i < deleteCount ; ) {
       int offset = 3 * i;
       int surr1 = deleteList[offset];
       int surr2 = deleteList[offset + 1];
