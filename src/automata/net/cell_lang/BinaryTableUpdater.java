@@ -200,7 +200,7 @@ class BinaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKeys_1() {
+  public boolean checkKey_1() {
     if (insertCount == 0)
       return true;
 
@@ -226,12 +226,9 @@ class BinaryTableUpdater {
     return true;
   }
 
-  public boolean checkKeys_1_2() {
+  public boolean checkKey_2() {
     if (insertCount == 0)
       return true;
-
-    if (!checkKeys_1())
-      return false;
 
     prepare21();
 

@@ -359,12 +359,11 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKeys_12() {
+  public boolean checkKey_12() {
     if (insertCount == 0)
       return true;
 
-    Ints123.sort(deleteList, deleteCount);
-    Ints123.sort(insertList, insertCount);
+    prepare123();
 
     int prevField1 = -1;
     int prevField2 = -1;
@@ -389,15 +388,11 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkKeys_12_3() {
+  public boolean checkKey_3() {
     if (insertCount == 0)
       return true;
 
-    if (!checkKeys_12())
-      return false;
-
-    Ints312.sort(deleteList, deleteCount);
-    Ints312.sort(insertList, insertCount);
+    prepare312();
 
     int prevField1 = -1;
     int prevField2 = -1;
@@ -422,15 +417,11 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkKeys_12_23() {
+  public boolean checkKey_23() {
     if (insertCount == 0)
       return true;
 
-    if (!checkKeys_12())
-      return false;
-
-    Ints231.sort(deleteList, deleteCount);
-    Ints231.sort(insertList, insertCount);
+    prepare231();
 
     int prevField1 = -1;
     int prevField2 = -1;
@@ -455,15 +446,11 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkKeys_12_23_31() {
+  public boolean checkKey_13() {
     if (insertCount == 0)
       return true;
 
-    if (!checkKeys_12_23())
-      return false;
-
-    Ints312.sort(deleteList, deleteCount);
-    Ints312.sort(insertList, insertCount);
+    prepare312();
 
     int prevField1 = -1;
     int prevField2 = -1;

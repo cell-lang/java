@@ -181,43 +181,48 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String* updates_check_code(StaticBlock block) {
-    tables_check_code = isort([
-      "ok &= " & native_method_call(pending_updates_var_ref_name(v), fn_names[arity(t)][t.keys], ())
-      : v, t <- block.tables, t.keys != []
-    ]);
-
-    foreign_keys = sort_by_key(block.foreign_keys, foreign_key_order);
-    foreign_keys_check_code = ({
-      origin = pending_updates_var_ref_name(k.origin);
-      target = pending_updates_var_ref_name(k.target);
-      method = foreign_key_check_method_name(k.type);
-      return "ok &= " & native_method_call(origin, method, (target));
-    } : k <- foreign_keys);
+    keys = [(v, arity(t), k) : v, t <- block.tables, k <- t.keys];
+    all_keys = sort_by_key(keys & block.foreign_keys, order);
+    all_keys_check_code = (check_code(k) : k <- all_keys);
 
     nested_blocks_check_code = isort([
       "ok &= " & native_method_call(v, updates_check_proc_name(t), (aux_struct_var_ref_name(v)))
       : v, t <- block.nested_blocks
     ]);
 
-    body = ("boolean ok = true;") & tables_check_code & foreign_keys_check_code &
-           nested_blocks_check_code & ("return ok;");
+    body = ("boolean ok = true;") & all_keys_check_code & nested_blocks_check_code & ("return ok;");
 
     sgn = "public boolean " & updates_check_proc_name(block.name) &  "(" & aux_struct_c_name(block.name) & " updater) {";
     return (sgn) & indent_lines(body) & ("}");
 
 
-    [NzNat -> [[[+Nat]] -> String]] fn_names = [
-      2 -> [
-        [[0]]                     -> "checkKeys_1",
-        [[1]]                     -> "checkKeys_2",
-        [[0], [1]]                -> "checkKeys_1_2"
-      ],
-      3 -> [
-        [[0, 1]]                  -> "checkKeys_12",
-        [[0, 1], [2]]             -> "checkKeys_12_3",
-        [[0, 1], [1, 2]]          -> "checkKeys_12_23",
-        [[0, 1], [1, 2], [2, 0]]  -> "checkKeys_12_23_31"
-      ]
+    String check_code((RelVar, NzNat, [+Nat]) key) {
+      var, arity, args = key;
+      var_name = pending_updates_var_ref_name(var);
+      method_name = key_check_method_name(arity, args);
+      return "ok &= " & native_method_call(var_name, method_name, ());
+    }
+
+
+    String check_code(BlockForeignKey key) {
+      origin = pending_updates_var_ref_name(key.origin);
+      target = pending_updates_var_ref_name(key.target);
+      method = foreign_key_check_method_name(key.type);
+      return "ok &= " & native_method_call(origin, method, (target));
+    }
+
+
+    String key_check_method_name(NzNat arity, [+Nat] key) =
+      "checkKey_" & key_check_method_suffixes(arity, key, !!);
+
+
+    [NzNat, [+Nat], String] key_check_method_suffixes = [
+      2,  [0],    "1";
+      2,  [1],    "2";
+      3,  [2],    "3";
+      3,  [0, 1], "12";
+      3,  [1, 2], "23";
+      3,  [0, 2], "13"
     ];
 
 
@@ -231,6 +236,22 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
       ternary_unary(i?)       = "checkForeignKeys_" & printed(i+1),
       ternary_binary          = "checkForeignKeys_12";
+
+
+    Nat order((RelVar, NzNat, [+Nat]) key) {
+      unused_var, arity, args = key;
+      return key_check_orders(arity, args, !!);
+    }
+
+
+    [NzNat, [+Nat], Nat] key_check_orders = [
+      2,  [0],      0;
+      3,  [0, 1],   0;
+      2,  [1],      1;
+      3,  [1, 2],   1;
+      3,  [2],      2;
+      3,  [0, 2],   2
+    ];
 
     // unary(a) -> unary(a)                      -/-
     // unary(a) -> binary(a, _)                  -/12
@@ -248,16 +269,17 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     // unary(c) -> ternary(_, _, c)              -/312
     // ternary(_, _, c) -> unary(c)              312/-
 
-    Nat foreign_key_order(ForeignKeyType) =
-      unary_unary             = 0,
-      unary_binary(i?)        = i,
-      unary_ternary(i?)       = i,
+    Nat order(BlockForeignKey key) =
+      match (key.type)
+        unary_unary             = 0,
+        unary_binary(i?)        = i,
+        unary_ternary(i?)       = i,
 
-      binary_unary(i?)        = i,
-      binary_ternary          = 0,
+        binary_unary(i?)        = i,
+        binary_ternary          = 0,
 
-      ternary_unary(i?)       = i,
-      ternary_binary          = 0;
+        ternary_unary(i?)       = i,
+        ternary_binary          = 0;
   }
 
 
