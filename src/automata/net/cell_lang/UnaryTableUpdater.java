@@ -28,6 +28,7 @@ class UnaryTableUpdater {
 
   public void clear() {
     clear = true;
+    deleteCount = 0;
   }
 
   public void set(Obj value) {
@@ -48,7 +49,7 @@ class UnaryTableUpdater {
   }
 
   public void delete(long value) {
-    if (table.contains((int) value))
+    if (!clear || table.contains((int) value))
       deleteList = Miscellanea.arrayAppend(deleteList, deleteCount++, (int) value);
   }
 
@@ -136,7 +137,7 @@ class UnaryTableUpdater {
     if (Arrays.binarySearch(insertList, 0, insertCount, surr) >= 0)
       return true;
 
-    if (Arrays.binarySearch(deleteList, 0, deleteCount, surr) >= 0)
+    if (clear || Arrays.binarySearch(deleteList, 0, deleteCount, surr) >= 0)
       return false;
 
     return table.contains(surr);
@@ -147,11 +148,23 @@ class UnaryTableUpdater {
   public boolean checkDeletedKeys(UnaryTableUpdater source) {
     prepare();
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-        if (source.contains(surr))
-          return false;
+    if (clear) {
+      UnaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int surr = it.get();
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains(surr))
+            return false;
+        it.next();
+      }
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains(surr))
+            return false;
+      }
     }
 
     return true;
@@ -160,11 +173,23 @@ class UnaryTableUpdater {
   public boolean checkDeletedKeys_1(BinaryTableUpdater source) {
     prepare();
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-        if (source.contains1(surr))
-          return false;
+    if (clear) {
+      UnaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int surr = it.get();
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains1(surr))
+            return false;
+        it.next();
+      }
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains1(surr))
+            return false;
+      }
     }
 
     return true;
@@ -173,11 +198,23 @@ class UnaryTableUpdater {
   public boolean checkDeletedKeys_2(BinaryTableUpdater source) {
     prepare();
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-        if (source.contains2(surr))
-          return false;
+    if (clear) {
+      UnaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int surr = it.get();
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains2(surr))
+            return false;
+        it.next();
+      }
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains2(surr))
+            return false;
+      }
     }
 
     return true;
@@ -186,11 +223,23 @@ class UnaryTableUpdater {
   public boolean checkDeletedKeys_1(TernaryTableUpdater source) {
     prepare();
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-        if (source.contains1(surr))
-          return false;
+    if (clear) {
+      UnaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int surr = it.get();
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains1(surr))
+            return false;
+        it.next();
+      }
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains1(surr))
+            return false;
+      }
     }
 
     return true;
@@ -199,11 +248,23 @@ class UnaryTableUpdater {
   public boolean checkDeletedKeys_2(TernaryTableUpdater source) {
     prepare();
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-        if (source.contains2(surr))
-          return false;
+    if (clear) {
+      UnaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int surr = it.get();
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains2(surr))
+            return false;
+        it.next();
+      }
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains2(surr))
+            return false;
+      }
     }
 
     return true;
@@ -212,11 +273,23 @@ class UnaryTableUpdater {
   public boolean checkDeletedKeys_3(TernaryTableUpdater source) {
     prepare();
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr = deleteList[i];
-      if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-        if (source.contains3(surr))
-          return false;
+    if (clear) {
+      UnaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int surr = it.get();
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains3(surr))
+            return false;
+        it.next();
+      }
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          if (source.contains3(surr))
+            return false;
+      }
     }
 
     return true;
