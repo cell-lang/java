@@ -186,7 +186,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       : v, t <- block.tables, t.keys != []
     ]);
 
-    foreign_keys = isort(block.foreign_keys);
+    foreign_keys = sort_by_key(block.foreign_keys, foreign_key_order);
     foreign_keys_check_code = ({
       origin = pending_updates_var_ref_name(k.origin);
       target = pending_updates_var_ref_name(k.target);
@@ -227,10 +227,37 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       unary_ternary(i?)       = "checkForeignKeys_" & printed(i+1),
 
       binary_unary(i?)        = "checkForeignKeys_" & printed(i+1),
-      binary_ternary(i?, j?)  = "checkForeignKeys_" & printed(i+1) & printed(j+1),
+      binary_ternary          = "checkForeignKeys_12",
 
       ternary_unary(i?)       = "checkForeignKeys_" & printed(i+1),
-      ternary_binary(j?, i?)  = "checkForeignKeys_" & printed(i+1) & printed(j+1);
+      ternary_binary          = "checkForeignKeys_12";
+
+    // unary(a) -> unary(a)                      -/-
+    // unary(a) -> binary(a, _)                  -/12
+    // unary(a) -> ternary(a, _, _)              -/123
+    // binary(a, _) -> unary(a)                  12/-
+    // ternary(a, _, _) -> unary(a)              123/-
+    // ternary(a, b, _) -> binary(a, b)          123/12*
+    // binary(a, b) -> ternary(a, b, _)          12*/123
+
+    // unary(b) -> binary(_, b)                  -/21
+    // binary(_, b) -> unary(b)                  21/-
+    // unary(b) -> ternary(_, b, _)              -/231
+    // ternary(_, b, _) -> unary(b)              231/-
+
+    // unary(c) -> ternary(_, _, c)              -/312
+    // ternary(_, _, c) -> unary(c)              312/-
+
+    Nat foreign_key_order(ForeignKeyType) =
+      unary_unary             = 0,
+      unary_binary(i?)        = i,
+      unary_ternary(i?)       = i,
+
+      binary_unary(i?)        = i,
+      binary_ternary          = 0,
+
+      ternary_unary(i?)       = i,
+      ternary_binary          = 0;
   }
 
 

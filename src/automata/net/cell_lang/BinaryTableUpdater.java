@@ -116,6 +116,7 @@ class BinaryTableUpdater {
   }
 
   public void prepare12() {
+    Miscellanea._assert(currOrd != Ord.ORD_21);
     if (currOrd != Ord.ORD_12) {
       Ints12.sort(deleteList, deleteCount);
       Ints12.sort(insertList, insertCount);
