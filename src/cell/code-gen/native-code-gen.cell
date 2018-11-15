@@ -440,7 +440,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 ////////////////////////////////////////////////////////////////////////////////
 
 type EncodInst  = blank_obj, ObjExpr, ElemVar, PendingInputVar, VecVar, ArrayVar, BoolExpr, IntExpr,
-                  Int32Expr, FloatExpr, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId,
+                  Int32Expr, FloatExpr, ItVar, StreamVar, AnyClsVar, AnyTableVar, AnyValueStoreId,
                   AnyAutoVar, AnyDBVar;
 
 

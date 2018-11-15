@@ -156,4 +156,13 @@ class OneWayBinTable {
     Miscellanea._assert(next == 2 * count);
     return res;
   }
+
+  public boolean isMap() {
+    for (int i=0 ; i < column.length ; i++) {
+      int code = column[i];
+      if (code != OverflowTable.EmptyMarker & code >> 29 != 0)
+        return false;
+    }
+    return true;
+  }
 }

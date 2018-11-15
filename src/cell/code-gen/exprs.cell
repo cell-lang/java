@@ -87,7 +87,7 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
     has_field()           = native_expr(expr.record) & ".hasField(" & symb_idx_name(expr.field) & ")",
 
     contains()            = native_contains_expr(expr.coll, expr.entry),
-    table_contains()      = native_method_call_expr(expr.table, "contains", ("(int) (" & native_expr(a) & ")" : a <- expr.tuple)),
+    table_contains()      = native_table_contains(expr.table, expr.tuple),
 
     is_member()           = native_fn_name(expr.pred) & "(" & native_expr(expr.obj) & ")",
     state_is_def()        = native_var_ref_name(expr.auto_var) & "." & state_is_def_proc_name(expr.type) & "()",
@@ -99,6 +99,16 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
     or(es?)               = native_nary_op(" | ",  es, parenthesized),
     and_then(es?)         = native_nary_op(" && ", es, parenthesized),
     or_else(es?)          = native_nary_op(" || ", es, parenthesized);
+}
+
+
+String native_table_contains(AnyTableVar table, Maybe[Int32Var]+ tuple) {
+  name = "contains";
+  if (a <~ tuple : a == nothing):
+    name = name & append((printed(i+1) : a @ i <- tuple, a != nothing));
+  ;
+  return native_method_call_expr(table, name, (native_expr(value(a)) : a <- tuple, a != nothing));
+
 }
 
 
@@ -194,11 +204,6 @@ String native_expr(IntNatOp expr, Bool parenthesized) =
   mantissa(e?)          = "Miscellanea.mantissa(" & native_expr(e) & ")",
   dec_exp(e?)           = "Miscellanea.decimalExponent(" & native_expr(e) & ")",
   rand_nat(e?)          = "Miscellanea.randNat(" & native_expr(e) & ")",
-  lookup_value()        = native_method_call_expr(expr.store, "lookupValue", (expr.value)),
-  lookup_value_ex()     = native_method_call_expr(aux_struct_var_ref_name(expr.store), "lookupValueEx", (expr.value)),
-  get_tuple_field()     = if expr.iter.arity == 1
-                            then native_var_ref_name(expr.iter) & ".get()"
-                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.field+1) & "()",
   unique_nat            = "Miscellanea.uniqueNat()",
   ticks                 = "Miscellanea.getTickCount()";
 
@@ -218,7 +223,12 @@ String native_expr(Int32NatOp expr, Bool parenthesized) =
   bool_to_bit(e?)       = "(" & native_expr(e, false) & " ? 1 : 0)",
   get_size(e?)          = native_expr(e) & ".getSize()",
   cast_int32(e?)        = "((int) " & native_expr(e, true) & ")",
-  add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized);
+  add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized),
+  lookup_value()        = native_method_call_expr(expr.store, "lookupValue", (expr.value)),
+  lookup_value_ex()     = native_method_call_expr(aux_struct_var_ref_name(expr.store), "lookupValueEx", (expr.value)),
+  get_tuple_field()     = if expr.iter.arity == 1
+                            then native_var_ref_name(expr.iter) & ".get()"
+                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.field+1) & "()";
 
 
 String native_expr(FloatExpr expr) = native_expr(expr, false);
@@ -262,7 +272,7 @@ String native_expr(OptTagRecExpr expr) =
                           };
 
 String native_expr(
-  <ElemVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId, AnyAutoVar, AnyDBVar> var
+  <ElemVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar, AnyTableVar, AnyValueStoreId, AnyAutoVar, AnyDBVar> var
 ) = native_var_ref_name(var);
 
 String native_expr(<blank_obj>) = "BlankObj.singleton";

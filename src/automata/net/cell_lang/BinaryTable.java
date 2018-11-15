@@ -167,4 +167,22 @@ class BinaryTable {
   public int[] rawCopy() {
     return table1.copy();
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean col1IsKey() {
+    return table1.isMap();
+  }
+
+  public boolean col2IsKey() {
+    if (table2.count == 0 & table1.count > 0)
+      table2.initReverse(table1);
+    return table2.isMap();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static Obj copy(BinaryTable[] tables, boolean flipped) {
+    throw new RuntimeException();
+  }
 }

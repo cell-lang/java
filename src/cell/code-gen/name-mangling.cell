@@ -57,27 +57,32 @@ String symb_idx_name(SymbObj symb) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String native_var_decl_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v) = native_var_name(v, false);
-String native_var_ref_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v)  = native_var_name(v, true);
+type QualifiableVars    = ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar,
+                          AnyAutoVar, AnyDBVar, AnyTableVar, AnyValueStoreId;
 
-String native_var_decl_name(<OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v) = native_var_name(v);
-String native_var_ref_name(<OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v)  = native_var_name(v);
+type UnqualifiableVars  = OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar;
+
+String native_var_decl_name(QualifiableVars v) = native_var_name(v, false);
+String native_var_ref_name(QualifiableVars v)  = native_var_name(v, true);
+
+String native_var_decl_name(UnqualifiableVars v) = native_var_name(v);
+String native_var_ref_name(UnqualifiableVars v)  = native_var_name(v);
 
 /////////////////////////////////////////////////////////////////////////////////////
 
 String native_var_decl_name(MembIntVectVar v) =
-  nodes_to_update_vect_var()  = "nodes_to_update_" & printed(v.level),
+  nodes_to_update_vect_var()  = "nodes_to_update" & printed(v.level),
   changed_outputs()           = "changed_outputs";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-String native_var_name(VecVar v)          = "vec_" & printed(v.id);
+String native_var_name(VecVar v)          = "vec" & printed(v.id);
 String native_var_name(ArrayVar var)      = "y" & printed(var.id) & "_" & native_type(var.repr);
-String native_var_name(SeqItVar v)        = "seq_it_" & printed(bare_id_2(v));
-String native_var_name(SetItVar v)        = "set_it_" & printed(bare_id_2(v));
-String native_var_name(BinRelItVar v)     = "bin_rel_it_" & printed(bare_id_2(v));
-String native_var_name(TernRelItVar v)    = "tern_rel_it_" & printed(bare_id_2(v));
-String native_var_name(StreamVar v)       = "stream_" & printed(bare_id_2(v));
+String native_var_name(SeqItVar v)        = "seqIt" & printed(bare_id_2(v));
+String native_var_name(SetItVar v)        = "setIt" & printed(bare_id_2(v));
+String native_var_name(BinRelItVar v)     = "binRelIt" & printed(bare_id_2(v));
+String native_var_name(TernRelItVar v)    = "ternRelIt" & printed(bare_id_2(v));
+String native_var_name(StreamVar v)       = "stream" & printed(bare_id_2(v));
 
 String native_var_name(TableItVar v) {
   prefix = match (v.arity)
@@ -85,7 +90,7 @@ String native_var_name(TableItVar v) {
     2   = "bin",
     3   = "tern";
 
-  return prefix & "_table_it_" & printed(v.id);
+  return prefix & "TableIt" & printed(v.id);
 }
 
 String native_var_name(AnyClsVar v) =
@@ -122,7 +127,7 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
     prev_var_value(v?)            = prefix & ad_hoc_var_name(v) & "d",
     pending_state_var(a?)         = prefix & _print_(a) & "_Mp",
     lvar(<*..*> n?)               = "v" & printed(n),
-    evar()                        = "vec_" & printed(var.id) & "[(int)(" & native_idx_expr(var.idx) & ")]",
+    evar()                        = "vec" & printed(var.id) & "[(int)(" & native_idx_expr(var.idx) & ")]",
     pending_input_var(<+> a?)     = prefix & _print_(a) & "_Sp";
 
 
@@ -207,17 +212,22 @@ String native_var_name(AnyAutoVar v, Bool add_prefix) =
 String native_var_name(AnyDBVar v, Bool add_prefix) =
   loc_db_var(a?)    = _print_(a) & "_T",
   nested_db_var(a?) = {if add_prefix then "this." else ""} & _print_(a) & "_T",
-  linked_db_var(n?) = "(*" & {if add_prefix then "this." else ""} & "linked_auto_" & printed(n) & ")",
+  linked_db_var(n?) = "(*" & {if add_prefix then "this." else ""} & "linkedAuto" & printed(n) & ")",
   qual_db_var()     = native_var_name(v.outer, add_prefix) & "." & native_var_name(v.inner, false);
 
+// ## TODO: REMOVE THIS WHEN DONE
+// String native_var_name(QualRelVar v, Bool add_prefix) =
+//   native_var_name(v.db_var, add_prefix) & "." & native_var_name(v.rel_var, false);
 
-String native_var_name(AnyRelVar v, Bool add_prefix) =
-  rel_var(a?)     = {if add_prefix then "this." else ""} & _print_(a) & "_B",
-  qual_rel_var()  = native_var_name(v.db_var, add_prefix) & "." & native_var_name(v.rel_var, false);
+
+String native_var_name(AnyTableVar var, Bool add_prefix) =
+  table_var(a?)             = {if add_prefix then "this." else ""} & _print_(a) & "_B",
+  unique_table_var(a?, id?) = {if add_prefix then "this." else ""} & _print_(a) & "_B" & printed(id),
+  qual_table_var()  = native_var_name(var.db_var, add_prefix) & "." & native_var_name(var.table_var, false);
 
 
 String native_var_name(AnyValueStoreId v, Bool add_prefix) =
-  value_store_id(n?)      = {if add_prefix then "this." else ""} & "value_store_" & printed(n),
+  value_store_id(n?)      = {if add_prefix then "this." else ""} & "valueStore" & printed(n),
   nested_value_store_id() = { assert add_prefix;
                               db_var_str = native_var_name(v.db_var, true);
                               return db_var_str & "." & native_var_name(v.store_id, false);
@@ -232,10 +242,11 @@ String native_idx_expr(<add(val1: IntVar, val2: Nat)> e)  = native_var_ref_name(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String pending_updates_var_decl_name(RelVar rel_var) =
-  rel_var(a?) = _print_(a) & "_Bp";
+String pending_updates_var_decl_name(TableVar rel_var) =
+  table_var(a?)             = _print_(a) & "_Bp",
+  unique_table_var(a?, n?)  = _print_(a) & "_B" & printed(n) & "p";
 
-String pending_updates_var_ref_name(RelVar rel_var) = "updater." & pending_updates_var_decl_name(rel_var);
+String pending_updates_var_ref_name(TableVar table_var) = "updater." & pending_updates_var_decl_name(table_var);
 
 String aux_struct_var_decl_name(<LocDBVar, NestedDBVar> db_var) = native_var_decl_name(db_var) & "x";
 
@@ -244,7 +255,7 @@ String aux_struct_var_ref_name(LocDBVar db_var) = aux_struct_var_decl_name(db_va
 String aux_struct_var_ref_name(NestedDBVar db_var) = "updater." & aux_struct_var_decl_name(db_var);
 
 String aux_struct_var_decl_name(ValueStoreId vs) =
-  value_store_id(n?)  = "value_store_aux_" & printed(n);
+  value_store_id(n?)  = "valueStoreUpdater" & printed(n);
 
 String aux_struct_var_ref_name(ValueStoreId vs) = "updater." & aux_struct_var_decl_name(vs);
 
@@ -366,8 +377,8 @@ String native_name(MethodId meth_id) {
 }
 
 String native_name(UpdateId id) =
-  main_handler    = "msg_handler",
-  handler_id(n?)  = "msg_handler_" & uppercase_encoding(n),
+  main_handler    = "msgHandler",
+  handler_id(n?)  = "msgHandler_" & uppercase_encoding(n),
   update_id()     = { id_str = if id.id? then uppercase_encoding(id.id) else "";
                       return _print_(bare_id(id.symbol)) & "_U" & printed(id.arity) & id_str;
                     };
@@ -379,13 +390,14 @@ String native_name(UpdateId id) =
 
 String copy_state_proc_name         (DBSymbol db_type) = "copyState";
 String set_state_proc_name          (DBSymbol db_type) = "setState";
-String set_state_entry_point_name   (DBSymbol db_type) = "setStateEntryPoint";
+String reconstruct_proc_name        (DBSymbol db_type) = "reconstruct";
 String updater_creation_proc_name   (DBSymbol db_type) = "newUpdater";
 String updater_reset_proc_name      (DBSymbol db_type) = "resetUpdater";
 String updates_copy_proc_name       (DBSymbol db_type) = "copy";
 String updates_apply_proc_name      (DBSymbol db_type) = "apply";
 String updates_finish_proc_name     (DBSymbol db_type) = "finish";
 String updates_check_proc_name      (DBSymbol db_type) = "check";
+String full_check_proc_name         (DBSymbol db_type) = "fullCheck";
 String update_entry_point_name      (DBSymbol db_type) = "updateEntryPoint";
 String init_method_name             (DBSymbol db_type) = "init";
 String cleanup_method_name          (DBSymbol db_type) = "cleanup";

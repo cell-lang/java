@@ -14,12 +14,13 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     copy_state_code = native_copy_state_code(block.name, block.copy_state_code);
     set_state_code = native_set_state_code(block.name, block.set_state_code);
 
-    set_state_entry_point_code = set_state_entry_point(block.name);
+    reconstruct_method_code = reconstruct_method_code(block.name);
 
     update_entry_point_code = if block.updates(main_handler, *)
       then update_entry_point(block.name)
       else ();
 
+    full_check_code = full_check_method_code(block);
     update_check_code = updates_check_code(block);
     update_apply_code = updates_apply_code(block);
     update_finish_code = updates_finish_code(block);
@@ -40,8 +41,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (""), indent_lines(ctor_code),
       (""), indent_lines(copy_state_code),
       (""), indent_lines(set_state_code),
-      (""), indent_lines(set_state_entry_point_code),
+      (""), indent_lines(reconstruct_method_code),
       (""), indent_lines(update_entry_point_code),
+      (""), indent_lines(full_check_code),
       (""), indent_lines(update_check_code),
       (""), indent_lines(update_apply_code),
       (""), indent_lines(update_finish_code),
@@ -76,7 +78,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* native_ctor_code(DBSymbol name, DBSymbol* links, [RelVar -> Table] tables, Instr* init_code) {
+  String* native_ctor_code(DBSymbol name, DBSymbol* links, [TableVar -> Table] tables, Instr* init_code) {
     links_init_code = ("this.linkedAuto" & printed(i) & " = linkedAuto" & printed(i) & ";" : i < |links|);
     tables_init_code = ({
         arg_list = append((native_var_decl_name(vs) : vs <- t.value_stores), ", ");
@@ -114,7 +116,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     vars_decls = gen_vars_decls(code, []);
     //body = vars_decls & ("" if vars_decls != (), aux_struct_init_call) & native_code(code, nothing);
     body = vars_decls & native_code(code, nothing);
-    sgn = "public void " & set_state_proc_name(name) & "(Obj a0, " & aux_struct_c_name(name) & " updater) {";
+    sgn = "public void " & set_state_proc_name(name) & "(Obj a0) {";
     return (sgn) & indent_lines(body) & ("}");
   }
 
@@ -152,31 +154,58 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* set_state_entry_point(DBSymbol block_name) {
-    set_state_call = native_method_call("this", set_state_proc_name(block_name), (fn_arg(0), "updater"));
-    updates_check_call = native_method_call("this", updates_check_proc_name(block_name), ("updater"));
-    updates_apply_call = native_method_call("this", updates_apply_proc_name(block_name), ("updater"));
-    updates_finish_call = native_method_call("this", updates_finish_proc_name(block_name), ("updater"));
-    updater_reset_call = native_method_call("this", updater_reset_proc_name(block_name), ("updater"));
+  String* reconstruct_method_code(DBSymbol block_name) {
+    meth_name = reconstruct_proc_name(block_name);
+    class_name = native_name(block_name);
 
     body = (
-      //aux_var_decl,
-      //aux_struct_init_call,
-      set_state_call,
-      "boolean ok = " & updates_check_call,
-      "if (ok) {",
-      //"  " & updates_copy_call,
-      "  " & updates_apply_call,
-      "  " & updates_finish_call,
-      "}",
-      updater_reset_call,
-      "return ok;"
+      class_name & " instance = new " & class_name & "(env);",
+      "instance." & set_state_proc_name(block_name) & "(state);",
+      "boolean ok = instance." & full_check_proc_name(block_name) & "();",
+      "return ok ? instance : null;"
     );
 
-    name = set_state_entry_point_name(block_name);
-    updater_type = aux_struct_c_name(block_name);
-    sgn = "public boolean " & name & "(Obj a0, " & updater_type & " updater) {";
+    sgn = "public static " & class_name & " " & meth_name & "(Obj state, Env env) {";
     return (sgn) & indent_lines(body) & ("}");
+  }
+
+
+  String* full_check_method_code(StaticBlock block) {
+    nested_blocks_check_code = join(((
+      "if (!" & native_var_ref_name(v) & "." & full_check_proc_name(block.nested_blocks(v)) & "())",
+      "  return false;"
+    ) : v <- isort(keys(block.nested_blocks))));
+
+    keys = [(v, arity(t), k) : v, t <- block.tables, k <- t.keys];
+    ord_keys = sort_by_key(keys, $(1));
+    keys_check_code = join(({
+      method_name = key_check_method_names((a, k), !!);
+      return (
+        "if (!" & native_var_ref_name(v) & "." & method_name & "())",
+        "  return false;"
+      );
+    } : v, a, k <- ord_keys));
+
+    foreign_keys_check_code = native_code(block.foreign_keys_check_code, nothing);
+    vars_decls = gen_vars_decls(block.foreign_keys_check_code, []);
+
+    sections = (vars_decls, keys_check_code, foreign_keys_check_code,
+      nested_blocks_check_code, ("return true;"));
+    sections = (s : s <- sections, s != ());
+    body = join(intermix(sections, ("")));
+
+    sgn = "public boolean " & full_check_proc_name(block.name) & "() {";
+    return (sgn) & indent_lines(body) & ("}");
+
+
+    [(NzNat, [+Nat]) -> String] key_check_method_names = [
+      (2, [0])    -> "col1IsKey",
+      (2, [1])    -> "col2IsKey",
+      (3, [2])    -> "col3IsKey",
+      (3, [0, 1]) -> "cols12AreKey",
+      (3, [0, 2]) -> "cols13AreKey",
+      (3, [1, 2]) -> "cols23AreKey"
+    ];
   }
 
 
@@ -196,7 +225,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     return (sgn) & indent_lines(body) & ("}");
 
 
-    String check_code((RelVar, NzNat, [+Nat]) key) {
+    String check_code((TableVar, NzNat, [+Nat]) key) {
       var, arity, args = key;
       var_name = pending_updates_var_ref_name(var);
       method_name = key_check_method_name(arity, args);
@@ -238,7 +267,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       ternary_binary          = "checkForeignKeys_12";
 
 
-    Nat order((RelVar, NzNat, [+Nat]) key) {
+    Nat order((TableVar, NzNat, [+Nat]) key) {
       unused_var, arity, args = key;
       return key_check_orders(arity, args, !!);
     }

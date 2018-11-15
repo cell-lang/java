@@ -29,6 +29,15 @@ class ValueStore extends ValueStoreBase {
     }
   }
 
+  public int insertOrAddRef(Obj value) {
+    int surr = lookupValue(value);
+    if (surr != -1) {
+      addRef(surr);
+      return surr;
+    }
+    throw new RuntimeException();
+  }
+
   public void insert(Obj value, int hashcode, int index) {
     Miscellanea._assert(firstFreeIdx == index);
     Miscellanea._assert(nextFreeIdx[index] != -1);

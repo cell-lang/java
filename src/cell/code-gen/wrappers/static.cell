@@ -1,3 +1,7 @@
+## FAKED FAKED FAKED
+String native_var_decl_name(RelVar) = rel_var(s?) = _print_(s) & "_B";
+
+
 implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol {
   String external_name(<MembVar, RelVar, MethodSymbol> member) =
     append((sentence_case(bare_id(x)) : x <- (db_var_chain | member)), "_");
@@ -377,7 +381,7 @@ implicit
     state_var_accessors_code, state_var_accessors_docs = (join(ls) : ls <- unzip(state_var_accessors));
     state_var_accessors_docs = ("") & state_var_accessors_docs if state_var_accessors_docs != ();
 
-    table_accessors = isort([table_accessors(v, t) : v, t <- block.tables]);
+    table_accessors = (); ## isort([table_accessors(v, t) : v, t <- block.tables]);
     table_accessors_code, table_accessors_docs = (join(ls) : ls <- unzip(table_accessors));
 
     methods_wrappers = isort([db_method_wrapper(id, m) : id, m <- block.methods]);
@@ -404,7 +408,7 @@ implicit
 implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol {
   (String, Nat)* pretty_names(StaticBlock block, [DBSymbol -> StaticBlock] blocks) {
     state_vars_names = ((pretty_name(v), 0) : v, unused_var <- isort(block.state_vars));
-    relvars_names = ((pretty_name(v), arity(t)) : v, t <- isort(block.tables));
+    relvars_names = (); ## ((pretty_name(v), arity(t)) : v, t <- isort(block.tables));
     methods_names = (
       (pretty_name(id.symbol), id.arity) : id, unused_var <- isort(block.methods), not id.id?
     );
@@ -472,9 +476,11 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "    Obj obj = Conversions.convertText(text);",
       "    if (!Generated." & native_fn_name(root_block.state_memb_pred) & "(obj))",
       "      throw new RuntimeException(\"Invalid state\");",
-      "    boolean " & native_method_call("ok", "automaton", set_state_entry_point_name(root_block.name), ("obj", "updater")),
-      "    if (!ok)",
+      "    Generated." & db_name & " instance = Generated." & db_name & ".reconstruct(obj, env);",
+      "    if (instance == null)",
       "      throw new RuntimeException(\"Invalid state\");",
+      "    automaton = instance;",
+      "    updater = automaton.newUpdater();",
       "  }"
     );
 
