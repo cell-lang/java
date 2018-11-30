@@ -25,6 +25,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     init_memb_var()       = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
     reset_memb_var()      = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
     clear_loc_var(v?)     = (native_var_ref_name(v) & " = NullObj.singleton;"),
+    nullify_var(v?)       = (native_var_ref_name(v) & " = null;"),
     terminate()           = { type_str = if instr.hard_fail then "_hard" else "soft";
                               return ("throw Miscellanea." & type_str & "Fail();");
                             },
@@ -82,7 +83,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     cls_var(<+> symb?) | capt_cls_var(symb?) = native_method_call(var, cls_var, "invoke", (args | "env"));
 
 
-  String native_push_call_info_code(ObjFnName fn_name, ObjExpr* args) {
+  String native_push_call_info_code(<FnId, ProcSymbol> fn_name, ObjExpr* args) {
     fn_name_str = printed(user_repr(fn_name));
     args_strs = (native_expr(a) : a <- args);
     argv_str = if args != () then "new Obj[] {" & append(args_strs, ", ") & "}" else "null";

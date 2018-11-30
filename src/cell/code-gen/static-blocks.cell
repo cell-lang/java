@@ -116,7 +116,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     vars_decls = gen_vars_decls(code, []);
     //body = vars_decls & ("" if vars_decls != (), aux_struct_init_call) & native_code(code, nothing);
     body = vars_decls & native_code(code, nothing);
-    sgn = "public void " & set_state_proc_name(name) & "(Obj a0) {";
+    sgn = "public boolean " & set_state_proc_name(name) & "(Obj a0) {";
     return (sgn) & indent_lines(body) & ("}");
   }
 
@@ -157,11 +157,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String* reconstruct_method_code(DBSymbol block_name) {
     meth_name = reconstruct_proc_name(block_name);
     class_name = native_name(block_name);
-
+    set_state_call = "instance." & set_state_proc_name(block_name) & "(state)";
+    full_check_call = "instance." & full_check_proc_name(block_name) & "()";
     body = (
       class_name & " instance = new " & class_name & "(env);",
-      "instance." & set_state_proc_name(block_name) & "(state);",
-      "boolean ok = instance." & full_check_proc_name(block_name) & "();",
+      "boolean ok = " & set_state_call & " && " & full_check_call & ";",
       "return ok ? instance : null;"
     );
 

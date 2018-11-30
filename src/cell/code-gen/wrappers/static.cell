@@ -474,8 +474,6 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "",
       "  public void setState(String text) {",
       "    Obj obj = Conversions.convertText(text);",
-      "    if (!Generated." & native_fn_name(root_block.state_memb_pred) & "(obj))",
-      "      throw new RuntimeException(\"Invalid state\");",
       "    Generated." & db_name & " instance = Generated." & db_name & ".reconstruct(obj, env);",
       "    if (instance == null)",
       "      throw new RuntimeException(\"Invalid state\");",

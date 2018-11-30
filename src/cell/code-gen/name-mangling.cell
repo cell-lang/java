@@ -4,7 +4,7 @@
 //  D
 //  E     Cached no-positional-argument function value
 //  F     Function
-//  G
+//  G     Aggregate function
 //  H
 //  I
 //  J
@@ -267,7 +267,7 @@ String var_decl(AnyVar v) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String memo_var_name(<ProcSymbol, MembTestPredId, ConvFnId>) = undefined;
+String memo_var_name(<ProcSymbol, MembTestPredId, SubAggrFnId, ConvFnId>) = undefined;
 
 String memo_var_name(FnId id) =
   fn_family_id()  = native_fn_symb_name(id.symbol) & "_E",
@@ -458,6 +458,17 @@ String native_fn_name(MembTestPredId) =
   memb_test(<*..*> n?)      = "is_type_" & printed(n),
   memb_test(a1?, <+> a2?)   = "is" & upper_camel_case(a2) & "_" & upper_camel_case(a1),
   memb_test(a?, <*..*> n?)  = "is" & upper_camel_case(a) & "_" & printed(n);
+
+
+String native_fn_base_name(AggrFnId) =
+  aggr_fn_id(s?)            = _print_(s) & "_G",
+  unique_aggr_fn_id(s?, i?) = _print_(s) & "_G" & uppercase_encoding(i);
+
+String native_fn_name(SubAggrFnId) =
+  red_var_init(id?, v?)   = native_fn_base_name(id) & "i_" & _print_(_untag_(v)),
+  red_vars_merge(id?, v?) = native_fn_base_name(id) & "m_" & _print_(_untag_(v)),
+  final_value_yield(id?)  = native_fn_base_name(id) & "f",
+  null_value(id?)         = native_fn_base_name(id) & "e";
 
 
 String native_fn_name(ProcSymbol proc_symb) {

@@ -1,5 +1,7 @@
 package net.cell_lang;
 
+import java.util.Arrays;
+
 
 class TernaryTable {
   public static final int Empty = 0xFFFFFFFF;
@@ -340,6 +342,91 @@ class TernaryTable {
   }
 
   ////////////////////////////////////////////////////////////////////////////
+
+  public boolean col3IsKey() {
+    if (index3 == null)
+      buildIndex3();
+
+    int[] hashtable = index3.hashtable;
+    int[] bucket = new int[32];
+
+    for (int i=0 ; i < hashtable.length ; i++) {
+      int count = 0;
+
+      int idx = hashtable[i];
+      while (idx != Empty) {
+        bucket = Miscellanea.arrayAppend(bucket, count++, flatTuples[3 * i]);
+        idx = index3.next(idx);
+      }
+
+      if (count > 1) {
+        if (count > 2)
+          Arrays.sort(bucket, 0, count);
+        int last = bucket[0];
+        for (int j=1 ; j < count ; i++) {
+          int val = bucket[j];
+          if (val == last)
+            return false;
+          last = val;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  public boolean cols12AreKey() {
+    return colsAreKey(index12, 0, 1);
+  }
+
+  public boolean cols13AreKey() {
+    if (index13 == null)
+      buildIndex13();
+    return colsAreKey(index13, 0, 2);
+  }
+
+  public boolean cols23AreKey() {
+    if (index23 == null)
+      buildIndex23();
+    return colsAreKey(index23, 1, 2);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+
+  boolean colsAreKey(Index index, int col1, int col2) {
+    int[] hashtable = index.hashtable;
+    long[] bucket = new long[32];
+
+    for (int i=0 ; i < hashtable.length ; i++) {
+      int count = 0;
+
+      int idx = hashtable[i];
+      while (idx != Empty) {
+        int offset = 3 * i;
+        int arg1 = flatTuples[offset + col1];
+        int arg2 = flatTuples[offset + col2];
+        long packedArgs = arg1 | (arg2 << 32);
+        Miscellanea._assert(arg1 == (packedArgs & 0xFFFFFFFF));
+        Miscellanea._assert(arg2 == (packedArgs >>> 32));
+        bucket = Miscellanea.arrayAppend(bucket, count++, packedArgs);
+        idx = index.next(idx);
+      }
+
+      if (count > 1) {
+        if (count > 2)
+          Arrays.sort(bucket, 0, count);
+        long last = bucket[0];
+        for (int j=1 ; j < count ; i++) {
+          long val = bucket[j];
+          if (val == last)
+            return false;
+          last = val;
+        }
+      }
+    }
+
+    return true;
+  }
 
   void deleteAt(int index, int hashcode) {
     int field1 = field1OrNext(index);

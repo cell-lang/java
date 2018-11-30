@@ -157,6 +157,34 @@ class OneWayBinTable {
     return res;
   }
 
+  public int[] copySym() {
+    int[] res = new int[count];
+    int next = 0;
+    for (int i=0 ; i < column.length ; i++) {
+      int code = column[i];
+      if (code != OverflowTable.EmptyMarker) {
+        if (code >> 29 == 0) {
+          if (i <= code) {
+            res[next++] = i;
+            res[next++] = code;
+          }
+        }
+        else {
+          OverflowTable.Iter it = overflowTable.getIter(code);
+          while (!it.done()) {
+            if (i <= code) {
+              res[next++] = i;
+              res[next++] = it.get();
+            }
+            it.next();
+          }
+        }
+      }
+    }
+    Miscellanea._assert(next == count);
+    return res;
+  }
+
   public boolean isMap() {
     for (int i=0 ; i < column.length ; i++) {
       int code = column[i];

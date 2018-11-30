@@ -34,29 +34,29 @@ class TernaryTableUpdater {
     }
   }
 
-  public void set(Obj value, int idx1, int idx2, int idx3) {
-    Miscellanea._assert(deleteCount == 0 || deleteCount == table.count);
-    Miscellanea._assert(insertCount == 0);
+  // public void set(Obj value, int idx1, int idx2, int idx3) {
+  //   Miscellanea._assert(deleteCount == 0 || deleteCount == table.count);
+  //   Miscellanea._assert(insertCount == 0);
 
-    clear();
-    TernRelIter it = value.getTernRelIter();
-    while (!it.done()) {
-      Obj val1 = idx1 == 0 ? it.get1() : (idx1 == 1 ? it.get2() : it.get3());
-      Obj val2 = idx2 == 0 ? it.get1() : (idx2 == 1 ? it.get2() : it.get3());
-      Obj val3 = idx3 == 0 ? it.get1() : (idx3 == 1 ? it.get2() : it.get3());
-      int surr1 = store1.lookupValueEx(val1);
-      if (surr1 == -1)
-        surr1 = store1.insert(val1);
-      int surr2 = store2.lookupValueEx(val2);
-      if (surr2 == -1)
-        surr2 = store2.insert(val2);
-      int surr3 = store3.lookupValueEx(val3);
-      if (surr3 == -1)
-        surr3 = store3.insert(val3);
-      insertList = Miscellanea.array3Append(insertList, insertCount++, surr1, surr2, surr3);
-      it.next();
-    }
-  }
+  //   clear();
+  //   TernRelIter it = value.getTernRelIter();
+  //   while (!it.done()) {
+  //     Obj val1 = idx1 == 0 ? it.get1() : (idx1 == 1 ? it.get2() : it.get3());
+  //     Obj val2 = idx2 == 0 ? it.get1() : (idx2 == 1 ? it.get2() : it.get3());
+  //     Obj val3 = idx3 == 0 ? it.get1() : (idx3 == 1 ? it.get2() : it.get3());
+  //     int surr1 = store1.lookupValueEx(val1);
+  //     if (surr1 == -1)
+  //       surr1 = store1.insert(val1);
+  //     int surr2 = store2.lookupValueEx(val2);
+  //     if (surr2 == -1)
+  //       surr2 = store2.insert(val2);
+  //     int surr3 = store3.lookupValueEx(val3);
+  //     if (surr3 == -1)
+  //       surr3 = store3.insert(val3);
+  //     insertList = Miscellanea.array3Append(insertList, insertCount++, surr1, surr2, surr3);
+  //     it.next();
+  //   }
+  // }
 
   public void insert(int value1, int value2, int value3) {
     insertList = Miscellanea.array3Append(insertList, insertCount++, value1, value2, value3);
