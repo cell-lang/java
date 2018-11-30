@@ -1,5 +1,7 @@
 package net.cell_lang;
 
+import java.util.function.IntPredicate;
+
 
 class BinaryTableUpdater {
   static int[] emptyArray = new int[0];
@@ -255,12 +257,12 @@ class BinaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys_1(UnaryTableUpdater source) {
+  public boolean checkDeletedKeys_1(IntPredicate source) {
     prepare12();
 
     for (int i=0 ; i < deleteCount ; ) {
       int surr1 = deleteList[2 * i];
-      if (!Ints12.contains1(insertList, insertCount, surr1) && source.contains(surr1)) {
+      if (!Ints12.contains1(insertList, insertCount, surr1) && source.test(surr1)) {
         int count = table.count1(surr1);
         Miscellanea._assert(count > 0);
 
@@ -286,12 +288,12 @@ class BinaryTableUpdater {
     return true;
   }
 
-  public boolean checkDeletedKeys_2(UnaryTableUpdater source) {
+  public boolean checkDeletedKeys_2(IntPredicate source) {
     prepare21();
 
     for (int i=0 ; i < deleteCount ; ) {
       int surr2 = deleteList[2 * i + 1];
-      if (!Ints21.contains2(insertList, insertCount, surr2) && source.contains(surr2)) {
+      if (!Ints21.contains2(insertList, insertCount, surr2) && source.test(surr2)) {
         int count = table.count2(surr2);
         Miscellanea._assert(count > 0);
 
@@ -316,14 +318,14 @@ class BinaryTableUpdater {
     return true;
   }
 
-  public boolean checkDeletedKeys_12(TernaryTableUpdater source) {
+  public boolean checkDeletedKeys_12(BiIntPredicate source) {
     prepare12();
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr1 = deleteList[2 * i];
       int surr2 = deleteList[2 * i + 1];
       if (!Ints12.contains(insertList, insertCount, surr1, surr2))
-        if (source.contains12(surr1, surr2))
+        if (source.test(surr1, surr2))
           return false;
     }
 
@@ -340,7 +342,7 @@ class BinaryTableUpdater {
         return false;
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_1(this);
+    return target.checkDeletedKeys(this::contains1);
   }
 
   // bin_rel(_, b) -> unary_rel(b);
@@ -351,7 +353,7 @@ class BinaryTableUpdater {
         return false;
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_2(this);
+    return target.checkDeletedKeys(this::contains2);
   }
 
   // bin_rel(a, b) -> ternary_rel(a, b, _)
@@ -362,7 +364,7 @@ class BinaryTableUpdater {
         return false;
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_12(this);
+    return target.checkDeletedKeys_12(this::contains);
   }
 
   //////////////////////////////////////////////////////////////////////////////

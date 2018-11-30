@@ -1,5 +1,7 @@
 package net.cell_lang;
 
+import java.util.function.IntPredicate;
+
 
 class TernaryTableUpdater {
   static int[] emptyArray = new int[0];
@@ -478,13 +480,13 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys_1(UnaryTableUpdater source) {
+  public boolean checkDeletedKeys_1(IntPredicate source) {
     prepare123();
 
     for (int i=0 ; i < deleteCount ; ) {
       int surr1 = deleteList[3 * i];
-      if (!Ints123.contains1(insertList, insertCount, surr1) && source.contains(surr1)) {
-        Miscellanea._assert(source.contains(surr1));
+      if (!Ints123.contains1(insertList, insertCount, surr1) && source.test(surr1)) {
+        Miscellanea._assert(source.test(surr1));
         int surr2 = deleteList[3 * i + 1];
         int surr3 = deleteList[3 * i + 2];
         int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
@@ -507,13 +509,13 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkDeletedKeys_2(UnaryTableUpdater source) {
+  public boolean checkDeletedKeys_2(IntPredicate source) {
     prepare231();
 
     for (int i=0 ; i < deleteCount ; ) {
       int surr2 = deleteList[3 * i + 1];
-      if (!Ints231.contains2(insertList, insertCount, surr2) && source.contains(surr2)) {
-        Miscellanea._assert(source.contains(surr2));
+      if (!Ints231.contains2(insertList, insertCount, surr2) && source.test(surr2)) {
+        Miscellanea._assert(source.test(surr2));
         int surr1 = deleteList[3 * i];
         int surr3 = deleteList[3 * i + 2];
         int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
@@ -536,13 +538,13 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkDeletedKeys_3(UnaryTableUpdater source) {
+  public boolean checkDeletedKeys_3(IntPredicate source) {
     prepare312();
 
     for (int i=0 ; i < deleteCount ; ) {
       int surr3 = deleteList[3 * i + 2];
-      if (!Ints312.contains3(insertList, insertCount, surr3) && source.contains(surr3)) {
-        Miscellanea._assert(source.contains(surr3));
+      if (!Ints312.contains3(insertList, insertCount, surr3) && source.test(surr3)) {
+        Miscellanea._assert(source.test(surr3));
         int surr1 = deleteList[3 * i];
         int surr2 = deleteList[3 * i + 1];
         int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
@@ -566,14 +568,14 @@ class TernaryTableUpdater {
     return true;
   }
 
-  public boolean checkDeletedKeys_12(BinaryTableUpdater source) {
+  public boolean checkDeletedKeys_12(BiIntPredicate source) {
     prepare123();
 
     for (int i=0 ; i < deleteCount ; ) {
       int offset = 3 * i;
       int surr1 = deleteList[offset];
       int surr2 = deleteList[offset + 1];
-      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && source.contains(surr1, surr2)) {
+      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && source.test(surr1, surr2)) {
         int surr3 = deleteList[3 * i + 2];
         int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
         for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
@@ -604,7 +606,7 @@ class TernaryTableUpdater {
         return false;
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_1(this);
+    return target.checkDeletedKeys(this::contains1);
   }
 
   // tern_rel(_, b, _) -> unary_rel(b);
@@ -615,7 +617,7 @@ class TernaryTableUpdater {
         return false;
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_2(this);
+    return target.checkDeletedKeys(this::contains2);
   }
 
   // tern_rel(_, _, c) -> unary_rel(c)
@@ -626,7 +628,7 @@ class TernaryTableUpdater {
         return false;
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_3(this);
+    return target.checkDeletedKeys(this::contains3);
   }
 
   // tern_rel(a, b, _) -> binary_rel(a, b)
@@ -634,6 +636,6 @@ class TernaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i], insertList[3*i+1]))
         return false;
-    return target.checkDeletedKeys_12(this);
+    return target.checkDeletedKeys_12(this::contains12);
   }
 }

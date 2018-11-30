@@ -1,6 +1,7 @@
 package net.cell_lang;
 
 import java.util.Arrays;
+import java.util.function.IntPredicate;
 
 
 class UnaryTableUpdater {
@@ -145,7 +146,7 @@ class UnaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys(UnaryTableUpdater source) {
+  public boolean checkDeletedKeys(IntPredicate source) {
     prepare();
 
     if (clear) {
@@ -153,7 +154,7 @@ class UnaryTableUpdater {
       while (!it.done()) {
         int surr = it.get();
         if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains(surr))
+          if (source.test(surr))
             return false;
         it.next();
       }
@@ -162,132 +163,7 @@ class UnaryTableUpdater {
       for (int i=0 ; i < deleteCount ; i++) {
         int surr = deleteList[i];
         if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains(surr))
-            return false;
-      }
-    }
-
-    return true;
-  }
-
-  public boolean checkDeletedKeys_1(BinaryTableUpdater source) {
-    prepare();
-
-    if (clear) {
-      UnaryTable.Iter it = table.getIter();
-      while (!it.done()) {
-        int surr = it.get();
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains1(surr))
-            return false;
-        it.next();
-      }
-    }
-    else {
-      for (int i=0 ; i < deleteCount ; i++) {
-        int surr = deleteList[i];
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains1(surr))
-            return false;
-      }
-    }
-
-    return true;
-  }
-
-  public boolean checkDeletedKeys_2(BinaryTableUpdater source) {
-    prepare();
-
-    if (clear) {
-      UnaryTable.Iter it = table.getIter();
-      while (!it.done()) {
-        int surr = it.get();
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains2(surr))
-            return false;
-        it.next();
-      }
-    }
-    else {
-      for (int i=0 ; i < deleteCount ; i++) {
-        int surr = deleteList[i];
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains2(surr))
-            return false;
-      }
-    }
-
-    return true;
-  }
-
-  public boolean checkDeletedKeys_1(TernaryTableUpdater source) {
-    prepare();
-
-    if (clear) {
-      UnaryTable.Iter it = table.getIter();
-      while (!it.done()) {
-        int surr = it.get();
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains1(surr))
-            return false;
-        it.next();
-      }
-    }
-    else {
-      for (int i=0 ; i < deleteCount ; i++) {
-        int surr = deleteList[i];
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains1(surr))
-            return false;
-      }
-    }
-
-    return true;
-  }
-
-  public boolean checkDeletedKeys_2(TernaryTableUpdater source) {
-    prepare();
-
-    if (clear) {
-      UnaryTable.Iter it = table.getIter();
-      while (!it.done()) {
-        int surr = it.get();
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains2(surr))
-            return false;
-        it.next();
-      }
-    }
-    else {
-      for (int i=0 ; i < deleteCount ; i++) {
-        int surr = deleteList[i];
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains2(surr))
-            return false;
-      }
-    }
-
-    return true;
-  }
-
-  public boolean checkDeletedKeys_3(TernaryTableUpdater source) {
-    prepare();
-
-    if (clear) {
-      UnaryTable.Iter it = table.getIter();
-      while (!it.done()) {
-        int surr = it.get();
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains3(surr))
-            return false;
-        it.next();
-      }
-    }
-    else {
-      for (int i=0 ; i < deleteCount ; i++) {
-        int surr = deleteList[i];
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.contains3(surr))
+          if (source.test(surr))
             return false;
       }
     }
@@ -305,7 +181,7 @@ class UnaryTableUpdater {
         return false;
 
     // Checking that no elements were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this);
+    return target.checkDeletedKeys(this::contains);
   }
 
   // unary_rel(x) -> binary_rel(x, _);
@@ -316,7 +192,7 @@ class UnaryTableUpdater {
         return false;
 
     // Checking that no elements were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_1(this);
+    return target.checkDeletedKeys_1(this::contains);
   }
 
   // unary_rel(x) -> binary_rel(_, x);
@@ -327,7 +203,7 @@ class UnaryTableUpdater {
         return false;
 
     // Checking that no elements were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_2(this);
+    return target.checkDeletedKeys_2(this::contains);
   }
 
   public boolean checkForeignKeys_1(TernaryTableUpdater target) {
@@ -337,7 +213,7 @@ class UnaryTableUpdater {
         return false;
 
     // Checking that no elements were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_1(this);
+    return target.checkDeletedKeys_1(this::contains);
   }
 
   public boolean checkForeignKeys_2(TernaryTableUpdater target) {
@@ -347,7 +223,7 @@ class UnaryTableUpdater {
         return false;
 
     // Checking that no elements were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_2(this);
+    return target.checkDeletedKeys_2(this::contains);
   }
 
   public boolean checkForeignKeys_3(TernaryTableUpdater target) {
@@ -357,6 +233,6 @@ class UnaryTableUpdater {
         return false;
 
     // Checking that no elements were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_3(this);
+    return target.checkDeletedKeys_3(this::contains);
   }
 }

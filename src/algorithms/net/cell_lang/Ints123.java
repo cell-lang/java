@@ -75,6 +75,10 @@ class Ints123 {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  public static boolean contains(int[] array, int size, int val1, int val2, int val3) {
+    throw new RuntimeException();
+  }
+
   public static boolean contains1(int[] array, int size, int val1) {
     return contains1(array, 0, size, val1);
   }
