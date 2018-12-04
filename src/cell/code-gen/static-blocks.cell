@@ -81,10 +81,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String* native_ctor_code(DBSymbol name, DBSymbol* links, [TableVar -> Table] tables, Instr* init_code) {
     links_init_code = ("this.linkedAuto" & printed(i) & " = linkedAuto" & printed(i) & ";" : i < |links|);
     tables_init_code = ({
-        arg_list = append((native_var_decl_name(vs) : vs <- t.value_stores), ", ");
-        return native_var_ref_name(v) & " = new " & native_table_type(t) & "(" & arg_list & ");";
-      } : v, t <- isort(tables)
-    );
+      value_stores = t.value_stores;
+      value_stores = drop(value_stores, 1) if t.symmetric;
+      arg_list = append((native_var_decl_name(vs) : vs <- value_stores), ", ");
+      return native_var_ref_name(v) & " = new " & native_table_type(t) & "(" & arg_list & ");";
+    } : v, t <- isort(tables));
     vars_decl = gen_vars_decls(init_code, []);
     vars_decl = vars_decl & ("") if vars_decl != ();
     body = vars_decl & links_init_code & tables_init_code & native_code(init_code, nothing);
@@ -426,13 +427,15 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       : vs <- isort(block.value_stores)
     );
 
-    tables_init_code = (
-      native_new_call(
+    tables_init_code = ({
+      value_stores = t.value_stores;
+      value_stores = drop(value_stores, 1) if t.symmetric;
+      return native_new_call(
         pending_updates_var_ref_name(v),
         pending_updates_var_type(t),
-        (v) & (aux_struct_var_ref_name(vs) : vs <- t.value_stores)
-      ) : v, t <- isort(block.tables)
-    );
+        (v) & (aux_struct_var_ref_name(vs) : vs <- value_stores)
+      );
+    } : v, t <- isort(block.tables));
 
     nested_blocks_init_code = (
       native_method_call(aux_struct_var_ref_name(v), v, updater_creation_proc_name(t), ())

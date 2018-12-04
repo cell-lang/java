@@ -85,10 +85,12 @@ String native_var_name(TernRelItVar v)    = "ternRelIt" & printed(bare_id_2(v));
 String native_var_name(StreamVar v)       = "stream" & printed(bare_id_2(v));
 
 String native_var_name(TableItVar v) {
-  prefix = match (v.arity)
-    1   = "unary",
-    2   = "bin",
-    3   = "tern";
+  prefix = match (v.arity, v.symmetric)
+    1,  false   = "unary",
+    2,  false   = "bin",
+    2,  true    = "symBin",
+    3,  false   = "tern",
+    3,  true    = "symTern";
 
   return prefix & "TableIt" & printed(v.id);
 }
@@ -296,7 +298,7 @@ String native_var_type(TernRelItVar v) = "TernRelIter";
 String native_var_type(StreamVar v)    = "java.util.ArrayList<Obj>";
 
 String native_var_type(VecVar v)       = undefined;
-String native_var_type(TableItVar v)   = table_it_var_type[v.arity];
+String native_var_type(TableItVar v)   = table_it_var_type(v);
 String native_var_type(ArrayVar v)     = native_elt_type(v) & "[]";
 
 String native_elt_type(ArrayVar var) = native_type(var.repr);
@@ -330,32 +332,31 @@ Bool is_nullable(LowLevelEltRepr) =
 Bool is_nullable(OptTagRecRepr) = true;
 
 
-String native_table_type(Table table) {
-  return names_by_arity[arity(table)];
-
-  [NzNat -> String] names_by_arity = [
-    1 -> "UnaryTable",
-    2 -> "BinaryTable",
-    3 -> "TernaryTable"
-  ];
-}
-
-[NzNat -> String] table_it_var_type = [
-  1 -> "UnaryTable.Iter",
-  2 -> "BinaryTable.Iter",
-  3 -> "TernaryTable.Iter"
-];
+String native_table_type(Table table) =
+  match (arity(table), table.symmetric)
+    1,  false   = "UnaryTable",
+    2,  false   = "BinaryTable",
+    2,  true    = "SymBinaryTable",
+    3,  false   = "TernaryTable",
+    3,  true    = "Sym12TernaryTable";
 
 
-String pending_updates_var_type(Table table) {
-  return names_by_arity[arity(table)];
+String table_it_var_type(TableItVar var) =
+  match (var.arity, var.symmetric)
+    1,  false   = "UnaryTable.Iter",
+    2,  false   = "BinaryTable.Iter",
+    2,  true    = "SymBinaryTable.Iter",
+    3,  false   = "TernaryTable.Iter",
+    3,  true    = "Sym12TernaryTable.Iter";
 
-  [NzNat -> String] names_by_arity = [
-    1 -> "UnaryTableUpdater",
-    2 -> "BinaryTableUpdater",
-    3 -> "TernaryTableUpdater"
-  ];
-}
+
+String pending_updates_var_type(Table table) =
+  match (arity(table), table.symmetric)
+    1,  false   = "UnaryTableUpdater",
+    2,  false   = "BinaryTableUpdater",
+    2,  true    = "SymBinaryTableUpdater",
+    3,  false   = "TernaryTableUpdater",
+    3,  true    = "Sym12TernaryTableUpdater";
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

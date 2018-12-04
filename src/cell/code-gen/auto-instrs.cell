@@ -1,21 +1,26 @@
 implicit prg : CompiledPrg, debug_mode : Bool {
   String auto_expr_native_code(RefObjExpr expr, WriteObjVar var) =
     copy_state()              = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
-    copy_table()              = native_copy_table_code(var, keys(expr.tables), expr.perm),
+    copy_table()              = native_copy_table_code(var, expr.tables, expr.perm),
     copy_persistent_state()   = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
     lookup_surrogate()        = native_method_call(var, expr.store, "lookupSurrogate", (expr.surrogate)),
     read_pending_var(v?)      = native_var_ref_name(var) & " = " & native_var_ref_name(v) & ";";
 
 
-  String native_copy_table_code(WriteObjVar res_var, [+TableVar] tables, Nat+ perm) {
+  String native_copy_table_code(WriteObjVar res_var, [+TableVar -> Table] tables, Nat+ perm) {
+    symmetric = only([t.symmetric : unused_var, t <- tables]);
+    assert not symmetric or (perm == (0, 1) or perm == (0, 1, 2));
+
     perm_args = match (perm)
       (_)       = (),
-      (0, 1)    = (false),
+      (0, 1)    = (false if not symmetric),
       (1, 0)    = (true),
       (_, _, _) = perm;
 
+    table_vars = keys(tables);
+
     if |tables| == 1:
-      return native_method_call(res_var, only(tables), "copy", perm_args);
+      return native_method_call(res_var, only(table_vars), "copy", perm_args);
 
     else
       class_name = match (|perm|)
@@ -23,7 +28,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         2 = "BinaryTable",
         3 = "TernaryTable";
 
-      tables_names = (native_var_ref_name(v) : v <- isort(tables));
+      tables_names = (native_var_ref_name(v) : v <- isort(table_vars));
       table_array_new = "new " & class_name & "[] {" & append(tables_names, ", ") & "}";
       return native_static_call(res_var, class_name & ".copy", (table_array_new) & perm_args);
     ;
@@ -64,7 +69,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     get_table_iter()      = (native_get_table_iter_code(instr.it_var, instr.table, instr.args)),
     // set_table()           = (native_set_table_code(instr.relvar, instr.table, instr.state, instr.perm)),
-    queue_deletes()       = (native_queue_deletes_code(instr.table_var, instr.args)),
+    queue_deletes()       = (native_queue_deletes_code(instr.table_var, instr.args, instr.symmetric)),
     queue_insert_value()  = (native_method_call(instr.res_var, aux_struct_var_ref_name(instr.store), "insert", (instr.value))),
     lookup_or_queue_insert_value()  = (native_method_call(instr.res_var, aux_struct_var_ref_name(instr.store), "lookupOrInsertValue", (instr.value))),
     queue_insert_tuple()  = (native_queue_insert_tuple_code(instr.table_var, instr.tuple)),
@@ -85,7 +90,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   String native_queue_insert_tuple_code(TableVar table_var, Int32Var+ tuple) {
     updater = pending_updates_var_ref_name(table_var);
-    return native_method_call(updater, "insert", ("(int) " & native_expr(v) : v <- tuple));
+    return native_method_call(updater, "insert", (native_expr(v) : v <- tuple));
   }
 
 
@@ -118,10 +123,12 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   // }
 
 
-  String native_queue_deletes_code(TableVar table_var, Maybe[Int32Var]+ args) {
-    fn_name = fn_names_by_args[(a != nothing : a <- args)];
+  String native_queue_deletes_code(TableVar table_var, Maybe[Int32Var]+ args, Bool symmetric) {
+    set_args = (a != nothing : a <- args);
+    fn_names = if symmetric then sym_fn_names_by_args else fn_names_by_args;
+    fn_name = fn_names(set_args);
     target = pending_updates_var_ref_name(table_var);
-    return native_method_call(target, fn_name, ("(int) " & native_expr(value(a)) : a <- args, a != nothing));
+    return native_method_call(target, fn_name, (native_expr(value(a)) : a <- args, a != nothing));
 
     [Bool+ -> String] fn_names_by_args = [
       (true)                  -> "delete",
@@ -139,12 +146,28 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (false, false, true)    -> "delete3",
       (false, false, false)   -> "clear"
     ];
+
+    [Bool+ -> String] sym_fn_names_by_args = [
+      (true,  true)           -> "delete",
+      (true,  false)          -> "delete",
+      (false, true)           -> "delete",
+      (false, false)          -> "clear",
+      (true,  true,  true)    -> "delete",
+      (true,  true,  false)   -> "delete12",
+      (true,  false, true)    -> "delete_13_23",
+      (false, true,  true)    -> "delete_13_23",
+      (true,  false, false)   -> "delete_1_2",
+      (false, true,  false)   -> "delete_1_2",
+      (false, false, true)    -> "delete3",
+      (false, false, false)   -> "clear"
+    ];
   }
 
 
   String native_get_table_iter_code(TableItVar it_var, AnyTableVar table_var, Maybe[Int32Var]+ args) {
-    fn_name = fn_names_by_args[(a != nothing : a <- args)];
-    return native_method_call(it_var, table_var, fn_name, ("(int) " & native_expr(value(a)) : a <- args, a != nothing));
+    fn_names = if it_var.symmetric then sym_fn_names_by_args else fn_names_by_args;
+    fn_name = fn_names((a != nothing : a <- args));
+    return native_method_call(it_var, table_var, fn_name, (native_expr(value(a)) : a <- args, a != nothing));
 
     [Bool+ -> String] fn_names_by_args = [
       (false)                 -> "getIter",
@@ -156,6 +179,19 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (false, true,  true)    -> "getIter23",
       (true,  false, false)   -> "getIter1",
       (false, true,  false)   -> "getIter2",
+      (false, false, true)    -> "getIter3",
+      (false, false, false)   -> "getIter"
+    ];
+
+    [Bool+ -> String] sym_fn_names_by_args = [
+      (true,  false)          -> "getIter",
+      (false, true)           -> "getIter",
+      (false, false)          -> "getIter",
+      (true,  true,  false)   -> "getIter12",
+      (true,  false, true)    -> "getIter_13_23",
+      (false, true,  true)    -> "getIter_13_23",
+      (true,  false, false)   -> "getIter_1_2",
+      (false, true,  false)   -> "getIter_1_2",
       (false, false, true)    -> "getIter3",
       (false, false, false)   -> "getIter"
     ];

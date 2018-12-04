@@ -8,9 +8,12 @@ class Conversions {
     int len = text.length();
     int count = text.codePointCount(0, len);
     if (count == len)
+      //## THIS IS ALL WRONG! Generated.parse() returns a Result[Any, Nat],
+      //## IT DOESN'T THROW AN EXCEPTION!
       return Generated.parse(text::charAt, len).getInnerObj();
     int[] codePoints = text.codePoints().toArray();
-    return Generated.parse(i -> codePoints[i], count);
+    //## DITTO
+    return Generated.parse(i -> codePoints[i], count).getInnerObj();
   }
 
   public static Value exportAsValue(Obj obj) {
@@ -18,6 +21,7 @@ class Conversions {
   }
 
   public static Obj stringToObj(String str) {
+    //## THIS ONE IS REAL BAD TOO. IT SHOULD USE THE MINIMUM SIZE ARRAY POSSIBLE!
     int[] cps = Miscellanea.codePoints(str);
     return Builder.createTaggedObj(SymbTable.StringSymbId, Builder.createSeq(cps));
   }
