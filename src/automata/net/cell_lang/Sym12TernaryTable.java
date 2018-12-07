@@ -138,12 +138,11 @@ class Sym12TernaryTable {
       arg2 = tmp;
     }
     int hashcode = Miscellanea.hashcode(arg1, arg2, arg3);
-    for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx)) {
+    for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2 & arg3(idx) == arg3) {
         deleteAt(idx, hashcode);
         return;
       }
-    }
   }
 
   public boolean contains(int arg1, int arg2, int arg3) {
@@ -153,10 +152,9 @@ class Sym12TernaryTable {
       arg2 = tmp;
     }
     int hashcode = Miscellanea.hashcode(arg1, arg2, arg3);
-    for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx)) {
+    for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2 & arg3(idx) == arg3)
         return true;
-    }
     return false;
   }
 
@@ -167,10 +165,9 @@ class Sym12TernaryTable {
       arg2 = tmp;
     }
     int hashcode = Miscellanea.hashcode(arg1, arg2);
-    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx)) {
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2)
         return true;
-    }
     return false;
   }
 
@@ -178,10 +175,9 @@ class Sym12TernaryTable {
     if (index_13_23 == null)
       buildIndex_13_23();
     int hashcode = Miscellanea.hashcode(arg12, arg3);
-    for (int idx = index_13_23.head(hashcode) ; idx != Empty ; idx = index_13_23.next(idx)) {
+    for (int idx = index_13_23.head(hashcode) ; idx != Empty ; idx = index_13_23.next(idx))
       if ((arg1OrNext(idx) == arg12 || arg2OrEmptyMarker(idx) == arg12) & arg3(idx) == arg3)
         return true;
-    }
     return false;
   }
 
@@ -189,10 +185,9 @@ class Sym12TernaryTable {
     if (index_1_2 == null)
       buildIndex_1_2();
     int hashcode = Miscellanea.hashcode(arg12);
-    for (int idx = index_1_2.head(hashcode) ; idx != Empty ; idx = index_1_2.next(idx)) {
+    for (int idx = index_1_2.head(hashcode) ; idx != Empty ; idx = index_1_2.next(idx))
       if (arg1OrNext(idx) == arg12 | arg2OrEmptyMarker(idx) == arg12)
         return true;
-    }
     return false;
   }
 
@@ -200,11 +195,57 @@ class Sym12TernaryTable {
     if (index3 == null)
       buildIndex3();
     int hashcode = Miscellanea.hashcode(arg3);
-    for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx)) {
+    for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
       if (arg3(idx) == arg3)
         return true;
-    }
     return false;
+  }
+
+  public int count12(int arg1, int arg2) {
+    if (arg1 > arg2) {
+      int tmp = arg1;
+      arg1 = arg2;
+      arg2 = tmp;
+    }
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
+      if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2)
+        count++;
+    return count;
+  }
+
+  public int count_13_23(int arg12, int arg3) {
+    if (index_13_23 == null)
+      buildIndex_13_23();
+    int hashcode = Miscellanea.hashcode(arg12, arg3);
+    int count = 0;
+    for (int idx = index_13_23.head(hashcode) ; idx != Empty ; idx = index_13_23.next(idx))
+      if ((arg1OrNext(idx) == arg12 || arg2OrEmptyMarker(idx) == arg12) & arg3(idx) == arg3)
+        count++;
+    return count;
+  }
+
+  public int count_1_2(int arg12) {
+    if (index_1_2 == null)
+      buildIndex_1_2();
+    int hashcode = Miscellanea.hashcode(arg12);
+    int count = 0;
+    for (int idx = index_1_2.head(hashcode) ; idx != Empty ; idx = index_1_2.next(idx))
+      if (arg1OrNext(idx) == arg12 || arg2OrEmptyMarker(idx) == arg12)
+        count++;
+    return count;
+  }
+
+  public int count3(int arg3) {
+    if (index3 == null)
+      buildIndex3();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg3);
+    for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
+      if (arg3(idx) == arg3)
+        count++;
+    return count;
   }
 
   public boolean count12Eq(int arg1, int arg2, int expCount) {
@@ -215,24 +256,8 @@ class Sym12TernaryTable {
     }
     int count = 0;
     int hashcode = Miscellanea.hashcode(arg1, arg2);
-    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx)) {
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2) {
-        count++;
-        if (count > expCount)
-          return false;
-      }
-    }
-    return count == expCount;
-  }
-
-  //## IS THIS ACTUALLY USED?
-  public boolean count12Eq(int arg12, int expCount) {
-    if (index_1_2 == null)
-      buildIndex_1_2();
-    int count = 0;
-    int hashcode = Miscellanea.hashcode(arg12);
-    for (int idx = index_1_2.head(hashcode) ; idx != Empty ; idx = index_1_2.next(idx))
-      if (arg1OrNext(idx) == arg12 || arg2OrEmptyMarker(idx) == arg12) {
         count++;
         if (count > expCount)
           return false;
@@ -476,7 +501,7 @@ class Sym12TernaryTable {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public Obj copy(TernaryTable[] tables, int idx1, int idx2, int idx3) {
+  public static Obj copy(TernaryTable[] tables, int idx1, int idx2, int idx3) {
     throw new RuntimeException();
   }
 

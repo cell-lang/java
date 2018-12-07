@@ -58,12 +58,8 @@ class SymBinaryTable {
     return table.containsKey(surr);
   }
 
-  public int count1(int surr1) {
-    return table.count(surr1);
-  }
-
-  public int count2(int surr2) {
-    return table.count(surr2);
+  public int count(int surr12) {
+    return table.count(surr12);
   }
 
   public int[] lookup(int surr) {

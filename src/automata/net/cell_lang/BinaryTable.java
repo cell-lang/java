@@ -71,6 +71,8 @@ class BinaryTable {
   }
 
   public int count2(int surr2) {
+    if (table2.count == 0 & table1.count > 0)
+      table2.initReverse(table1);
     return table2.count(surr2);
   }
 

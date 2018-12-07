@@ -222,6 +222,7 @@ String native_expr(Int32Var var, Bool parenthesized) = native_var_ref_name(var);
 String native_expr(Int32NatOp expr, Bool parenthesized) =
   bool_to_bit(e?)       = "(" & native_expr(e, false) & " ? 1 : 0)",
   get_size(e?)          = native_expr(e) & ".getSize()",
+  get_count()           = native_get_count_expr(expr.table, expr.args, expr.symmetric),
   cast_int32(e?)        = "((int) " & native_expr(e, true) & ")",
   add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized),
   lookup_value()        = native_method_call_expr(expr.store, "lookupValue", (expr.value)),
@@ -230,6 +231,39 @@ String native_expr(Int32NatOp expr, Bool parenthesized) =
                             then native_var_ref_name(expr.iter) & ".get()"
                             else native_var_ref_name(expr.iter) & ".get" & printed(expr.field+1) & "()";
 
+String native_get_count_expr(AnyTableVar table, Maybe[Int32Var]+ args, Bool symmetric) {
+  fn_names = if symmetric then sym_fn_names_by_args else fn_names_by_args;
+  fn_name = fn_names((a != nothing : a <- args));
+  args_list = append((native_var_ref_name(value(a)) : a <- args, a != nothing), ", ");
+  return native_var_ref_name(table) & "." & fn_name & "(" & args_list & ")";
+
+  [Bool+ -> String] fn_names_by_args = [
+    (false)               -> "size",
+    (false, false)        -> "size",
+    (true,  false)        -> "count1",
+    (false, true)         -> "count2",
+    (false, false, false) -> "size",
+    (true,  false, false) -> "count1",
+    (false, true,  false) -> "count2",
+    (false, false, true)  -> "count3",
+    (true,  true,  false) -> "count12",
+    (true,  false, true)  -> "count13",
+    (false, true,  true)  -> "count23"
+  ];
+
+  [Bool+ -> String] sym_fn_names_by_args = [
+    (false, false)        -> "size",
+    (true,  false)        -> "count",
+    (false, true)         -> "count",
+    (false, false, false) -> "size",
+    (true,  false, false) -> "count_1_2",
+    (false, true,  false) -> "count_1_2",
+    (false, false, true)  -> "count3",
+    (true,  true,  false) -> "count12",
+    (true,  false, true)  -> "count_13_23",
+    (false, true,  true)  -> "count_13_23"
+  ];
+}
 
 String native_expr(FloatExpr expr) = native_expr(expr, false);
 

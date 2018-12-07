@@ -213,16 +213,79 @@ class TernaryTable {
     return false;
   }
 
+  public int count12(int arg1, int arg2) {
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
+      if (field1OrNext(idx) == arg1 & field2OrEmptyMarker(idx) == arg2)
+        count++;
+    return count;
+  }
+
+  public int count13(int arg1, int arg3) {
+    if (index13 == null)
+      buildIndex13();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg1, arg3);
+    for (int idx = index13.head(hashcode) ; idx != Empty ; idx = index13.next(idx))
+      if (field1OrNext(idx) == arg1 & field3(idx) == arg3)
+        count++;
+    return count;
+  }
+
+  public int count23(int arg2, int arg3) {
+    if (index23 == null)
+      buildIndex23();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg2, arg3);
+    for (int idx = index23.head(hashcode) ; idx != Empty ; idx = index23.next(idx))
+      if (field2OrEmptyMarker(idx) == arg2 & field3(idx) == arg3)
+        count++;
+    return count;
+  }
+
+  public int count1(int arg1) {
+    if (index1 == null)
+      buildIndex1();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg1);
+    for (int idx = index1.head(hashcode) ; idx != Empty ; idx = index1.next(idx))
+      if (field1OrNext(idx) == arg1)
+        count++;
+    return count;
+  }
+
+  public int count2(int arg2) {
+    if (index2 == null)
+      buildIndex2();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg2);
+    for (int idx = index2.head(hashcode) ; idx != Empty ; idx = index2.next(idx))
+      if (field2OrEmptyMarker(idx) == arg2)
+        count++;
+    return count;
+  }
+
+  public int count3(int arg3) {
+    if (index3 == null)
+      buildIndex3();
+    int count = 0;
+    int hashcode = Miscellanea.hashcode(arg3);
+    for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
+      if (field3(idx) == arg3)
+        count++;
+    return count;
+  }
+
   public boolean count12Eq(int arg1, int arg2, int expCount) {
     int count = 0;
     int hashcode = Miscellanea.hashcode(arg1, arg2);
-    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx)) {
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
       if (field1OrNext(idx) == arg1 & field2OrEmptyMarker(idx) == arg2) {
         count++;
         if (count > expCount)
           return false;
       }
-    }
     return count == expCount;
   }
 
@@ -527,7 +590,7 @@ class TernaryTable {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public Obj copy(TernaryTable[] tables, int idx1, int idx2, int idx3) {
+  public static Obj copy(TernaryTable[] tables, int idx1, int idx2, int idx3) {
     throw new RuntimeException();
   }
 
