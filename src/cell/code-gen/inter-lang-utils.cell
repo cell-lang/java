@@ -1,10 +1,7 @@
-
-////////////////////////////////////////////////////////////////////////////////
-
-[ClsDef] cls_defs(CompiledPrg prg) {
-  cls_defs = select_rec(prg, $ :: ClsDef); ## TODO: THIS SHOULD BE TESTED
-  fail if not cls_defs :: [ClsDef];
-  return cls_defs;
+[LambdaExpr] lambda_exprs(CompiledPrg prg) {
+  lambda_exprs = select_rec(prg, $ :: LambdaExpr); ## TODO: THIS SHOULD BE TESTED
+  fail if not lambda_exprs :: [LambdaExpr];
+  return lambda_exprs;
 }
 
 
@@ -135,7 +132,7 @@ implicit prg : CompiledPrg {
   }
 
 
-  ClsDef* sorted_cls_defs = isort(cls_defs(prg));
+  LambdaExpr* sorted_lambda_exprs = isort(lambda_exprs(prg));
 
 
   (String, Nat)* int_seqs_types_and_lengths = ((native_int_type(min(s), max(s)), |s|) : s <- prg.int_seqs);

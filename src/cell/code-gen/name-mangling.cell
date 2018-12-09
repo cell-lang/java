@@ -98,7 +98,7 @@ String native_var_name(TableItVar v) {
 String native_var_name(AnyClsVar v) =
   cls_var(<+> a?)     = _print_(a) & "_C",
   cls_var(<*..*> n?)  = "cls_" & printed(n),
-  capt_cls_var(n?)    = "captured_cls[" & printed(n) & "]";
+  capt_cls_var(n?)    = "capt_cls_" & printed(n);
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +120,7 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
     var(<+> a?)                   = _print_(a) & "_V",
     fn_arg(<*..*> n?)             = "a" & printed(n),
     impl_arg(<+> a?)              = prefix & _print_(a) & "_V",
-    capt_var(<*..*> n?)           = "captured_vars["  & printed(n) & "]",
+    capt_var(<*..*> n?)           = "capt_var_"  & printed(n),
     memb_var(<+> a?)              = prefix & _print_(a) & "_M",
     signal_var(a?)                = prefix & _print_(a) & "_S",
     qual_signal_var()             = native_var_name(var.auto_var, true) & "." & native_var_name(var.memb_var, false),
@@ -225,15 +225,20 @@ String native_var_name(AnyDBVar v, Bool add_prefix) =
 String native_var_name(AnyTableVar var, Bool add_prefix) =
   table_var(a?)             = {if add_prefix then "this." else ""} & _print_(a) & "_B",
   unique_table_var(a?, id?) = {if add_prefix then "this." else ""} & _print_(a) & "_B" & printed(id),
-  qual_table_var()  = native_var_name(var.db_var, add_prefix) & "." & native_var_name(var.table_var, false);
+  qual_table_var()          = native_var_name(var.db_var, add_prefix) & "." & native_var_name(var.table_var, false),
+  capt_table_var(v?)        = { assert add_prefix; return "this.capt_auto." & native_var_name(v, false);};
 
 
 String native_var_name(AnyValueStoreId v, Bool add_prefix) =
-  value_store_id(n?)      = {if add_prefix then "this." else ""} & "valueStore" & printed(n),
-  nested_value_store_id() = { assert add_prefix;
-                              db_var_str = native_var_name(v.db_var, true);
-                              return db_var_str & "." & native_var_name(v.store_id, false);
-                            };
+  value_store_id(n?)        = {if add_prefix then "this." else ""} & "valueStore" & printed(n),
+  nested_value_store_id()   = { assert add_prefix;
+                                db_var_str = native_var_name(v.db_var, true);
+                                return db_var_str & "." & native_var_name(v.store_id, false);
+                              },
+  capt_value_store_id(id?)  = { assert add_prefix;
+                                return "this.capt_auto." & native_var_name(id, false);
+                              };
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

@@ -59,7 +59,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     proc_code = native_code(
       isort(prg.procs),
       isort(prg.bool_procs),
-      sorted_cls_defs,
+      sorted_lambda_exprs,
       ord_react_blocks,
       ord_static_blocks,
       prg.int_seqs
@@ -313,9 +313,9 @@ String* gen_vars_decls(Instr* body, [ObjProcArg] args) {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg, debug_mode : Bool {
-  String* native_code(ObjProcDef* obj_proc_defs, BoolProcDef* bool_proc_defs, ClsDef* cls_defs, ReactBlock* react_blocks, StaticBlock* static_blocks, Int+* int_seqs) {
+  String* native_code(ObjProcDef* obj_proc_defs, BoolProcDef* bool_proc_defs, LambdaExpr* lambda_exprs, ReactBlock* react_blocks, StaticBlock* static_blocks, Int+* int_seqs) {
     type_checking_fns = join((native_code(d) & ("", "") : d <- bool_proc_defs)) & 4 * ("");
-    closures = join((gen_lambda(d, i) & ("", "") : d @ i <- cls_defs)) & 4 * ("");
+    closures = join((gen_lambda(d, i) & ("", "") : d @ i <- lambda_exprs)) & 4 * ("");
     functions = join((native_code(d) & ("", "") : d <- obj_proc_defs));
 
     static_blocks_code = join((("", "") & native_static_block_decl(b) : b <- static_blocks));
@@ -411,25 +411,26 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* gen_lambda(ClsDef cd, Nat id) {
-    body = remove_dead_code(cd.body); ## BAD BAD BAD: THIS OUGHT TO BE DONE IN DEAD CODE REMOVAL, NOT HERE
+  String* gen_lambda(LambdaExpr lambda, Nat id) {
+    body = remove_dead_code(lambda.cls.body); ## BAD BAD BAD: THIS OUGHT TO BE DONE IN DEAD CODE REMOVAL, NOT HERE
     vars_decls = gen_vars_decls(body, []);
     comp_body = native_code(body, nothing);
     full_body = vars_decls & ("" if vars_decls != ()) & comp_body;
 
-    id_str = printed(id);
+    code = (
+      "static class Lambda" & printed(id) & " extends Lambda {",
+      "  public " & native_name(value(lambda.capt_auto)) & " capt_auto;" if lambda.capt_auto != nothing
+    );
+    for i < |lambda.capt_vars|:
+      code = (code | "  public Obj capt_var_" & printed(i) & ";");
+    ;
+    for i < |lambda.capt_cls_vars|:
+      code = (code | "  public Lambda capt_cls_var_" & printed(i) & ";");
+    ;
 
-    return (
-      "static class Lambda" & id_str & " extends Lambda {",
-      "  Obj[] captured_vars;",
-      "  Lambda[] captured_cls;",
+    return (code |
       "",
-      "  public Lambda" & id_str & "(Obj[] captured_vars, Lambda[] captured_cls) {",
-      "    this.captured_vars = captured_vars;",
-      "    this.captured_cls = captured_cls;",
-      "  }",
-      "",
-      "  public Obj invoke(" & append(("Obj a" & printed(i) & ", " : i < cd.arity)) & "Env env) {"
+      "  public Obj invoke(" & append(("Obj a" & printed(i) & ", " : i < lambda.cls.arity)) & "Env env) {"
     ) & indent_lines(indent_lines(full_body)) &
     ( "  }",
       "}"

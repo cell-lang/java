@@ -264,7 +264,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, AnyTypeExpr* args, BoundCls* cls_args, Maybe[Nat] block_id) {
+  String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, AnyTypeExpr* args, AnyLambdaExpr* cls_args, Maybe[Nat] block_id) {
     cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
     args_list = args & cls_args_refs;
     args_list = (args_list | "env") if not name :: ConvFnId;
@@ -275,29 +275,30 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     return (join(cls_setup_code) | call_code);
 
 
-    (String*, AnyClsVar) gen_cls_info(BoundCls cls) =
-      cls_var()       |
-      capt_cls_var()  = ((), cls),
-      bound_cls()     = gen_cls_info(cls.cls, cls.capt_vars, cls.capt_cls_vars);
+    (String*, AnyClsVar) gen_cls_info(AnyClsVar cls) = ((), cls);
 
 
-    (String*, AnyClsVar) gen_cls_info(ClsDef cls, ObjExpr* capt_vars, AnyClsVar* capt_cls_vars) {
+    (String*, AnyClsVar) gen_cls_info(LambdaExpr lambda) {
       id = _counter_(:any_value_will_do);
       var = cls_var(id);
       name = native_expr(var);
 
-      capt_var_array = if capt_vars != ()
-        then "new Obj[] {" & append((native_expr(v) : v <- capt_vars), ", ") & "}"
-        else "null";
+      type = "Lambda" & printed(index_first(lambda, sorted_lambda_exprs));
+      code = (type & " " & name & " = new " & type & "();");
 
-      capt_cls_var_array = if capt_cls_vars != ()
-        then "new Lambda[] {" & append((native_expr(v) : v <- capt_cls_vars), ", ") & "}"
-        else "null";
+      if lambda.capt_auto != nothing:
+        code = (code | name & ".capt_auto = this;");
+      ;
 
-      instr = "Lambda " & name & " = new Lambda" & printed(index_first(cls, sorted_cls_defs)) &
-              "(" & capt_var_array & ", " & capt_cls_var_array & ");";
+      for v @ i <- lambda.capt_vars:
+        code = (code | name & "." & native_var_ref_name(capt_var(i)) & " = " & native_expr(v) & ";");
+      ;
 
-      return ((instr), var);
+      for v @ i <- lambda.capt_cls_vars:
+        code = (code | name & "." & native_var_ref_name(capt_cls_var(i)) & " = " & native_expr(v) & ";");
+      ;
+
+      return (code, var);
     }
   }
 
