@@ -77,15 +77,19 @@ implicit
     methods_wrappers_code, methods_wrappers_docs = (join(ls) : ls <- unzip(methods_wrappers));
     methods_wrappers_docs = ("") & methods_wrappers_docs if methods_wrappers_docs != ();
 
+    accessors_wrappers = isort([db_method_wrapper(id, m) : id, m <- block.accessors]);
+    accessors_wrappers_code, accessors_wrappers_docs = (join(ls) : ls <- unzip(accessors_wrappers));
+    accessors_wrappers_docs = ("") & accessors_wrappers_docs if accessors_wrappers_docs != ();
+
     nested_autos_accessors = isort([
         static_auto_accessors(blocks[t], blocks, block_name = blocks[t].name, db_var_chain = (db_var_chain | v))
       : v, t <- block.nested_blocks
     ]);
     nested_autos_code, nested_autos_docs = (join(ls) : ls <- unzip(nested_autos_accessors));
 
-    code = methods_wrappers_code & nested_autos_code;
+    code = methods_wrappers_code & accessors_wrappers_code & nested_autos_code;
 
-    docs_by_type = (methods_wrappers_docs);
+    docs_by_type = (methods_wrappers_docs, accessors_wrappers_docs);
     docs = join((indent_lines(d) : d <- docs_by_type)) & nested_autos_docs;
 
     return (code, docs);
@@ -99,11 +103,12 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, 
     methods_names = (
       (pretty_name(id.symbol), id.arity) : id, unused_var <- isort(block.methods), not id.id?
     );
+    accessors_names = ((pretty_name(id.symbol), id.arity) : id, unused_var <- isort(block.accessors));
     nested_names = join((
       pretty_names(blocks(b, !!), blocks, block_name = b, db_var_chain = (db_var_chain | v))
       : v, b <- isort(block.nested_blocks))
     );
-    return methods_names & nested_names;
+    return methods_names & accessors_names & nested_names;
   }
 }
 
@@ -111,9 +116,10 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, 
 ////////////////////////////////////////////////////////////////////////////////
 
 [NeType] interface_types(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
-  methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- root_block.methods]);
+  methods_types = union([set(m.args_types) & [m.ret_type] : unused_var, m <- root_block.methods]);
+  accessors_types = union([set(a.args_types) & [a.ret_type] : unused_var, a <- root_block.accessors]);
   nested_autos_types = union([interface_types(blocks(b, !!), blocks) : v, b <- root_block.nested_blocks]);
-  return methods_types & nested_autos_types;
+  return methods_types & accessors_types & nested_autos_types;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -31,6 +31,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     methods_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.methods];
     updates_code = [native_update_code(block.name, id, u.args_vars, u.body) : id, u <- block.updates];
+    accessors_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.accessors];
 
     class_name = native_name(block.name);
 
@@ -49,6 +50,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (""), indent_lines(update_finish_code),
       join((("") & indent_lines(c) : c <- isort(methods_code))),
       join((("") & indent_lines(c) : c <- isort(updates_code))),
+      join((("") & indent_lines(c) : c <- isort(accessors_code))),
       ("", ""), indent_lines(updater_creation_code(block)),
       (""), indent_lines(updater_reset_code(block)),
       ("}")
