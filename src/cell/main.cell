@@ -29,7 +29,7 @@ String* create_error_msg(ParserError err, String filename) =
 
 [String -> String*] Compile(
   [String -> Byte*] src_files, Bool include_runtime, Bool run_typechecking, Bool ignore_assertions,
-  Bool debug_mode, Bool print_intermediate, Bool print_times, Bool wait_for_key
+  Bool debug_mode, Bool generate_accessors, Bool print_intermediate, Bool print_times, Bool wait_for_key
 ) {
   t0 = _ticks_(:any_value_will_do);
 
@@ -124,9 +124,10 @@ String* create_error_msg(ParserError err, String filename) =
       t5 = _ticks_(:any_value_will_do);
 
       options = options(
-        debug_mode: debug_mode,
-        ignore_assertions: ignore_assertions,
-        max_opt_fields_in_opt_rec: 16
+        debug_mode:                 debug_mode,
+        ignore_assertions:          ignore_assertions,
+        generate_accessors:         generate_accessors,
+        max_opt_fields_in_opt_rec:  16
       );
       code = if not is_done then just(compiled_program(options = options)) else nothing;
     ;
@@ -232,6 +233,7 @@ Int Main(String* args) {
   run_typechecking = true;
   ignore_assertions = false;
   debug_mode = false;
+  generate_accessors = true;
 
   print_intermediate = false;
   print_times = false;
@@ -247,6 +249,8 @@ Int Main(String* args) {
       ignore_assertions = true;
     elif o == "-d":
       debug_mode = true;
+    elif o == "-nag":
+      generate_accessors = false;
     elif o == "-p":
       print_intermediate = true;
     elif o == "-t":
@@ -283,8 +287,8 @@ Int Main(String* args) {
     src_files = src_files & [fn -> value(fc)];
   ;
 
-  files = Compile(src_files, include_runtime, run_typechecking, ignore_assertions,
-                   debug_mode, print_intermediate, print_times, wait_for_key_at_every_step);
+  files = Compile(src_files, include_runtime, run_typechecking, ignore_assertions, debug_mode,
+                  generate_accessors, print_intermediate, print_times, wait_for_key_at_every_step);
 
   for name, lines <- isort(files):
     ok = FileWrite(out_dir & "/" & name, chars(append(lines, "\n")));
