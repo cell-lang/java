@@ -493,7 +493,7 @@ String* custom_parser = (
   "",
   "public static Obj parse(Obj text) {",
   "  Obj chars = text.getInnerObj();",
-  "  return parse(i -> chars.getLongAt(i), chars.getSize());",
+  "  return parse(chars::getLongAt, chars.getSize());",
   "}",
   "",
   "",

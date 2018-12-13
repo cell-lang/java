@@ -7,13 +7,18 @@ class Conversions {
   public static Obj convertText(String text) {
     int len = text.length();
     int count = text.codePointCount(0, len);
-    if (count == len)
-      //## THIS IS ALL WRONG! Generated.parse() returns a Result[Any, Nat],
-      //## IT DOESN'T THROW AN EXCEPTION!
-      return Generated.parse(text::charAt, len).getInnerObj();
-    int[] codePoints = text.codePoints().toArray();
-    //## DITTO
-    return Generated.parse(i -> codePoints[i], count).getInnerObj();
+    Token[] tokens;
+    if (count == len) {
+      tokens = Lexer.lex(text::charAt, len);
+    }
+    else {
+      int[] codePoints = text.codePoints().toArray();
+      tokens = Lexer.lex(i -> codePoints[i], count);
+    }
+    Parser parser = new Generated.Parser(tokens);
+    Obj obj = parser.parseObj();
+    parser.checkEof();
+    return obj;
   }
 
   public static Value exportAsValue(Obj obj) {
