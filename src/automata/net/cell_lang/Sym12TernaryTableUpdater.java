@@ -70,7 +70,7 @@ class Sym12TernaryTableUpdater {
   }
 
   public void delete_13_23(int value12, int value3) {
-    Sym12TernaryTable.Iter_13_23 it = table.getIter_13_23(value12, value3);
+    Sym12TernaryTable.Iter it = table.getIter_13_23(value12, value3);
     while (!it.done()) {
       deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), value3);
       it.next();
@@ -78,7 +78,7 @@ class Sym12TernaryTableUpdater {
   }
 
   public void delete_1_2(int value12) {
-    Sym12TernaryTable.Iter_1_2 it = table.getIter_1_2(value12);
+    Sym12TernaryTable.Iter it = table.getIter_1_2(value12);
     while (!it.done()) {
       deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
       it.next();
@@ -235,7 +235,7 @@ class Sym12TernaryTableUpdater {
     if (table.contains_1_2(surr12)) {
       //## THIS COULD BE MADE FASTER BY CHECKING FIRST WHETHER surr12 APPEARS IN THE DELETE LIST AT ALL
       prepare();
-      Sym12TernaryTable.Iter_1_2 it = table.getIter_1_2(surr12);
+      Sym12TernaryTable.Iter it = table.getIter_1_2(surr12);
       Miscellanea._assert(!it.done());
       do {
         if (!Ints123.contains(deleteList, deleteCount, it.get1(), it.get2(), it.get3()))

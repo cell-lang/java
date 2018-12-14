@@ -99,7 +99,7 @@ class SymBinaryTable {
   public void delete(int surr1, int surr2) {
     table.delete(surr1, surr2);
     if (surr1 != surr2)
-      table.delete(surr2, surr2);
+      table.delete(surr2, surr1);
     else
       eqCount--;
     check();
