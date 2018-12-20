@@ -83,6 +83,47 @@ class Test_BinaryTable {
           System.exit(1);
         }
 
+    { int expectedCount = 0;
+      for (int i=0 ; i < size ; i++)
+        for (int j=0 ; j < size ; j++)
+          if (bitMap[i][j])
+            expectedCount++;
+
+      int actualCount = 0;
+      BinaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int arg1 = it.get1();
+        int arg2 = it.get2();
+        if (!bitMap[arg1][arg2]) {
+          System.out.println("ERROR (1)!\n");
+          System.exit(1);
+        }
+        actualCount++;
+        it.next();
+      }
+
+      if (actualCount != expectedCount) {
+        System.out.println("ERROR (1)!\n");
+        System.out.printf("Actual count = %d, expected = %d\n\n", actualCount, expectedCount);
+        printDiffs(table, bitMap, size);
+
+        it = table.getIter();
+        while (!it.done()) {
+          int arg1 = it.get1();
+          int arg2 = it.get2();
+          System.out.printf("%2d %2d\n", arg1, arg2);
+          it.next();
+        }
+
+        System.exit(1);
+      }
+
+      if (table.size() != expectedCount) {
+        System.out.println("ERROR (1/C)!\n");
+        System.exit(1);
+      }
+    }
+
     for (int i=0 ; i < size ; i++) {
       int count = 0;
       int[] list = new int[size];
@@ -90,6 +131,11 @@ class Test_BinaryTable {
         if (bitMap[i][j])
           list[count++] = j;
       int[] expValues = Arrays.copyOf(list, count);
+
+      if (table.count1(i) != count) {
+        System.out.println("ERROR (5/A)!\n");
+        System.exit(1);
+      }
 
       if (table.contains1(i) != (expValues.length > 0)) {
         System.out.println("ERROR (2)!\n");
@@ -110,7 +156,7 @@ class Test_BinaryTable {
       BinaryTable.Iter it = table.getIter1(i);
       count = 0;
       while (!it.done()) {
-        list[count++] = it.get2();
+        list[count++] = it.get1();
         it.next();
       }
       actualValues = Arrays.copyOf(list, count);
@@ -128,6 +174,11 @@ class Test_BinaryTable {
         if (bitMap[i][j])
           list[count++] = i;
       int[] expValues = Arrays.copyOf(list, count);
+
+      if (table.count2(j) != count) {
+        System.out.println("ERROR (5/A)!\n");
+        System.exit(1);
+      }
 
       if (table.contains2(j) != (expValues.length > 0)) {
         System.out.println("ERROR (5)!\n");

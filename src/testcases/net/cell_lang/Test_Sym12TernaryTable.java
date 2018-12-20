@@ -8,14 +8,14 @@ class Test_Sym12TernaryTable {
   static Random random = new Random(0);
 
   public static void run() {
-    // for (int i=1 ; i < 50 ; i++) {
-    //   for (int j=0 ; j < 100 ; j++) {
-    //     run(i, false);
-    //   }
-    //   System.out.printf("%d\n", i);
-    // }
+    for (int i=1 ; i <= 24 ; i++) {
+      for (int j=0 ; j < 100 ; j++) {
+        run(i, false);
+      }
+      System.out.printf("%d\n", i);
+    }
 
-    // System.out.println();
+    System.out.println();
 
     for (int i=1 ; i < 27 ; i++) {
       run(i, false);
@@ -107,10 +107,50 @@ class Test_Sym12TernaryTable {
             System.exit(1);
           }
 
+    { int expectedCount = 0;
+      for (int i=0 ; i < range ; i++)
+        for (int j=0 ; j <= i ; j++)
+          for (int k=0 ; k < range ; k++)
+            if (bitMap[i][j][k])
+              expectedCount++;
+
+      int actualCount = 0;
+
+      Sym12TernaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int arg1 = it.get1();
+        int arg2 = it.get2();
+        int arg3 = it.get3();
+        if (!bitMap[arg1][arg2][arg3] | !bitMap[arg2][arg1][arg3]) {
+          System.out.println("ERROR (?, ?, ?) - A\n");
+          System.exit(1);
+        }
+        actualCount++;
+        it.next();
+      }
+
+      if (actualCount != expectedCount) {
+        System.out.println("ERROR (?, ?, ?) - B\n");
+        System.out.printf("Actual count = %d, expected = %d\n\n", actualCount, expectedCount);
+        printDiffs(table, bitMap, range);
+        System.exit(1);
+      }
+
+      if (table.size() != expectedCount) {
+        System.out.println("ERROR (?, ?, ?) - B\n");
+        System.exit(1);
+      }
+    }
+
     for (int s1=0 ; s1 < range ; s1++)
       for (int s2=0 ; s2 < range ; s2++) {
         int[] expected = match12(bitMap, s1, s2, range);
         int[] actual = match12(table, s1, s2, range);
+
+        if (table.count12(s1, s2) != expected.length) {
+          System.out.println("Error (_, _, ?) - A\n");
+          System.exit(1);
+        }
 
         if (table.contains12(s1, s2) != (expected.length > 0)) {
           System.out.println("Error (_, _, ?) - A\n");
@@ -145,6 +185,11 @@ class Test_Sym12TernaryTable {
         int[] expected = match13(bitMap, s1, s3, range);
         int[] actual = match13(table, s1, s3, range);
 
+        if (table.count_13_23(s1, s3) != expected.length) {
+          System.out.println("Error (_, ?, _) - A\n");
+          System.exit(1);
+        }
+
         if (table.contains_13_23(s1, s3) != (expected.length > 0)) {
           System.out.println("Error (_, ?, _) - A\n");
           System.exit(1);
@@ -178,6 +223,11 @@ class Test_Sym12TernaryTable {
         int[] expected = match23(bitMap, s2, s3, range);
         int[] actual = match23(table, s2, s3, range);
 
+        if (table.count_13_23(s2, s3) != expected.length) {
+          System.out.println("Error (?, _, _) - A\n");
+          System.exit(1);
+        }
+
         if (table.contains_13_23(s2, s3) != (expected.length > 0)) {
           System.out.println("Error (?, _, _) - A\n");
           System.exit(1);
@@ -193,6 +243,14 @@ class Test_Sym12TernaryTable {
       int[] expected = match1(bitMap, s1, range);
       int[] actual = match1(table, s1, range);
 
+      if (2 * table.count_1_2(s1) != expected.length) {
+        System.out.printf("Error (%d, ?, ?) - A\n", s1);
+        System.out.printf("table.count_1_2(%d) = %d, expected = %d\n", s1, table.count_1_2(s1), expected.length);
+        printDiffs(table, bitMap, range);
+        System.out.printf("expected = %s\n", Arrays.toString(expected));
+        System.exit(1);
+      }
+
       if (table.contains_1_2(s1) != (expected.length > 0)) {
         System.out.println("Error (_, ?, ?) - A\n");
         System.exit(1);
@@ -205,6 +263,9 @@ class Test_Sym12TernaryTable {
         System.out.printf("range = %d, s1 = %d\n", range, s1);
         System.out.printf("expected: %s\n", Arrays.toString(expected));
         System.out.printf("actual: %s\n", Arrays.toString(actual));
+
+        actual = match1(table, s1, range);
+
         System.exit(1);
       }
     }
@@ -212,6 +273,11 @@ class Test_Sym12TernaryTable {
     for (int s2=0 ; s2 < range ; s2++) {
       int[] expected = match2(bitMap, s2, range);
       int[] actual = match2(table, s2, range);
+
+      if (2 * table.count_1_2(s2) != expected.length) {
+        System.out.println("Error (?, _, ?) - A\n");
+        System.exit(1);
+      }
 
       if (table.contains_1_2(s2) != (expected.length > 0)) {
         System.out.println("Error (?, _, ?) - A\n");
@@ -227,6 +293,11 @@ class Test_Sym12TernaryTable {
     for (int s3=0 ; s3 < range ; s3++) {
       int[] expected = match3(bitMap, s3, range);
       int[] actual = match3(table, s3, range);
+
+      if (2 * table.count3(s3) != expected.length) {
+        System.out.println("Error (?, ?, _) - A\n");
+        System.exit(1);
+      }
 
       if (table.contains3(s3) != (expected.length > 0)) {
         System.out.println("Error (?, ?, _) - A\n");
@@ -254,7 +325,7 @@ class Test_Sym12TernaryTable {
     int[] buffer = new int[range];
     Sym12TernaryTable.Iter it = table.getIter12(s1, s2);
     while (!it.done()) {
-      buffer[count++] = it.get3();
+      buffer[count++] = it.get1();
       it.next();
     }
     buffer = Arrays.copyOf(buffer, count);
@@ -281,7 +352,7 @@ class Test_Sym12TernaryTable {
           System.out.printf("%d ", buffer[i]);
         System.out.println();
       }
-      buffer[count++] = it.get2();
+      buffer[count++] = it.get1();
       it.next();
     }
     buffer = Arrays.copyOf(buffer, count);
@@ -303,7 +374,7 @@ class Test_Sym12TernaryTable {
     int[] buffer = new int[range];
     Sym12TernaryTable.Iter it = table.getIter_13_23(s2, s3);
     while (!it.done()) {
-      buffer[count++] = it.get2(); // get2() returns the unknown argument
+      buffer[count++] = it.get1();
       it.next();
     }
     buffer = Arrays.copyOf(buffer, count);
@@ -328,8 +399,8 @@ class Test_Sym12TernaryTable {
     int[] buffer = new int[2 * range * range];
     Sym12TernaryTable.Iter it = table.getIter_1_2(s1);
     while (!it.done()) {
+      buffer[count++] = it.get1();
       buffer[count++] = it.get2();
-      buffer[count++] = it.get3();
       it.next();
     }
     return sort2(Arrays.copyOf(buffer, count));
@@ -352,8 +423,8 @@ class Test_Sym12TernaryTable {
     int[] buffer = new int[2 * range * range];
     Sym12TernaryTable.Iter it = table.getIter_1_2(s2);
     while (!it.done()) {
-      buffer[count++] = it.get2(); // get2() returns the unknown argument
-      buffer[count++] = it.get3();
+      buffer[count++] = it.get1();
+      buffer[count++] = it.get2();
       it.next();
     }
     return sort2(Arrays.copyOf(buffer, count));
@@ -425,5 +496,21 @@ class Test_Sym12TernaryTable {
       }
       System.out.println();
     }
+
+    System.out.println();
+    System.out.println();
+
+    for (int s1=0 ; s1 < range ; s1++) {
+      for (int s2=0 ; s2 < range ; s2++) {
+        for (int s3=0 ; s3 < range ; s3++) {
+          boolean actual = table.contains(s1, s2, s3);
+          boolean expected = bitMap[s1][s2][s3];
+          if (expected)
+            System.out.printf("%2d, %2d, %2d  %s\n", s1, s2, s3, actual ? "" : "ERROR");
+        }
+      }
+    }
+
+    System.out.println();
   }
 }

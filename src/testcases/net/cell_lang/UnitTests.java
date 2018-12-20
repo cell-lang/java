@@ -18,6 +18,11 @@ public class UnitTests {
     // Test_TernaryTable.run();
     // System.out.println("TernaryTable      OK");
 
+    // Test_SymBinaryTable.run();
+    // System.out.println("SymBinaryTable    OK");
+    Test_Sym12TernaryTable.run();
+    System.out.println("Sym12TernaryTable OK");
+
     // Test_BinaryTable.run2();
     // Test_BinaryTable.run3();
     // System.out.println("WTF?");

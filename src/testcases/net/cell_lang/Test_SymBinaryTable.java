@@ -89,17 +89,71 @@ class Test_SymBinaryTable {
         }
   }
 
+  static int counter = 0;
+
   static void checkTable(SymBinaryTable table, boolean[][] bitMap, int size) {
+    counter++;
+
     table.check();
 
     for (int i=0 ; i < size ; i++)
       for (int j=0 ; j < size ; j++)
         if (table.contains(i, j) != bitMap[i][j]) {
-          System.out.println("ERROR (1)!\n");
+          System.out.println("ERROR (0)!\n");
           printDiffs(table, bitMap, size);
           //throw new Exception();
           System.exit(1);
         }
+
+    { int expectedCount = 0;
+      for (int i=0 ; i < size ; i++)
+        for (int j=0 ; j <= i ; j++)
+          if (bitMap[i][j])
+            expectedCount++;
+
+      int actualCount = 0;
+
+
+// System.out.printf("counter = %d\n", counter);
+// if (counter == 304) {
+//   System.out.println();
+//   printDiffs(table, bitMap, size);
+//   System.out.println();
+// }
+
+      SymBinaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int arg1 = it.get1();
+        int arg2 = it.get2();
+        if (!bitMap[arg1][arg2] | !bitMap[arg2][arg1]) {
+          System.out.println("ERROR (1)!\n");
+          System.exit(1);
+        }
+        actualCount++;
+        it.next();
+      }
+
+      if (actualCount != expectedCount) {
+        System.out.println("ERROR (1)!\n");
+        System.out.printf("Actual count = %d, expected = %d\n\n", actualCount, expectedCount);
+        printDiffs(table, bitMap, size);
+
+        it = table.getIter();
+        while (!it.done()) {
+          int arg1 = it.get1();
+          int arg2 = it.get2();
+          System.out.printf("%2d %2d\n", arg1, arg2);
+          it.next();
+        }
+
+        System.exit(1);
+      }
+
+      if (table.size() != expectedCount) {
+        System.out.println("ERROR (1)!\n");
+        System.exit(1);
+      }
+    }
 
     for (int i=0 ; i < size ; i++) {
       int count = 0;
@@ -128,11 +182,7 @@ class Test_SymBinaryTable {
       SymBinaryTable.Iter it = table.getIter(i);
       count = 0;
       while (!it.done()) {
-        if (it.get1() != i) {
-          System.out.println("ERROR (4.0)!\n");
-          System.exit(1);
-        }
-        list[count++] = it.get2();
+        list[count++] = it.get1();
         it.next();
       }
       actualValues = Arrays.copyOf(list, count);
@@ -148,6 +198,11 @@ class Test_SymBinaryTable {
         // System.out.println();
         System.exit(1);
       }
+
+      if (table.count(i) != count) {
+        System.out.println("ERROR (4/A)!\n");
+        System.exit(1);
+      }
     }
 
     for (int j=0 ; j < size ; j++) {
@@ -157,6 +212,11 @@ class Test_SymBinaryTable {
         if (bitMap[i][j])
           list[count++] = i;
       int[] expValues = Arrays.copyOf(list, count);
+
+      if (table.count(j) != count) {
+        System.out.println("ERROR (5/A)!\n");
+        System.exit(1);
+      }
 
       if (table.contains(j) != (expValues.length > 0)) {
         System.out.println("ERROR (5)!\n");
