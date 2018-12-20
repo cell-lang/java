@@ -157,8 +157,8 @@ class OneWayBinTable {
     return res;
   }
 
-  public int[] copySym() {
-    int[] res = new int[count];
+  public int[] copySym(int eqCount) {
+    int[] res = new int[count+eqCount];
     int next = 0;
     for (int i=0 ; i < column.length ; i++) {
       int code = column[i];
@@ -172,16 +172,17 @@ class OneWayBinTable {
         else {
           OverflowTable.Iter it = overflowTable.getIter(code);
           while (!it.done()) {
-            if (i <= code) {
+            int value = it.get();
+            if (i <= value) {
               res[next++] = i;
-              res[next++] = it.get();
+              res[next++] = value;
             }
             it.next();
           }
         }
       }
     }
-    Miscellanea._assert(next == count);
+    Miscellanea._assert(next == count + eqCount);
     return res;
   }
 

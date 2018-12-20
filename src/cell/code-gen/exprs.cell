@@ -227,7 +227,7 @@ String native_expr(Int32NatOp expr, Bool parenthesized) =
   add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized),
   lookup_value()        = native_method_call_expr(expr.store, "lookupValue", (expr.value)),
   lookup_value_ex()     = native_method_call_expr(aux_struct_var_ref_name(expr.store), "lookupValueEx", (expr.value)),
-  get_tuple_field()     = if expr.iter.arity == 1
+  get_unknown_arg()     = if expr.iter.arity == 1
                             then native_var_ref_name(expr.iter) & ".get()"
                             else native_var_ref_name(expr.iter) & ".get" & printed(expr.field+1) & "()";
 

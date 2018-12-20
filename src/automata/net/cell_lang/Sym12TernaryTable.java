@@ -304,7 +304,7 @@ class Sym12TernaryTable {
   }
 
   public Iter123 getIter() {
-    return new Iter123(this);
+    return new Iter123();
   }
 
   public Iter12 getIter12(int arg1, int arg2) {
@@ -315,17 +315,17 @@ class Sym12TernaryTable {
     }
     Miscellanea._assert(arg1 <= arg2);
     int hashcode = Miscellanea.hashcode(arg1, arg2);
-    return new Iter12(arg1, arg2, index12.head(hashcode), this);
+    return new Iter12(arg1, arg2, index12.head(hashcode));
   }
 
   public Iter getIter_13_23(int arg12, int arg3) {
     int hashcode = Miscellanea.hashcode(arg12, arg3);
     if (index13 == null)
       buildIndex13();
-    Iter iter1 = new Iter13(arg12, arg3, index13.head(hashcode), this);
+    Iter iter1 = new Iter13(arg12, arg3, index13.head(hashcode));
     if (index23 == null)
       buildIndex23();
-    Iter iter2 = new Iter23(arg12, arg3, index23.head(hashcode), this);
+    Iter iter2 = new Iter23(arg12, arg3, index23.head(hashcode));
     if (iter1.done())
       return iter2;
     if (iter2.done())
@@ -337,10 +337,10 @@ class Sym12TernaryTable {
     int hashcode = Miscellanea.hashcode(arg12);
     if (index1 == null)
       buildIndex1();
-    Iter iter1 = new Iter1(arg12, index1.head(hashcode), this);
+    Iter iter1 = new Iter1(arg12, index1.head(hashcode));
     if (index2 == null)
       buildIndex2();
-    Iter iter2 = new Iter2(arg12, index2.head(hashcode), this);
+    Iter iter2 = new Iter2(arg12, index2.head(hashcode));
     if (iter1.done())
       return iter2;
     if (iter2.done())
@@ -352,7 +352,7 @@ class Sym12TernaryTable {
     if (index3 == null)
       buildIndex3();
     int hashcode = Miscellanea.hashcode(arg3);
-    return new Iter3(arg3, index3.head(hashcode), this);
+    return new Iter3(arg3, index3.head(hashcode));
   }
 
   public Obj copy(int idx1, int idx2, int idx3) {
@@ -559,36 +559,24 @@ class Sym12TernaryTable {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public static abstract class Iter {
-    protected int index;
-    protected Sym12TernaryTable table;
-
-
-    protected Iter(int index, Sym12TernaryTable table) {
-      this.index = index;
-      this.table = table;
-    }
-
-    public boolean done() {
-      return index == Empty;
-    }
+  public abstract static class Iter {
+    public abstract boolean done();
+    public abstract void next();
 
     public int get1() {
-      Miscellanea._assert(index != Empty);
-      return table.arg1OrNext(index);
+      System.out.println(toString());
+      throw Miscellanea.internalFail();
     }
 
     public int get2() {
-      Miscellanea._assert(index != Empty);
-      return table.arg2OrEmptyMarker(index);
+      System.out.println(toString());
+      throw Miscellanea.internalFail();
     }
 
     public int get3() {
-      Miscellanea._assert(index != Empty);
-      return table.arg3(index);
+      System.out.println(toString());
+      throw Miscellanea.internalFail();
     }
-
-    public abstract void next();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -598,55 +586,76 @@ class Sym12TernaryTable {
     Iter iter2;
 
     public IterPair(Iter iter1, Iter iter2) {
-      super(iter1.index, iter1.table);
       Miscellanea._assert(!iter1.done() & !iter2.done());
       this.iter1 = iter1;
       this.iter2 = iter2;
     }
 
+    public boolean done() {
+      return iter1 == null;
+    }
+
     public void next() {
-      Miscellanea._assert(!iter2.done());
-      if (iter1 != null) {
-        iter1.next();
-        if (iter1.done()) {
-          iter1 = null;
-          index = iter2.index;
-        }
-        else
-          index = iter1.index;
-      }
-      else {
-        iter2.next();
-        index = iter2.index;
+      iter1.next();
+      if (iter1.done()) {
+        iter1 = iter2;
+        iter2 = null;
       }
     }
 
     public int get1() {
-      Miscellanea._assert(index != Empty);
-      return iter1 != null ? table.arg1OrNext(index) : table.arg2OrEmptyMarker(index);
+      return iter1.get1();
     }
 
     public int get2() {
-      Miscellanea._assert(index != Empty);
-      return iter1 != null ? table.arg2OrEmptyMarker(index) : table.arg1OrNext(index);
+      return iter1.get2();
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static final class Iter123 extends Iter {
+  public abstract static class IdxIter extends Iter {
+    protected int index;
+
+    protected IdxIter(int index) {
+      this.index = index;
+    }
+
+    public boolean done() {
+      return index == Empty;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final class Iter123 extends IdxIter {
     int end;
 
-    public Iter123(Sym12TernaryTable table) {
-      super(0, table);
-      end = table.capacity();
-      while (table.arg2OrEmptyMarker(index) == Empty) {
+    public Iter123() {
+      super(0);
+      end = capacity();
+      while (arg2OrEmptyMarker(index) == Empty) {
         index++;
         if (index == end) {
           index = Empty;
           break;
         }
       }
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return arg1OrNext(index);
+    }
+
+    public int get2() {
+      Miscellanea._assert(index != Empty);
+      return arg2OrEmptyMarker(index);
+    }
+
+    public int get3() {
+      Miscellanea._assert(index != Empty);
+      return arg3(index);
     }
 
     public void next() {
@@ -657,182 +666,203 @@ class Sym12TernaryTable {
           index = Empty;
           return;
         }
-      } while (table.arg2OrEmptyMarker(index) == Empty);
+      } while (arg2OrEmptyMarker(index) == Empty);
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static final class Iter12 extends Iter {
+  public final class Iter12 extends IdxIter {
     int arg1, arg2;
 
-    public Iter12(int arg1, int arg2, int index0, Sym12TernaryTable table) {
-      super(index0, table);
+    public Iter12(int arg1, int arg2, int index0) {
+      super(index0);
       Miscellanea._assert(arg1 <= arg2);
       this.arg1 = arg1;
       this.arg2 = arg2;
       while (index != Empty && !isMatch())
-        index = table.index12.next(index);
+        index = index12.next(index);
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return arg3(index);
     }
 
     public void next() {
       Miscellanea._assert(!done());
       do {
-        index = table.index12.next(index);
+        index = index12.next(index);
       }
       while (index != Empty && !isMatch());
     }
 
     boolean isMatch() {
-      return table.arg1OrNext(index) == arg1 && table.arg2OrEmptyMarker(index) == arg2;
+      return arg1OrNext(index) == arg1 && arg2OrEmptyMarker(index) == arg2;
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private static final class Iter13 extends Iter {
+  private final class Iter13 extends IdxIter {
     int arg1, arg3;
 
-    public Iter13(int arg1, int arg3, int index0, Sym12TernaryTable table) {
-      super(index0, table);
+    public Iter13(int arg1, int arg3, int index0) {
+      super(index0);
       this.arg1 = arg1;
       this.arg3 = arg3;
       while (index != Empty && !isMatch())
-        index = table.index13.next(index);
+        index = index13.next(index);
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return arg2OrEmptyMarker(index);
     }
 
     public void next() {
       Miscellanea._assert(!done());
       do {
-        index = table.index13.next(index);
+        index = index13.next(index);
       } while (index != Empty && !isMatch());
     }
 
     boolean isMatch() {
-      return table.arg1OrNext(index) == arg1 && table.arg3(index) == arg3;
+      return arg1OrNext(index) == arg1 && arg3(index) == arg3;
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private static final class Iter23 extends Iter {
+  private final class Iter23 extends IdxIter {
     int arg2, arg3;
 
-    public Iter23(int arg2, int arg3, int index0, Sym12TernaryTable table) {
-      super(index0, table);
+    public Iter23(int arg2, int arg3, int index0) {
+      super(index0);
       this.arg2 = arg2;
       this.arg3 = arg3;
       while (index != Empty && !isMatch())
-        index = table.index23.next(index);
+        index = index23.next(index);
     }
 
-    // Returns the known argument
     public int get1() {
       Miscellanea._assert(index != Empty);
-      return table.arg2OrEmptyMarker(index);
-    }
-
-    // Returns the unknown argument
-    public int get2() {
-      Miscellanea._assert(index != Empty);
-      return table.arg1OrNext(index);
+      return arg1OrNext(index);
     }
 
     public void next() {
       Miscellanea._assert(!done());
       do {
-        index = table.index23.next(index);
+        index = index23.next(index);
       } while (index != Empty && !isMatch());
     }
 
     boolean isMatch() {
       // Since it's always used together with Iter13, in order to avoid duplicates we skip entries
       // of the form (arg2, arg2, arg3) that would be found by a search through the other index
-      return table.arg1OrNext(index) != arg2 &&
-             table.arg2OrEmptyMarker(index) == arg2 &&
-             table.arg3(index) == arg3;
+      return arg1OrNext(index) != arg2 &&
+             arg2OrEmptyMarker(index) == arg2 &&
+             arg3(index) == arg3;
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private static final class Iter1 extends Iter {
+  private final class Iter1 extends IdxIter {
     int arg1;
 
-    public Iter1(int arg1, int index0, Sym12TernaryTable table) {
-      super(index0, table);
+    public Iter1(int arg1, int index0) {
+      super(index0);
       this.arg1 = arg1;
       while (index != Empty && !isMatch())
-        index = table.index1.next(index);
+        index = index1.next(index);
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return arg2OrEmptyMarker(index);
+    }
+
+    public int get2() {
+      Miscellanea._assert(index != Empty);
+      return arg3(index);
     }
 
     public void next() {
       Miscellanea._assert(!done());
       do {
-        index = table.index1.next(index);
+        index = index1.next(index);
       } while (index != Empty && !isMatch());
     }
 
     boolean isMatch() {
-      return table.arg1OrNext(index) == arg1;
+      return arg1OrNext(index) == arg1;
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private static final class Iter2 extends Iter {
+  private final class Iter2 extends IdxIter {
     int arg2;
 
-    public Iter2(int arg2, int index0, Sym12TernaryTable table) {
-      super(index0, table);
+    public Iter2(int arg2, int index0) {
+      super(index0);
       this.arg2 = arg2;
       while (index != Empty && !isMatch())
-        index = table.index2.next(index);
+        index = index2.next(index);
     }
 
-    // Returns the known argument
     public int get1() {
       Miscellanea._assert(index != Empty);
-      return table.arg2OrEmptyMarker(index);
+      return arg1OrNext(index);
     }
 
-    // Returns the unknown argument
     public int get2() {
       Miscellanea._assert(index != Empty);
-      return table.arg1OrNext(index);
+      return arg3(index);
     }
 
     public void next() {
       Miscellanea._assert(!done());
       do {
-        index = table.index2.next(index);
+        index = index2.next(index);
       } while (index != Empty && !isMatch());
     }
 
     boolean isMatch() {
       // Since it's always used together with Iter1, in order to avoid duplicates we skip entries
       // of the form (arg2, arg2, *) that would be found by a search through the other index
-      return table.arg1OrNext(index) != arg2 && table.arg2OrEmptyMarker(index) == arg2;
+      return arg1OrNext(index) != arg2 && arg2OrEmptyMarker(index) == arg2;
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static final class Iter3 extends Iter {
+  public final class Iter3 extends IdxIter {
     int arg3;
 
-    public Iter3(int arg3, int index0, Sym12TernaryTable table) {
-      super(index0, table);
+    public Iter3(int arg3, int index0) {
+      super(index0);
       this.arg3 = arg3;
-      while (index != Empty && table.arg3(index) != arg3)
-        index = table.index3.next(index);
+      while (index != Empty && arg3(index) != arg3)
+        index = index3.next(index);
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return arg1OrNext(index);
+    }
+
+    public int get2() {
+      Miscellanea._assert(index != Empty);
+      return arg2OrEmptyMarker(index);
     }
 
     public void next() {
       Miscellanea._assert(!done());
       do {
-        index = table.index3.next(index);
-      } while (index != Empty && table.arg3(index) != arg3);
+        index = index3.next(index);
+      } while (index != Empty && arg3(index) != arg3);
     }
   }
 }

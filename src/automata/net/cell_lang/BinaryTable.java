@@ -4,11 +4,13 @@ package net.cell_lang;
 class BinaryTable {
   public static class Iter {
     int[] entries;
+    boolean singleCol;
     int next;
     int end;
 
-    public Iter(int[] entries) {
+    public Iter(int[] entries, boolean singleCol) {
       this.entries = entries;
+      this.singleCol = singleCol;
       next = 0;
       end = entries.length;
     }
@@ -22,11 +24,12 @@ class BinaryTable {
     }
 
     public int get2() {
+      Miscellanea._assert(!singleCol);
       return entries[next+1];
     }
 
     public void next() {
-      next += 2;
+      next += singleCol ? 1 : 2;
     }
   }
 
@@ -87,29 +90,15 @@ class BinaryTable {
   }
 
   public Iter getIter() {
-    return new Iter(table1.copy());
+    return new Iter(table1.copy(), false);
   }
 
   public Iter getIter1(int surr1) {
-    int[] col2 = lookupByCol1(surr1);
-    int count = col2.length;
-    int[] entries = new int[2 * count];
-    for (int i=0 ; i < count ; i++) {
-      entries[2 * i] = surr1;
-      entries[2 * i + 1] = col2[i];
-    }
-    return new Iter(entries);
+    return new Iter(lookupByCol1(surr1), true);
   }
 
   public Iter getIter2(int surr2) {
-    int[] col1 = lookupByCol2(surr2);
-    int count = col1.length;
-    int[] entries = new int[2 * count];
-    for (int i=0 ; i < count ; i++) {
-      entries[2 * i] = col1[i];
-      entries[2 * i + 1] = surr2;
-    }
-    return new Iter(entries);
+    return new Iter(lookupByCol2(surr2), true);
   }
 
   public void insert(int surr1, int surr2) {

@@ -6,9 +6,11 @@ class SymBinaryTable {
     int[] entries;
     int next;
     int end;
+    boolean singleCol;
 
-    public Iter(int[] entries) {
+    public Iter(int[] entries, boolean singleCol) {
       this.entries = entries;
+      this.singleCol = singleCol;
       next = 0;
       end = entries.length;
     }
@@ -22,11 +24,12 @@ class SymBinaryTable {
     }
 
     public int get2() {
+      Miscellanea._assert(!singleCol);
       return entries[next+1];
     }
 
     public void next() {
-      next += 2;
+      next += singleCol ? 1 : 2;
     }
   }
 
@@ -67,18 +70,11 @@ class SymBinaryTable {
   }
 
   public Iter getIter() {
-    return new Iter(rawCopy());
+    return new Iter(rawCopy(), false);
   }
 
   public Iter getIter(int surr) {
-    int[] col2 = table.lookup(surr);
-    int count = col2.length;
-    int[] entries = new int[2 * count];
-    for (int i=0 ; i < count ; i++) {
-      entries[2 * i] = surr;
-      entries[2 * i + 1] = col2[i];
-    }
-    return new Iter(entries);
+    return new Iter(table.lookup(surr), true);
   }
 
   public void insert(int surr1, int surr2) {
@@ -147,7 +143,7 @@ class SymBinaryTable {
   }
 
   public int[] rawCopy() {
-    return table.copySym();
+    return table.copySym(eqCount);
   }
 
   //////////////////////////////////////////////////////////////////////////////

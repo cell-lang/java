@@ -331,48 +331,48 @@ class TernaryTable {
     return count == expCount;
   }
 
-  public Iter getIter() {
-    return new Iter(Empty, Empty, Empty, 0, Iter.Type.F123, this);
+  public Iter123 getIter() {
+    return new Iter123();
   }
 
-  public Iter getIter12(int field1, int field2) {
+  public Iter12 getIter12(int field1, int field2) {
     int hashcode = Miscellanea.hashcode(field1, field2);
-    return new Iter(field1, field2, Empty, index12.head(hashcode), Iter.Type.F12, this);
+    return new Iter12(field1, field2, index12.head(hashcode));
   }
 
-  public Iter getIter13(int field1, int field3) {
+  public Iter13 getIter13(int field1, int field3) {
     if (index13 == null)
       buildIndex13();
     int hashcode = Miscellanea.hashcode(field1, field3);
-    return new Iter(field1, Empty, field3, index13.head(hashcode), Iter.Type.F13, this);
+    return new Iter13(field1, field3, index13.head(hashcode));
   }
 
-  public Iter getIter23(int field2, int field3) {
+  public Iter23 getIter23(int field2, int field3) {
     if (index23 == null)
       buildIndex23();
     int hashcode = Miscellanea.hashcode(field2, field3);
-    return new Iter(Empty, field2, field3, index23.head(hashcode), Iter.Type.F23, this);
+    return new Iter23(field2, field3, index23.head(hashcode));
   }
 
-  public Iter getIter1(int field1) {
+  public Iter1 getIter1(int field1) {
     if (index1 == null)
       buildIndex1();
     int hashcode = Miscellanea.hashcode(field1);
-    return new Iter(field1, Empty, Empty, index1.head(hashcode), Iter.Type.F1, this);
+    return new Iter1(field1, index1.head(hashcode));
   }
 
-  public Iter getIter2(int field2) {
+  public Iter2 getIter2(int field2) {
     if (index2 == null)
       buildIndex2();
     int hashcode = Miscellanea.hashcode(field2);
-    return new Iter(Empty, field2, Empty, index2.head(hashcode), Iter.Type.F2, this);
+    return new Iter2(field2, index2.head(hashcode));
   }
 
-  public Iter getIter3(int field3) {
+  public Iter3 getIter3(int field3) {
     if (index3 == null)
       buildIndex3();
     int hashcode = Miscellanea.hashcode(field3);
-    return new Iter(Empty, Empty, field3, index3.head(hashcode), Iter.Type.F3, this);
+    return new Iter3(field3, index3.head(hashcode));
   }
 
   public Obj copy(int idx1, int idx2, int idx3) {
@@ -597,119 +597,259 @@ class TernaryTable {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public static class Iter {
-    public enum Type {F123, F12, F13, F23, F1, F2, F3};
-
-    int field1, field2, field3;
-
+  public abstract static class Iter {
     int index;
-    Type type;
-
-    TernaryTable table;
-
-    public Iter(int field1, int field2, int field3, int index, Type type, TernaryTable table) {
-      this.field1 = field1;
-      this.field2 = field2;
-      this.field3 = field3;
-      this.index = index;
-      this.type = type;
-      this.table = table;
-      if (index != Empty) {
-        int field2OrEmptyMarker = table.field2OrEmptyMarker(index);
-        boolean ok1 = field1 == Empty | table.field1OrNext(index) == field1;
-        boolean ok2 = field2 == Empty | field2OrEmptyMarker == field2;
-        boolean ok3 = field3 == Empty | table.field3(index) == field3;
-        if ((type == Type.F123 & field2OrEmptyMarker == Empty) | !ok1 | !ok2 | !ok3) {
-          next();
-        }
-      }
-    }
 
     public boolean done() {
       return index == Empty;
     }
 
     public int get1() {
+      throw Miscellanea.internalFail();
+    }
+
+    public int get2() {
+      throw Miscellanea.internalFail();
+    }
+
+    public int get3() {
+      throw Miscellanea.internalFail();
+    }
+
+    public abstract void next();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final class Iter123 extends Iter {
+    public Iter123() {
+      if (count > 0) {
+        index = 0;
+        while (field2OrEmptyMarker(index) == Empty)
+          index++;
+      }
+      else
+        index = Empty;
+    }
+
+    public int get1() {
       Miscellanea._assert(index != Empty);
-      return table.field1OrNext(index);
+      return field1OrNext(index);
     }
 
     public int get2() {
       Miscellanea._assert(index != Empty);
-      return table.field2OrEmptyMarker(index);
+      return field2OrEmptyMarker(index);
     }
 
     public int get3() {
       Miscellanea._assert(index != Empty);
-      return table.field3(index);
+      return field3(index);
     }
 
     public void next() {
       Miscellanea._assert(index != Empty);
-      switch (type) {
-        case F123:
-          int size = table.capacity();
-          do {
-            index++;
-            if (index == size) {
-              index = Empty;
-              return;
-            }
-          } while (table.field2OrEmptyMarker(index) == Empty);
-          break;
+      int size = capacity();
+      do {
+        index++;
+        if (index == size) {
+          index = Empty;
+          return;
+        }
+      } while (field2OrEmptyMarker(index) == Empty);
+    }
+  }
 
-        case F12:
-          for ( ; ; ) {
-            index = table.index12.next(index);
-            if (index == Empty)
-              return;
-            if (table.field1OrNext(index) == field1 & table.field2OrEmptyMarker(index) == field2)
-              return;
-          }
+  //////////////////////////////////////////////////////////////////////////////
 
-        case F13:
-          for ( ; ; ) {
-            index = table.index13.next(index);
-            if (index == Empty)
-              return;
-            if (table.field1OrNext(index) == field1 & table.field3(index) == field3)
-              return;
-          }
+  public final class Iter12 extends Iter {
+    int arg1;
+    int arg2;
 
-        case F23:
-          for ( ; ; ) {
-            index = table.index23.next(index);
-            if (index == Empty)
-              return;
-            if (table.field2OrEmptyMarker(index) == field2 & table.field3(index) == field3)
-              return;
-          }
-
-        case F1:
-          do {
-            index = table.index1.next(index);
-          } while (index != Empty && table.field1OrNext(index) != field1);
-          break;
-
-        case F2:
-          do {
-            index = table.index2.next(index);
-          } while (index != Empty && table.field2OrEmptyMarker(index) != field2);
-          break;
-
-        case F3:
-          do {
-            index = table.index3.next(index);
-          } while (index != Empty && table.field3(index) != field3);
-          break;
-      }
+    public Iter12(int arg1, int arg2, int index) {
+      this.arg1 = arg1;
+      this.arg2 = arg2;
+      this.index = index;
+      if (index != Empty && !isMatch())
+        next();
     }
 
-    public void dump() {
-      System.out.printf("fields = (%d, %d, %d)", field1, field2, field3);
-      System.out.printf("index  = %d", index);
-      System.out.printf("type   = %s", type.toString());
-      System.out.printf("done() = %s", done() ? "true" : "false");
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return field3(index);
+    }
+
+    public void next() {
+      Miscellanea._assert(index != Empty);
+      do {
+        index = index12.next(index);
+      } while (index != Empty && !isMatch());
+    }
+
+
+    private boolean isMatch() {
+      return field1OrNext(index) == arg1 && field2OrEmptyMarker(index) == arg2;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final class Iter13 extends Iter {
+    int arg1;
+    int arg3;
+
+    public Iter13(int arg1, int arg3, int index) {
+      this.arg1 = arg1;
+      this.arg3 = arg3;
+      this.index = index;
+      if (index != Empty && !isMatch())
+        next();
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return field2OrEmptyMarker(index);
+    }
+
+    public void next() {
+      Miscellanea._assert(index != Empty);
+      do {
+        index = index13.next(index);
+      } while (index != Empty && !isMatch());
+    }
+
+    private boolean isMatch() {
+      return field1OrNext(index) == arg1 && field3(index) == arg3;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final class Iter23 extends Iter {
+    int arg2;
+    int arg3;
+
+    public Iter23(int arg2, int arg3, int index) {
+      this.arg2 = arg2;
+      this.arg3 = arg3;
+      this.index = index;
+      if (index != Empty && !isMatch())
+        next();
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return field1OrNext(index);
+    }
+
+    public void next() {
+      Miscellanea._assert(index != Empty);
+      do {
+        index = index23.next(index);
+      } while (index != Empty && !isMatch());
+    }
+
+    private boolean isMatch() {
+      return field2OrEmptyMarker(index) == arg2 && field3(index) == arg3;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final class Iter1 extends Iter {
+    int arg1;
+
+    public Iter1(int arg1, int index) {
+      this.arg1 = arg1;
+      this.index = index;
+      if (index != Empty && !isMatch())
+        next();
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return field2OrEmptyMarker(index);
+    }
+
+    public int get2() {
+      Miscellanea._assert(index != Empty);
+      return field3(index);
+    }
+
+    public void next() {
+      do {
+        index = index1.next(index);
+      } while (index != Empty && field1OrNext(index) != arg1);
+    }
+
+    private boolean isMatch() {
+      return field1OrNext(index) == arg1;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final class Iter2 extends Iter {
+    int arg2;
+
+    public Iter2(int arg2, int index) {
+      this.arg2 = arg2;
+      this.index = index;
+      if (index != Empty && !isMatch())
+        next();
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return field1OrNext(index);
+    }
+
+    public int get2() {
+      Miscellanea._assert(index != Empty);
+      return field3(index);
+    }
+
+    public void next() {
+      do {
+        index = index2.next(index);
+      } while (index != Empty && field2OrEmptyMarker(index) != arg2);
+    }
+
+    private boolean isMatch() {
+      return field2OrEmptyMarker(index) == arg2;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final class Iter3 extends Iter {
+    int arg3;
+
+    public Iter3(int arg3, int index) {
+      this.arg3 = arg3;
+      this.index = index;
+      if (index != Empty && !isMatch())
+        next();
+    }
+
+    public int get1() {
+      Miscellanea._assert(index != Empty);
+      return field1OrNext(index);
+    }
+
+    public int get2() {
+      Miscellanea._assert(index != Empty);
+      return field2OrEmptyMarker(index);
+    }
+
+    public void next() {
+      do {
+        index = index3.next(index);
+      } while (index != Empty && field3(index) != arg3);
+    }
+
+    private boolean isMatch() {
+      return field3(index) == arg3;
     }
   }
 }
