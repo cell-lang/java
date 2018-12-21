@@ -75,8 +75,23 @@ class Ints123 {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  //## THIS HASN'T BEEN TESTED YET
   public static boolean contains(int[] array, int size, int val1, int val2, int val3) {
-    throw new RuntimeException();
+    int low = 0;
+    int high = size - 1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      int ord = rangeCheck123(mid, val1, val2, val3, array);
+      if (ord == -1) // mid < target range
+        low = mid + 1;
+      else if (ord == 1) // mid > target range
+        high = mid - 1;
+      else
+        return true;
+    }
+
+    return false;
   }
 
   public static boolean contains1(int[] array, int size, int val1) {
@@ -279,6 +294,26 @@ class Ints123 {
     if (val < val2)
       return -1;
     if (val > val2)
+      return 1;
+    return 0;
+  }
+
+  private static int rangeCheck123(int idx, int val1, int val2, int val3, int[] array) {
+    int offset = 3 * idx;
+    int val = array[offset];
+    if (val < val1)
+      return -1;
+    if (val > val1)
+      return 1;
+    val = array[offset + 1];
+    if (val < val2)
+      return -1;
+    if (val > val2)
+      return 1;
+    val = array[offset + 2];
+    if (val < val3)
+      return -1;
+    if (val > val3)
       return 1;
     return 0;
   }

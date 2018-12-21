@@ -30,24 +30,6 @@ class BinaryTableUpdater {
     deleteCount = deleteList.length / 2;
   }
 
-  // public void set(Obj value, boolean flipped) {
-  //   clear();
-  //   Miscellanea._assert(insertCount == 0);
-  //   BinRelIter it = value.getBinRelIter();
-  //   while (!it.done()) {
-  //     Obj val1 = flipped ? it.get2() : it.get1();
-  //     Obj val2 = flipped ? it.get1() : it.get2();
-  //     int surr1 = store1.lookupValueEx(val1);
-  //     if (surr1 == -1)
-  //       surr1 = store1.insert(val1);
-  //     int surr2 = store2.lookupValueEx(val2);
-  //     if (surr2 == -1)
-  //       surr2 = store2.insert(val2);
-  //     insertList = Miscellanea.array2Append(insertList, insertCount++, surr1, surr2);
-  //     it.next();
-  //   }
-  // }
-
   public void delete(int value1, int value2) {
     if (table.contains(value1, value2))
       deleteList = Miscellanea.array2Append(deleteList, deleteCount++, value1, value2);

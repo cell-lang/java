@@ -20,8 +20,8 @@ public class UnitTests {
 
     // Test_SymBinaryTable.run();
     // System.out.println("SymBinaryTable    OK");
-    Test_Sym12TernaryTable.run();
-    System.out.println("Sym12TernaryTable OK");
+    // Test_Sym12TernaryTable.run();
+    // System.out.println("Sym12TernaryTable OK");
 
     // Test_BinaryTable.run2();
     // Test_BinaryTable.run3();
@@ -53,5 +53,10 @@ public class UnitTests {
     // System.out.println("ternary(a, b, _) -> binary(a, b)  OK");
     // Test_ForeignKey_BT12.run();
     // System.out.println("binary(a, b) -> ternary(a, b, _)  OK");
+
+    // Test_ForeignKey_TB12S.run();
+    // System.out.println("ternary(a | b, _) -> binary(a | b)  OK");
+    // Test_ForeignKey_BT12S.run();
+    // System.out.println("binary(a | b) -> ternary(a | b, _)  OK");
   }
 }

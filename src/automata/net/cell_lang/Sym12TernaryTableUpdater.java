@@ -20,7 +20,7 @@ class Sym12TernaryTableUpdater {
   Sym12TernaryTable table;
   ValueStoreUpdater store12, store3;
 
-  boolean prepared = true;
+  boolean prepared = false;
 
   public Sym12TernaryTableUpdater(Sym12TernaryTable table, ValueStoreUpdater store12, ValueStoreUpdater store3) {
     this.table = table;
@@ -64,23 +64,36 @@ class Sym12TernaryTableUpdater {
     }
     Sym12TernaryTable.Iter12 it = table.getIter12(value1, value2);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, it.get3());
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, it.get1());
       it.next();
     }
   }
 
-  public void delete_13_23(int value12, int value3) {
-    Sym12TernaryTable.Iter it = table.getIter_13_23(value12, value3);
+  public void delete_13_23(int arg12, int arg3) {
+    Sym12TernaryTable.Iter it = table.getIter_13_23(arg12, arg3);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), value3);
+      int arg1 = arg12;
+      int arg2 = it.get1();
+      if (arg1 > arg2) {
+        arg1 = arg2;
+        arg2 = arg12;
+      }
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, arg1, arg2, arg3);
       it.next();
     }
   }
 
-  public void delete_1_2(int value12) {
-    Sym12TernaryTable.Iter it = table.getIter_1_2(value12);
+  public void delete_1_2(int arg12) {
+    Sym12TernaryTable.Iter it = table.getIter_1_2(arg12);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
+      int arg1 = arg12;
+      int arg2 = it.get1();
+      int arg3 = it.get2();
+      if (arg1 > arg2) {
+        arg1 = arg2;
+        arg2 = arg12;
+      }
+      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, arg1, arg2, arg3);
       it.next();
     }
   }
@@ -88,6 +101,7 @@ class Sym12TernaryTableUpdater {
   public void delete3(int value3) {
     Sym12TernaryTable.Iter3 it = table.getIter3(value3);
     while (!it.done()) {
+      Miscellanea._assert(it.get1() <= it.get2());
       deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), value3);
       it.next();
     }
@@ -156,6 +170,9 @@ class Sym12TernaryTableUpdater {
 
   private void prepare() {
     if (!prepared) {
+      for (int i=0 ; i < deleteCount ; i++) {
+        Miscellanea._assert(deleteList[3 * i] <= deleteList[3 * i + 1]);
+      }
       Ints123.sort(deleteList, deleteCount);
       Ints123.sort(insertList, insertCount);
       prepared = true;
@@ -211,14 +228,14 @@ class Sym12TernaryTableUpdater {
     }
 
     prepare();
-    if (Ints12.contains(insertList, insertCount, surr1, surr2))
+    if (Ints123.contains12(insertList, insertCount, surr1, surr2))
       return true;
 
     if (table.contains12(surr1, surr2)) {
       Sym12TernaryTable.Iter12 it = table.getIter12(surr1, surr2);
       Miscellanea._assert(!it.done());
       do {
-        if (!Ints123.contains(deleteList, deleteCount, surr1, surr2, it.get3()))
+        if (!Ints123.contains(deleteList, deleteCount, surr1, surr2, it.get1()))
           return true;
         it.next();
       } while (!it.done());
@@ -227,18 +244,25 @@ class Sym12TernaryTableUpdater {
     return false;
   }
 
-  public boolean contains_1_2(int surr12) {
+  public boolean contains_1_2(int arg12) {
     prepareInsert12();
-    if (Ints.contains(insertList12, surr12))
+    if (Ints.contains(insertList12, arg12))
       return true;
 
-    if (table.contains_1_2(surr12)) {
-      //## THIS COULD BE MADE FASTER BY CHECKING FIRST WHETHER surr12 APPEARS IN THE DELETE LIST AT ALL
+    if (table.contains_1_2(arg12)) {
+      //## THIS COULD BE MADE FASTER BY CHECKING FIRST WHETHER arg12 APPEARS IN THE DELETE LIST AT ALL
       prepare();
-      Sym12TernaryTable.Iter it = table.getIter_1_2(surr12);
+      Sym12TernaryTable.Iter it = table.getIter_1_2(arg12);
       Miscellanea._assert(!it.done());
       do {
-        if (!Ints123.contains(deleteList, deleteCount, it.get1(), it.get2(), it.get3()))
+        int arg1 = arg12;
+        int arg2 = it.get1();
+        int arg3 = it.get2();
+        if (arg1 >= arg2) {
+          arg1 = arg2;
+          arg2 = arg12;
+        }
+        if (!Ints123.contains(deleteList, deleteCount, arg1, arg2, arg3))
           return true;
         it.next();
       } while (!it.done());
