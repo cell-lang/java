@@ -87,7 +87,7 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
     has_field()           = native_expr(expr.record) & ".hasField(" & symb_idx_name(expr.field) & ")",
 
     contains()            = native_contains_expr(expr.coll, expr.entry),
-    table_contains()      = native_table_contains(expr.table, expr.tuple),
+    table_contains()      = native_table_contains(expr.table, expr.tuple, expr.symmetric),
 
     is_member()           = native_fn_name(expr.pred) & "(" & native_expr(expr.obj) & ")",
     state_is_def()        = native_var_ref_name(expr.auto_var) & "." & state_is_def_proc_name(expr.type) & "()",
@@ -102,13 +102,24 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
 }
 
 
-String native_table_contains(AnyTableVar table, Maybe[Int32Var]+ tuple) {
+String native_table_contains(AnyTableVar table, Maybe[Int32Var]+ tuple, Bool symmetric) {
   name = "contains";
   if (a <~ tuple : a == nothing):
-    name = name & append((printed(i+1) : a @ i <- tuple, a != nothing));
+    if not symmetric:
+      suffix = append((printed(i+1) : a @ i <- tuple, a != nothing));
+    else
+      suffix = match (tuple)
+        (_,       _)                  = "",
+        (just(),  just(),  nothing)   = "12",
+        (just(),  nothing, just())    |
+        (nothing, just(),  nothing)   = "_13_23",
+        (just(),  nothing, nothing)   |
+        (nothing, just(),  nothing)   = "_1_2",
+        (nothing, nothing, just())    = "3";
+    ;
+    name = name & suffix;
   ;
   return native_method_call_expr(table, name, (native_expr(value(a)) : a <- tuple, a != nothing));
-
 }
 
 
@@ -229,7 +240,7 @@ String native_expr(Int32NatOp expr, Bool parenthesized) =
   lookup_value_ex()     = native_method_call_expr(aux_struct_var_ref_name(expr.store), "lookupValueEx", (expr.value)),
   get_unknown_arg()     = if expr.iter.arity == 1
                             then native_var_ref_name(expr.iter) & ".get()"
-                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.field+1) & "()";
+                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.arg+1) & "()";
 
 String native_get_count_expr(AnyTableVar table, Maybe[Int32Var]+ args, Bool symmetric) {
   fn_names = if symmetric then sym_fn_names_by_args else fn_names_by_args;

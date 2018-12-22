@@ -267,7 +267,16 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       binary_ternary          = "checkForeignKeys_12",
 
       ternary_unary(i?)       = "checkForeignKeys_" & printed(i+1),
-      ternary_binary          = "checkForeignKeys_12";
+      ternary_binary          = "checkForeignKeys_12",
+
+      unary_sym_binary        = "checkForeignKeys",
+      unary_sym_ternary       = "checkForeignKeys_1_2",
+
+      sym_binary_unary        = "checkForeignKeys_1_2",
+      sym_ternary_unary       = "checkForeignKeys_1_2",
+
+      sym_binary_sym_ternary  = "checkForeignKeys_12",
+      sym_ternary_sym_binary  = "checkForeignKeys_12";
 
 
     Nat order((TableVar, NzNat, [+Nat]) key) {
@@ -285,21 +294,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       3,  [0, 2],   2
     ];
 
-    // unary(a) -> unary(a)                      -/-
-    // unary(a) -> binary(a, _)                  -/12
-    // unary(a) -> ternary(a, _, _)              -/123
-    // binary(a, _) -> unary(a)                  12/-
-    // ternary(a, _, _) -> unary(a)              123/-
-    // ternary(a, b, _) -> binary(a, b)          123/12*
-    // binary(a, b) -> ternary(a, b, _)          12*/123
-
-    // unary(b) -> binary(_, b)                  -/21
-    // binary(_, b) -> unary(b)                  21/-
-    // unary(b) -> ternary(_, b, _)              -/231
-    // ternary(_, b, _) -> unary(b)              231/-
-
-    // unary(c) -> ternary(_, _, c)              -/312
-    // ternary(_, _, c) -> unary(c)              312/-
 
     Nat order(BlockForeignKey key) =
       match (key.type)
@@ -311,7 +305,16 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         binary_ternary          = 0,
 
         ternary_unary(i?)       = i,
-        ternary_binary          = 0;
+        ternary_binary          = 0,
+
+        unary_sym_binary        = 0,
+        unary_sym_ternary       = 0,
+
+        sym_binary_unary        = 0,
+        sym_ternary_unary       = 0,
+
+        sym_binary_sym_ternary  = 0,
+        sym_ternary_sym_binary  = 0;
   }
 
 

@@ -415,6 +415,17 @@ class Sym12TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
+  // tern_rel(a, b, _) -> unary_rel(a), unary_rel(b)
+  public boolean checkForeignKeys_1_2(UnaryTableUpdater target) {
+    // Checking that every new entry satisfies the foreign key
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains(insertList[3*i]) | !target.contains(insertList[3*i+1]))
+        return false;
+
+    // Checking that no entries were invalidates by a deletion on the target table
+    return target.checkDeletedKeys(this::contains_1_2);
+  }
+
   // tern_rel(_, _, c) -> unary_rel(c)
   public boolean checkForeignKeys_3(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key

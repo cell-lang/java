@@ -175,64 +175,73 @@ class UnaryTableUpdater {
 
   // unary_rel_1(x) -> unary_rel_2(x);
   public boolean checkForeignKeys(UnaryTableUpdater target) {
-    // Checking that every new elements satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[i]))
         return false;
-
-    // Checking that no elements were invalidated by a deletion on the target table
     return target.checkDeletedKeys(this::contains);
   }
 
   // unary_rel(x) -> binary_rel(x, _);
   public boolean checkForeignKeys_1(BinaryTableUpdater target) {
-    // Checking that every new elements satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains1(insertList[i]))
         return false;
-
-    // Checking that no elements were invalidated by a deletion on the target table
     return target.checkDeletedKeys_1(this::contains);
   }
 
   // unary_rel(x) -> binary_rel(_, x);
   public boolean checkForeignKeys_2(BinaryTableUpdater target) {
-    // Checking that every new elements satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains2(insertList[i]))
         return false;
-
-    // Checking that no elements were invalidated by a deletion on the target table
     return target.checkDeletedKeys_2(this::contains);
   }
 
+  // unary_rel(x) -> ternary_rel(x, _, _)
   public boolean checkForeignKeys_1(TernaryTableUpdater target) {
-    // Checking that every new elements satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains1(insertList[i]))
         return false;
-
-    // Checking that no elements were invalidated by a deletion on the target table
     return target.checkDeletedKeys_1(this::contains);
   }
 
+  // unary_rel(x) -> ternary_rel(, x, _)
   public boolean checkForeignKeys_2(TernaryTableUpdater target) {
-    // Checking that every new elements satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains2(insertList[i]))
         return false;
-
-    // Checking that no elements were invalidated by a deletion on the target table
     return target.checkDeletedKeys_2(this::contains);
   }
 
+  // unary_rel(x) -> ternary_rel(_, _, x)
   public boolean checkForeignKeys_3(TernaryTableUpdater target) {
-    // Checking that every new elements satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains3(insertList[i]))
         return false;
+    return target.checkDeletedKeys_3(this::contains);
+  }
 
-    // Checking that no elements were invalidated by a deletion on the target table
+  // unary_rel(x) -> sym_binary_rel(x, _) | sym_binary_rel(_, x)
+  public boolean checkForeignKeys(SymBinaryTableUpdater target) {
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains(insertList[i]))
+        return false;
+    return target.checkDeletedKeys((a1, a2) -> contains(a1) & contains(a2));
+  }
+
+  // unary_rel(x) -> sym_ternary_rel(x, _, _) | sym_ternary_rel(_, x, _)
+  public boolean checkForeignKeys_1_2(Sym12TernaryTableUpdater target) {
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains_1_2(insertList[i]))
+        return false;
+    return target.checkDeletedKeys_12((a1, a2) -> contains(a1) & contains(a2));
+  }
+
+  // unary_rel(x) -> sym_ternary_rel(_, _, x)
+  public boolean checkForeignKeys_3(Sym12TernaryTableUpdater target) {
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains3(insertList[i]))
+        return false;
     return target.checkDeletedKeys_3(this::contains);
   }
 }
