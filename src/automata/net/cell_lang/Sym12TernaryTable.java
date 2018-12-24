@@ -552,7 +552,7 @@ class Sym12TernaryTable {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public static Obj copy(TernaryTable[] tables, int idx1, int idx2, int idx3) {
+  public static Obj copy(Sym12TernaryTable[] tables, int idx1, int idx2, int idx3) {
     throw new RuntimeException();
   }
 

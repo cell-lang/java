@@ -25,8 +25,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     else
       class_name = match (|perm|)
         1 = "UnaryTable",
-        2 = "BinaryTable",
-        3 = "TernaryTable";
+        2 = if symmetric then "SymBinaryTable" else "BinaryTable",
+        3 = if symmetric then "Sym12TernaryTable" else "TernaryTable";
 
       tables_names = (native_var_ref_name(v) : v <- isort(table_vars));
       table_array_new = "new " & class_name & "[] {" & append(tables_names, ", ") & "}";
