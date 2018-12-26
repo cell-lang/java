@@ -117,18 +117,7 @@ class UnaryTable {
   }
 
   public Obj copy() {
-    if (count == 0)
-      return EmptyRelObj.singleton;
-    Obj[] objs = new Obj[count];
-    int next = 0;
-    for (int i=0 ; i < bitmap.length ; i++) {
-      long mask = bitmap[i];
-      for (int j=0 ; j < 64 ; j++)
-        if (((mask >>> (int) j) & 1) != 0)
-          objs[next++] = store.getValue(j + 64 * i);
-    }
-    Miscellanea._assert(next == count);
-    return Builder.createSet(objs, objs.length);
+    return copy(new UnaryTable[] {this});
   }
 
 //    public static String IntToBinaryString(int number) {
@@ -157,6 +146,25 @@ class UnaryTable {
   //////////////////////////////////////////////////////////////////////////////
 
   public static Obj copy(UnaryTable[] tables) {
-    throw new RuntimeException();
+    int count = 0;
+    for (int i=0 ; i < tables.length ; i++)
+      count += tables[i].count;
+    if (count == 0)
+      return EmptyRelObj.singleton;
+    Obj[] objs = new Obj[count];
+    int next = 0;
+    for (int i=0 ; i < tables.length ; i++) {
+      UnaryTable table = tables[i];
+      ValueStore store = table.store;
+      long[] bitmap = table.bitmap;
+      for (int j=0 ; j < bitmap.length ; j++) {
+        long mask = bitmap[j];
+        for (int k=0 ; k < 64 ; k++)
+          if (((mask >>> k) & 1) != 0)
+            objs[next++] = store.getValue(k + 64 * j);
+      }
+    }
+    Miscellanea._assert(next == count);
+    return Builder.createSet(objs, objs.length);
   }
 }

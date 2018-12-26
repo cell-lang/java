@@ -15,7 +15,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (_)       = (),
       (0, 1)    = (false if not symmetric),
       (1, 0)    = (true),
-      (_, _, _) = perm;
+      (_, _, _) = if symmetric then () else perm;
 
     table_vars = keys(tables);
 

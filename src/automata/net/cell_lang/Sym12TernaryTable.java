@@ -355,33 +355,8 @@ class Sym12TernaryTable {
     return new Iter3(arg3, index3.head(hashcode));
   }
 
-  public Obj copy(int idx1, int idx2, int idx3) {
-    if (count == 0)
-      return EmptyRelObj.singleton;
-
-    Obj[] objs1 = new Obj[count];
-    Obj[] objs2 = new Obj[count];
-    Obj[] objs3 = new Obj[count];
-
-    int size = capacity();
-    int next = 0;
-    for (int i=0 ; i < size ; i++) {
-      int arg2 = arg2OrEmptyMarker(i);
-      if (arg2 != Empty) {
-        objs1[next] = store12.getValue(arg1OrNext(i));
-        objs2[next] = store12.getValue(arg2);
-        objs3[next] = store3.getValue(arg3(i));
-        next++;
-      }
-    }
-    Miscellanea._assert(next == count);
-
-    Obj[][] cols = new Obj[3][];
-    cols[idx1] = objs1;
-    cols[idx2] = objs2;
-    cols[idx3] = objs3;
-
-    return Builder.createTernRel(cols[0], cols[1], cols[2], count);
+  public Obj copy() {
+    return copy(new Sym12TernaryTable[] {this});
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -552,8 +527,37 @@ class Sym12TernaryTable {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public static Obj copy(Sym12TernaryTable[] tables, int idx1, int idx2, int idx3) {
-    throw new RuntimeException();
+  public static Obj copy(Sym12TernaryTable[] tables) {
+    int count = 0;
+    for (int i=0 ; i < tables.length ; i++)
+      count += tables[i].count;
+
+    if (count == 0)
+      return EmptyRelObj.singleton;
+
+    Obj[] col1 = new Obj[count];
+    Obj[] col2 = new Obj[count];
+    Obj[] col3 = new Obj[count];
+
+    int next = 0;
+    for (int iT=0 ; iT < tables.length ; iT++) {
+      Sym12TernaryTable table = tables[iT];
+      ValueStore store12 = table.store12;
+      ValueStore store3 = table.store3;
+      int size = table.capacity();
+      for (int iS=0 ; iS < size ; iS++) {
+        int arg2 = table.arg2OrEmptyMarker(iS);
+        if (arg2 != Empty) {
+          col1[next] = store12.getValue(table.arg1OrNext(iS));
+          col2[next] = store12.getValue(arg2);
+          col3[next] = store3.getValue(table.arg3(iS));
+          next++;
+        }
+      }
+    }
+    Miscellanea._assert(next == count);
+
+    return Builder.createTernRel(col1, col2, col3, count);
   }
 
   //////////////////////////////////////////////////////////////////////////////

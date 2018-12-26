@@ -122,37 +122,7 @@ class BinaryTable {
   }
 
   public Obj copy(boolean flipped) {
-    int count = table1.count;
-
-    if (count == 0)
-      return EmptyRelObj.singleton;
-
-    Obj[] objs1 = new Obj[count];
-    Obj[] objs2 = new Obj[count];
-
-    int next = 0;
-    for (int i=0 ; i < table1.column.length ; i++) {
-      int code = table1.column[i];
-      if (code != OverflowTable.EmptyMarker) {
-        Obj val1 = store1.getValue(i);
-        if (code >> 29 == 0) {
-          objs1[next] = val1;
-          objs2[next++] = store2.getValue(code);
-        }
-        else {
-          OverflowTable.Iter it = table1.overflowTable.getIter(code);
-          while (!it.done()) {
-            int surr2 = it.get();
-            objs1[next] = val1;
-            objs2[next++] = store2.getValue(surr2);
-            it.next();
-          }
-        }
-      }
-    }
-    Miscellanea._assert(next == count);
-
-    return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
+    return copy(new BinaryTable[] {this}, flipped);
   }
 
   public int[] rawCopy() {
@@ -174,6 +144,44 @@ class BinaryTable {
   //////////////////////////////////////////////////////////////////////////////
 
   public static Obj copy(BinaryTable[] tables, boolean flipped) {
-    throw new RuntimeException();
+    int count = 0;
+    for (int i=0 ; i < tables.length ; i++)
+      count += tables[i].size();
+
+    if (count == 0)
+      return EmptyRelObj.singleton;
+
+    Obj[] objs1 = new Obj[count];
+    Obj[] objs2 = new Obj[count];
+
+    int next = 0;
+    for (int iT=0 ; iT < tables.length ; iT++) {
+      BinaryTable table = tables[iT];
+      int[] column = table.table1.column;
+      ValueStore store1 = table.store1;
+      ValueStore store2 = table.store2;
+      for (int iS=0 ; iS < column.length ; iS++) {
+        int code = column[iS];
+        if (code != OverflowTable.EmptyMarker) {
+          Obj val1 = store1.getValue(iS);
+          if (code >> 29 == 0) {
+            objs1[next] = val1;
+            objs2[next++] = store2.getValue(code);
+          }
+          else {
+            OverflowTable.Iter it = table.table1.overflowTable.getIter(code);
+            while (!it.done()) {
+              int arg2 = it.get();
+              objs1[next] = val1;
+              objs2[next++] = store2.getValue(arg2);
+              it.next();
+            }
+          }
+        }
+      }
+    }
+    Miscellanea._assert(next == count);
+
+    return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2); //## THIS COULD BE MADE MORE EFFICIENT
   }
 }

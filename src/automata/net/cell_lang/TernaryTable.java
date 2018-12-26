@@ -376,32 +376,7 @@ class TernaryTable {
   }
 
   public Obj copy(int idx1, int idx2, int idx3) {
-    if (count == 0)
-      return EmptyRelObj.singleton;
-
-    Obj[] objs1 = new Obj[count];
-    Obj[] objs2 = new Obj[count];
-    Obj[] objs3 = new Obj[count];
-
-    int size = capacity();
-    int next = 0;
-    for (int i=0 ; i < size ; i++) {
-      int field2 = field2OrEmptyMarker(i);
-      if (field2 != Empty) {
-        objs1[next] = store1.getValue(field1OrNext(i));
-        objs2[next] = store2.getValue(field2);
-        objs3[next] = store3.getValue(field3(i));
-        next++;
-      }
-    }
-    Miscellanea._assert(next == count);
-
-    Obj[][] cols = new Obj[3][];
-    cols[idx1] = objs1;
-    cols[idx2] = objs2;
-    cols[idx3] = objs3;
-
-    return Builder.createTernRel(cols[0], cols[1], cols[2], count);
+    return copy(new TernaryTable[] {this}, idx1, idx2, idx3);
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -591,7 +566,42 @@ class TernaryTable {
   //////////////////////////////////////////////////////////////////////////////
 
   public static Obj copy(TernaryTable[] tables, int idx1, int idx2, int idx3) {
-    throw new RuntimeException();
+    int count = 0;
+    for (int i=0 ; i < tables.length ; i++)
+      count += tables[i].count;
+
+    if (count == 0)
+      return EmptyRelObj.singleton;
+
+    Obj[] objs1 = new Obj[count];
+    Obj[] objs2 = new Obj[count];
+    Obj[] objs3 = new Obj[count];
+
+    int next = 0;
+    for (int iT=0 ; iT < tables.length ; iT++) {
+      TernaryTable table = tables[iT];
+      ValueStore store1 = table.store1;
+      ValueStore store2 = table.store2;
+      ValueStore store3 = table.store3;
+      int size = table.capacity();
+      for (int iS=0 ; iS < size ; iS++) {
+        int field2 = table.field2OrEmptyMarker(iS);
+        if (field2 != Empty) {
+          objs1[next] = store1.getValue(table.field1OrNext(iS));
+          objs2[next] = store2.getValue(field2);
+          objs3[next] = store3.getValue(table.field3(iS));
+          next++;
+        }
+      }
+    }
+    Miscellanea._assert(next == count);
+
+    Obj[][] cols = new Obj[3][];
+    cols[idx1] = objs1;
+    cols[idx2] = objs2;
+    cols[idx3] = objs3;
+
+    return Builder.createTernRel(cols[0], cols[1], cols[2], count);
   }
 
   //////////////////////////////////////////////////////////////////////////////

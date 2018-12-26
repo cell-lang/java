@@ -102,44 +102,7 @@ class SymBinaryTable {
   }
 
   public Obj copy() {
-    int size = size();
-
-    if (size == 0)
-      return EmptyRelObj.singleton;
-
-    Obj[] objs1 = new Obj[size];
-    Obj[] objs2 = new Obj[size];
-
-    int len = table.column.length;
-    int next = 0;
-    for (int i=0 ; i < len ; i++) {
-      int code = table.column[i];
-      if (code != OverflowTable.EmptyMarker) {
-        if (code >> 29 == 0) {
-          if (i <= code) {
-            objs1[next] = store.getValue(i);
-            objs2[next++] = store.getValue(code);
-          }
-        }
-        else {
-          OverflowTable.Iter it = table.overflowTable.getIter(code);
-          Obj val1 = null;
-          while (!it.done()) {
-            int surr2 = it.get();
-            if (i <= surr2) {
-              if (val1 == null)
-                val1 = store.getValue(i);
-              objs1[next] = val1;
-              objs2[next++] = store.getValue(surr2);
-            }
-            it.next();
-          }
-        }
-      }
-    }
-    Miscellanea._assert(next == size);
-
-    return Builder.createBinRel(objs1, objs2, size); //## THIS COULD BE MADE MORE EFFICIENT
+    return copy(new SymBinaryTable[] {this});
   }
 
   public int[] rawCopy() {
@@ -148,7 +111,50 @@ class SymBinaryTable {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static Obj copy(SymBinaryTable[] tables, boolean flipped) {
-    throw new RuntimeException();
+  public static Obj copy(SymBinaryTable[] tables) {
+    int size = 0;
+    for (int i=0 ; i < tables.length ; i++)
+      size += tables[i].size();
+
+    if (size == 0)
+      return EmptyRelObj.singleton;
+
+    Obj[] objs1 = new Obj[size];
+    Obj[] objs2 = new Obj[size];
+
+    int next = 0;
+    for (int iT=0 ; iT < tables.length ; iT++) {
+      SymBinaryTable table = tables[iT];
+      int[] column = table.table.column;
+      ValueStore store = table.store;
+      for (int iS=0 ; iS < column.length ; iS++) {
+        int code = table.table.column[iS];
+        if (code != OverflowTable.EmptyMarker) {
+          if (code >> 29 == 0) {
+            if (iS <= code) {
+              objs1[next] = store.getValue(iS);
+              objs2[next++] = store.getValue(code);
+            }
+          }
+          else {
+            OverflowTable.Iter it = table.table.overflowTable.getIter(code);
+            Obj val1 = null;
+            while (!it.done()) {
+              int arg2 = it.get();
+              if (iS <= arg2) {
+                if (val1 == null)
+                  val1 = store.getValue(iS);
+                objs1[next] = val1;
+                objs2[next++] = store.getValue(arg2);
+              }
+              it.next();
+            }
+          }
+        }
+      }
+    }
+    Miscellanea._assert(next == size);
+
+    return Builder.createBinRel(objs1, objs2, size); //## THIS COULD BE MADE MORE EFFICIENT
   }
 }
