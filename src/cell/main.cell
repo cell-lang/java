@@ -105,11 +105,32 @@ String* create_error_msg(ParserError err, String filename) =
           if wait_for_key:
             unused_var = GetChar();
           ;
+
+          errs = analysis_errors;
+          if errs == []:
+            Print("Code analysis OK\n");
+            if wait_for_key:
+              unused_var = GetChar();
+            ;
+          else
+            bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
+            ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
+            msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
+            for m <- msgs:
+              for l <- m:
+                Print(l & "\n");
+              ;
+              Print("\n");
+            ;
+            is_done = true;
+          ;
+
         else
           Print("Error: the program does not typecheck\n\n");
           // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
-          sorted_fds = sort_set(keys(errs), source_file($a) < source_file($b));
-          msgs = (create_error_msgs(fd, errs[fd]) : fd <- sorted_fds);
+          bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
+          ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
+          msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
           for m <- msgs:
             for l <- m:
               Print(l & "\n");
