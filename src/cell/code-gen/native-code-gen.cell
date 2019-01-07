@@ -422,10 +422,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "  public " & native_name(value(lambda.capt_auto)) & " capt_auto;" if lambda.capt_auto != nothing
     );
     for i < |lambda.capt_vars|:
-      code = (code | "  public Obj capt_var_" & printed(i) & ";");
+      code = (code | "  public Obj " & native_var_decl_name(capt_var(i)) & ";");
     ;
     for i < |lambda.capt_cls_vars|:
-      code = (code | "  public Lambda capt_cls_var_" & printed(i) & ";");
+      code = (code | "  public Lambda " & native_var_name(capt_cls_var(i)) & ";");
     ;
 
     return (code |
