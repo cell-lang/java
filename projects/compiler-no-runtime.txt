@@ -41,10 +41,24 @@
 
 ../compiler/src/utils-1.cell
 ../compiler/src/utils-2.cell
+../compiler/src/utils-2-misc.cell
 ../compiler/src/utils-2-pseudotypes.cell
 ../compiler/src/utils-2-time-exprs.cell
 ../compiler/src/utils-2-totality.cell
 ../compiler/src/utils-3.cell
+
+
+// Stage 2 - relational layer
+
+../compiler/src/stage-2-relational-layer/accessors.cell
+../compiler/src/stage-2-relational-layer/unsafe-accessors.cell
+../compiler/src/stage-2-relational-layer/derived.cell
+
+
+// Stage 2 - reactive layer
+
+../compiler/src/stage-2-reactive-layer/accessors.cell
+../compiler/src/stage-2-reactive-layer/unsafe-accessors.cell
 
 
 // Compiler steps
@@ -91,28 +105,32 @@
 ../compiler/src/E-type-checking/signatures.cell
 ../compiler/src/E-type-checking/reactive.cell
 
-../compiler/src/F-code-generation/cg.cell
-../compiler/src/F-code-generation/utils.cell
-../compiler/src/F-code-generation/type-membership.cell
-../compiler/src/F-code-generation/databases.cell
-../compiler/src/F-code-generation/automata.cell
-../compiler/src/F-code-generation/auto-methods.cell
-../compiler/src/F-code-generation/auto-utils.cell
-../compiler/src/F-code-generation/auto-nodes.cell
-../compiler/src/F-code-generation/auto-nodes-gen.cell
-../compiler/src/F-code-generation/auto-nodes-code-gen.cell
-../compiler/src/F-code-generation/opt-utils.cell
-../compiler/src/F-code-generation/alt-expr.cell
-../compiler/src/F-code-generation/expr-opt.cell
-../compiler/src/F-code-generation/expr-code-gen.cell
-../compiler/src/F-code-generation/low-level-signs.cell
-../compiler/src/F-code-generation/ad-hoc-records.cell
-../compiler/src/F-code-generation/conversion.cell
-../compiler/src/F-code-generation/stmt-code-gen.cell
-../compiler/src/F-code-generation/pattern-matching.cell
-../compiler/src/F-code-generation/yield-actions.cell
+../compiler/src/F-code-analysis/code-analysis.cell
+../compiler/src/F-code-analysis/errors.cell
+../compiler/src/F-code-analysis/updates.cell
 
-../compiler/src/G-code-optimization/dead-code-removal.cell
+../compiler/src/G-code-generation/cg.cell
+../compiler/src/G-code-generation/utils.cell
+../compiler/src/G-code-generation/type-membership.cell
+../compiler/src/G-code-generation/databases.cell
+../compiler/src/G-code-generation/automata.cell
+../compiler/src/G-code-generation/auto-methods.cell
+../compiler/src/G-code-generation/auto-utils.cell
+../compiler/src/G-code-generation/auto-nodes.cell
+../compiler/src/G-code-generation/auto-nodes-gen.cell
+../compiler/src/G-code-generation/auto-nodes-code-gen.cell
+../compiler/src/G-code-generation/opt-utils.cell
+../compiler/src/G-code-generation/alt-expr.cell
+../compiler/src/G-code-generation/expr-opt.cell
+../compiler/src/G-code-generation/expr-code-gen.cell
+../compiler/src/G-code-generation/low-level-signs.cell
+../compiler/src/G-code-generation/ad-hoc-records.cell
+../compiler/src/G-code-generation/conversion.cell
+../compiler/src/G-code-generation/stmt-code-gen.cell
+../compiler/src/G-code-generation/pattern-matching.cell
+../compiler/src/G-code-generation/yield-actions.cell
+
+../compiler/src/H-code-optimization/dead-code-removal.cell
 
 src/cell/code-gen/auto-instrs.cell
 src/cell/code-gen/exprs.cell

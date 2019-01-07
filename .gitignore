@@ -9,6 +9,7 @@ generated.java
 inputs/
 runtime/
 tmp/
+debug/
 codegen.exe
 *.class
 tests.cell
