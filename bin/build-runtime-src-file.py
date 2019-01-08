@@ -2,79 +2,84 @@
 
 ################################################################################
 
-src_ArrayObjs               = 'core/net/cell_lang/ArrayObjs.java'
-src_BinRelIter              = 'core/net/cell_lang/BinRelIter.java'
-src_BlankObj                = 'core/net/cell_lang/BlankObj.java'
-src_Builder                 = 'core/net/cell_lang/Builder.java'
-src_Canonical               = 'core/net/cell_lang/Canonical.java'
-src_EmptyRelObj             = 'core/net/cell_lang/EmptyRelObj.java'
-src_EmptyRelValue           = 'core/net/cell_lang/EmptyRelValue.java'
-src_EmptySeqObj             = 'core/net/cell_lang/EmptySeqObj.java'
-src_FloatArrayObjs          = 'core/net/cell_lang/FloatArrayObjs.java'
-src_FloatObj                = 'core/net/cell_lang/FloatObj.java'
-src_FloatValue              = 'core/net/cell_lang/FloatValue.java'
-src_Hacks                   = 'core/net/cell_lang/Hacks.java'
-src_IntArrayObjs            = 'core/net/cell_lang/IntArrayObjs.java'
-src_IntObj                  = 'core/net/cell_lang/IntObj.java'
-src_IntValue                = 'core/net/cell_lang/IntValue.java'
-src_Lexer                   = 'core/net/cell_lang/Lexer.java'
-src_Miscellanea             = 'core/net/cell_lang/Miscellanea.java'
-src_NeBinRelObj             = 'core/net/cell_lang/NeBinRelObj.java'
-src_NeBinRelValue           = 'core/net/cell_lang/NeBinRelValue.java'
-src_NeFloatSeqObj           = 'core/net/cell_lang/NeFloatSeqObj.java'
-src_NeIntSeqObj             = 'core/net/cell_lang/NeIntSeqObj.java'
-src_NeSeqObj                = 'core/net/cell_lang/NeSeqObj.java'
-src_NeSetObj                = 'core/net/cell_lang/NeSetObj.java'
-src_NeSetValue              = 'core/net/cell_lang/NeSetValue.java'
-src_NeTernRelObj            = 'core/net/cell_lang/NeTernRelObj.java'
-src_NeTernRelValue          = 'core/net/cell_lang/NeTernRelValue.java'
-src_NullObj                 = 'core/net/cell_lang/NullObj.java'
-src_Obj                     = 'core/net/cell_lang/Obj.java'
-src_OptTagRecObj            = 'core/net/cell_lang/OptTagRecObj.java'
-src_Parser                  = 'core/net/cell_lang/Parser.java'
-src_ParsingException        = 'core/net/cell_lang/ParsingException.java'
-src_Procs                   = 'core/net/cell_lang/Procs.java'
-src_RecordObj               = 'core/net/cell_lang/RecordObj.java'
-src_SeqIter                 = 'core/net/cell_lang/SeqIter.java'
-src_SeqObj                  = 'core/net/cell_lang/SeqObj.java'
-src_SeqValue                = 'core/net/cell_lang/SeqValue.java'
-src_SetIter                 = 'core/net/cell_lang/SetIter.java'
-src_SymbObj                 = 'core/net/cell_lang/SymbObj.java'
-src_SymbTable               = 'core/net/cell_lang/SymbTable.java'
-src_SymbValue               = 'core/net/cell_lang/SymbValue.java'
-src_TaggedObj               = 'core/net/cell_lang/TaggedObj.java'
-src_TaggedValue             = 'core/net/cell_lang/TaggedValue.java'
-src_TernRelIter             = 'core/net/cell_lang/TernRelIter.java'
-src_Token                   = 'core/net/cell_lang/Token.java'
-src_TokenType               = 'core/net/cell_lang/TokenType.java'
-src_Utils                   = 'core/net/cell_lang/Utils.java'
-src_ValueBase               = 'core/net/cell_lang/ValueBase.java'
-src_Value                   = 'core/net/cell_lang/Value.java'
+src_ArrayObjs                 = 'core/net/cell_lang/ArrayObjs.java'
+src_BinRelIter                = 'core/net/cell_lang/BinRelIter.java'
+src_BlankObj                  = 'core/net/cell_lang/BlankObj.java'
+src_Builder                   = 'core/net/cell_lang/Builder.java'
+src_Canonical                 = 'core/net/cell_lang/Canonical.java'
+src_EmptyRelObj               = 'core/net/cell_lang/EmptyRelObj.java'
+src_EmptyRelValue             = 'core/net/cell_lang/EmptyRelValue.java'
+src_EmptySeqObj               = 'core/net/cell_lang/EmptySeqObj.java'
+src_FloatArrayObjs            = 'core/net/cell_lang/FloatArrayObjs.java'
+src_FloatObj                  = 'core/net/cell_lang/FloatObj.java'
+src_FloatValue                = 'core/net/cell_lang/FloatValue.java'
+src_Hacks                     = 'core/net/cell_lang/Hacks.java'
+src_IntArrayObjs              = 'core/net/cell_lang/IntArrayObjs.java'
+src_IntObj                    = 'core/net/cell_lang/IntObj.java'
+src_IntValue                  = 'core/net/cell_lang/IntValue.java'
+src_Lexer                     = 'core/net/cell_lang/Lexer.java'
+src_Miscellanea               = 'core/net/cell_lang/Miscellanea.java'
+src_NeBinRelObj               = 'core/net/cell_lang/NeBinRelObj.java'
+src_NeBinRelValue             = 'core/net/cell_lang/NeBinRelValue.java'
+src_NeFloatSeqObj             = 'core/net/cell_lang/NeFloatSeqObj.java'
+src_NeIntSeqObj               = 'core/net/cell_lang/NeIntSeqObj.java'
+src_NeSeqObj                  = 'core/net/cell_lang/NeSeqObj.java'
+src_NeSetObj                  = 'core/net/cell_lang/NeSetObj.java'
+src_NeSetValue                = 'core/net/cell_lang/NeSetValue.java'
+src_NeTernRelObj              = 'core/net/cell_lang/NeTernRelObj.java'
+src_NeTernRelValue            = 'core/net/cell_lang/NeTernRelValue.java'
+src_NullObj                   = 'core/net/cell_lang/NullObj.java'
+src_Obj                       = 'core/net/cell_lang/Obj.java'
+src_OptTagRecObj              = 'core/net/cell_lang/OptTagRecObj.java'
+src_Parser                    = 'core/net/cell_lang/Parser.java'
+src_ParsingException          = 'core/net/cell_lang/ParsingException.java'
+src_Procs                     = 'core/net/cell_lang/Procs.java'
+src_RecordObj                 = 'core/net/cell_lang/RecordObj.java'
+src_SeqIter                   = 'core/net/cell_lang/SeqIter.java'
+src_SeqObj                    = 'core/net/cell_lang/SeqObj.java'
+src_SeqValue                  = 'core/net/cell_lang/SeqValue.java'
+src_SetIter                   = 'core/net/cell_lang/SetIter.java'
+src_SymbObj                   = 'core/net/cell_lang/SymbObj.java'
+src_SymbTable                 = 'core/net/cell_lang/SymbTable.java'
+src_SymbValue                 = 'core/net/cell_lang/SymbValue.java'
+src_TaggedObj                 = 'core/net/cell_lang/TaggedObj.java'
+src_TaggedValue               = 'core/net/cell_lang/TaggedValue.java'
+src_TernRelIter               = 'core/net/cell_lang/TernRelIter.java'
+src_Token                     = 'core/net/cell_lang/Token.java'
+src_TokenType                 = 'core/net/cell_lang/TokenType.java'
+src_Utils                     = 'core/net/cell_lang/Utils.java'
+src_Value                     = 'core/net/cell_lang/Value.java'
+src_ValueBase                 = 'core/net/cell_lang/ValueBase.java'
 
-src_Algs                    = 'algorithms/net/cell_lang/Algs.java'
-src_Ints123                 = 'algorithms/net/cell_lang/Ints123.java'
-src_Ints12                  = 'algorithms/net/cell_lang/Ints12.java'
-src_Ints21                  = 'algorithms/net/cell_lang/Ints21.java'
-src_Ints231                 = 'algorithms/net/cell_lang/Ints231.java'
-src_Ints312                 = 'algorithms/net/cell_lang/Ints312.java'
+src_Algs                      = 'algorithms/net/cell_lang/Algs.java'
+src_Ints                      = 'algorithms/net/cell_lang/Ints.java'
+src_Ints123                   = 'algorithms/net/cell_lang/Ints123.java'
+src_Ints12                    = 'algorithms/net/cell_lang/Ints12.java'
+src_Ints21                    = 'algorithms/net/cell_lang/Ints21.java'
+src_Ints231                   = 'algorithms/net/cell_lang/Ints231.java'
+src_Ints312                   = 'algorithms/net/cell_lang/Ints312.java'
 
-src_BinaryTable             = 'automata/net/cell_lang/BinaryTable.java'
-src_BinaryTableUpdater      = 'automata/net/cell_lang/BinaryTableUpdater.java'
-src_Index                   = 'automata/net/cell_lang/Index.java'
-src_OneWayBinTable          = 'automata/net/cell_lang/OneWayBinTable.java'
-src_OverflowTable           = 'automata/net/cell_lang/OverflowTable.java'
-src_TernaryTable            = 'automata/net/cell_lang/TernaryTable.java'
-src_TernaryTableUpdater     = 'automata/net/cell_lang/TernaryTableUpdater.java'
-src_UnaryTable              = 'automata/net/cell_lang/UnaryTable.java'
-src_UnaryTableUpdater       = 'automata/net/cell_lang/UnaryTableUpdater.java'
-src_ValueStoreBase          = 'automata/net/cell_lang/ValueStoreBase.java'
-src_ValueStore              = 'automata/net/cell_lang/ValueStore.java'
-src_ValueStoreUpdater       = 'automata/net/cell_lang/ValueStoreUpdater.java'
+src_BiIntPredicate            = 'automata/net/cell_lang/BiIntPredicate.java'
+src_BinaryTable               = 'automata/net/cell_lang/BinaryTable.java'
+src_BinaryTableUpdater        = 'automata/net/cell_lang/BinaryTableUpdater.java'
+src_Index                     = 'automata/net/cell_lang/Index.java'
+src_OneWayBinTable            = 'automata/net/cell_lang/OneWayBinTable.java'
+src_OverflowTable             = 'automata/net/cell_lang/OverflowTable.java'
+src_Sym12TernaryTable         = 'automata/net/cell_lang/Sym12TernaryTable.java'
+src_Sym12TernaryTableUpdater  = 'automata/net/cell_lang/Sym12TernaryTableUpdater.java'
+src_SymBinaryTable            = 'automata/net/cell_lang/SymBinaryTable.java'
+src_SymBinaryTableUpdater     = 'automata/net/cell_lang/SymBinaryTableUpdater.java'
+src_TernaryTable              = 'automata/net/cell_lang/TernaryTable.java'
+src_TernaryTableBase          = 'automata/net/cell_lang/TernaryTableBase.java'
+src_TernaryTableUpdater       = 'automata/net/cell_lang/TernaryTableUpdater.java'
+src_UnaryTable                = 'automata/net/cell_lang/UnaryTable.java'
+src_UnaryTableUpdater         = 'automata/net/cell_lang/UnaryTableUpdater.java'
+src_ValueStore                = 'automata/net/cell_lang/ValueStore.java'
+src_ValueStoreBase            = 'automata/net/cell_lang/ValueStoreBase.java'
+src_ValueStoreUpdater         = 'automata/net/cell_lang/ValueStoreUpdater.java'
 
-src_Conversions             = 'misc/net/cell_lang/Conversions.java'
-src_Pair                    = 'misc/net/cell_lang/Pair.java'
-src_Triplet                 = 'misc/net/cell_lang/Triplet.java'
-src_WrappingUtils           = 'misc/net/cell_lang/WrappingUtils.java'
+src_Conversions               = 'misc/net/cell_lang/Conversions.java'
+src_WrappingUtils             = 'misc/net/cell_lang/WrappingUtils.java'
 
 ################################################################################
 
@@ -129,6 +134,7 @@ std_sources = [
   # src_Value,
 
   src_Algs,
+  src_Ints,
   src_Ints123,
   src_Ints12,
   src_Ints21,
@@ -137,12 +143,18 @@ std_sources = [
 ]
 
 table_sources = [
+  src_BiIntPredicate,
   src_BinaryTable,
   src_BinaryTableUpdater,
   src_Index,
   src_OneWayBinTable,
   src_OverflowTable,
+  src_Sym12TernaryTable,
+  src_Sym12TernaryTableUpdater,
+  src_SymBinaryTable,
+  src_SymBinaryTableUpdater,
   src_TernaryTable,
+  src_TernaryTableBase,
   src_TernaryTableUpdater,
   src_UnaryTable,
   src_UnaryTableUpdater,
@@ -153,8 +165,6 @@ table_sources = [
 
 interface_sources = [
   src_Conversions,
-  # src_Pair,
-  # src_Triplet,
   src_WrappingUtils
 ]
 
@@ -250,9 +260,7 @@ file_data = [
   data_array_def('core_runtime', input_dir, std_sources, False),
   data_array_def('table_runtime', input_dir, table_sources, False),
   data_array_def('interface_runtime', input_dir, interface_sources, False),
-  data_array_def('value_class_def', input_dir, [src_Value], True),
-  data_array_def('pair_class_def', input_dir, [src_Pair], True),
-  data_array_def('triplet_class_def', input_dir, [src_Triplet], True)
+  data_array_def('value_class_def', input_dir, [src_Value], True)
 ]
 
 out_file = open(out_fname, 'w')
@@ -266,9 +274,7 @@ empty_file_data = [
   data_array_def('core_runtime', input_dir, [], False),
   data_array_def('table_runtime', input_dir, [], False),
   data_array_def('interface_runtime', input_dir, [], False),
-  data_array_def('value_class_def', input_dir, [], True),
-  data_array_def('pair_class_def', input_dir, [], True),
-  data_array_def('triplet_class_def', input_dir, [], True)
+  data_array_def('value_class_def', input_dir, [], True)
 ]
 
 empty_out_file = open(empty_out_fname, 'w')
