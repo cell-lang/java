@@ -1,21 +1,26 @@
 implicit prg : CompiledPrg, debug_mode : Bool {
   String auto_expr_native_code(RefObjExpr expr, WriteObjVar var) =
     copy_state()              = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
-    copy_table()              = native_copy_table_code(var, expr.tables, expr.perm),
+    copy_rel()                = native_copy_rel_code(var, expr.tables, expr.applied_perm),
     copy_persistent_state()   = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
     lookup_surrogate()        = native_method_call(var, expr.store, "lookupSurrogate", (expr.surrogate)),
     read_pending_var(v?)      = native_var_ref_name(var) & " = " & native_var_ref_name(v) & ";";
 
 
-  String native_copy_table_code(WriteObjVar res_var, [+TableVar -> Table] tables, Nat+ perm) {
+  String native_copy_rel_code(WriteObjVar res_var, [+TableVar -> Table] tables, [+Nat -> Nat] applied_perm) {
     symmetric = only([t.symmetric : unused_var, t <- tables]);
-    assert not symmetric or (perm == (0, 1) or perm == (0, 1, 2));
+    assert not symmetric or (applied_perm == (0, 1) or applied_perm == (0, 1, 2));
 
-    perm_args = match (perm)
-      (_)       = (),
-      (0, 1)    = (false if not symmetric),
-      (1, 0)    = (true),
-      (_, _, _) = if symmetric then () else perm;
+    arity = |applied_perm|;
+    if arity == 1:
+      perm_args = ();
+    elif arity == 2:
+      assert applied_perm == [0 -> 0, 1 -> 1] or applied_perm == [0 -> 1, 1 -> 0];
+      perm_args = if applied_perm == [0 -> 0, 1 -> 1] then (false if not symmetric) else (true);
+    else
+      assert arity == 3;
+      perm_args = if symmetric then () else (applied_perm(!!, i) : i < arity);
+    ;
 
     table_vars = keys(tables);
 
@@ -23,7 +28,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       return native_method_call(res_var, only(table_vars), "copy", perm_args);
 
     else
-      class_name = match (|perm|)
+      class_name = match (arity)
         1 = "UnaryTable",
         2 = if symmetric then "SymBinaryTable" else "BinaryTable",
         3 = if symmetric then "Sym12TernaryTable" else "TernaryTable";

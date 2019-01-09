@@ -150,7 +150,7 @@ String* create_error_msg(ParserError err, String filename) =
         generate_accessors:         generate_accessors,
         max_opt_fields_in_opt_rec:  16
       );
-      code = if not is_done then just(compiled_program(options = options)) else nothing;
+      code = if not is_done then just(compiled_program(undefined, options = options)) else nothing;
     ;
   ;
   return [] if is_done;
