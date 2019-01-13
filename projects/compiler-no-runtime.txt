@@ -22,30 +22,28 @@
 ../compiler/src/ctors-3.cell
 
 
-// Method definitions
-
-../compiler/src/methods-1.cell
-../compiler/src/methods-2.cell
-../compiler/src/methods-3.cell
-
-
-// Accessors
-
-../compiler/src/accessors-1.cell
-../compiler/src/accessors-2.cell
-
-
 // Utilities
 
 ../compiler/src/utils.cell
 
-../compiler/src/utils-1.cell
-../compiler/src/utils-2.cell
-../compiler/src/utils-2-misc.cell
-../compiler/src/utils-2-pseudotypes.cell
-../compiler/src/utils-2-time-exprs.cell
-../compiler/src/utils-2-totality.cell
-../compiler/src/utils-3.cell
+
+// Stage 1
+
+../compiler/src/stage-1/methods.cell
+../compiler/src/stage-1/accessors.cell
+../compiler/src/stage-1/utils.cell
+
+
+// Stage 2
+
+../compiler/src/stage-2/utils.cell
+../compiler/src/stage-2/misc.cell
+../compiler/src/stage-2/pseudotypes.cell
+../compiler/src/stage-2/time-exprs.cell
+../compiler/src/stage-2/totality.cell
+../compiler/src/stage-2/rewriting.cell
+../compiler/src/stage-2/methods.cell
+../compiler/src/stage-2/accessors.cell
 
 
 // Stage 2 - relational layer
@@ -59,6 +57,12 @@
 
 ../compiler/src/stage-2-reactive-layer/accessors.cell
 ../compiler/src/stage-2-reactive-layer/unsafe-accessors.cell
+
+
+// Stage 3
+
+../compiler/src/stage-3/utils.cell
+../compiler/src/stage-3/methods.cell
 
 
 // Compiler steps
@@ -109,28 +113,31 @@
 ../compiler/src/F-code-analysis/errors.cell
 ../compiler/src/F-code-analysis/updates.cell
 
-../compiler/src/G-code-generation/cg.cell
-../compiler/src/G-code-generation/utils.cell
-../compiler/src/G-code-generation/type-membership.cell
-../compiler/src/G-code-generation/databases.cell
-../compiler/src/G-code-generation/automata.cell
-../compiler/src/G-code-generation/auto-methods.cell
-../compiler/src/G-code-generation/auto-utils.cell
-../compiler/src/G-code-generation/auto-nodes.cell
-../compiler/src/G-code-generation/auto-nodes-gen.cell
-../compiler/src/G-code-generation/auto-nodes-code-gen.cell
-../compiler/src/G-code-generation/opt-utils.cell
-../compiler/src/G-code-generation/alt-expr.cell
-../compiler/src/G-code-generation/expr-opt.cell
-../compiler/src/G-code-generation/expr-code-gen.cell
-../compiler/src/G-code-generation/low-level-signs.cell
-../compiler/src/G-code-generation/ad-hoc-records.cell
-../compiler/src/G-code-generation/conversion.cell
-../compiler/src/G-code-generation/stmt-code-gen.cell
-../compiler/src/G-code-generation/pattern-matching.cell
-../compiler/src/G-code-generation/yield-actions.cell
+../compiler/src/G-code-preprocessing/auto-gen-code.cell
+../compiler/src/G-code-preprocessing/rel-vars-perm.cell
 
-../compiler/src/H-code-optimization/dead-code-removal.cell
+../compiler/src/H-code-generation/cg.cell
+../compiler/src/H-code-generation/utils.cell
+../compiler/src/H-code-generation/type-membership.cell
+../compiler/src/H-code-generation/databases.cell
+../compiler/src/H-code-generation/automata.cell
+../compiler/src/H-code-generation/auto-methods.cell
+../compiler/src/H-code-generation/auto-utils.cell
+../compiler/src/H-code-generation/auto-nodes.cell
+../compiler/src/H-code-generation/auto-nodes-gen.cell
+../compiler/src/H-code-generation/auto-nodes-code-gen.cell
+../compiler/src/H-code-generation/opt-utils.cell
+../compiler/src/H-code-generation/alt-expr.cell
+../compiler/src/H-code-generation/expr-opt.cell
+../compiler/src/H-code-generation/expr-code-gen.cell
+../compiler/src/H-code-generation/low-level-signs.cell
+../compiler/src/H-code-generation/ad-hoc-records.cell
+../compiler/src/H-code-generation/conversion.cell
+../compiler/src/H-code-generation/stmt-code-gen.cell
+../compiler/src/H-code-generation/pattern-matching.cell
+../compiler/src/H-code-generation/yield-actions.cell
+
+../compiler/src/I-code-optimization/dead-code-removal.cell
 
 src/cell/code-gen/auto-instrs.cell
 src/cell/code-gen/exprs.cell

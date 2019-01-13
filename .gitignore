@@ -28,3 +28,4 @@ bin/cellc-java.jar
 bin/cellcd-java.jar
 bin/cellcd-java
 src/cell/main-lexer.cell
+bin/cellc-java-0.2.jar

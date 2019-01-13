@@ -1,243 +1,3 @@
-String error_pos_msg(String filename, NzNat line, NzNat col) =
-  "File " & filename & ", line " & printed(line) & ", column " & printed(col);
-
-
-String* create_error_msg(LexerError err, String filename) = ("Syntax error, invalid token", error_pos_msg(filename, err.line, err.col));
-
-
-String* create_error_msg(ParError err, String filename) =
-  parenthesis_not_closed(t?)  = ("Opening parenthesis without corresponding closing parenthesis", error_pos_msg(filename, t.line, t.col)),
-  parenthesis_not_opened(t?)  = ("Closing parenthesis without corresponding opening parenthesis", error_pos_msg(filename, t.line, t.col)),
-  mismatched_parenthesis()    = ( "Mismatched parentheses, file " & filename,
-                                  "Line " & printed(err.left.line) & " column " & printed(err.left.col) &
-                                  ", line " & printed(err.right.line) & " column " & printed(err.right.col)
-                                );
-
-
-String* create_error_msg(ParserError err, String filename) =
-  unexpected_end_of_file()  = ("Unexpected end of file: " & filename),
-  unexpected_token()        = ("Unexpected token", error_pos_msg(filename, err.found.line, err.found.col)),
-  all_choices_failed()      = create_error_msg(err.error, filename),
-  neg_rule_match()          = { pos = source_file_location(err.match.rule_match);
-                                return ("Syntax error in file " & filename, "The exact location of the error is unknown") if pos == nothing;
-                                start_pos, end_pos = value(pos);
-                                start_line, start_col = start_pos;
-                                return ("Syntax error", error_pos_msg(filename, start_line, start_col));
-
-                              };
-
-
-[String -> String*] Compile(
-  [String -> Byte*] src_files, Bool include_runtime, Bool run_typechecking, Bool ignore_assertions,
-  Bool debug_mode, Bool generate_accessors, Bool print_intermediate, Bool print_times, Bool wait_for_key
-) {
-  t0 = _ticks_(:any_value_will_do);
-
-  decls = ();
-  for fn <- rand_sort(keys(src_files)):
-    res = lex_and_parse_src_file(fn, src_files[fn]);
-    if is_success(res):
-      decls = (decls | [fn -> get_result(res)]);
-    else
-      err_msg = create_error_msg(get_error(res), fn);
-      Print(append(err_msg, "\n") & "\n");
-      return [];
-    ;
-  ;
-  syn_prg = syn_prg(parsed_src_files: merge(decls));
-
-  t1 = _ticks_(:any_value_will_do);
-
-  Print("Source files parsed\n");
-  if wait_for_key:
-    unused_var = GetChar();
-  ;
-
-  if print_intermediate:
-    ok = FileWrite("dump-syn-prg.txt", chars(_print_(syn_prg)));
-  ;
-
-  errs = prg_wf_errors(syn_prg=syn_prg);
-
-  t2 = _ticks_(:any_value_will_do);
-
-  if errs == ():
-    Print("Program is well-formed\n");
-    if wait_for_key:
-      unused_var = GetChar();
-    ;
-  else
-    msgs = append((append(create_error_msg(e), "\n") & "\n\n" : e <- errs));
-    Print(msgs);
-    return [];
-  ;
-
-  prg = desugared_prg(syn_prg=syn_prg);
-  t3 = _ticks_(:any_value_will_do);
-  Print("Syntax removed\n");
-  if wait_for_key:
-    unused_var = GetChar();
-  ;
-
-  if print_intermediate:
-    ok = FileWrite("dump-prg.txt", chars(_print_(prg)));
-  ;
-
-  errs = core_wf_errors(prg);
-  if errs != []:
-    msgs = append((append(error_message(e), "\n") & "\n\n" : e <- rand_sort(errs)));
-    Print(msgs);
-    return [];
-  ;
-  t4 = _ticks_(:any_value_will_do);
-  Print("Additional checks passed\n");
-  if wait_for_key:
-    unused_var = GetChar();
-  ;
-
-  is_done = false;
-  let program = prg:
-    let typedefs = schema_and_typedefs:
-      if run_typechecking:
-        errs = typechecking_errors;
-        if errs == []:
-          Print("The program typechecks\n");
-          if wait_for_key:
-            unused_var = GetChar();
-          ;
-
-          errs = analysis_errors;
-          if errs == []:
-            Print("Code analysis OK\n");
-            if wait_for_key:
-              unused_var = GetChar();
-            ;
-          else
-            bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
-            ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
-            msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
-            for m <- msgs:
-              for l <- m:
-                Print(l & "\n");
-              ;
-              Print("\n");
-            ;
-            is_done = true;
-          ;
-
-        else
-          Print("Error: the program does not typecheck\n\n");
-          // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
-          bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
-          ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
-          msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
-          for m <- msgs:
-            for l <- m:
-              Print(l & "\n");
-            ;
-            Print("\n");
-          ;
-          Print("Number of functions with typechecking errors: " & printed(|errs|) & "\n");
-          is_done = true;
-        ;
-      ;
-
-      t5 = _ticks_(:any_value_will_do);
-
-      options = options(
-        debug_mode:                 debug_mode,
-        ignore_assertions:          ignore_assertions,
-        generate_accessors:         generate_accessors,
-        max_opt_fields_in_opt_rec:  16
-      );
-      code = if not is_done then just(compiled_program(undefined, options = options)) else nothing;
-    ;
-  ;
-  return [] if is_done;
-  code = value_unsafe(code);
-
-  t6 = _ticks_(:any_value_will_do);
-  Print("Code generated\n");
-  if wait_for_key:
-    unused_var = GetChar();
-  ;
-
-  if print_intermediate:
-    ok = FileWrite("dump-code.txt", chars(_print_(code)));
-  ;
-
-  opt_code = compiled_prg(
-    typedefs:       code.typedefs,
-    opt_reprs:      code.opt_reprs,
-    bool_procs:     code.bool_procs,
-    procs:          [remove_dead_code(pd) : pd <- code.procs],
-    react_blocks:   [remove_dead_code(b)  : b  <- code.react_blocks],
-    static_blocks:  [remove_dead_code(b)  : b <- code.static_blocks],
-    int_seqs:       code.int_seqs
-  );
-  t7 = _ticks_(:any_value_will_do);
-  Print("Dead code removed\n");
-  if wait_for_key:
-    unused_var = GetChar();
-  ;
-
-  if print_intermediate:
-    ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
-  ;
-
-  files = generated_code(include_runtime, prg = opt_code, debug_mode = debug_mode);
-  t8 = _ticks_(:any_value_will_do);
-  Print("Java code generated\n");
-  if wait_for_key:
-    unused_var = GetChar();
-  ;
-
-  if print_times:
-    Print("\n");
-    Print("Parsing:               " & printed(t1-t0) & "ms\n");
-    Print("Error checking:        " & printed(t2-t1) & "ms\n");
-    Print("Syntax removal:        " & printed(t3-t2) & "ms\n");
-    Print("Additional checks:     " & printed(t4-t3) & "ms\n");
-    if run_typechecking:
-      Print("Type checking:         " & printed(t5-t4) & "ms\n");
-    ;
-    Print("Code generation:       " & printed(t6-t5) & "ms\n");
-    Print("Code optimization:     " & printed(t7-t6) & "ms\n");
-    Print("Java code generation:  " & printed(t8-t7) & "ms\n");
-    Print("Total time elapsed:    " & printed(t8-t0) & "ms\n");
-  ;
-
-  return files;
-}
-
-
-Nat* remove_comments(Nat* line) {
-  len = |line|;
-  i = 0;
-  while i < len-1:
-    return subseq(line, 0, i) if line(i) == ascii_slash and line(i+1) == ascii_slash;
-    i = i + 1;
-  ;
-  return line;
-}
-
-
-Nat* trim_spaces(Nat* line) {
-  len = |line|;
-  skip_front = 0;
-  while skip_front < len and is_space(line(skip_front)):
-    skip_front = skip_front + 1;
-  ;
-  return () if skip_front == len;
-  skip_back = 0;
-  while skip_back < len - skip_front and is_space(line(len-skip_back-1)):
-    skip_back = skip_back + 1;
-  ;
-  assert skip_front + skip_back < len;
-  return subseq(line, skip_front, :blank, skip_back);
-}
-
-
 Int Main(String* args) {
   argc = |args|;
 
@@ -325,3 +85,270 @@ Int Main(String* args) {
 
   return if files != [] then 0 else 1;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+[String -> String*] Compile(
+  [String -> Byte*] src_files, Bool include_runtime, Bool run_typechecking, Bool ignore_assertions,
+  Bool debug_mode, Bool generate_accessors, Bool print_intermediate, Bool print_times, Bool wait_for_key
+) {
+  t0 = _ticks_(:any_value_will_do);
+
+  decls = ();
+  for fn <- rand_sort(keys(src_files)):
+    res = lex_and_parse_src_file(fn, src_files[fn]);
+    if is_success(res):
+      decls = (decls | [fn -> get_result(res)]);
+    else
+      err_msg = create_error_msg(get_error(res), fn);
+      Print(append(err_msg, "\n") & "\n");
+      return [];
+    ;
+  ;
+  syn_prg = syn_prg(parsed_src_files: merge(decls));
+
+  t1 = _ticks_(:any_value_will_do);
+
+  Print("Source files parsed\n");
+  if wait_for_key:
+    unused_var = GetChar();
+  ;
+
+  if print_intermediate:
+    ok = FileWrite("dump-syn-prg.txt", chars(_print_(syn_prg)));
+  ;
+
+  errs = prg_wf_errors(syn_prg=syn_prg);
+
+  t2 = _ticks_(:any_value_will_do);
+
+  if errs == ():
+    Print("Program is well-formed\n");
+    if wait_for_key:
+      unused_var = GetChar();
+    ;
+  else
+    msgs = append((append(create_error_msg(e), "\n") & "\n\n" : e <- errs));
+    Print(msgs);
+    return [];
+  ;
+
+  prg = desugared_prg(syn_prg=syn_prg);
+  t3 = _ticks_(:any_value_will_do);
+  Print("Syntax removed\n");
+  if wait_for_key:
+    unused_var = GetChar();
+  ;
+
+  if print_intermediate:
+    ok = FileWrite("dump-prg.txt", chars(_print_(prg)));
+  ;
+
+  errs = core_wf_errors(prg);
+  if errs != []:
+    msgs = append((append(error_message(e), "\n") & "\n\n" : e <- rand_sort(errs)));
+    Print(msgs);
+    return [];
+  ;
+  t4 = _ticks_(:any_value_will_do);
+  Print("Additional checks passed\n");
+  if wait_for_key:
+    unused_var = GetChar();
+  ;
+
+  is_bad = false;
+  let program = prg:
+    let typedefs = schema_and_typedefs:
+      if run_typechecking:
+        errs = typechecking_errors;
+        if errs == []:
+          Print("The program typechecks\n");
+          if wait_for_key:
+            unused_var = GetChar();
+          ;
+
+          errs = analysis_errors;
+          if errs == []:
+            Print("Code analysis OK\n");
+            if wait_for_key:
+              unused_var = GetChar();
+            ;
+          else
+            bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
+            ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
+            msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
+            for m <- msgs:
+              for l <- m:
+                Print(l & "\n");
+              ;
+              Print("\n");
+            ;
+            is_bad = true;
+          ;
+
+        else
+          Print("Error: the program does not typecheck\n\n");
+          // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
+          bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
+          ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
+          msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
+          for m <- msgs:
+            for l <- m:
+              Print(l & "\n");
+            ;
+            Print("\n");
+          ;
+          Print("Number of functions with typechecking errors: " & printed(|errs|) & "\n");
+          is_bad = true;
+        ;
+      ;
+
+      t5 = _ticks_(:any_value_will_do);
+
+      if not is_bad:
+        options = options(
+          debug_mode:                 debug_mode,
+          ignore_assertions:          ignore_assertions,
+          max_opt_fields_in_opt_rec:  16
+        );
+
+        let options = options:
+          if prg.data_bases != []:
+            prg2 = if generate_accessors then prg_plus_auto_gen_code else prg;
+            let program = prg2:
+              let typedefs = schema_and_typedefs:
+                prg3, perms = post_rel_vars_perm_program;
+                let program = prg3:
+                  let typedefs = schema_and_typedefs:
+                    code = just(compiled_program(perms));
+                  ;
+                ;
+              ;
+            ;
+          else
+            code = just(compiled_program([]));
+          ;
+        ;
+
+      else
+        code = nothing;
+      ;
+    ;
+  ;
+  return [] if is_bad;
+  code = value_unsafe(code);
+
+  t6 = _ticks_(:any_value_will_do);
+  Print("Code generated\n");
+  if wait_for_key:
+    unused_var = GetChar();
+  ;
+
+  if print_intermediate:
+    ok = FileWrite("dump-code.txt", chars(_print_(code)));
+  ;
+
+  opt_code = compiled_prg(
+    typedefs:       code.typedefs,
+    opt_reprs:      code.opt_reprs,
+    bool_procs:     code.bool_procs,
+    procs:          [remove_dead_code(pd) : pd <- code.procs],
+    react_blocks:   [remove_dead_code(b)  : b  <- code.react_blocks],
+    static_blocks:  [remove_dead_code(b)  : b <- code.static_blocks],
+    int_seqs:       code.int_seqs
+  );
+  t7 = _ticks_(:any_value_will_do);
+  Print("Dead code removed\n");
+  if wait_for_key:
+    unused_var = GetChar();
+  ;
+
+  if print_intermediate:
+    ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
+  ;
+
+  files = generated_code(include_runtime, prg = opt_code, debug_mode = debug_mode);
+  t8 = _ticks_(:any_value_will_do);
+  Print("Java code generated\n");
+  if wait_for_key:
+    unused_var = GetChar();
+  ;
+
+  if print_times:
+    Print("\n");
+    Print("Parsing:               " & printed(t1-t0) & "ms\n");
+    Print("Error checking:        " & printed(t2-t1) & "ms\n");
+    Print("Syntax removal:        " & printed(t3-t2) & "ms\n");
+    Print("Additional checks:     " & printed(t4-t3) & "ms\n");
+    if run_typechecking:
+      Print("Type checking:         " & printed(t5-t4) & "ms\n");
+    ;
+    Print("Code generation:       " & printed(t6-t5) & "ms\n");
+    Print("Code optimization:     " & printed(t7-t6) & "ms\n");
+    Print("Java code generation:  " & printed(t8-t7) & "ms\n");
+    Print("Total time elapsed:    " & printed(t8-t0) & "ms\n");
+  ;
+
+  return files;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+Nat* remove_comments(Nat* line) {
+  len = |line|;
+  i = 0;
+  while i < len-1:
+    return subseq(line, 0, i) if line(i) == ascii_slash and line(i+1) == ascii_slash;
+    i = i + 1;
+  ;
+  return line;
+}
+
+
+Nat* trim_spaces(Nat* line) {
+  len = |line|;
+  skip_front = 0;
+  while skip_front < len and is_space(line(skip_front)):
+    skip_front = skip_front + 1;
+  ;
+  return () if skip_front == len;
+  skip_back = 0;
+  while skip_back < len - skip_front and is_space(line(len-skip_back-1)):
+    skip_back = skip_back + 1;
+  ;
+  assert skip_front + skip_back < len;
+  return subseq(line, skip_front, :blank, skip_back);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+String error_pos_msg(String filename, NzNat line, NzNat col) =
+  "File " & filename & ", line " & printed(line) & ", column " & printed(col);
+
+
+String* create_error_msg(LexerError err, String filename) = ("Syntax error, invalid token", error_pos_msg(filename, err.line, err.col));
+
+
+String* create_error_msg(ParError err, String filename) =
+  parenthesis_not_closed(t?)  = ("Opening parenthesis without corresponding closing parenthesis", error_pos_msg(filename, t.line, t.col)),
+  parenthesis_not_opened(t?)  = ("Closing parenthesis without corresponding opening parenthesis", error_pos_msg(filename, t.line, t.col)),
+  mismatched_parenthesis()    = ( "Mismatched parentheses, file " & filename,
+                                  "Line " & printed(err.left.line) & " column " & printed(err.left.col) &
+                                  ", line " & printed(err.right.line) & " column " & printed(err.right.col)
+                                );
+
+
+String* create_error_msg(ParserError err, String filename) =
+  unexpected_end_of_file()  = ("Unexpected end of file: " & filename),
+  unexpected_token()        = ("Unexpected token", error_pos_msg(filename, err.found.line, err.found.col)),
+  all_choices_failed()      = create_error_msg(err.error, filename),
+  neg_rule_match()          = { pos = source_file_location(err.match.rule_match);
+                                return ("Syntax error in file " & filename, "The exact location of the error is unknown") if pos == nothing;
+                                start_pos, end_pos = value(pos);
+                                start_line, start_col = start_pos;
+                                return ("Syntax error", error_pos_msg(filename, start_line, start_col));
+
+                              };
