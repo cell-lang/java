@@ -71,7 +71,7 @@ String native_var_ref_name(UnqualifiableVars v)  = native_var_name(v);
 /////////////////////////////////////////////////////////////////////////////////////
 
 String native_var_decl_name(MembIntVectVar v) =
-  nodes_to_update_vect_var()  = "nodes_to_update" & printed(v.level),
+  nodes_to_update_vect_var()  = "nodes_to_update_" & printed(v.level),
   changed_outputs()           = "changed_outputs";
 
 /////////////////////////////////////////////////////////////////////////////////////

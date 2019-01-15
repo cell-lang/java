@@ -234,12 +234,15 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     // then we need to create a new automaton by calling recontruct() and replacing
     // the old automaton with the new if the reconstruction process is successful
     class_name = native_name(type);
+    updater_class_name = updater_creation_proc_name(type);
     reconstr_call = native_method_call(db_var, reconstruct_proc_name(type), (state, "env"));
     return (
       "{ " & class_name & " instance = " & reconstr_call,
       "  " & native_var_ref_name(res_var) & " = instance != null;",
-      "  if (instance != null)",
+      "  if (instance != null) {",
       "    " & native_var_ref_name(db_var) & " = instance;",
+      "    " & native_method_call(aux_struct_var_ref_name(db_var), db_var, updater_class_name, ()),
+      "  }",
       "}"
     );
   }

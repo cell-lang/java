@@ -354,12 +354,18 @@ class BinaryTableUpdater {
   public void dump(boolean flipped) {
     System.out.print("deleteList =");
     for (int i=0 ; i < deleteCount ; i++)
-      System.out.printf(" (%d, %d)", deleteList[2 * i], deleteList[2 * i + 1]);
+      if (flipped)
+        System.out.printf(" (%d, %d)", deleteList[2 * i + 1], deleteList[2 * i]);
+      else
+        System.out.printf(" (%d, %d)", deleteList[2 * i], deleteList[2 * i + 1]);
     System.out.println();
 
     System.out.print("insertList =");
     for (int i=0 ; i < insertCount ; i++)
-      System.out.printf(" (%d, %d)", insertList[2 * i], insertList[2 * i + 1]);
+      if (flipped)
+        System.out.printf(" (%d, %d)", insertList[2 * i + 1], insertList[2 * i]);
+      else
+        System.out.printf(" (%d, %d)", insertList[2 * i], insertList[2 * i + 1]);
     System.out.println("\n");
 
     System.out.print("deleteList =");
@@ -368,6 +374,11 @@ class BinaryTableUpdater {
       int field2 = deleteList[2 * i + 1];
       Obj obj1 = store1.lookupSurrogateEx(field1);
       Obj obj2 = store2.lookupSurrogateEx(field2);
+      if (flipped) {
+        Obj tmp = obj1;
+        obj1 = obj2;
+        obj2 = tmp;
+      }
       System.out.printf(" (%s, %s)", obj1.toString(), obj2.toString());
     }
     System.out.println("");
@@ -378,6 +389,11 @@ class BinaryTableUpdater {
       int field2 = insertList[2 * i + 1];
       Obj obj1 = store1.lookupSurrogateEx(field1);
       Obj obj2 = store2.lookupSurrogateEx(field2);
+      if (flipped) {
+        Obj tmp = obj1;
+        obj1 = obj2;
+        obj2 = tmp;
+      }
       System.out.printf(" (%s, %s)",
         obj1 != null ? obj1.toString() : "null",
         obj2 != null ? obj2.toString() : "null"
@@ -386,7 +402,7 @@ class BinaryTableUpdater {
 
     System.out.printf("\n\n%s\n\n", table.copy(flipped).toString());
 
-    store1.dump();
-    store2.dump();
+    // store1.dump();
+    // store2.dump();
   }
 }

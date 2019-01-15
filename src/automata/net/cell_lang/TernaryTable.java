@@ -440,11 +440,11 @@ class TernaryTable {
 
       int idx = hashtable[i];
       while (idx != Empty) {
-        int offset = 3 * i;
-        int arg1 = flatTuples[offset + col1];
-        int arg2 = flatTuples[offset + col2];
+        int offset = 3 * idx;
+        long arg1 = flatTuples[offset + col1];
+        long arg2 = flatTuples[offset + col2];
         long packedArgs = arg1 | (arg2 << 32);
-        Miscellanea._assert(arg1 == (packedArgs & 0xFFFFFFFF));
+        Miscellanea._assert(arg1 == (packedArgs & 0xFFFFFFFFL));
         Miscellanea._assert(arg2 == (packedArgs >>> 32));
         bucket = Miscellanea.arrayAppend(bucket, count++, packedArgs);
         idx = index.next(idx);
@@ -454,7 +454,7 @@ class TernaryTable {
         if (count > 2)
           Arrays.sort(bucket, 0, count);
         long last = bucket[0];
-        for (int j=1 ; j < count ; i++) {
+        for (int j=1 ; j < count ; j++) {
           long val = bucket[j];
           if (val == last)
             return false;

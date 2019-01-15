@@ -35,7 +35,15 @@ class ValueStore extends ValueStoreBase {
       addRef(surr);
       return surr;
     }
-    throw new RuntimeException();
+    else {
+      int capacity = capacity();
+      Miscellanea._assert(count <= capacity);
+      if (count == capacity)
+        resize(count+1);
+      int idx = firstFreeIdx;
+      insert(value, firstFreeIdx);
+      return idx;
+    }
   }
 
   public void insert(Obj value, int hashcode, int index) {
