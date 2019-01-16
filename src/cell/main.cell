@@ -206,6 +206,7 @@ Int Main(String* args) {
 
       t5 = _ticks_(:any_value_will_do);
 
+      memb_test_accessors_ids = [];
       if not is_bad:
         options = options(
           debug_mode:                 debug_mode,
@@ -215,7 +216,11 @@ Int Main(String* args) {
 
         let options = options:
           if prg.data_bases != []:
-            prg2 = if generate_accessors then prg_plus_auto_gen_code else prg;
+            if generate_accessors:
+              prg2, memb_test_accessors_ids = prg_plus_auto_gen_code;
+            else
+              prg2 = prg;
+            ;
             let program = prg2:
               let typedefs = schema_and_typedefs:
                 prg3, perms = post_rel_vars_perm_program;
@@ -268,7 +273,7 @@ Int Main(String* args) {
     ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
   ;
 
-  files = generated_code(include_runtime, prg = opt_code, debug_mode = debug_mode);
+  files = generated_code(include_runtime, memb_test_accessors_ids, prg = opt_code, debug_mode = debug_mode);
   t8 = _ticks_(:any_value_will_do);
   Print("Java code generated\n");
   if wait_for_key:

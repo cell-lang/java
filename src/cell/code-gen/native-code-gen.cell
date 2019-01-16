@@ -1,5 +1,5 @@
 implicit prg : CompiledPrg, debug_mode : Bool {
-  [String -> String*] generated_code(Bool include_runtime) {
+  [String -> String*] generated_code(Bool include_runtime, [DBSymbol -> [MethodId]] gen_memb_testers_ids) {
     symbs = program_symbols;
     assert |symbs| <= 64 * 1024; ## IMPLEMENT PROPERLY
 
@@ -68,7 +68,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     static_blocks_map = [b.name -> b : b <- prg.static_blocks];
     let prg = prg, typedefs = prg.typedefs:
       react_auto_wrappers = (react_auto_wrapper(b) : b <- ord_react_blocks);
-      rel_auto_wrappers = (static_auto_wrapper(b, static_blocks_map) : b <- ord_static_blocks);
+      rel_auto_wrappers = (
+        static_auto_wrapper(b, static_blocks_map, gen_memb_testers_ids[b.name]) : b <- ord_static_blocks
+      );
       inter_types_decls = interface_types_decls;
       inter_types_docs = interface_types_docs;
 

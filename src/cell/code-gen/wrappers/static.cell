@@ -61,10 +61,10 @@ implicit
   root_block_name : DBSymbol,
   duplicate_names : [String, Nat] {
 
-  (String*, String*) db_method_wrapper(MethodId method_id, CompiledMethod method) {
+  (String*, String*) db_method_wrapper(MethodId method_id, CompiledMethod method, Bool is_gen_memb_tester) {
     if not method_id.id?:
       ext_name = call_method_name(method_id);
-      return method_wrapper(method_id, method, block_name, ext_name, db_class_name, path_prefix);
+      return method_wrapper(method_id, method, block_name, ext_name, db_class_name, path_prefix, is_gen_memb_tester);
     else
       return ((), ());
     ;
@@ -72,17 +72,18 @@ implicit
 
   //////////////////////////////////////////////////////////////////////////////
 
-  (String*, String*) static_auto_accessors(StaticBlock block, [DBSymbol -> StaticBlock] blocks) {
-    methods_wrappers = isort([db_method_wrapper(id, m) : id, m <- block.methods]);
+  (String*, String*) static_auto_accessors(StaticBlock block, [DBSymbol -> StaticBlock] blocks, [MethodId] gen_memb_testers_ids) {
+    methods_wrappers = isort([db_method_wrapper(id, m, gen_memb_testers_ids(id)) : id, m <- block.methods]);
     methods_wrappers_code, methods_wrappers_docs = (join(ls) : ls <- unzip(methods_wrappers));
     methods_wrappers_docs = ("") & methods_wrappers_docs if methods_wrappers_docs != ();
 
-    accessors_wrappers = isort([db_method_wrapper(id, m) : id, m <- block.accessors]);
+    ## THIS PART OF THE CODE IS USELESS NOW, SINCE THE accessors FIELD IS NOT USED ANYMORE
+    accessors_wrappers = isort([db_method_wrapper(id, m, false) : id, m <- block.accessors]);
     accessors_wrappers_code, accessors_wrappers_docs = (join(ls) : ls <- unzip(accessors_wrappers));
     accessors_wrappers_docs = ("") & accessors_wrappers_docs if accessors_wrappers_docs != ();
 
     nested_autos_accessors = isort([
-        static_auto_accessors(blocks[t], blocks, block_name = blocks[t].name, db_var_chain = (db_var_chain | v))
+        static_auto_accessors(blocks[t], blocks, [], block_name = blocks[t].name, db_var_chain = (db_var_chain | v))
       : v, t <- block.nested_blocks
     ]);
     nested_autos_code, nested_autos_docs = (join(ls) : ls <- unzip(nested_autos_accessors));
@@ -126,11 +127,11 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, 
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
-  (String, String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
+  (String, String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks, [MethodId] gen_memb_testers_ids) {
     let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name:
       dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];
       let duplicate_names = dup_names:
-        accessors_code, accessors_docs = static_auto_accessors(root_block, blocks);
+        accessors_code, accessors_docs = static_auto_accessors(root_block, blocks, gen_memb_testers_ids);
         class_name = db_class_name;
       ;
     ;
