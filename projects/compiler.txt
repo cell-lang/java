@@ -50,7 +50,8 @@
 
 ../compiler/src/stage-2-relational-layer/accessors.cell
 ../compiler/src/stage-2-relational-layer/unsafe-accessors.cell
-../compiler/src/stage-2-relational-layer/derived.cell
+../compiler/src/stage-2-relational-layer/utils.cell
+../compiler/src/stage-2-relational-layer/rel-vars-part.cell
 
 
 // Stage 2 - reactive layer
@@ -114,6 +115,7 @@
 ../compiler/src/F-code-analysis/updates.cell
 
 ../compiler/src/G-code-preprocessing/auto-gen-code.cell
+../compiler/src/G-code-preprocessing/rel-vars-part.cell
 ../compiler/src/G-code-preprocessing/rel-vars-perm.cell
 
 ../compiler/src/H-code-generation/cg.cell

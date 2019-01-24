@@ -168,25 +168,6 @@ Int Main(String* args) {
             unused_var = GetChar();
           ;
 
-          errs = analysis_errors;
-          if errs == []:
-            Print("Code analysis OK\n");
-            if wait_for_key:
-              unused_var = GetChar();
-            ;
-          else
-            bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
-            ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
-            msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
-            for m <- msgs:
-              for l <- m:
-                Print(l & "\n");
-              ;
-              Print("\n");
-            ;
-            is_bad = true;
-          ;
-
         else
           Print("Error: the program does not typecheck\n\n");
           // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
@@ -214,26 +195,31 @@ Int Main(String* args) {
           max_opt_fields_in_opt_rec:  16
         );
 
-        let options = options:
-          if prg.data_bases != []:
-            if generate_accessors:
-              prg2, memb_test_accessors_ids = prg_plus_auto_gen_code;
-            else
-              prg2 = prg;
-            ;
-            let program = prg2:
-              let typedefs = schema_and_typedefs:
-                prg3, perms = post_rel_vars_perm_program;
-                let program = prg3:
-                  let typedefs = schema_and_typedefs:
-                    code = just(compiled_program(perms));
-                  ;
-                ;
-              ;
+        if prg.data_bases != []:
+          res = transform_analyze_and_compile(prg, options, generate_accessors);
+          if succeeded(res):
+            cmp_prg, memb_test_accessors_ids = get_result(res);
+            code = just(cmp_prg);
+            Print("Code analysis OK\n");
+            if wait_for_key:
+              unused_var = GetChar();
             ;
           else
-            code = just(compiled_program([]));
+            errs = get_error(res);
+            bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
+            ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
+            msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
+            for m <- msgs:
+              for l <- m:
+                Print(l & "\n");
+              ;
+              Print("\n");
+            ;
+            is_bad = true;
+            code = nothing;
           ;
+        else
+          code = just(compiled_program([], options=options));
         ;
 
       else
@@ -296,6 +282,43 @@ Int Main(String* args) {
   ;
 
   return files;
+}
+
+
+Result[(CompiledPrg, [DBSymbol -> [MethodId]]), [+<Update, Handler> -> [+AnalysisError]]]
+transform_analyze_and_compile(Program prg, CompOptions options, Bool generate_accessors) {
+  curr_prg = prg;
+
+  // Partitioning relvars
+  let program = curr_prg:
+    curr_prg = post_rel_vars_part_prg(typedefs = schema_and_typedefs);
+  ;
+
+  // Analysing the program. Has to be done after partitioning
+  let program = curr_prg:
+    errs = analysis_errors(typedefs = schema_and_typedefs);
+  ;
+  return failure(errs) if errs != [];
+
+  // Generating accessors
+  if generate_accessors:
+    typedefs = schema_and_typedefs(program=curr_prg);
+    curr_prg, memb_test_accessors_ids = prg_plus_auto_gen_code(program=curr_prg, typedefs=typedefs);
+  else
+    memb_test_accessors_ids = [];
+  ;
+
+  // Permutating relvars
+  let program = curr_prg:
+    curr_prg, perms = post_rel_vars_perm_program(typedefs = schema_and_typedefs);
+  ;
+
+  // Compiling the program
+  let program = curr_prg:
+    code = compiled_program(perms, typedefs = schema_and_typedefs, options = options);
+  ;
+
+  return success((code, memb_test_accessors_ids));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

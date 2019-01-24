@@ -217,16 +217,17 @@ String native_var_name(AnyDBVar v, Bool add_prefix) =
   linked_db_var(n?) = "(*" & {if add_prefix then "this." else ""} & "linkedAuto" & printed(n) & ")",
   qual_db_var()     = native_var_name(v.outer, add_prefix) & "." & native_var_name(v.inner, false);
 
-// ## TODO: REMOVE THIS WHEN DONE
-// String native_var_name(QualRelVar v, Bool add_prefix) =
-//   native_var_name(v.db_var, add_prefix) & "." & native_var_name(v.rel_var, false);
 
+String native_var_name(AnyTableVar var, Bool add_prefix) {
+  return match (var)
+    table_var(v?)             = {if add_prefix then "this." else ""} & native_name(v),
+    qual_table_var()          = native_var_name(var.db_var, add_prefix) & "." & native_var_name(var.table_var, false),
+    capt_table_var(v?)        = { assert add_prefix; return "this.capt_auto." & native_var_name(v, false);};
 
-String native_var_name(AnyTableVar var, Bool add_prefix) =
-  table_var(a?)             = {if add_prefix then "this." else ""} & _print_(a) & "_B",
-  unique_table_var(a?, id?) = {if add_prefix then "this." else ""} & _print_(a) & "_B" & printed(id),
-  qual_table_var()          = native_var_name(var.db_var, add_prefix) & "." & native_var_name(var.table_var, false),
-  capt_table_var(v?)        = { assert add_prefix; return "this.capt_auto." & native_var_name(v, false);};
+  String native_name(PhysRelVar) =
+    rel_var(s?)           = _print_(s) & "_B",
+    split_rel_var(v?, n?) = native_name(v) & "_" & _print_(n);
+}
 
 
 String native_var_name(AnyValueStoreId v, Bool add_prefix) =
@@ -249,9 +250,14 @@ String native_idx_expr(<add(val1: IntVar, val2: Nat)> e)  = native_var_ref_name(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String pending_updates_var_decl_name(TableVar rel_var) =
-  table_var(a?)             = _print_(a) & "_Bp",
-  unique_table_var(a?, n?)  = _print_(a) & "_B" & printed(n) & "p";
+String pending_updates_var_decl_name(TableVar var) {
+  return match (var)
+    table_var(v?) = native_name(v);
+
+  String native_name(PhysRelVar) =
+    rel_var(s?)           = _print_(s) & "_Bp",
+    split_rel_var(v?, n?) = native_name(v) & "_" & _print_(n);
+}
 
 String pending_updates_var_ref_name(TableVar table_var) = "updater." & pending_updates_var_decl_name(table_var);
 
