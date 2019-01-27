@@ -225,7 +225,7 @@ String native_var_name(AnyTableVar var, Bool add_prefix) {
     capt_table_var(v?)        = { assert add_prefix; return "this.capt_auto." & native_var_name(v, false);};
 
   String native_name(PhysRelVar) =
-    rel_var(s?)           = _print_(s) & "_B",
+    phys_rel_var(s?)      = _print_(s) & "_B",
     split_rel_var(v?, n?) = native_name(v) & "_" & _print_(n);
 }
 
@@ -255,7 +255,7 @@ String pending_updates_var_decl_name(TableVar var) {
     table_var(v?) = native_name(v);
 
   String native_name(PhysRelVar) =
-    rel_var(s?)           = _print_(s) & "_Bp",
+    phys_rel_var(s?)      = _print_(s) & "_Bp",
     split_rel_var(v?, n?) = native_name(v) & "_" & _print_(n);
 }
 
