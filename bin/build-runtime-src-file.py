@@ -198,6 +198,7 @@ def convert_file(file_name, keep_all):
     # if i > 10:
     #   break
     # i = i + 1
+    ## IS THERE A BUG HERE? MISSING PARENTHESES AROUND THE or EXPRESSION?
     if not keep_all and (l.startswith('package ') or l.startswith('import ')):
       pass
     else:
