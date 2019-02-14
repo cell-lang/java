@@ -164,7 +164,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       type_name = input_types_names(untagged_type, !!);
       unique_id = printed(_counter_(:any_value_will_do));
       in_var = "var_" & unique_id;
-      code = (type_name & " " & in_var & " = " & expr & ".inner;");
+      code = (type_name & " " & in_var & " = " & expr & ".value;");
       code = code & import_code_ex(untagged_type, in_var, next_action_prefix);
     else
       code = import_code(untagged_type, expr, next_action_prefix);
@@ -179,7 +179,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
 
 
     String* import_code(<BasicInterType, CollInterType> inter_type, String expr, String action_prefix) {
-      return import_code_ex(inter_type, expr & ".inner", action_prefix);
+      return import_code_ex(inter_type, expr & ".value", action_prefix);
     }
   }
 
@@ -359,7 +359,7 @@ implicit prg : CompiledPrg {
       unique_id = printed(_counter_(:any_value_will_do));
       out_var = "var_" & unique_id;
       code = (code | type_name & " " & out_var & " = new " & type_name & "();");
-      code = code & export_code(untagged_type, in_var, out_var & ".inner = ");
+      code = code & export_code(untagged_type, in_var, out_var & ".value = ");
       code = (code | action_prefix & out_var & ";");
     else
       code = code & untagged_type_export_code(untagged_type, type_name, in_var, action_prefix);
@@ -375,7 +375,7 @@ implicit prg : CompiledPrg {
       unique_id = printed(_counter_(:any_value_will_do));
       var = "var_" & unique_id;
       code = (type_name & " " & var & " = new " & type_name & "();");
-      code = code & export_code(inter_type, expr, var & ".inner = ");
+      code = code & export_code(inter_type, expr, var & ".value = ");
       return (code | action_prefix & var & ";");
     }
   }
