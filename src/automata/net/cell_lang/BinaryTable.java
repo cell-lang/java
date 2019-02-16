@@ -47,8 +47,8 @@ class BinaryTable {
   }
 
   public void check() {
-    table1.check();
-    table2.check();
+    // table1.check();
+    // table2.check();
   }
 
   public int size() {

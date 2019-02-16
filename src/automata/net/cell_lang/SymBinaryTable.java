@@ -46,7 +46,7 @@ class SymBinaryTable {
   }
 
   public void check() {
-    table.check();
+    // table.check();
   }
 
   public int size() {
