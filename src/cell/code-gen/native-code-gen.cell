@@ -1,5 +1,5 @@
 implicit prg : CompiledPrg, debug_mode : Bool {
-  [String -> String*] generated_code(Bool include_runtime) {
+  [String -> String*] generated_code(Bool include_runtime, [DBSymbol -> [MethodId]] gen_memb_testers_ids) {
     symbs = program_symbols;
     assert |symbs| <= 64 * 1024; ## IMPLEMENT PROPERLY
 
@@ -59,7 +59,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     proc_code = native_code(
       isort(prg.procs),
       isort(prg.bool_procs),
-      sorted_cls_defs,
+      sorted_lambda_exprs,
       ord_react_blocks,
       ord_static_blocks,
       prg.int_seqs
@@ -68,7 +68,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     static_blocks_map = [b.name -> b : b <- prg.static_blocks];
     let prg = prg, typedefs = prg.typedefs:
       react_auto_wrappers = (react_auto_wrapper(b) : b <- ord_react_blocks);
-      rel_auto_wrappers = (static_auto_wrapper(b, static_blocks_map) : b <- ord_static_blocks);
+      rel_auto_wrappers = (
+        static_auto_wrapper(b, static_blocks_map, lookup(gen_memb_testers_ids, b.name, [])) : b <- ord_static_blocks
+      );
       inter_types_decls = interface_types_decls;
       inter_types_docs = interface_types_docs;
 
@@ -101,20 +103,21 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         "",
         "import java.io.File;",
         "import java.io.FileOutputStream;",
+        "import java.io.IOException;",
         "import java.io.OutputStreamWriter;",
         "import java.io.PrintWriter;",
         "import java.io.StringWriter;",
         "import java.io.Writer;",
-        "import java.io.IOException;",
         "import java.nio.file.Files;",
-        "import java.nio.file.Path;",
+        // "import java.nio.file.Path;",
         "import java.nio.file.Paths;",
         "import java.util.ArrayList;",
         "import java.util.Arrays;",
+        "import java.util.function.IntPredicate;",
         "import java.util.HashMap;",
+        "import java.util.IdentityHashMap;",
         "import java.util.NoSuchElementException;",
         "import java.util.Random;",
-        "import java.util.IdentityHashMap;",
         "",
         "",
         "class Generated {" if has_main,
@@ -140,8 +143,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
       // Runtime support for wrapping code
       interface_runtime if include_runtime and has_automata,
-      private_class_def(pair_class_def) if has_main and include_runtime and has_automata,
-      private_class_def(triplet_class_def) if has_main and include_runtime and has_automata,
       ("") if include_runtime and has_automata
     ));
 
@@ -155,11 +156,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     files = ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs if wrappers_docs != ()] & wrappers;
     if include_runtime and not has_main:
-      files = files & [
-        "Value.java"    -> value_class_def,
-        "Pair.java"     -> pair_class_def,
-        "Triplet.java"  -> triplet_class_def
-      ];
+      files = files & ["Value.java" -> value_class_def];
     ;
     return files;
 
@@ -313,9 +310,9 @@ String* gen_vars_decls(Instr* body, [ObjProcArg] args) {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg, debug_mode : Bool {
-  String* native_code(ObjProcDef* obj_proc_defs, BoolProcDef* bool_proc_defs, ClsDef* cls_defs, ReactBlock* react_blocks, StaticBlock* static_blocks, Int+* int_seqs) {
+  String* native_code(ObjProcDef* obj_proc_defs, BoolProcDef* bool_proc_defs, LambdaExpr* lambda_exprs, ReactBlock* react_blocks, StaticBlock* static_blocks, Int+* int_seqs) {
     type_checking_fns = join((native_code(d) & ("", "") : d <- bool_proc_defs)) & 4 * ("");
-    closures = join((gen_lambda(d, i) & ("", "") : d @ i <- cls_defs)) & 4 * ("");
+    closures = join((gen_lambda(d, i) & ("", "") : d @ i <- lambda_exprs)) & 4 * ("");
     functions = join((native_code(d) & ("", "") : d <- obj_proc_defs));
 
     static_blocks_code = join((("", "") & native_static_block_decl(b) : b <- static_blocks));
@@ -411,25 +408,26 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* gen_lambda(ClsDef cd, Nat id) {
-    body = remove_dead_code(cd.body); ## BAD BAD BAD: THIS OUGHT TO BE DONE IN DEAD CODE REMOVAL, NOT HERE
+  String* gen_lambda(LambdaExpr lambda, Nat id) {
+    body = remove_dead_code(lambda.cls.body); ## BAD BAD BAD: THIS OUGHT TO BE DONE IN DEAD CODE REMOVAL, NOT HERE
     vars_decls = gen_vars_decls(body, []);
     comp_body = native_code(body, nothing);
     full_body = vars_decls & ("" if vars_decls != ()) & comp_body;
 
-    id_str = printed(id);
+    code = (
+      "static class Lambda" & printed(id) & " extends Lambda {",
+      "  public " & native_name(value(lambda.capt_auto)) & " capt_auto;" if lambda.capt_auto != nothing
+    );
+    for i < |lambda.capt_vars|:
+      code = (code | "  public Obj " & native_var_decl_name(capt_var(i)) & ";");
+    ;
+    for i < |lambda.capt_cls_vars|:
+      code = (code | "  public Lambda " & native_var_name(capt_cls_var(i)) & ";");
+    ;
 
-    return (
-      "static class Lambda" & id_str & " extends Lambda {",
-      "  Obj[] captured_vars;",
-      "  Lambda[] captured_cls;",
+    return (code |
       "",
-      "  public Lambda" & id_str & "(Obj[] captured_vars, Lambda[] captured_cls) {",
-      "    this.captured_vars = captured_vars;",
-      "    this.captured_cls = captured_cls;",
-      "  }",
-      "",
-      "  public Obj invoke(" & append(("Obj a" & printed(i) & ", " : i < cd.arity)) & "Env env) {"
+      "  public Obj invoke(" & append(("Obj a" & printed(i) & ", " : i < lambda.cls.arity)) & "Env env) {"
     ) & indent_lines(indent_lines(full_body)) &
     ( "  }",
       "}"
@@ -440,7 +438,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 ////////////////////////////////////////////////////////////////////////////////
 
 type EncodInst  = blank_obj, ObjExpr, ElemVar, PendingInputVar, VecVar, ArrayVar, BoolExpr, IntExpr,
-                  Int32Expr, FloatExpr, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId,
+                  Int32Expr, FloatExpr, ItVar, StreamVar, AnyClsVar, AnyTableVar, AnyValueStoreId,
                   AnyAutoVar, AnyDBVar;
 
 
@@ -492,7 +490,7 @@ String* custom_parser = (
   "",
   "public static Obj parse(Obj text) {",
   "  Obj chars = text.getInnerObj();",
-  "  return parse(i -> chars.getLongAt(i), chars.getSize());",
+  "  return parse(chars::getLongAt, chars.getSize());",
   "}",
   "",
   "",

@@ -71,10 +71,17 @@ class ValueStoreUpdater extends ValueStoreBase {
     return surrogates[index];
   }
 
+  public int lookupOrInsertValue(Obj value) {
+    int surr = lookupValueEx(value);
+    if (surr != -1)
+      return surr;
+    return insert(value);
+  }
+
   public Obj lookupSurrogateEx(int surr) {
-    Obj obj1 = lookupSurrogate(surr);
-    if (obj1 != null)
-      return obj1;
+    for (int i=0 ; i < count ; i++)
+      if (surrogates[i] == surr)
+        return lookupSurrogate(i);
     return store.lookupSurrogate(surr);
   }
 

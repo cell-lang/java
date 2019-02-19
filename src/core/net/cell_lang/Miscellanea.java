@@ -317,6 +317,20 @@ class Miscellanea {
     return array;
   }
 
+  public static long[] arrayAppend(long[] array, int count, long newValue) {
+    Miscellanea._assert(count <= array.length);
+
+    if (count == array.length) {
+      int newLen = Math.max(32, (3 * count) / 2);
+      long[] newArray = new long[newLen];
+      arrayCopy(array, newArray, count);
+      array = newArray;
+    }
+
+    array[count] = newValue;
+    return array;
+  }
+
   public static int[] array2Append(int[] array, int count, int val1, int val2) {
     Miscellanea._assert(2 * count <= array.length);
 

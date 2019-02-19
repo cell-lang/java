@@ -92,10 +92,55 @@ class Test_TernaryTable {
             System.exit(1);
           }
 
+    { int expectedCount = 0;
+      for (int i=0 ; i < range ; i++)
+        for (int j=0 ; j < range ; j++)
+          for (int k=0 ; k < range ; k++)
+            if (bitMap[i][j][k])
+              expectedCount++;
+
+      if (table.size() != expectedCount) {
+        System.out.println("Error (?, ?, ?) - A\n");
+        System.exit(1);
+      }
+
+      int actualCount = 0;
+
+      TernaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int arg1 = it.get1();
+        int arg2 = it.get2();
+        int arg3 = it.get3();
+        if (!bitMap[arg1][arg2][arg3]) {
+          System.out.println("ERROR (?, ?, ?) - A\n");
+          System.exit(1);
+        }
+        actualCount++;
+        it.next();
+      }
+
+      if (actualCount != expectedCount) {
+        System.out.println("ERROR (?, ?, ?) - B\n");
+        System.out.printf("Actual count = %d, expected = %d\n\n", actualCount, expectedCount);
+        printDiffs(table, bitMap, range);
+        System.exit(1);
+      }
+
+      if (table.size() != expectedCount) {
+        System.out.println("ERROR (?, ?, ?) - B\n");
+        System.exit(1);
+      }
+    }
+
     for (int s1=0 ; s1 < range ; s1++)
       for (int s2=0 ; s2 < range ; s2++) {
         int[] expected = match12(bitMap, s1, s2, range);
         int[] actual = match12(table, s1, s2, range);
+
+        if (table.count12(s1, s2) != expected.length) {
+          System.out.println("Error (_, _, ?) - A\n");
+          System.exit(1);
+        }
 
         if (table.contains12(s1, s2) != (expected.length > 0)) {
           System.out.println("Error (_, _, ?) - A\n");
@@ -113,6 +158,11 @@ class Test_TernaryTable {
         int[] expected = match13(bitMap, s1, s3, range);
         int[] actual = match13(table, s1, s3, range);
 
+        if (table.count13(s1, s3) != expected.length) {
+          System.out.println("Error (_, ?, _) - A\n");
+          System.exit(1);
+        }
+
         if (table.contains13(s1, s3) != (expected.length > 0)) {
           System.out.println("Error (_, ?, _) - A\n");
           System.exit(1);
@@ -129,13 +179,20 @@ class Test_TernaryTable {
         int[] expected = match23(bitMap, s2, s3, range);
         int[] actual = match23(table, s2, s3, range);
 
+        if (table.count23(s2, s3) != expected.length) {
+          System.out.printf("Error (?, %d, %d) - A\n", s2, s3);
+          System.out.printf("Actual count: %s, expected: %s\n", table.count23(s2, s3), expected.length);
+          printDiffs(table, bitMap, range);
+          System.exit(1);
+        }
+
         if (table.contains23(s2, s3) != (expected.length > 0)) {
-          System.out.println("Error (?, _, _) - A\n");
+          System.out.println("Error (?, _, _) - B\n");
           System.exit(1);
         }
 
         if (!Arrays.equals(actual, expected)) {
-          System.out.println("Error (?, _, _) - B\n");
+          System.out.println("Error (?, _, _) - C\n");
           System.exit(1);
         }
       }
@@ -143,6 +200,11 @@ class Test_TernaryTable {
     for (int s1=0 ; s1 < range ; s1++) {
       int[] expected = match1(bitMap, s1, range);
       int[] actual = match1(table, s1, range);
+
+      if (2 * table.count1(s1) != expected.length) {
+        System.out.println("Error (_, ?, ?) - A\n");
+        System.exit(1);
+      }
 
       if (table.contains1(s1) != (expected.length > 0)) {
         System.out.println("Error (_, ?, ?) - A\n");
@@ -164,6 +226,11 @@ class Test_TernaryTable {
       int[] expected = match2(bitMap, s2, range);
       int[] actual = match2(table, s2, range);
 
+      if (2 * table.count2(s2) != expected.length) {
+        System.out.println("Error (?, _, ?) - A\n");
+        System.exit(1);
+      }
+
       if (table.contains2(s2) != (expected.length > 0)) {
         System.out.println("Error (?, _, ?) - A\n");
         System.exit(1);
@@ -178,6 +245,11 @@ class Test_TernaryTable {
     for (int s3=0 ; s3 < range ; s3++) {
       int[] expected = match3(bitMap, s3, range);
       int[] actual = match3(table, s3, range);
+
+      if (2 * table.count3(s3) != expected.length) {
+        System.out.println("Error (?, ?, _) - A\n");
+        System.exit(1);
+      }
 
       if (table.contains3(s3) != (expected.length > 0)) {
         System.out.println("Error (?, ?, _) - A\n");
@@ -205,7 +277,7 @@ class Test_TernaryTable {
     int[] buffer = new int[range];
     TernaryTable.Iter it = table.getIter12(s1, s2);
     while (!it.done()) {
-      buffer[count++] = it.get3();
+      buffer[count++] = it.get1();
       it.next();
     }
     buffer = Arrays.copyOf(buffer, count);
@@ -227,7 +299,7 @@ class Test_TernaryTable {
     int[] buffer = new int[range];
     TernaryTable.Iter it = table.getIter13(s1, s3);
     while (!it.done()) {
-      buffer[count++] = it.get2();
+      buffer[count++] = it.get1();
       it.next();
     }
     buffer = Arrays.copyOf(buffer, count);
@@ -274,8 +346,8 @@ class Test_TernaryTable {
     int[] buffer = new int[2 * range * range];
     TernaryTable.Iter it = table.getIter1(s1);
     while (!it.done()) {
+      buffer[count++] = it.get1();
       buffer[count++] = it.get2();
-      buffer[count++] = it.get3();
       it.next();
     }
     return sort2(Arrays.copyOf(buffer, count));
@@ -299,7 +371,7 @@ class Test_TernaryTable {
     TernaryTable.Iter it = table.getIter2(s2);
     while (!it.done()) {
       buffer[count++] = it.get1();
-      buffer[count++] = it.get3();
+      buffer[count++] = it.get2();
       it.next();
     }
     return sort2(Arrays.copyOf(buffer, count));
@@ -371,6 +443,22 @@ class Test_TernaryTable {
       }
       System.out.println();
     }
+
+    System.out.println();
+    System.out.println();
+
+    for (int s1=0 ; s1 < range ; s1++) {
+      for (int s2=0 ; s2 < range ; s2++) {
+        for (int s3=0 ; s3 < range ; s3++) {
+          boolean actual = table.contains(s1, s2, s3);
+          boolean expected = bitMap[s1][s2][s3];
+          if (expected)
+            System.out.printf("%2d, %2d, %2d  %s\n", s1, s2, s3, actual ? "" : "ERROR");
+        }
+      }
+    }
+
+    System.out.println();
   }
 }
 

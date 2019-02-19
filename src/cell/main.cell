@@ -1,35 +1,97 @@
-String error_pos_msg(String filename, NzNat line, NzNat col) =
-  "File " & filename & ", line " & printed(line) & ", column " & printed(col);
+Int Main(String* args) {
+  argc = |args|;
 
+  if argc < 2:
+    Print("Usage: cellc-java <project file> <output directory>\n");
+    return 1;
+  ;
 
-String* create_error_msg(LexerError err, String filename) = ("Syntax error, invalid token", error_pos_msg(filename, err.line, err.col));
+  fname = args(argc-2);
+  out_dir = args(argc-1);
+  options = subseq(args, 0, argc-2);
 
+  include_runtime = core_runtime != ();
+  run_typechecking = true;
+  ignore_assertions = false;
+  debug_mode = false;
+  generate_accessors = true;
 
-String* create_error_msg(ParError err, String filename) =
-  parenthesis_not_closed(t?)  = ("Opening parenthesis without corresponding closing parenthesis", error_pos_msg(filename, t.line, t.col)),
-  parenthesis_not_opened(t?)  = ("Closing parenthesis without corresponding opening parenthesis", error_pos_msg(filename, t.line, t.col)),
-  mismatched_parenthesis()    = ( "Mismatched parentheses, file " & filename,
-                                  "Line " & printed(err.left.line) & " column " & printed(err.left.col) &
-                                  ", line " & printed(err.right.line) & " column " & printed(err.right.col)
-                                );
+  print_intermediate = false;
+  print_times = false;
+  wait_for_key_at_the_end = false;
+  wait_for_key_at_every_step = false;
 
+  for o <- options:
+    if o == "-nrt":
+      include_runtime = false;
+    elif o == "-ntc":
+      run_typechecking = false;
+    elif o == "-ia":
+      ignore_assertions = true;
+    elif o == "-d":
+      debug_mode = true;
+    elif o == "-nag":
+      generate_accessors = false;
+    elif o == "-p":
+      print_intermediate = true;
+    elif o == "-t":
+      print_times = true;
+    elif o == "-w":
+      wait_for_key_at_the_end = true;
+    elif o == "-W":
+      wait_for_key_at_the_end = true;
+      wait_for_key_at_every_step = true;
+    else
+      Print("Unknown option: " & o & "\n");
+      return 1;
+    ;
+  ;
 
-String* create_error_msg(ParserError err, String filename) =
-  unexpected_end_of_file()  = ("Unexpected end of file: " & filename),
-  unexpected_token()        = ("Unexpected token", error_pos_msg(filename, err.found.line, err.found.col)),
-  all_choices_failed()      = create_error_msg(err.error, filename),
-  neg_rule_match()          = { pos = source_file_location(err.match.rule_match);
-                                return ("Syntax error in file " & filename, "The exact location of the error is unknown") if pos == nothing;
-                                start_pos, end_pos = value(pos);
-                                start_line, start_col = start_pos;
-                                return ("Syntax error", error_pos_msg(filename, start_line, start_col));
+  read_res = FileRead(fname);
+  if read_res == nothing:
+    Print("File not found: " & fname & "\n");
+    return 1;
+  ;
+  prj_file = value(read_res);
 
-                              };
+  ## BAD. SHOULD BE: [s : l <- ls, s = ..., s != ""]
+  prj_file_lines = (string(trim_spaces(remove_comments(l))) : l <- split_lines(prj_file));
+  src_file_names = (l : l <- prj_file_lines, l != "");
 
+  src_files = [];
+  for fn <- src_file_names:
+    fc = FileRead(fn);
+    if fc == nothing:
+      Print("Can't read file: " & fn & "\n");
+      return 1;
+    ;
+    src_files = src_files & [fn -> value(fc)];
+  ;
+
+  files = Compile(src_files, include_runtime, run_typechecking, ignore_assertions, debug_mode,
+                  generate_accessors, print_intermediate, print_times, wait_for_key_at_every_step);
+
+  for name, lines <- isort(files):
+    ok = FileWrite(out_dir & "/" & name, chars(append(lines, "\n")));
+    if not ok:
+      Print("Error: cannot write file " & name & " to " & out_dir & "\n");
+      return 1;
+    ;
+  ;
+
+  if wait_for_key_at_the_end:
+    unused_var = GetChar();
+  ;
+
+  return if files != [] then 0 else 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 [String -> String*] Compile(
   [String -> Byte*] src_files, Bool include_runtime, Bool run_typechecking, Bool ignore_assertions,
-  Bool debug_mode, Bool print_intermediate, Bool print_times, Bool wait_for_key
+  Bool debug_mode, Bool generate_accessors, Bool print_intermediate, Bool print_times, Bool wait_for_key
 ) {
   t0 = _ticks_(:any_value_will_do);
 
@@ -95,7 +157,7 @@ String* create_error_msg(ParserError err, String filename) =
     unused_var = GetChar();
   ;
 
-  is_done = false;
+  is_bad = false;
   let program = prg:
     let typedefs = schema_and_typedefs:
       if run_typechecking:
@@ -105,11 +167,13 @@ String* create_error_msg(ParserError err, String filename) =
           if wait_for_key:
             unused_var = GetChar();
           ;
+
         else
           Print("Error: the program does not typecheck\n\n");
           // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
-          sorted_fds = sort_set(keys(errs), source_file($a) < source_file($b));
-          msgs = (create_error_msgs(fd, errs[fd]) : fd <- sorted_fds);
+          bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
+          ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
+          msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
           for m <- msgs:
             for l <- m:
               Print(l & "\n");
@@ -117,21 +181,53 @@ String* create_error_msg(ParserError err, String filename) =
             Print("\n");
           ;
           Print("Number of functions with typechecking errors: " & printed(|errs|) & "\n");
-          is_done = true;
+          is_bad = true;
         ;
       ;
 
       t5 = _ticks_(:any_value_will_do);
 
-      options = options(
-        debug_mode: debug_mode,
-        ignore_assertions: ignore_assertions,
-        max_opt_fields_in_opt_rec: 16
-      );
-      code = if not is_done then just(compiled_program(options = options)) else nothing;
+      memb_test_accessors_ids = [];
+      if not is_bad:
+        options = options(
+          debug_mode:                 debug_mode,
+          ignore_assertions:          ignore_assertions,
+          max_opt_fields_in_opt_rec:  16
+        );
+
+        if prg.data_bases != []:
+          res = transform_analyze_and_compile(prg, options, generate_accessors);
+          if succeeded(res):
+            cmp_prg, memb_test_accessors_ids = get_result(res);
+            code = just(cmp_prg);
+            Print("Code analysis OK\n");
+            if wait_for_key:
+              unused_var = GetChar();
+            ;
+          else
+            errs = get_error(res);
+            bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
+            ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
+            msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
+            for m <- msgs:
+              for l <- m:
+                Print(l & "\n");
+              ;
+              Print("\n");
+            ;
+            is_bad = true;
+            code = nothing;
+          ;
+        else
+          code = just(compiled_program([], options=options));
+        ;
+
+      else
+        code = nothing;
+      ;
     ;
   ;
-  return [] if is_done;
+  return [] if is_bad;
   code = value_unsafe(code);
 
   t6 = _ticks_(:any_value_will_do);
@@ -163,7 +259,7 @@ String* create_error_msg(ParserError err, String filename) =
     ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
   ;
 
-  files = generated_code(include_runtime, prg = opt_code, debug_mode = debug_mode);
+  files = generated_code(include_runtime, memb_test_accessors_ids, prg = opt_code, debug_mode = debug_mode);
   t8 = _ticks_(:any_value_will_do);
   Print("Java code generated\n");
   if wait_for_key:
@@ -188,6 +284,45 @@ String* create_error_msg(ParserError err, String filename) =
   return files;
 }
 
+
+Result[(CompiledPrg, [DBSymbol -> [MethodId]]), [+<Update, Handler> -> [+AnalysisError]]]
+transform_analyze_and_compile(Program prg, CompOptions options, Bool generate_accessors) {
+  curr_prg = prg;
+
+  // Partitioning relvars
+  let program = curr_prg:
+    curr_prg = post_rel_vars_part_prg(typedefs = schema_and_typedefs);
+  ;
+
+  // Analysing the program. Has to be done after partitioning
+  let program = curr_prg:
+    errs = analysis_errors(typedefs = schema_and_typedefs);
+  ;
+  return failure(errs) if errs != [];
+
+  // Generating accessors
+  if generate_accessors:
+    typedefs = schema_and_typedefs(program=curr_prg);
+    curr_prg, memb_test_accessors_ids = prg_plus_auto_gen_code(program=curr_prg, typedefs=typedefs);
+  else
+    memb_test_accessors_ids = [];
+  ;
+
+  // Permutating relvars
+  let program = curr_prg:
+    curr_prg, perms = post_rel_vars_perm_program(typedefs = schema_and_typedefs);
+  ;
+
+  // Compiling the program
+  let program = curr_prg:
+    code = compiled_program(perms, typedefs = schema_and_typedefs, options = options);
+  ;
+
+  return success((code, memb_test_accessors_ids));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 Nat* remove_comments(Nat* line) {
   len = |line|;
@@ -215,88 +350,33 @@ Nat* trim_spaces(Nat* line) {
   return subseq(line, skip_front, :blank, skip_back);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-Int Main(String* args) {
-  argc = |args|;
+String error_pos_msg(String filename, NzNat line, NzNat col) =
+  "File " & filename & ", line " & printed(line) & ", column " & printed(col);
 
-  if argc < 2:
-    Print("Usage: cellc-java <project file> <output directory>\n");
-    return 1;
-  ;
 
-  fname = args(argc-2);
-  out_dir = args(argc-1);
-  options = subseq(args, 0, argc-2);
+String* create_error_msg(LexerError err, String filename) = ("Syntax error, invalid token", error_pos_msg(filename, err.line, err.col));
 
-  include_runtime = core_runtime != ();
-  run_typechecking = true;
-  ignore_assertions = false;
-  debug_mode = false;
 
-  print_intermediate = false;
-  print_times = false;
-  wait_for_key_at_the_end = false;
-  wait_for_key_at_every_step = false;
+String* create_error_msg(ParError err, String filename) =
+  parenthesis_not_closed(t?)  = ("Opening parenthesis without corresponding closing parenthesis", error_pos_msg(filename, t.line, t.col)),
+  parenthesis_not_opened(t?)  = ("Closing parenthesis without corresponding opening parenthesis", error_pos_msg(filename, t.line, t.col)),
+  mismatched_parenthesis()    = ( "Mismatched parentheses, file " & filename,
+                                  "Line " & printed(err.left.line) & " column " & printed(err.left.col) &
+                                  ", line " & printed(err.right.line) & " column " & printed(err.right.col)
+                                );
 
-  for o <- options:
-    if o == "-nrt":
-      include_runtime = false;
-    elif o == "-ntc":
-      run_typechecking = false;
-    elif o == "-ia":
-      ignore_assertions = true;
-    elif o == "-d":
-      debug_mode = true;
-    elif o == "-p":
-      print_intermediate = true;
-    elif o == "-t":
-      print_times = true;
-    elif o == "-w":
-      wait_for_key_at_the_end = true;
-    elif o == "-W":
-      wait_for_key_at_the_end = true;
-      wait_for_key_at_every_step = true;
-    else
-      Print("Unknown option: " & o & "\n");
-      return 1;
-    ;
-  ;
 
-  read_res = FileRead(fname);
-  if read_res == nothing:
-    Print("File not found: " & fname & "\n");
-    return 1;
-  ;
-  prj_file = value(read_res);
+String* create_error_msg(ParserError err, String filename) =
+  unexpected_end_of_file()  = ("Unexpected end of file: " & filename),
+  unexpected_token()        = ("Unexpected token", error_pos_msg(filename, err.found.line, err.found.col)),
+  all_choices_failed()      = create_error_msg(err.error, filename),
+  neg_rule_match()          = { pos = source_file_location(err.match.rule_match);
+                                return ("Syntax error in file " & filename, "The exact location of the error is unknown") if pos == nothing;
+                                start_pos, end_pos = value(pos);
+                                start_line, start_col = start_pos;
+                                return ("Syntax error", error_pos_msg(filename, start_line, start_col));
 
-  ## BAD. SHOULD BE: [s : l <- ls, s = ..., s != ""]
-  prj_file_lines = (string(trim_spaces(remove_comments(l))) : l <- split_lines(prj_file));
-  src_file_names = (l : l <- prj_file_lines, l != "");
-
-  src_files = [];
-  for fn <- src_file_names:
-    fc = FileRead(fn);
-    if fc == nothing:
-      Print("Can't read file: " & fn & "\n");
-      return 1;
-    ;
-    src_files = src_files & [fn -> value(fc)];
-  ;
-
-  files = Compile(src_files, include_runtime, run_typechecking, ignore_assertions,
-                   debug_mode, print_intermediate, print_times, wait_for_key_at_every_step);
-
-  for name, lines <- isort(files):
-    ok = FileWrite(out_dir & "/" & name, chars(append(lines, "\n")));
-    if not ok:
-      Print("Error: cannot write file " & name & " to " & out_dir & "\n");
-      return 1;
-    ;
-  ;
-
-  if wait_for_key_at_the_end:
-    unused_var = GetChar();
-  ;
-
-  return if files != [] then 0 else 1;
-}
+                              };

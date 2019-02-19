@@ -6,7 +6,7 @@ class Ints12 {
     sort(array, 0, size-1);
   }
 
-  static void sort(int[] array, int first, int last) {
+  private static void sort(int[] array, int first, int last) {
     if (first >= last)
       return;
 
@@ -59,7 +59,7 @@ class Ints12 {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  static void swap(int idx1, int idx2, int[] array) {
+  private static void swap(int idx1, int idx2, int[] array) {
     int offset1 = 2 * idx1;
     int offset2 = 2 * idx2;
     int tmp0 = array[offset1];
@@ -72,9 +72,36 @@ class Ints12 {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static boolean contains1(int[] array, int size, int val1) {
+  public static boolean contains(int[] array, int size, int val1, int val2) {
     int low = 0;
     int high = size - 1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      switch (ordCheck(mid, val1, val2, array)) {
+        case -1: // mid < target range
+          low = mid + 1;
+          break;
+
+        case 0: // mid in target range
+          return true;
+
+        case 1: // mid > target range
+          high = mid - 1;
+          break;
+      }
+    }
+
+    return false;
+  }
+
+  public static boolean contains1(int[] array, int size, int val1) {
+    return contains1(array, 0, size, val1);
+  }
+
+  public static boolean contains1(int[] array, int offset, int count, int val1) {
+    int low = offset;
+    int high = offset + count - 1;
 
     while (low <= high) {
       int mid = low + (high - low) / 2;
@@ -95,9 +122,81 @@ class Ints12 {
     return false;
   }
 
+  public static int indexFirst1(int[] array, int size, int val1) {
+    int low = 0;
+    int high = size - 1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      switch (rangeStartCheck1(mid, val1, array)) {
+        case -1: // mid < target range start
+          low = mid + 1;
+          break;
+
+        case 0: // mid == target range start
+          return mid;
+
+        case 1: // mid > target range start
+          high = mid - 1;
+          break;
+      }
+    }
+
+    return -1;
+  }
+
+  public static int count1(int[] array, int size, int val1, int offset) {
+    return rangeEndExclusive(array, size, val1, offset) - offset;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
-  static boolean isGreater(int idx1, int idx2, int[] array) {
+  private static int rangeEndExclusive(int[] array, int size, int val1, int offset) {
+    int low = offset;
+    int high = size - 1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      switch (rangeEndCheck1(mid, val1, array, size)) {
+        case -1: // mid < target range end
+          low = mid + 1;
+          break;
+
+        case 0: // mid == target range end
+          return mid + 1;
+
+        case 1: // mid > target range end
+          high = mid - 1;
+          break;
+      }
+    }
+
+    return offset;
+  }
+
+  private static int rangeStartCheck1(int idx, int val1, int[] array) {
+    int ord = rangeCheck1(idx, val1, array);
+    if (ord != 0 | idx == 0)
+      return ord;
+    ord = rangeCheck1(idx-1, val1, array);
+    Miscellanea._assert(ord == 0 | ord == -1);
+    return ord == -1 ? 0 : 1;
+  }
+
+  private static int rangeEndCheck1(int idx, int val1, int[] array, int size) {
+    int ord = rangeCheck1(idx, val1, array);
+    if (ord != 0 | idx == size-1)
+      return ord;
+    ord = rangeCheck1(idx+1, val1, array);
+    if (!(ord == 0 | ord == 1))
+      System.out.printf("\n");
+    Miscellanea._assert(ord == 0 | ord == 1);
+    return ord == 1 ? 0 : -1;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static boolean isGreater(int idx1, int idx2, int[] array) {
     int offset1 = 2 * idx1;
     int offset2 = 2 * idx2;
     int elem1 = array[offset1];
@@ -109,7 +208,22 @@ class Ints12 {
     return elem1 > elem2;
   }
 
-  static int rangeCheck1(int idx, int val1, int[] array) {
+  private static int ordCheck(int idx, int val1, int val2, int[] array) {
+    int offset = 2 * idx;
+    int val = array[offset];
+    if (val < val1)
+      return -1;
+    if (val > val1)
+      return 1;
+    val = array[offset + 1];
+    if (val < val2)
+      return -1;
+    if (val > val2)
+      return 1;
+    return 0;
+  }
+
+  private static int rangeCheck1(int idx, int val1, int[] array) {
     int offset = 2 * idx;
     int val = array[offset];
     if (val < val1)

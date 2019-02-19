@@ -87,7 +87,7 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
     has_field()           = native_expr(expr.record) & ".hasField(" & symb_idx_name(expr.field) & ")",
 
     contains()            = native_contains_expr(expr.coll, expr.entry),
-    table_contains()      = native_method_call_expr(expr.table, "contains", ("(int) (" & native_expr(a) & ")" : a <- expr.tuple)),
+    table_contains()      = native_table_contains(expr.table, expr.tuple, expr.symmetric),
 
     is_member()           = native_fn_name(expr.pred) & "(" & native_expr(expr.obj) & ")",
     state_is_def()        = native_var_ref_name(expr.auto_var) & "." & state_is_def_proc_name(expr.type) & "()",
@@ -99,6 +99,27 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
     or(es?)               = native_nary_op(" | ",  es, parenthesized),
     and_then(es?)         = native_nary_op(" && ", es, parenthesized),
     or_else(es?)          = native_nary_op(" || ", es, parenthesized);
+}
+
+
+String native_table_contains(AnyTableVar table, Maybe[Int32Var]+ tuple, Bool symmetric) {
+  name = "contains";
+  if (a <~ tuple : a == nothing):
+    if not symmetric:
+      suffix = append((printed(i+1) : a @ i <- tuple, a != nothing));
+    else
+      suffix = match (tuple)
+        (_,       _)                  = "",
+        (just(),  just(),  nothing)   = "12",
+        (just(),  nothing, just())    |
+        (nothing, just(),  nothing)   = "_13_23",
+        (just(),  nothing, nothing)   |
+        (nothing, just(),  nothing)   = "_1_2",
+        (nothing, nothing, just())    = "3";
+    ;
+    name = name & suffix;
+  ;
+  return native_method_call_expr(table, name, (native_expr(value(a)) : a <- tuple, a != nothing));
 }
 
 
@@ -194,11 +215,6 @@ String native_expr(IntNatOp expr, Bool parenthesized) =
   mantissa(e?)          = "Miscellanea.mantissa(" & native_expr(e) & ")",
   dec_exp(e?)           = "Miscellanea.decimalExponent(" & native_expr(e) & ")",
   rand_nat(e?)          = "Miscellanea.randNat(" & native_expr(e) & ")",
-  lookup_value()        = native_method_call_expr(expr.store, "lookupValue", (expr.value)),
-  lookup_value_ex()     = native_method_call_expr(aux_struct_var_ref_name(expr.store), "lookupValueEx", (expr.value)),
-  get_tuple_field()     = if expr.iter.arity == 1
-                            then native_var_ref_name(expr.iter) & ".get()"
-                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.field+1) & "()",
   unique_nat            = "Miscellanea.uniqueNat()",
   ticks                 = "Miscellanea.getTickCount()";
 
@@ -217,9 +233,48 @@ String native_expr(Int32Var var, Bool parenthesized) = native_var_ref_name(var);
 String native_expr(Int32NatOp expr, Bool parenthesized) =
   bool_to_bit(e?)       = "(" & native_expr(e, false) & " ? 1 : 0)",
   get_size(e?)          = native_expr(e) & ".getSize()",
+  get_count()           = native_get_count_expr(expr.table, expr.args, expr.symmetric),
   cast_int32(e?)        = "((int) " & native_expr(e, true) & ")",
-  add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized);
+  add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized),
+  lookup_value()        = native_method_call_expr(expr.store, "lookupValue", (expr.value)),
+  lookup_value_ex()     = native_method_call_expr(aux_struct_var_ref_name(expr.store), "lookupValueEx", (expr.value)),
+  get_unknown_arg()     = if expr.iter.arity == 1
+                            then native_var_ref_name(expr.iter) & ".get()"
+                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.arg+1) & "()";
 
+String native_get_count_expr(AnyTableVar table, Maybe[Int32Var]+ args, Bool symmetric) {
+  fn_names = if symmetric then sym_fn_names_by_args else fn_names_by_args;
+  fn_name = fn_names((a != nothing : a <- args));
+  args_list = append((native_var_ref_name(value(a)) : a <- args, a != nothing), ", ");
+  return native_var_ref_name(table) & "." & fn_name & "(" & args_list & ")";
+
+  [Bool+ -> String] fn_names_by_args = [
+    (false)               -> "size",
+    (false, false)        -> "size",
+    (true,  false)        -> "count1",
+    (false, true)         -> "count2",
+    (false, false, false) -> "size",
+    (true,  false, false) -> "count1",
+    (false, true,  false) -> "count2",
+    (false, false, true)  -> "count3",
+    (true,  true,  false) -> "count12",
+    (true,  false, true)  -> "count13",
+    (false, true,  true)  -> "count23"
+  ];
+
+  [Bool+ -> String] sym_fn_names_by_args = [
+    (false, false)        -> "size",
+    (true,  false)        -> "count",
+    (false, true)         -> "count",
+    (false, false, false) -> "size",
+    (true,  false, false) -> "count_1_2",
+    (false, true,  false) -> "count_1_2",
+    (false, false, true)  -> "count3",
+    (true,  true,  false) -> "count12",
+    (true,  false, true)  -> "count_13_23",
+    (false, true,  true)  -> "count_13_23"
+  ];
+}
 
 String native_expr(FloatExpr expr) = native_expr(expr, false);
 
@@ -262,7 +317,7 @@ String native_expr(OptTagRecExpr expr) =
                           };
 
 String native_expr(
-  <ElemVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar, AnyRelVar, AnyValueStoreId, AnyAutoVar, AnyDBVar> var
+  <ElemVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar, AnyTableVar, AnyValueStoreId, AnyAutoVar, AnyDBVar> var
 ) = native_var_ref_name(var);
 
 String native_expr(<blank_obj>) = "BlankObj.singleton";

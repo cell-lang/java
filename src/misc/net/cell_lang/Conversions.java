@@ -7,10 +7,18 @@ class Conversions {
   public static Obj convertText(String text) {
     int len = text.length();
     int count = text.codePointCount(0, len);
-    if (count == len)
-      return Generated.parse(text::charAt, len).getInnerObj();
-    int[] codePoints = text.codePoints().toArray();
-    return Generated.parse(i -> codePoints[i], count);
+    Token[] tokens;
+    if (count == len) {
+      tokens = Lexer.lex(text::charAt, len);
+    }
+    else {
+      int[] codePoints = text.codePoints().toArray();
+      tokens = Lexer.lex(i -> codePoints[i], count);
+    }
+    Parser parser = new Generated.Parser(tokens);
+    Obj obj = parser.parseObj();
+    parser.checkEof();
+    return obj;
   }
 
   public static Value exportAsValue(Obj obj) {
@@ -18,6 +26,7 @@ class Conversions {
   }
 
   public static Obj stringToObj(String str) {
+    //## THIS ONE IS REAL BAD TOO. IT SHOULD USE THE MINIMUM SIZE ARRAY POSSIBLE!
     int[] cps = Miscellanea.codePoints(str);
     return Builder.createTaggedObj(SymbTable.StringSymbId, Builder.createSeq(cps));
   }

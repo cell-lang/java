@@ -147,7 +147,7 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
   (String*, String*) auto_method_wrapper(MethodId method_id, CompiledMethod method) {
     return ((), ()) if method_id.id?;
     name = safe_name(method_id.symbol, method_id.arity);
-    return method_wrapper(method_id, method, block.name, name, auto_class_name, "automaton.");
+    return method_wrapper(method_id, method, block.name, name, auto_class_name, "automaton.", false);
   }
 }
 
@@ -367,7 +367,8 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   (String*, String*) method_wrapper(MethodId method_id, CompiledMethod method,
-    <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name, String method_path) {
+    <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name,
+    String method_path, Bool is_gen_memb_tester) {
     args_inter_types = (interface_type(t) : t <- method.args_types);
     inter_ret_type = interface_type(method.ret_type);
 
@@ -414,7 +415,9 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 
     code = code & (
       "  if (!" & cond & ")",
-      "    throw new RuntimeException(\"Invalid argument type\");"
+      if is_gen_memb_tester
+        then "    return false;"
+        else "    throw new RuntimeException(\"Invalid argument type\");"
     ) if cond != "";
 
     code = code & (

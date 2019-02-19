@@ -4,7 +4,7 @@
 //  D
 //  E     Cached no-positional-argument function value
 //  F     Function
-//  G
+//  G     Aggregate function
 //  H
 //  I
 //  J
@@ -57,11 +57,16 @@ String symb_idx_name(SymbObj symb) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String native_var_decl_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v) = native_var_name(v, false);
-String native_var_ref_name(<ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar, AnyAutoVar, AnyDBVar, AnyRelVar, AnyValueStoreId> v)  = native_var_name(v, true);
+type QualifiableVars    = ObjVar, PendingInputVar, BoolVar, IntVar, Int32Var, FloatVar,
+                          AnyAutoVar, AnyDBVar, AnyTableVar, AnyValueStoreId;
 
-String native_var_decl_name(<OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v) = native_var_name(v);
-String native_var_ref_name(<OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar> v)  = native_var_name(v);
+type UnqualifiableVars  = OptTagRecVar, VecVar, ArrayVar, ItVar, StreamVar, AnyClsVar;
+
+String native_var_decl_name(QualifiableVars v) = native_var_name(v, false);
+String native_var_ref_name(QualifiableVars v)  = native_var_name(v, true);
+
+String native_var_decl_name(UnqualifiableVars v) = native_var_name(v);
+String native_var_ref_name(UnqualifiableVars v)  = native_var_name(v);
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -71,27 +76,29 @@ String native_var_decl_name(MembIntVectVar v) =
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-String native_var_name(VecVar v)          = "vec_" & printed(v.id);
+String native_var_name(VecVar v)          = "vec" & printed(v.id);
 String native_var_name(ArrayVar var)      = "y" & printed(var.id) & "_" & native_type(var.repr);
-String native_var_name(SeqItVar v)        = "seq_it_" & printed(bare_id_2(v));
-String native_var_name(SetItVar v)        = "set_it_" & printed(bare_id_2(v));
-String native_var_name(BinRelItVar v)     = "bin_rel_it_" & printed(bare_id_2(v));
-String native_var_name(TernRelItVar v)    = "tern_rel_it_" & printed(bare_id_2(v));
-String native_var_name(StreamVar v)       = "stream_" & printed(bare_id_2(v));
+String native_var_name(SeqItVar v)        = "seqIt" & printed(bare_id_2(v));
+String native_var_name(SetItVar v)        = "setIt" & printed(bare_id_2(v));
+String native_var_name(BinRelItVar v)     = "binRelIt" & printed(bare_id_2(v));
+String native_var_name(TernRelItVar v)    = "ternRelIt" & printed(bare_id_2(v));
+String native_var_name(StreamVar v)       = "stream" & printed(bare_id_2(v));
 
 String native_var_name(TableItVar v) {
-  prefix = match (v.arity)
-    1   = "unary",
-    2   = "bin",
-    3   = "tern";
+  prefix = match (v.arity, v.symmetric)
+    1,  false   = "unary",
+    2,  false   = "bin",
+    2,  true    = "symBin",
+    3,  false   = "tern",
+    3,  true    = "symTern";
 
-  return prefix & "_table_it_" & printed(v.id);
+  return prefix & "TableIt" & printed(v.id);
 }
 
 String native_var_name(AnyClsVar v) =
   cls_var(<+> a?)     = _print_(a) & "_C",
   cls_var(<*..*> n?)  = "cls_" & printed(n),
-  capt_cls_var(n?)    = "captured_cls[" & printed(n) & "]";
+  capt_cls_var(n?)    = "capt_cls_" & printed(n);
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -113,7 +120,7 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
     var(<+> a?)                   = _print_(a) & "_V",
     fn_arg(<*..*> n?)             = "a" & printed(n),
     impl_arg(<+> a?)              = prefix & _print_(a) & "_V",
-    capt_var(<*..*> n?)           = "captured_vars["  & printed(n) & "]",
+    capt_var(<*..*> n?)           = "capt_var_"  & printed(n),
     memb_var(<+> a?)              = prefix & _print_(a) & "_M",
     signal_var(a?)                = prefix & _print_(a) & "_S",
     qual_signal_var()             = native_var_name(var.auto_var, true) & "." & native_var_name(var.memb_var, false),
@@ -122,7 +129,7 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
     prev_var_value(v?)            = prefix & ad_hoc_var_name(v) & "d",
     pending_state_var(a?)         = prefix & _print_(a) & "_Mp",
     lvar(<*..*> n?)               = "v" & printed(n),
-    evar()                        = "vec_" & printed(var.id) & "[(int)(" & native_idx_expr(var.idx) & ")]",
+    evar()                        = "vec" & printed(var.id) & "[(int)(" & native_idx_expr(var.idx) & ")]",
     pending_input_var(<+> a?)     = prefix & _print_(a) & "_Sp";
 
 
@@ -207,21 +214,32 @@ String native_var_name(AnyAutoVar v, Bool add_prefix) =
 String native_var_name(AnyDBVar v, Bool add_prefix) =
   loc_db_var(a?)    = _print_(a) & "_T",
   nested_db_var(a?) = {if add_prefix then "this." else ""} & _print_(a) & "_T",
-  linked_db_var(n?) = "(*" & {if add_prefix then "this." else ""} & "linked_auto_" & printed(n) & ")",
+  linked_db_var(n?) = "(*" & {if add_prefix then "this." else ""} & "linkedAuto" & printed(n) & ")",
   qual_db_var()     = native_var_name(v.outer, add_prefix) & "." & native_var_name(v.inner, false);
 
 
-String native_var_name(AnyRelVar v, Bool add_prefix) =
-  rel_var(a?)     = {if add_prefix then "this." else ""} & _print_(a) & "_B",
-  qual_rel_var()  = native_var_name(v.db_var, add_prefix) & "." & native_var_name(v.rel_var, false);
+String native_var_name(AnyTableVar var, Bool add_prefix) {
+  return match (var)
+    table_var(v?)             = {if add_prefix then "this." else ""} & native_name(v),
+    qual_table_var()          = native_var_name(var.db_var, add_prefix) & "." & native_var_name(var.table_var, false),
+    capt_table_var(v?)        = { assert add_prefix; return "this.capt_auto." & native_var_name(v, false);};
+
+  String native_name(PhysRelVar) =
+    phys_rel_var(s?)      = _print_(s) & "_B",
+    split_rel_var(v?, n?) = native_name(v) & "_" & _print_(n);
+}
 
 
 String native_var_name(AnyValueStoreId v, Bool add_prefix) =
-  value_store_id(n?)      = {if add_prefix then "this." else ""} & "value_store_" & printed(n),
-  nested_value_store_id() = { assert add_prefix;
-                              db_var_str = native_var_name(v.db_var, true);
-                              return db_var_str & "." & native_var_name(v.store_id, false);
-                            };
+  value_store_id(n?)        = {if add_prefix then "this." else ""} & "valueStore" & printed(n),
+  nested_value_store_id()   = { assert add_prefix;
+                                db_var_str = native_var_name(v.db_var, true);
+                                return db_var_str & "." & native_var_name(v.store_id, false);
+                              },
+  capt_value_store_id(id?)  = { assert add_prefix;
+                                return "this.capt_auto." & native_var_name(id, false);
+                              };
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -232,10 +250,16 @@ String native_idx_expr(<add(val1: IntVar, val2: Nat)> e)  = native_var_ref_name(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String pending_updates_var_decl_name(RelVar rel_var) =
-  rel_var(a?) = _print_(a) & "_Bp";
+String pending_updates_var_decl_name(TableVar var) {
+  return match (var)
+    table_var(v?) = native_name(v);
 
-String pending_updates_var_ref_name(RelVar rel_var) = "updater." & pending_updates_var_decl_name(rel_var);
+  String native_name(PhysRelVar) =
+    phys_rel_var(s?)      = _print_(s) & "_Bp",
+    split_rel_var(v?, n?) = native_name(v) & "_" & _print_(n);
+}
+
+String pending_updates_var_ref_name(TableVar table_var) = "updater." & pending_updates_var_decl_name(table_var);
 
 String aux_struct_var_decl_name(<LocDBVar, NestedDBVar> db_var) = native_var_decl_name(db_var) & "x";
 
@@ -244,7 +268,7 @@ String aux_struct_var_ref_name(LocDBVar db_var) = aux_struct_var_decl_name(db_va
 String aux_struct_var_ref_name(NestedDBVar db_var) = "updater." & aux_struct_var_decl_name(db_var);
 
 String aux_struct_var_decl_name(ValueStoreId vs) =
-  value_store_id(n?)  = "value_store_aux_" & printed(n);
+  value_store_id(n?)  = "valueStoreUpdater" & printed(n);
 
 String aux_struct_var_ref_name(ValueStoreId vs) = "updater." & aux_struct_var_decl_name(vs);
 
@@ -256,7 +280,7 @@ String var_decl(AnyVar v) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-String memo_var_name(<ProcSymbol, MembTestPredId, ConvFnId>) = undefined;
+String memo_var_name(<ProcSymbol, MembTestPredId, SubAggrFnId, ConvFnId>) = undefined;
 
 String memo_var_name(FnId id) =
   fn_family_id()  = native_fn_symb_name(id.symbol) & "_E",
@@ -285,7 +309,7 @@ String native_var_type(TernRelItVar v) = "TernRelIter";
 String native_var_type(StreamVar v)    = "java.util.ArrayList<Obj>";
 
 String native_var_type(VecVar v)       = undefined;
-String native_var_type(TableItVar v)   = table_it_var_type[v.arity];
+String native_var_type(TableItVar v)   = table_it_var_type(v);
 String native_var_type(ArrayVar v)     = native_elt_type(v) & "[]";
 
 String native_elt_type(ArrayVar var) = native_type(var.repr);
@@ -319,32 +343,31 @@ Bool is_nullable(LowLevelEltRepr) =
 Bool is_nullable(OptTagRecRepr) = true;
 
 
-String native_table_type(Table table) {
-  return names_by_arity[arity(table)];
-
-  [NzNat -> String] names_by_arity = [
-    1 -> "UnaryTable",
-    2 -> "BinaryTable",
-    3 -> "TernaryTable"
-  ];
-}
-
-[NzNat -> String] table_it_var_type = [
-  1 -> "UnaryTable.Iter",
-  2 -> "BinaryTable.Iter",
-  3 -> "TernaryTable.Iter"
-];
+String native_table_type(Table table) =
+  match (arity(table), table.symmetric)
+    1,  false   = "UnaryTable",
+    2,  false   = "BinaryTable",
+    2,  true    = "SymBinaryTable",
+    3,  false   = "TernaryTable",
+    3,  true    = "Sym12TernaryTable";
 
 
-String pending_updates_var_type(Table table) {
-  return names_by_arity[arity(table)];
+String table_it_var_type(TableItVar var) =
+  match (var.arity, var.symmetric)
+    1,  false   = "UnaryTable.Iter",
+    2,  false   = "BinaryTable.Iter",
+    2,  true    = "SymBinaryTable.Iter",
+    3,  false   = "TernaryTable.Iter",
+    3,  true    = "Sym12TernaryTable.Iter";
 
-  [NzNat -> String] names_by_arity = [
-    1 -> "UnaryTableUpdater",
-    2 -> "BinaryTableUpdater",
-    3 -> "TernaryTableUpdater"
-  ];
-}
+
+String pending_updates_var_type(Table table) =
+  match (arity(table), table.symmetric)
+    1,  false   = "UnaryTableUpdater",
+    2,  false   = "BinaryTableUpdater",
+    2,  true    = "SymBinaryTableUpdater",
+    3,  false   = "TernaryTableUpdater",
+    3,  true    = "Sym12TernaryTableUpdater";
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -366,8 +389,8 @@ String native_name(MethodId meth_id) {
 }
 
 String native_name(UpdateId id) =
-  main_handler    = "msg_handler",
-  handler_id(n?)  = "msg_handler_" & uppercase_encoding(n),
+  main_handler    = "msgHandler",
+  handler_id(n?)  = "msgHandler_" & uppercase_encoding(n),
   update_id()     = { id_str = if id.id? then uppercase_encoding(id.id) else "";
                       return _print_(bare_id(id.symbol)) & "_U" & printed(id.arity) & id_str;
                     };
@@ -379,13 +402,14 @@ String native_name(UpdateId id) =
 
 String copy_state_proc_name         (DBSymbol db_type) = "copyState";
 String set_state_proc_name          (DBSymbol db_type) = "setState";
-String set_state_entry_point_name   (DBSymbol db_type) = "setStateEntryPoint";
+String reconstruct_proc_name        (DBSymbol db_type) = "reconstruct";
 String updater_creation_proc_name   (DBSymbol db_type) = "newUpdater";
 String updater_reset_proc_name      (DBSymbol db_type) = "resetUpdater";
 String updates_copy_proc_name       (DBSymbol db_type) = "copy";
 String updates_apply_proc_name      (DBSymbol db_type) = "apply";
 String updates_finish_proc_name     (DBSymbol db_type) = "finish";
 String updates_check_proc_name      (DBSymbol db_type) = "check";
+String full_check_proc_name         (DBSymbol db_type) = "fullCheck";
 String update_entry_point_name      (DBSymbol db_type) = "updateEntryPoint";
 String init_method_name             (DBSymbol db_type) = "init";
 String cleanup_method_name          (DBSymbol db_type) = "cleanup";
@@ -446,6 +470,17 @@ String native_fn_name(MembTestPredId) =
   memb_test(<*..*> n?)      = "is_type_" & printed(n),
   memb_test(a1?, <+> a2?)   = "is" & upper_camel_case(a2) & "_" & upper_camel_case(a1),
   memb_test(a?, <*..*> n?)  = "is" & upper_camel_case(a) & "_" & printed(n);
+
+
+String native_fn_base_name(AggrFnId) =
+  aggr_fn_id(s?)            = _print_(s) & "_G",
+  unique_aggr_fn_id(s?, i?) = _print_(s) & "_G" & uppercase_encoding(i);
+
+String native_fn_name(SubAggrFnId) =
+  red_var_init(id?, v?)   = native_fn_base_name(id) & "i_" & _print_(_untag_(v)),
+  red_vars_merge(id?, v?) = native_fn_base_name(id) & "m_" & _print_(_untag_(v)),
+  final_value_yield(id?)  = native_fn_base_name(id) & "f",
+  null_value(id?)         = native_fn_base_name(id) & "e";
 
 
 String native_fn_name(ProcSymbol proc_symb) {

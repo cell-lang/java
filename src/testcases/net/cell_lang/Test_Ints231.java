@@ -10,14 +10,15 @@ public class Test_Ints231 {
 
   public static void run() {
     for (int i=0 ; i < 100000 ; i++) {
-      runRandomTest();
+      int[] array = runRandomSortTest();
+      TestSearches_Ints231.run(array, 1000);
       if ((i + 1) % 100 == 0)
         System.out.print('.');
     }
     System.out.println();
   }
 
-  static void runRandomTest() {
+  static int[] runRandomSortTest() {
     int len = rand.nextInt(200);
     int[] array = new int[3 * len];
 
@@ -73,6 +74,8 @@ public class Test_Ints231 {
           System.exit(1);
         }
       }
+
+    return array;
   }
 
   static int[] sort231(int[] array, int len) {
@@ -139,5 +142,72 @@ public class Test_Ints231 {
   static void printArray(int[] array, int len) {
     for (int i=0 ; i < len ; i++)
       System.out.printf("%3d:  %5d, %5d, %5d\n", i, array[3*i], array[3*i+1], array[3*i+2]);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+class TestSearches_Ints231 {
+  static void run(int[] array, int range) {
+    int len = array.length / 3;
+    int[] counts2 = buildCounts2(array, range);
+    int[][] counts23 = buildCounts23(array, range);
+
+    // contains2/3, indexFirst2, count2
+    for (int i=0 ; i < range ; i++) {
+      int count = counts2[i];
+      if (count != 0) {
+        check(Ints231.contains2(array, len, i));
+        int idx = Ints231.indexFirst2(array, len, i);
+        check(idx != -1);
+        check(Ints231.count2(array, len, i, idx) == count);
+      }
+      else {
+        check(!Ints231.contains2(array, len, i));
+        check(Ints231.indexFirst2(array, len, i) == -1);
+      }
+    }
+
+    // contains23/4, indexFirst23, count23
+    for (int i=0 ; i < range ; i++)
+      for (int j=0 ; j < range ; j++) {
+        int count = counts23[i][j];
+        if (count != 0) {
+          check(Ints231.contains23(array, len, i, j));
+          int idx = Ints231.indexFirst23(array, len, i, j);
+          check(idx != -1);
+          check(Ints231.count23(array, len, i, j, idx) == count);
+        }
+        else {
+          check(!Ints231.contains23(array, len, i, j));
+          check(Ints231.indexFirst23(array, len, i, j) == -1);
+        }
+      }
+
+    //## TODO: contains1/4, contains23/5
+    // boolean contains1(int[] array, int offset, int count, int val1)
+    // boolean contains23(int[] array, int offset, int count, int val1, int val2)
+  }
+
+  static int[] buildCounts2(int[] array, int size) {
+    int[] counts = new int[size];
+    for (int i=0 ; i < array.length ; i += 3)
+      counts[array[i+1]]++;
+    return counts;
+  }
+
+  static int[][] buildCounts23(int[] array, int size) {
+    int[][] counts = new int[size][];
+    for (int i=0 ; i < size ; i++)
+      counts[i] = new int[size];
+    for (int i=0 ; i < array.length ; i += 3)
+      counts[array[i+1]][array[i+2]]++;
+    return counts;
+  }
+
+  static void check(boolean cond) {
+    if (!cond)
+      throw new RuntimeException();
   }
 }

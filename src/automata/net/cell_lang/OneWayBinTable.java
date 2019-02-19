@@ -82,6 +82,15 @@ class OneWayBinTable {
     return surrs;
   }
 
+  public int count(int surr) {
+    if (surr >= column.length)
+      return 0;
+    int code = column[surr];
+    if (code == OverflowTable.EmptyMarker)
+      return 0;
+    return overflowTable.count(code);
+  }
+
   public void insert(int surr1, int surr2) {
     int size = column.length;
     if (surr1 >= size) {
@@ -146,5 +155,43 @@ class OneWayBinTable {
     }
     Miscellanea._assert(next == 2 * count);
     return res;
+  }
+
+  public int[] copySym(int eqCount) {
+    int[] res = new int[count+eqCount];
+    int next = 0;
+    for (int i=0 ; i < column.length ; i++) {
+      int code = column[i];
+      if (code != OverflowTable.EmptyMarker) {
+        if (code >> 29 == 0) {
+          if (i <= code) {
+            res[next++] = i;
+            res[next++] = code;
+          }
+        }
+        else {
+          OverflowTable.Iter it = overflowTable.getIter(code);
+          while (!it.done()) {
+            int value = it.get();
+            if (i <= value) {
+              res[next++] = i;
+              res[next++] = value;
+            }
+            it.next();
+          }
+        }
+      }
+    }
+    Miscellanea._assert(next == count + eqCount);
+    return res;
+  }
+
+  public boolean isMap() {
+    for (int i=0 ; i < column.length ; i++) {
+      int code = column[i];
+      if (code != OverflowTable.EmptyMarker & code >> 29 != 0)
+        return false;
+    }
+    return true;
   }
 }

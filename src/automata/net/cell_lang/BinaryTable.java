@@ -4,11 +4,13 @@ package net.cell_lang;
 class BinaryTable {
   public static class Iter {
     int[] entries;
+    boolean singleCol;
     int next;
     int end;
 
-    public Iter(int[] entries) {
+    public Iter(int[] entries, boolean singleCol) {
       this.entries = entries;
+      this.singleCol = singleCol;
       next = 0;
       end = entries.length;
     }
@@ -22,11 +24,12 @@ class BinaryTable {
     }
 
     public int get2() {
+      Miscellanea._assert(!singleCol);
       return entries[next+1];
     }
 
     public void next() {
-      next += 2;
+      next += singleCol ? 1 : 2;
     }
   }
 
@@ -44,8 +47,8 @@ class BinaryTable {
   }
 
   public void check() {
-    table1.check();
-    table2.check();
+    // table1.check();
+    // table2.check();
   }
 
   public int size() {
@@ -66,6 +69,16 @@ class BinaryTable {
     return table2.containsKey(surr2);
   }
 
+  public int count1(int surr1) {
+    return table1.count(surr1);
+  }
+
+  public int count2(int surr2) {
+    if (table2.count == 0 & table1.count > 0)
+      table2.initReverse(table1);
+    return table2.count(surr2);
+  }
+
   public int[] lookupByCol1(int surr) {
     return table1.lookup(surr);
   }
@@ -77,29 +90,15 @@ class BinaryTable {
   }
 
   public Iter getIter() {
-    return new Iter(table1.copy());
+    return new Iter(table1.copy(), false);
   }
 
   public Iter getIter1(int surr1) {
-    int[] col2 = lookupByCol1(surr1);
-    int count = col2.length;
-    int[] entries = new int[2 * count];
-    for (int i=0 ; i < count ; i++) {
-      entries[2 * i] = surr1;
-      entries[2 * i + 1] = col2[i];
-    }
-    return new Iter(entries);
+    return new Iter(lookupByCol1(surr1), true);
   }
 
   public Iter getIter2(int surr2) {
-    int[] col1 = lookupByCol2(surr2);
-    int count = col1.length;
-    int[] entries = new int[2 * count];
-    for (int i=0 ; i < count ; i++) {
-      entries[2 * i] = col1[i];
-      entries[2 * i + 1] = surr2;
-    }
-    return new Iter(entries);
+    return new Iter(lookupByCol2(surr2), true);
   }
 
   public void insert(int surr1, int surr2) {
@@ -123,7 +122,31 @@ class BinaryTable {
   }
 
   public Obj copy(boolean flipped) {
-    int count = table1.count;
+    return copy(new BinaryTable[] {this}, flipped);
+  }
+
+  public int[] rawCopy() {
+    return table1.copy();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean col1IsKey() {
+    return table1.isMap();
+  }
+
+  public boolean col2IsKey() {
+    if (table2.count == 0 & table1.count > 0)
+      table2.initReverse(table1);
+    return table2.isMap();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static Obj copy(BinaryTable[] tables, boolean flipped) {
+    int count = 0;
+    for (int i=0 ; i < tables.length ; i++)
+      count += tables[i].size();
 
     if (count == 0)
       return EmptyRelObj.singleton;
@@ -132,31 +155,33 @@ class BinaryTable {
     Obj[] objs2 = new Obj[count];
 
     int next = 0;
-    for (int i=0 ; i < table1.column.length ; i++) {
-      int code = table1.column[i];
-      if (code != OverflowTable.EmptyMarker) {
-        Obj val1 = store1.getValue(i);
-        if (code >> 29 == 0) {
-          objs1[next] = val1;
-          objs2[next++] = store2.getValue(code);
-        }
-        else {
-          OverflowTable.Iter it = table1.overflowTable.getIter(code);
-          while (!it.done()) {
-            int surr2 = it.get();
+    for (int iT=0 ; iT < tables.length ; iT++) {
+      BinaryTable table = tables[iT];
+      int[] column = table.table1.column;
+      ValueStore store1 = table.store1;
+      ValueStore store2 = table.store2;
+      for (int iS=0 ; iS < column.length ; iS++) {
+        int code = column[iS];
+        if (code != OverflowTable.EmptyMarker) {
+          Obj val1 = store1.getValue(iS);
+          if (code >> 29 == 0) {
             objs1[next] = val1;
-            objs2[next++] = store2.getValue(surr2);
-            it.next();
+            objs2[next++] = store2.getValue(code);
+          }
+          else {
+            OverflowTable.Iter it = table.table1.overflowTable.getIter(code);
+            while (!it.done()) {
+              int arg2 = it.get();
+              objs1[next] = val1;
+              objs2[next++] = store2.getValue(arg2);
+              it.next();
+            }
           }
         }
       }
     }
     Miscellanea._assert(next == count);
 
-    return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2, count); //## THIS COULD BE MADE MORE EFFICIENT
-  }
-
-  public int[] rawCopy() {
-    return table1.copy();
+    return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2); //## THIS COULD BE MADE MORE EFFICIENT
   }
 }

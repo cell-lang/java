@@ -9,14 +9,15 @@ public class Test_Ints12 {
 
   public static void run() {
     for (int i=0 ; i < 100000 ; i++) {
-      runRandomTest();
+      int[] array = runRandomSortTest();
+      TestSearches_Ints12.run(array);
       if ((i + 1) % 100 == 0)
         System.out.print('.');
     }
     System.out.println();
   }
 
-  static void runRandomTest() {
+  static int[] runRandomSortTest() {
     int len = rand.nextInt(200);
     int[] array = new int[2 * len];
 
@@ -61,7 +62,12 @@ public class Test_Ints12 {
         System.exit(1);
       }
     }
+
+    return array;
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
   static int[] sort12(int[] array, int len) {
     long[] pairs = new long[len];
@@ -107,5 +113,69 @@ public class Test_Ints12 {
       return prev1 < curr1;
     else
       return prev2 <= curr2;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+class TestSearches_Ints12 {
+  static void run(int[] array) {
+    int range = 1000;
+    int len = array.length / 2;
+    boolean[][] bitmap = buildBitmap(array, range);
+    int[] counts1 = buildCounts1(array, range);
+    int[] counts2 = buildCounts2(array, range);
+
+    // contains
+    for (int i=0 ; i < range ; i++)
+      for (int j=0 ; j < range ; j++)
+        check(Ints12.contains(array, len, i, j) == bitmap[i][j]);
+
+    // contains1/3, indexFirst1, count1
+    for (int i=0 ; i < range ; i++) {
+      int count = counts1[i];
+      if (count != 0) {
+        check(Ints12.contains1(array, len, i));
+        int idx = Ints12.indexFirst1(array, len, i);
+        check(idx != -1);
+        check(Ints12.count1(array, len, i, idx) == count);
+      }
+      else {
+        check(!Ints12.contains1(array, len, i));
+        check(Ints12.indexFirst1(array, len, i) == -1);
+      }
+    }
+
+    //## TODO: contains1/4
+    // boolean contains1(int[] array, int offset, int count, int val1)
+  }
+
+  static boolean[][] buildBitmap(int[] array, int size) {
+    boolean[][] bitmap = new boolean[size][];
+    for (int i=0 ; i < size ; i++)
+      bitmap[i] = new boolean[size];
+    for (int i=0 ; i < array.length ; i += 2)
+      bitmap[array[i]][array[i+1]] = true;
+    return bitmap;
+  }
+
+  static int[] buildCounts1(int[] array, int size) {
+    int[] counts = new int[size];
+    for (int i=0 ; i < array.length ; i += 2)
+      counts[array[i]]++;
+    return counts;
+  }
+
+  static int[] buildCounts2(int[] array, int size) {
+    int[] counts = new int[size];
+    for (int i=0 ; i < array.length ; i += 2)
+      counts[array[i+1]]++;
+    return counts;
+  }
+
+  static void check(boolean cond) {
+    if (!cond)
+      throw new RuntimeException();
   }
 }

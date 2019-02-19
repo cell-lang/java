@@ -9,14 +9,15 @@ public class Test_Ints21 {
 
   public static void run() {
     for (int i=0 ; i < 100000 ; i++) {
-      runRandomTest();
+      int[] array = runRandomSortTest();
+      TestSearches_Ints21.run(array);
       if ((i + 1) % 100 == 0)
         System.out.print('.');
     }
     System.out.println();
   }
 
-  static void runRandomTest() {
+  static int[] runRandomSortTest() {
     int len = rand.nextInt(200);
     int[] array = new int[2 * len];
 
@@ -61,6 +62,8 @@ public class Test_Ints21 {
         System.exit(1);
       }
     }
+
+    return array;
   }
 
   static int[] sort21(int[] array, int len) {
@@ -107,5 +110,69 @@ public class Test_Ints21 {
       return prev2 < curr2;
     else
       return prev1 <= curr1;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+class TestSearches_Ints21 {
+  static void run(int[] array) {
+    int range = 1000;
+    int len = array.length / 2;
+    boolean[][] bitmap = buildBitmap(array, range);
+    int[] counts1 = buildCounts1(array, range);
+    int[] counts2 = buildCounts2(array, range);
+
+    // contains
+    for (int i=0 ; i < range ; i++)
+      for (int j=0 ; j < range ; j++)
+        check(Ints21.contains(array, len, i, j) == bitmap[i][j]);
+
+    // contains2/3, indexFirst2, count2
+    for (int i=0 ; i < range ; i++) {
+      int count = counts2[i];
+      if (count != 0) {
+        check(Ints21.contains2(array, len, i));
+        int idx = Ints21.indexFirst2(array, len, i);
+        check(idx != -1);
+        check(Ints21.count2(array, len, i, idx) == count);
+      }
+      else {
+        check(!Ints21.contains2(array, len, i));
+        check(Ints21.indexFirst2(array, len, i) == -1);
+      }
+    }
+
+    //## TODO: contains2/4
+    // boolean contains2(int[] array, int offset, int count, int val2)
+  }
+
+  static boolean[][] buildBitmap(int[] array, int size) {
+    boolean[][] bitmap = new boolean[size][];
+    for (int i=0 ; i < size ; i++)
+      bitmap[i] = new boolean[size];
+    for (int i=0 ; i < array.length ; i += 2)
+      bitmap[array[i]][array[i+1]] = true;
+    return bitmap;
+  }
+
+  static int[] buildCounts1(int[] array, int size) {
+    int[] counts = new int[size];
+    for (int i=0 ; i < array.length ; i += 2)
+      counts[array[i]]++;
+    return counts;
+  }
+
+  static int[] buildCounts2(int[] array, int size) {
+    int[] counts = new int[size];
+    for (int i=0 ; i < array.length ; i += 2)
+      counts[array[i+1]]++;
+    return counts;
+  }
+
+  static void check(boolean cond) {
+    if (!cond)
+      throw new RuntimeException();
   }
 }

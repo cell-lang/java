@@ -28,6 +28,7 @@ class OverflowTable {
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////
 
   static final int MinSize = 32;
 
@@ -50,252 +51,14 @@ class OverflowTable {
   static final int AvailableTag         = 6;
   static final int Unused               = 7;
 
+  ////////////////////////////////////////////////////////////////////////////
+
   int[] slots;
   int head2;
   int head4;
   int head8;
   int head16;
 
-
-  public void check(int[] column, int count) {
-    int len = slots.length;
-    boolean[] slotOK = new boolean[len];
-    for (int i=0 ; i < len ; i++)
-      Miscellanea._assert(!slotOK[i]);
-
-    if (head2 != EmptyMarker) {
-      int curr = head2;
-      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (2), curr = " + Integer.toString(curr));
-      for ( ; ; ) {
-        check(curr < len, "curr < len");
-        int slot1 = slots[curr + 1];
-        int tag = slot1 >>> 29;
-        int payload = slot1 & PayloadMask;
-        check(slot1 == End2UpperMarker | (tag == Block2Tag & payload < len), "slot1 == End2UpperMarker | (tag == Block2Tag & payload < len)");
-        check(!slotOK[curr] & !slotOK[curr+1], "!slotOK[curr] & !slotOK[curr+1]");
-        slotOK[curr] = slotOK[curr+1] = true;
-        if (slot1 == End2UpperMarker)
-          break;
-        int nextSlot0 = slots[payload];
-        check(nextSlot0 >>> 29 == AvailableTag, "nextSlot0 >>> 29 == AvailableTag");
-        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
-        curr = payload;
-      }
-    }
-
-    if (head4 != EmptyMarker) {
-      int curr = head4;
-      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (4), curr = " + Integer.toString(curr));
-      for ( ; ; ) {
-        check(curr < len, "curr < len");
-        int slot1 = slots[curr + 1];
-        int tag = slot1 >>> 29;
-        int payload = slot1 & PayloadMask;
-        check(slot1 == End4UpperMarker | (tag == Block4Tag & payload < len), "slot1 == End4UpperMarker | (tag == Block4Tag & payload < len)");
-        for (int i=0 ; i < 4 ; i++) {
-          check(!slotOK[curr+i], "!slotOK[curr+i]");
-          slotOK[curr+i] = true;
-        }
-        if (slot1 == End4UpperMarker)
-          break;
-        int nextSlot0 = slots[payload];
-        check(nextSlot0 >>> 29 == AvailableTag, "nextSlot0 >>> 29 == AvailableTag");
-        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
-        curr = payload;
-      }
-    }
-
-    if (head8 != EmptyMarker) {
-      int curr = head8;
-      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (8), curr = " + Integer.toString(curr));
-      for ( ; ; ) {
-        check(curr < len, "curr < len");
-        int slot1 = slots[curr + 1];
-        int tag = slot1 >>> 29;
-        int payload = slot1 & PayloadMask;
-        check(slot1 == End8UpperMarker | (tag == Block8Tag & payload < len), "slot1 == End8UpperMarker | (tag == Block8Tag & payload < len)");
-        for (int i=0 ; i < 8 ; i++) {
-          check(!slotOK[curr+i], "!slotOK[curr+i]");
-          slotOK[curr+i] = true;
-        }
-        if (slot1 == End8UpperMarker)
-          break;
-        int nextSlot0 = slots[payload];
-        check(nextSlot0 >>> 29 == AvailableTag, "nextSlot0 >>> 29 == AvailableTag");
-        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
-        curr = payload;
-      }
-    }
-
-    if (head16 != EmptyMarker) {
-      int curr = head16;
-      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (16), curr = " + Integer.toString(curr));
-      for ( ; ; ) {
-        check(curr < len, "curr < len");
-        int slot1 = slots[curr + 1];
-        int tag = slot1 >>> 29;
-        int payload = slot1 & PayloadMask;
-        check(slot1 == End16UpperMarker | (tag == Block16Tag & payload < len), "slot1 == End16UpperMarker | (tag == Block16Tag & payload < len)");
-        for (int i=0 ; i < 16 ; i++) {
-          check(!slotOK[curr+i], "!slotOK[curr+i]");
-          slotOK[curr+i] = true;
-        }
-        if (slot1 == End16UpperMarker)
-          break;
-        int nextSlot0 = slots[payload];
-        check(nextSlot0 >>> 29 == AvailableTag, "nextSlot0 >>> 29 == AvailableTag");
-        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
-        curr = payload;
-      }
-    }
-
-    int actualCount = 0;
-    for (int i=0 ; i < column.length ; i++) {
-      int content = column[i];
-      if (content == EmptyMarker)
-        continue;
-      int tag = content >>> 29;
-      int payload = content & PayloadMask;
-      if (tag == 0) {
-        check(payload < 1000, "payload < 1000");
-        actualCount++;
-      }
-      else {
-        actualCount += checkGroup(tag, payload, slotOK);
-      }
-    }
-
-    check(count == actualCount, "count == actualCount");
-
-    for (int i=0 ; i < slotOK.length ; i++) {
-      if (!slotOK[i]) {
-        for (int j=0 ; j < slotOK.length ; j++) {
-          if (j != 0 & j % 256 == 0)
-            System.out.println();
-          if (j != 0 & j % 128 == 0)
-            System.out.println();
-          if (j % 16 == 0)
-            System.out.print("\n  ");
-          System.out.printf("%d ", slotOK[j] ? 1 : 0);
-        }
-        System.out.println();
-        System.out.println();
-        System.out.printf("i = %d\n", i);
-        System.out.println();
-      }
-      check(slotOK[i], "slotOK[i]");
-    }
-  }
-
-  int checkGroup(int tag, int blockIdx, boolean[] slotOK) {
-    check(tag >= Block2Tag, "tag >= Block2Tag");
-    check(tag <= HashedBlockTag, "tag <= HashedBlockTag");
-
-    int capacity, minUsage;
-    if (tag == Block2Tag) {
-      capacity = 2;
-      minUsage = 2;
-    }
-    else if (tag == Block4Tag) {
-      capacity = 4;
-      minUsage = 2;
-    }
-    else if (tag == Block8Tag) {
-      capacity = 8;
-      minUsage = 4;
-    }
-    else if (tag == Block16Tag) {
-      capacity = 16;
-      minUsage = 7;
-    }
-    else {
-      Miscellanea._assert(tag == HashedBlockTag);
-      capacity = 16;
-      minUsage = 7; // Unused
-    }
-
-    for (int i=0 ; i < capacity ; i++) {
-      check(!slotOK[blockIdx+i], "!slotOK[blockIdx+i]");
-      slotOK[blockIdx+i] = true;
-    }
-
-    int count = 0;
-
-    if (tag != HashedBlockTag) {
-      for (int i=0 ; i < capacity ; i++) {
-        int slot = slots[blockIdx + i];
-        if (i < minUsage)
-          check(slot != EmptyMarker, "slot != EmptyMarker");
-        if (slot == EmptyMarker) {
-          for (int j=i+1 ; j < capacity ; j++)
-            check(slots[blockIdx+j] == EmptyMarker, "slots[blockIdx+j] == EmptyMarker");
-          break;
-        }
-        check(slot >>> 29 == 0, "slot >>> 29 == 0");
-        check((slot & PayloadMask) < 1000, "(slot & PayloadMask) < 1000");
-        count++;
-      }
-    }
-    else {
-      int blockCount = slots[blockIdx];
-      int actualBlockCount = 0;
-      for (int i=1 ; i < 16 ; i++) {
-        int slot = slots[blockIdx + i];
-        if (slot != EmptyMarker) {
-          int slotTag = slot >>> 29;
-          int slotPayload = slot & PayloadMask;
-          if (slotTag == 0) {
-            check(slotPayload < 1000, "slotPayload < 1000");
-            actualBlockCount++;
-          }
-          else
-            actualBlockCount += checkGroup(slotTag, slotPayload, slotOK);
-        }
-      }
-      check(blockCount == actualBlockCount, "blockCount == actualBlockCount");
-      count += blockCount;
-    }
-
-    return count;
-  }
-
-  void check(boolean cond, String msg) {
-    if (!cond) {
-      System.out.println(msg);
-      System.out.println("");
-      dump();
-      System.out.println("");
-      Miscellanea._assert(false);
-    }
-  }
-
-  public void dump() {
-    System.out.print("  slots:");
-    for (int i=0 ; i < slots.length ; i++) {
-      if (i != 0 & i % 256 == 0)
-        System.out.println();
-      if (i != 0 & i % 128 == 0)
-        System.out.println();
-      if (i % 16 == 0)
-        System.out.print("\n   ");
-      else if (i % 8 == 0)
-        System.out.print("  ");
-      int slot = slots[i];
-      int payload = slot & PayloadMask;
-      System.out.printf("  %d:%3s", slot >>> 29, payload == 0x1FFFFFFF ? "-" : Integer.toString(payload));
-    }
-    System.out.println();
-    System.out.println();
-    System.out.printf(
-      "  heads: 2 = %s, 4 = %s, 8 = %s, 16 = %s\n",
-      head2  != EmptyMarker ? Integer.toString(head2)  : "-",
-      head4  != EmptyMarker ? Integer.toString(head4)  : "-",
-      head8  != EmptyMarker ? Integer.toString(head8)  : "-",
-      head16 != EmptyMarker ? Integer.toString(head16) : "-"
-    );
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
   public OverflowTable() {
@@ -338,7 +101,7 @@ class OverflowTable {
         return insertWith16Block(payload, value, handle, inserted);
 
       case 5: // Hashed block
-        insertIntoHashedBlock(payload, value, hashCode(value), inserted);
+        insertIntoHashedBlock(payload, value, inserted);
         return handle;
 
       default:
@@ -365,7 +128,7 @@ class OverflowTable {
         return deleteFrom16Block(blockIdx, value, handle, deleted);
 
       case 5: // Hashed block
-        return deleteFromHashedBlock(blockIdx, value, handle, hashCode(value), deleted);
+        return deleteFromHashedBlock(blockIdx, value, handle, deleted);
 
       default:
         throw Miscellanea.internalFail(); // Control flow cannot get here
@@ -391,7 +154,7 @@ class OverflowTable {
         return inBlock(value, blockIdx, 16);
 
       case 5: // Hashed block
-        return inHashedBlock(value, blockIdx, hashCode(value));
+        return inHashedBlock(value, blockIdx);
 
       default:
         throw Miscellanea.internalFail(); // Control flow cannot get here
@@ -469,10 +232,10 @@ class OverflowTable {
     return false;
   }
 
-  boolean inHashedBlock(int value, int blockIdx, int hashcode) {
-    int slotIdx = blockIdx + Integer.remainderUnsigned(hashcode, 15) + 1;
+  boolean inHashedBlock(int value, int blockIdx) {
+    int slotIdx = blockIdx + Integer.remainderUnsigned(value, 15) + 1;
     int content = slots[slotIdx];
-    if (content == value)
+    if (content == value / 15)
       return true;
     if (content == EmptyMarker)
       return false;
@@ -481,9 +244,9 @@ class OverflowTable {
     if (tag == 0)
       return false;
     else if (tag < 5)
-      return in(value, content);
+      return in(value / 15, content);
     else
-      return inHashedBlock(value, content & PayloadMask, hashcode / 15);
+      return inHashedBlock(value / 15, content & PayloadMask);
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -511,9 +274,13 @@ class OverflowTable {
       if (content != EmptyMarker) {
         int tag = content >>> 29;
         if (tag == 0)
-          dest[next++] = content;
-        else
+          dest[next++] = 15 * content + i - 1;
+        else {
+          int start = next;
           next = copy(content, dest, next);
+          for (int j=start ; j < next ; j++)
+            dest[j] = 15 * dest[j] + i - 1;
+        }
       }
     }
     return next;
@@ -695,15 +462,15 @@ class OverflowTable {
     }
 
     inserted[0] = true;
-    if (value3 == EmptyMarker) {
-      // Easy case: the last slot is available
+    if (value2 == EmptyMarker) {
+      // Easy case: the third slot is available
       // We store the new value there, and return the same handle
-      slots[block4Idx+3] = value;
+      slots[block4Idx+2] = value;
       return handle;
     }
-    else if (value2 == EmptyMarker) {
-      // Another easy case: the last but one slot is available
-      slots[block4Idx+2] = value;
+    else if (value3 == EmptyMarker) {
+      // Another easy case: the last slot is available
+      slots[block4Idx+3] = value;
       return handle;
     }
     else {
@@ -866,7 +633,7 @@ class OverflowTable {
   }
 
   int insertWith16Block(int blockIdx, int value, int handle, boolean[] inserted) {
-    // a 16-slot standard block, which can contain between 7 and 16 entries
+    // A 16-slot standard block, which can contain between 7 and 16 entries
     int value15 = slots[blockIdx+15];
     if (value15 == EmptyMarker) {
       // The slot still contains some empty space
@@ -882,7 +649,7 @@ class OverflowTable {
           return handle;
         }
       }
-      Miscellanea._assert(false); //## CONTROL FLOW CAN NEVER MAKE IT HERE...
+      throw Miscellanea.internalFail(); //## CONTROL FLOW CAN NEVER MAKE IT HERE...
     }
 
     // The block is full, if the new value is not a duplicate
@@ -902,7 +669,7 @@ class OverflowTable {
     // Transferring the existing values
     for (int i=0 ; i < 16 ; i++) {
       int content = slots[blockIdx+i];
-      insertIntoHashedBlock(hashedBlockIdx, content, hashCode(content), inserted);
+      insertIntoHashedBlock(hashedBlockIdx, content, inserted);
       Miscellanea._assert(inserted[0]);
     }
 
@@ -910,15 +677,15 @@ class OverflowTable {
     release16Block(blockIdx);
 
     // Adding the new value
-    insertIntoHashedBlock(hashedBlockIdx, value, hashCode(value), inserted);
+    insertIntoHashedBlock(hashedBlockIdx, value, inserted);
     Miscellanea._assert(inserted[0]);
 
     // Returning the tagged index of the block
     return hashedBlockIdx | (HashedBlockTag << 29);
   }
 
-  int deleteFromHashedBlock(int blockIdx, int value, int handle, int hashcode, boolean[] deleted) {
-    int slotIdx = blockIdx + Integer.remainderUnsigned(hashcode, 15) + 1;
+  int deleteFromHashedBlock(int blockIdx, int value, int handle, boolean[] deleted) {
+    int slotIdx = blockIdx + Integer.remainderUnsigned(value, 15) + 1;
     int content = slots[slotIdx];
     if (content == EmptyMarker) {
       deleted[0] = false;
@@ -927,7 +694,7 @@ class OverflowTable {
     int tag = content >>> 29;
     Miscellanea._assert(tag <= 5);
     if (tag == 0) {
-      if (content == value) {
+      if (content == value / 15) {
         deleted[0] = true;
         slots[slotIdx] = EmptyMarker;
       }
@@ -937,12 +704,12 @@ class OverflowTable {
       }
     }
     else if (tag < 5) {
-      int newHandle = delete(content, value, deleted);
+      int newHandle = delete(content, value / 15, deleted);
       slots[slotIdx] = newHandle;
     }
     else {
       int nestedBlockIdx = content & PayloadMask;
-      int newHandle = deleteFromHashedBlock(nestedBlockIdx, value, content, hashcode / 15, deleted);
+      int newHandle = deleteFromHashedBlock(nestedBlockIdx, value / 15, content, deleted);
       slots[slotIdx] = newHandle;
     }
 
@@ -964,16 +731,16 @@ class OverflowTable {
     int slot4  = slots[blockIdx + 4];
     int slot5  = slots[blockIdx + 5];
 
-    int nextIdx = copyAndReleaseBlock(slot1, (int) blockIdx);
-    nextIdx = copyAndReleaseBlock(slot2, nextIdx);
-    nextIdx = copyAndReleaseBlock(slot3, nextIdx);
-    nextIdx = copyAndReleaseBlock(slot4, nextIdx);
-    nextIdx = copyAndReleaseBlock(slot5, nextIdx);
+    int nextIdx = copyAndReleaseBlock(slot1, blockIdx, 0);
+    nextIdx = copyAndReleaseBlock(slot2, nextIdx, 1);
+    nextIdx = copyAndReleaseBlock(slot3, nextIdx, 2);
+    nextIdx = copyAndReleaseBlock(slot4, nextIdx, 3);
+    nextIdx = copyAndReleaseBlock(slot5, nextIdx, 4);
 
     int endIdx = blockIdx + 6;
     for (int i=6 ; nextIdx < endIdx ; i++) {
       Miscellanea._assert(i < 16);
-      nextIdx = copyAndReleaseBlock(slots[blockIdx + i], nextIdx);
+      nextIdx = copyAndReleaseBlock(slots[blockIdx + i], nextIdx, i-1);
     }
 
     slots[blockIdx + 6] = EmptyMarker;
@@ -983,76 +750,72 @@ class OverflowTable {
     return blockIdx | (Block8Tag << 29);
   }
 
-  int copyAndReleaseBlock(int handle, int nextIdx) {
-    if (handle != EmptyMarker) {
-      int tag = handle >>> 29;
-      int blockIdx = handle & PayloadMask;
-      Miscellanea._assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
+  int copyAndReleaseBlock(int handle, int nextIdx, int rem15) {
+    if (handle == EmptyMarker)
+      return nextIdx;
 
-      switch (tag) {
-        case 0: // Inline
-          slots[nextIdx++] = handle;
-          break;
+    int tag = handle >>> 29;
+    int blockIdx = handle & PayloadMask;
+    Miscellanea._assert(((tag << 29) | blockIdx) == handle, "((tag << 29) | blockIdx) == handle");
 
-        case 1: // 2-block slot
-          slots[nextIdx++] = slots[blockIdx];
-          slots[nextIdx++] = slots[blockIdx + 1];
-          release2Block(blockIdx);
-          break;
-
-        case 2: // 4-block slot
-          nextIdx = copyNonEmpty(blockIdx, 4, slots, nextIdx);
-          release4Block(blockIdx);
-          break;
-
-        case 3: // 8-block slot
-          nextIdx = copyNonEmpty(blockIdx, 8, slots, nextIdx);
-          release8Block(blockIdx);
-          break;
-
-        // case 4: // 16-slot block
-        //   nextIdx = copyNonEmpty(blockIdx, 16, slots, nextIdx);
-        //   break;
-
-        // case 5: // Hashed block
-        //   nextIdx = copyHashedBlock(blockIdx, slots, nextIdx);
-        //   break;
-
-        default:
-          throw Miscellanea.internalFail(); // Control flow cannot get here
-      }
+    if (tag == 0) { // Inline
+      slots[nextIdx] = 15 * handle + rem15;
+      return nextIdx + 1;
     }
-
-    return nextIdx;
+    else if (tag == 1) { // 2-block slot
+      slots[nextIdx]     = 15 * slots[blockIdx] + rem15;
+      slots[nextIdx + 1] = 15 * slots[blockIdx + 1] + rem15;
+      release2Block(blockIdx);
+      return nextIdx + 2;
+    }
+    else if (tag == 2) { // 4-block slot
+      int endIdx = copyNonEmpty(blockIdx, 4, slots, nextIdx);
+      for (int i=nextIdx ; i < endIdx ; i++)
+        slots[i] = 15 * slots[i] + rem15;
+      release4Block(blockIdx);
+      return endIdx;
+    }
+    else { // 8-block slot
+      // Both 16-slot and hashed blocks contain at least 7 elements, so they cannot appear
+      // here, as the parent hashed block being shrunk has only six elements left
+      Miscellanea._assert(tag == 3);
+      int endIdx = copyNonEmpty(blockIdx, 8, slots, nextIdx);
+      for (int i=nextIdx ; i < endIdx ; i++)
+        slots[i] = 15 * slots[i] + rem15;
+      release8Block(blockIdx);
+      return endIdx;
+    }
   }
 
 
-  void insertIntoHashedBlock(int blockIdx, int value, int hashcode, boolean[] inserted) {
-    int slotIdx = blockIdx + Integer.remainderUnsigned(hashcode, 15) + 1;
+  void insertIntoHashedBlock(int blockIdx, int value, boolean[] inserted) {
+    int slotIdx = blockIdx + Integer.remainderUnsigned(value, 15) + 1;
     int content = slots[slotIdx];
     if (content == EmptyMarker) {
-      slots[slotIdx] = value;
+      slots[slotIdx] = value / 15;
       slots[blockIdx]++;
       inserted[0] = true;
     }
     else {
       int tag = content >>> 29;
+      int payload = content & PayloadMask;
       Miscellanea._assert(tag <= 5);
-      if (tag < 5) {
-        int newHandle = insert(content, value, inserted);
+      if (tag == 0) {
+        int remValue = value / 15;
+        if (content != remValue) {
+          int newHandle = insert(content, remValue, inserted);
+          slots[slotIdx] = newHandle;
+        }
+      }
+      else if (tag < 5) {
+        int newHandle = insert(content, value / 15, inserted);
         slots[slotIdx] = newHandle;
       }
       else
-        insertIntoHashedBlock(content & PayloadMask, value, hashcode / 15, inserted);
+        insertIntoHashedBlock(content & PayloadMask, value / 15, inserted);
       if (inserted[0])
         slots[blockIdx]++;
     }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-
-  int hashCode(int value) {
-    return value;
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -1254,5 +1017,246 @@ class OverflowTable {
     }
     // The new block becomes the head one
     return blockIdx;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void check(int[] column, int count) {
+    int len = slots.length;
+    boolean[] slotOK = new boolean[len];
+    for (int i=0 ; i < len ; i++)
+      Miscellanea._assert(!slotOK[i]);
+
+    if (head2 != EmptyMarker) {
+      int curr = head2;
+      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (2), curr = " + Integer.toString(curr));
+      for ( ; ; ) {
+        check(curr < len, "curr < len");
+        int slot1 = slots[curr + 1];
+        int tag = slot1 >>> 29;
+        int payload = slot1 & PayloadMask;
+        check(slot1 == End2UpperMarker | (tag == Block2Tag & payload < len), "slot1 == End2UpperMarker | (tag == Block2Tag & payload < len)");
+        check(!slotOK[curr] & !slotOK[curr+1], "!slotOK[curr] & !slotOK[curr+1]");
+        slotOK[curr] = slotOK[curr+1] = true;
+        if (slot1 == End2UpperMarker)
+          break;
+        int nextSlot0 = slots[payload];
+        check(nextSlot0 >>> 29 == AvailableTag, "nextSlot0 >>> 29 == AvailableTag");
+        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
+        curr = payload;
+      }
+    }
+
+    if (head4 != EmptyMarker) {
+      int curr = head4;
+      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (4), curr = " + Integer.toString(curr));
+      for ( ; ; ) {
+        check(curr < len, "curr < len");
+        int slot1 = slots[curr + 1];
+        int tag = slot1 >>> 29;
+        int payload = slot1 & PayloadMask;
+        check(slot1 == End4UpperMarker | (tag == Block4Tag & payload < len), "slot1 == End4UpperMarker | (tag == Block4Tag & payload < len)");
+        for (int i=0 ; i < 4 ; i++) {
+          check(!slotOK[curr+i], "!slotOK[curr+i]");
+          slotOK[curr+i] = true;
+        }
+        if (slot1 == End4UpperMarker)
+          break;
+        int nextSlot0 = slots[payload];
+        check(nextSlot0 >>> 29 == AvailableTag, "nextSlot0 >>> 29 == AvailableTag");
+        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
+        curr = payload;
+      }
+    }
+
+    if (head8 != EmptyMarker) {
+      int curr = head8;
+      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (8), curr = " + Integer.toString(curr));
+      for ( ; ; ) {
+        check(curr < len, "curr < len");
+        int slot1 = slots[curr + 1];
+        int tag = slot1 >>> 29;
+        int payload = slot1 & PayloadMask;
+        check(slot1 == End8UpperMarker | (tag == Block8Tag & payload < len), "slot1 == End8UpperMarker | (tag == Block8Tag & payload < len)");
+        for (int i=0 ; i < 8 ; i++) {
+          check(!slotOK[curr+i], "!slotOK[curr+i]");
+          slotOK[curr+i] = true;
+        }
+        if (slot1 == End8UpperMarker)
+          break;
+        int nextSlot0 = slots[payload];
+        check(nextSlot0 >>> 29 == AvailableTag, "nextSlot0 >>> 29 == AvailableTag");
+        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
+        curr = payload;
+      }
+    }
+
+    if (head16 != EmptyMarker) {
+      int curr = head16;
+      check(slots[curr] == EndLowerMarker, "slots[curr] == EndLowerMarker (16), curr = " + Integer.toString(curr));
+      for ( ; ; ) {
+        check(curr < len, "curr < len");
+        int slot1 = slots[curr + 1];
+        int tag = slot1 >>> 29;
+        int payload = slot1 & PayloadMask;
+        check(slot1 == End16UpperMarker | (tag == Block16Tag & payload < len), "slot1 == End16UpperMarker | (tag == Block16Tag & payload < len)");
+        for (int i=0 ; i < 16 ; i++) {
+          check(!slotOK[curr+i], "!slotOK[curr+i]");
+          slotOK[curr+i] = true;
+        }
+        if (slot1 == End16UpperMarker)
+          break;
+        int nextSlot0 = slots[payload];
+        check(nextSlot0 >>> 29 == AvailableTag, "nextSlot0 >>> 29 == AvailableTag");
+        check((nextSlot0 & PayloadMask) == curr, "(nextSlot0 & PayloadMask) == curr");
+        curr = payload;
+      }
+    }
+
+    int actualCount = 0;
+    for (int i=0 ; i < column.length ; i++) {
+      int content = column[i];
+      if (content == EmptyMarker)
+        continue;
+      int tag = content >>> 29;
+      int payload = content & PayloadMask;
+      if (tag == 0) {
+        check(payload < 1000, "payload < 1000"); //## THIS SHOULD BE REMOVED ONCE DONE...
+        actualCount++;
+      }
+      else {
+        actualCount += checkGroup(tag, payload, slotOK);
+      }
+    }
+
+    check(count == actualCount, "count == actualCount");
+
+    for (int i=0 ; i < slotOK.length ; i++) {
+      if (!slotOK[i]) {
+        for (int j=0 ; j < slotOK.length ; j++) {
+          if (j != 0 & j % 256 == 0)
+            System.out.println();
+          if (j != 0 & j % 128 == 0)
+            System.out.println();
+          if (j % 16 == 0)
+            System.out.print("\n  ");
+          System.out.printf("%d ", slotOK[j] ? 1 : 0);
+        }
+        System.out.println();
+        System.out.println();
+        System.out.printf("i = %d\n", i);
+        System.out.println();
+      }
+      check(slotOK[i], "slotOK[i]");
+    }
+  }
+
+  int checkGroup(int tag, int blockIdx, boolean[] slotOK) {
+    check(tag >= Block2Tag, "tag >= Block2Tag");
+    check(tag <= HashedBlockTag, "tag <= HashedBlockTag");
+
+    int capacity, minUsage;
+    if (tag == Block2Tag) {
+      capacity = 2;
+      minUsage = 2;
+    }
+    else if (tag == Block4Tag) {
+      capacity = 4;
+      minUsage = 2;
+    }
+    else if (tag == Block8Tag) {
+      capacity = 8;
+      minUsage = 4;
+    }
+    else if (tag == Block16Tag) {
+      capacity = 16;
+      minUsage = 7;
+    }
+    else {
+      Miscellanea._assert(tag == HashedBlockTag);
+      capacity = 16;
+      minUsage = 7; // Unused
+    }
+
+    for (int i=0 ; i < capacity ; i++) {
+      check(!slotOK[blockIdx+i], "!slotOK[blockIdx+i]");
+      slotOK[blockIdx+i] = true;
+    }
+
+    int count = 0;
+
+    if (tag != HashedBlockTag) {
+      for (int i=0 ; i < capacity ; i++) {
+        int slot = slots[blockIdx + i];
+        if (i < minUsage)
+          check(slot != EmptyMarker, "slot != EmptyMarker");
+        if (slot == EmptyMarker) {
+          for (int j=i+1 ; j < capacity ; j++)
+            check(slots[blockIdx+j] == EmptyMarker, "slots[blockIdx+j] == EmptyMarker");
+          break;
+        }
+        check(slot >>> 29 == 0, "slot >>> 29 == 0");
+        check((slot & PayloadMask) < 1000, "(slot & PayloadMask) < 1000");
+        count++;
+      }
+    }
+    else {
+      int blockCount = slots[blockIdx];
+      int actualBlockCount = 0;
+      for (int i=1 ; i < 16 ; i++) {
+        int slot = slots[blockIdx + i];
+        if (slot != EmptyMarker) {
+          int slotTag = slot >>> 29;
+          int slotPayload = slot & PayloadMask;
+          if (slotTag == 0) {
+            check(slotPayload < 1000, "slotPayload < 1000");
+            actualBlockCount++;
+          }
+          else
+            actualBlockCount += checkGroup(slotTag, slotPayload, slotOK);
+        }
+      }
+      check(blockCount == actualBlockCount, "blockCount == actualBlockCount");
+      count += blockCount;
+    }
+
+    return count;
+  }
+
+  void check(boolean cond, String msg) {
+    if (!cond) {
+      System.out.println(msg);
+      System.out.println("");
+      dump();
+      System.out.println("");
+      Miscellanea._assert(false);
+    }
+  }
+
+  public void dump() {
+    System.out.print("  slots:");
+    for (int i=0 ; i < slots.length ; i++) {
+      if (i != 0 & i % 256 == 0)
+        System.out.println();
+      if (i != 0 & i % 128 == 0)
+        System.out.println();
+      if (i % 16 == 0)
+        System.out.print("\n   ");
+      else if (i % 8 == 0)
+        System.out.print("  ");
+      int slot = slots[i];
+      int payload = slot & PayloadMask;
+      System.out.printf("  %d:%3s", slot >>> 29, payload == 0x1FFFFFFF ? "-" : Integer.toString(payload));
+    }
+    System.out.println();
+    System.out.println();
+    System.out.printf(
+      "  heads: 2 = %s, 4 = %s, 8 = %s, 16 = %s\n",
+      head2  != EmptyMarker ? Integer.toString(head2)  : "-",
+      head4  != EmptyMarker ? Integer.toString(head4)  : "-",
+      head8  != EmptyMarker ? Integer.toString(head8)  : "-",
+      head16 != EmptyMarker ? Integer.toString(head16) : "-"
+    );
   }
 }

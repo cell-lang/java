@@ -10,14 +10,15 @@ public class Test_Ints123 {
 
   public static void run() {
     for (int i=0 ; i < 100000 ; i++) {
-      runRandomTest();
+      int[] array = runRandomSortTest();
+      TestSearches_Ints123.run(array, 1000);
       if ((i + 1) % 100 == 0)
         System.out.print('.');
     }
     System.out.println();
   }
 
-  static void runRandomTest() {
+  static int[] runRandomSortTest() {
     int len = rand.nextInt(200);
     int[] array = new int[3 * len];
 
@@ -66,6 +67,8 @@ public class Test_Ints123 {
           System.exit(1);
         }
       }
+
+    return array;
   }
 
   static int[] sort123(int[] array, int len) {
@@ -121,5 +124,72 @@ public class Test_Ints123 {
       return prev2 < curr2;
 
     return prev3 <= curr3;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+class TestSearches_Ints123 {
+  static void run(int[] array, int range) {
+    int len = array.length / 3;
+    int[] counts1 = buildCounts1(array, range);
+    int[][] counts12 = buildCounts12(array, range);
+
+    // contains1/3, indexFirst1, count1
+    for (int i=0 ; i < range ; i++) {
+      int count = counts1[i];
+      if (count != 0) {
+        check(Ints123.contains1(array, len, i));
+        int idx = Ints123.indexFirst1(array, len, i);
+        check(idx != -1);
+        check(Ints123.count1(array, len, i, idx) == count);
+      }
+      else {
+        check(!Ints123.contains1(array, len, i));
+        check(Ints123.indexFirst1(array, len, i) == -1);
+      }
+    }
+
+    // contains12/4, indexFirst12, count12
+    for (int i=0 ; i < range ; i++)
+      for (int j=0 ; j < range ; j++) {
+        int count = counts12[i][j];
+        if (count != 0) {
+          check(Ints123.contains12(array, len, i, j));
+          int idx = Ints123.indexFirst12(array, len, i, j);
+          check(idx != -1);
+          check(Ints123.count12(array, len, i, j, idx) == count);
+        }
+        else {
+          check(!Ints123.contains12(array, len, i, j));
+          check(Ints123.indexFirst12(array, len, i, j) == -1);
+        }
+      }
+
+    //## TODO: contains1/4, contains12/5
+    // boolean contains1(int[] array, int offset, int count, int val1)
+    // boolean contains12(int[] array, int offset, int count, int val1, int val2)
+  }
+
+  static int[] buildCounts1(int[] array, int size) {
+    int[] counts = new int[size];
+    for (int i=0 ; i < array.length ; i += 3)
+      counts[array[i]]++;
+    return counts;
+  }
+
+  static int[][] buildCounts12(int[] array, int size) {
+    int[][] counts = new int[size][];
+    for (int i=0 ; i < size ; i++)
+      counts[i] = new int[size];
+    for (int i=0 ; i < array.length ; i += 3)
+      counts[array[i]][array[i+1]]++;
+    return counts;
+  }
+
+  static void check(boolean cond) {
+    if (!cond)
+      throw new RuntimeException();
   }
 }
