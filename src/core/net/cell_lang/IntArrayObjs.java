@@ -159,6 +159,39 @@ final class IntArrayObj extends IntArrayObjBase {
   public long getLongAt(long idx) {
     return longs[(int) idx];
   }
+
+  @Override
+  public IntArrayObjBase packForString() {
+    int len = longs.length;
+
+    long min = 0, max = 0;
+    for (int i=0 ; i < len ; i++) {
+      long elt = longs[i];
+      min = elt < min ? elt : min;
+      max = elt > max ? elt : max;
+      if (min < -2147483648 | max > 2147483647)
+        return this;
+    }
+
+    if (min >= -128 & max <= 127) {
+      byte[] packedElts = new byte[len];
+      for (int i=0 ; i < len ; i++)
+        packedElts[i] = (byte) longs[i];
+      return new ByteArrayObj(packedElts);
+    }
+
+    if (min >= -32768 & max < 32768) {
+      short[] packedElts = new short[len];
+      for (int i=0 ; i < len ; i++)
+        packedElts[i] = (short) longs[i];
+      return new ShortArrayObj(packedElts);
+    }
+
+    int[] packedElts = new int[len];
+    for (int i=0 ; i < len ; i++)
+      packedElts[i] = (int) longs[i];
+    return new Int32ArrayObj(packedElts);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -197,6 +230,39 @@ final class IntArraySliceObj extends IntArrayObjBase {
 
   public NeIntSeqObj concat(NeIntSeqObj seq) {
     return source != null ? source.concat(offset+getSize(), seq) : super.concat(seq);
+  }
+
+  @Override
+  public IntArrayObjBase packForString() {
+    int len = getSize();
+
+    long min = 0, max = 0;
+    for (int i=0 ; i < len ; i++) {
+      long elt = longs[offset+i];
+      min = elt < min ? elt : min;
+      max = elt > max ? elt : max;
+      if (min < -2147483648 | max > 2147483647)
+        return this;
+    }
+
+    if (min >= -128 & max <= 127) {
+      byte[] packedElts = new byte[len];
+      for (int i=0 ; i < len ; i++)
+        packedElts[i] = (byte) longs[offset+i];
+      return new ByteArrayObj(packedElts);
+    }
+
+    if (min >= -32768 & max < 32768) {
+      short[] packedElts = new short[len];
+      for (int i=0 ; i < len ; i++)
+        packedElts[i] = (short) longs[offset+i];
+      return new ShortArrayObj(packedElts);
+    }
+
+    int[] packedElts = new int[len];
+    for (int i=0 ; i < len ; i++)
+      packedElts[i] = (int) longs[offset+i];
+    return new Int32ArrayObj(packedElts);
   }
 }
 

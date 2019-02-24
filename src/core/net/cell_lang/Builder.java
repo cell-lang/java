@@ -99,6 +99,8 @@ class Builder {
   }
 
   public static Obj createTaggedObj(int tag, Obj obj) {
+    if (tag == SymbTable.StringSymbId)
+      obj = obj.packForString();
     return new TaggedObj(tag, obj);
   }
 
