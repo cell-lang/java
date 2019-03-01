@@ -213,6 +213,48 @@ class TernaryTable {
     return false;
   }
 
+
+  public int lookup12(int arg1, int arg2) {
+    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int value = -1;
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx)) {
+      if (field1OrNext(idx) == arg1 && field2OrEmptyMarker(idx) == arg2)
+        if (value == -1)
+          value = field3(idx);
+        else
+          throw Miscellanea.softFail();
+    }
+    return value;
+  }
+
+  public int lookup13(int arg1, int arg3) {
+    if (index13 == null)
+      buildIndex13();
+    int hashcode = Miscellanea.hashcode(arg1, arg3);
+    int value = -1;
+    for (int idx = index13.head(hashcode) ; idx != Empty ; idx = index13.next(idx))
+      if (field1OrNext(idx) == arg1 && field3(idx) == arg3)
+        if (value == -1)
+          value = field2OrEmptyMarker(idx);
+        else
+          throw Miscellanea.softFail();
+    return value;
+  }
+
+  public int lookup23(int arg2, int arg3) {
+    if (index23 == null)
+      buildIndex23();
+    int hashcode = Miscellanea.hashcode(arg2, arg3);
+    int value = -1;
+    for (int idx = index23.head(hashcode) ; idx != Empty ; idx = index23.next(idx))
+      if (field2OrEmptyMarker(idx) == arg2 && field3(idx) == arg3)
+        if (value == -1)
+          value = field1OrNext(idx);
+        else
+          throw Miscellanea.softFail();
+    return value;
+  }
+
   public int count12(int arg1, int arg2) {
     int count = 0;
     int hashcode = Miscellanea.hashcode(arg1, arg2);

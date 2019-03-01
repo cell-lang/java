@@ -229,6 +229,70 @@ class Sym12TernaryTable {
     return count;
   }
 
+  public int lookup12(int arg1, int arg2) {
+    if (arg1 > arg2) {
+      int tmp = arg1;
+      arg1 = arg2;
+      arg2 = tmp;
+    }
+    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int value = -1;
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
+      if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2)
+        if (value == -1)
+          value = arg3(idx);
+        else
+          throw Miscellanea.softFail();
+    return value;
+  }
+
+  public int lookup_13_23(int arg12, int arg3) {
+    int hashcode = Miscellanea.hashcode(arg12, arg3);
+    int value = -1;
+
+    if (index13 == null)
+      buildIndex13();
+
+    for (int idx = index13.head(hashcode) ; idx != Empty ; idx = index13.next(idx))
+      if (arg3(idx) == arg3) {
+        if (arg1OrNext(idx) == arg12) {
+          if (value == -1)
+            value = arg2OrEmptyMarker(idx);
+          else
+            throw Miscellanea.softFail();
+        }
+        else if (arg2OrEmptyMarker(idx) == arg12) {
+          if (value == -1)
+            value = arg1OrNext(idx);
+          else
+            throw Miscellanea.softFail();
+        }
+      }
+
+    if (index23 == null)
+      buildIndex23();
+
+    for (int idx = index23.head(hashcode) ; idx != Empty ; idx = index23.next(idx))
+      if (arg3(idx) == arg3) {
+        if (arg1OrNext(idx) == arg12) {
+          int arg2 = arg2OrEmptyMarker(idx);
+          if (value == -1)
+            value = arg2;
+          else if (value != arg2)
+            throw Miscellanea.softFail();
+        }
+        else if (arg2OrEmptyMarker(idx) == arg12) {
+          int arg1 = arg1OrNext(idx);
+          if (value == -1)
+            value = arg1;
+          else if (value != arg1)
+            throw Miscellanea.softFail();
+        }
+      }
+
+    return value;
+  }
+
   public int count_13_23(int arg12, int arg3) {
     int hashcode = Miscellanea.hashcode(arg12, arg3);
     int count = 0;
