@@ -234,6 +234,7 @@ String native_expr(Int32NatOp expr, Bool parenthesized) =
   bool_to_bit(e?)       = "(" & native_expr(e, false) & " ? 1 : 0)",
   get_size(e?)          = native_expr(e) & ".getSize()",
   get_count()           = native_get_count_expr(expr.table, expr.args, expr.symmetric),
+  table_lookup()        = native_table_lookup_expr(expr.table, expr.args, expr.symmetric),
   cast_int32(e?)        = "((int) " & native_expr(e, true) & ")",
   add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized),
   lookup_value()        = native_method_call_expr(expr.store, "lookupValue", (expr.value)),
@@ -241,6 +242,32 @@ String native_expr(Int32NatOp expr, Bool parenthesized) =
   get_unknown_arg()     = if expr.iter.arity == 1
                             then native_var_ref_name(expr.iter) & ".get()"
                             else native_var_ref_name(expr.iter) & ".get" & printed(expr.arg+1) & "()";
+
+
+// table_lookup(table: AnyTableVar, args: Maybe[Int32Var]+, symmetric: Bool),
+String native_table_lookup_expr(AnyTableVar table, Maybe[Int32Var]+ args, Bool symmetric) {
+  fn_names = if symmetric then sym_fn_names_by_args else fn_names_by_args;
+  fn_name = fn_names((a != nothing : a <- args));
+  args_list = append((native_var_ref_name(value(a)) : a <- args, a != nothing), ", ");
+  return native_var_ref_name(table) & "." & fn_name & "(" & args_list & ")";
+
+  [Bool+ -> String] fn_names_by_args = [
+    (true,  false)        -> "lookup1",
+    (false, true)         -> "lookup2",
+    (true,  true,  false) -> "lookup12",
+    (true,  false, true)  -> "lookup13",
+    (false, true,  true)  -> "lookup23"
+  ];
+
+  [Bool+ -> String] sym_fn_names_by_args = [
+    (true,  false)        -> "lookup",
+    (false, true)         -> "lookup",
+    (true,  false, true)  -> "lookup_13_23",
+    (false, true,  true)  -> "lookup_13_23",
+    (true,  true,  false) -> "lookup12"
+  ];
+}
+
 
 String native_get_count_expr(AnyTableVar table, Maybe[Int32Var]+ args, Bool symmetric) {
   fn_names = if symmetric then sym_fn_names_by_args else fn_names_by_args;

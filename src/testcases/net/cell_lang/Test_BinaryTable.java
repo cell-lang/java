@@ -146,7 +146,7 @@ class Test_BinaryTable {
         System.exit(1);
       }
 
-      int[] actualValues = table.lookupByCol1(i);
+      int[] actualValues = table.restrict1(i);
       Arrays.sort(actualValues);
       if (!Arrays.equals(actualValues, expValues)) {
         System.out.println("ERROR (3)!\n");
@@ -185,7 +185,7 @@ class Test_BinaryTable {
         System.exit(1);
       }
 
-      int[] actualValues = table.lookupByCol2(j);
+      int[] actualValues = table.restrict2(j);
       Arrays.sort(actualValues);
       if (!Arrays.equals(actualValues, expValues)) {
         System.out.println("ERROR (6)!\n");
@@ -245,7 +245,7 @@ class Test_BinaryTable {
         }
       }
 
-      int[] surrs = table.lookupByCol1(0);
+      int[] surrs = table.restrict1(0);
       Arrays.sort(surrs);
       int[] inputs = new int[i+1];
       for (int j=0 ; j <= i ; j++)
@@ -258,7 +258,7 @@ class Test_BinaryTable {
         for (int j=0 ; j < surrs.length ; j++)
           System.out.printf(" %3d", surrs[j]);
         System.out.println();
-        surrs = table.lookupByCol1(0);
+        surrs = table.restrict1(0);
         System.exit(1);
       }
     }
@@ -294,7 +294,7 @@ class Test_BinaryTable {
         }
       }
 
-      int[] surrs = table1.lookupByCol1(0);
+      int[] surrs = table1.restrict1(0);
       Arrays.sort(surrs);
       if (surrs.length != i + 1) {
         System.out.printf("ERROR (5)!\n");
@@ -309,7 +309,7 @@ class Test_BinaryTable {
           for (int j=0 ; j < surrs.length ; j++)
             System.out.printf(" %3d", surrs[j]);
           System.out.println();
-          surrs = table1.lookupByCol1(0);
+          surrs = table1.restrict1(0);
           System.exit(1);
         }
     }

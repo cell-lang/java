@@ -61,7 +61,7 @@ class OneWayBinTable {
     return surr1 < column.length && column[surr1] != OverflowTable.EmptyMarker;
   }
 
-  public int[] lookup(int surr) {
+  public int[] restrict(int surr) {
     if (surr >= column.length)
       return emptyArray;
     int code = column[surr];
@@ -80,6 +80,17 @@ class OneWayBinTable {
     }
     Miscellanea._assert(next == count);
     return surrs;
+  }
+
+  public int lookup(int surr) {
+    if (surr >= column.length)
+      return -1;
+    int code = column[surr];
+    if (code == OverflowTable.EmptyMarker)
+      return -1;
+    if (code >> 29 == 0)
+      return code;
+    throw Miscellanea.internalFail();
   }
 
   public int count(int surr) {

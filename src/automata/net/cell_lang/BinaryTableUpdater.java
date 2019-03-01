@@ -36,13 +36,13 @@ class BinaryTableUpdater {
   }
 
   public void delete1(int value) {
-    int[] assocs = table.lookupByCol1((int) value);
+    int[] assocs = table.restrict1((int) value);
     for (int i=0 ; i < assocs.length ; i++)
       deleteList = Miscellanea.array2Append(deleteList, deleteCount++, value, assocs[i]);
   }
 
   public void delete2(int value) {
-    int[] assocs = table.lookupByCol2((int) value);
+    int[] assocs = table.restrict2((int) value);
     for (int i=0 ; i < assocs.length ; i++)
       deleteList = Miscellanea.array2Append(deleteList, deleteCount++, assocs[i], value);
   }
@@ -145,7 +145,7 @@ class BinaryTableUpdater {
     int count = Ints12.count1(deleteList, deleteCount, surr1, idx);
 
     //## BAD: THIS IS VERY INEFFICIENT IF THERE'S A LOT OF ENTRIES WHOSE FIRST ARGUMENT IS surr1
-    int[] vals2 = table.lookupByCol1(surr1);
+    int[] vals2 = table.restrict1(surr1);
 
     for (int i=0 ; i < vals2.length ; i++)
       // Elements in range [idx, idx+count) are sorted in both orders,
@@ -171,7 +171,7 @@ class BinaryTableUpdater {
     int count = Ints21.count2(deleteList, deleteCount, surr2, idx);
 
     //## BAD: THIS IS VERY INEFFICIENT IF THERE'S A LOT OF ENTRIES WHOSE SECOND ARGUMENT IS surr2
-    int[] vals1 = table.lookupByCol2(surr2);
+    int[] vals1 = table.restrict2(surr2);
 
     for (int i=0 ; i < vals1.length ; i++)
       // Elements in range [idx, idx+count) are sorted in both orders,

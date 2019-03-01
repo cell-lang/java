@@ -65,7 +65,11 @@ class SymBinaryTable {
     return table.count(surr12);
   }
 
-  public int[] lookup(int surr) {
+  public int[] restrict(int surr) {
+    return table.restrict(surr);
+  }
+
+  public int lookup(int surr) {
     return table.lookup(surr);
   }
 
@@ -74,7 +78,7 @@ class SymBinaryTable {
   }
 
   public Iter getIter(int surr) {
-    return new Iter(table.lookup(surr), true);
+    return new Iter(table.restrict(surr), true);
   }
 
   public void insert(int surr1, int surr2) {

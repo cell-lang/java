@@ -39,7 +39,7 @@ class SymBinaryTableUpdater {
   }
 
   public void delete(int value) {
-    int[] assocs = table.lookup(value);
+    int[] assocs = table.restrict(value);
     for (int i=0 ; i < assocs.length ; i++) {
       int otherVal = assocs[i];
       boolean swap = value > otherVal;
@@ -156,7 +156,7 @@ class SymBinaryTableUpdater {
     prepare();
 
     //## BAD: THIS IS VERY INEFFICIENT IF THERE'S A LOT OF ENTRIES WHOSE FIRST ARGUMENT IS surr
-    int[] surrs = table.lookup(surr);
+    int[] surrs = table.restrict(surr);
     for (int i=0 ; i < surrs.length ; i++) {
       int surr1 = surr;
       int surr2 = surrs[i];

@@ -79,11 +79,21 @@ class BinaryTable {
     return table2.count(surr2);
   }
 
-  public int[] lookupByCol1(int surr) {
+  public int[] restrict1(int surr) {
+    return table1.restrict(surr);
+  }
+
+  public int[] restrict2(int surr) {
+    if (table2.count == 0 & table1.count > 0)
+      table2.initReverse(table1);
+    return table2.restrict(surr);
+  }
+
+  public int lookup1(int surr) {
     return table1.lookup(surr);
   }
 
-  public int[] lookupByCol2(int surr) {
+  public int lookup2(int surr) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(table1);
     return table2.lookup(surr);
@@ -94,11 +104,11 @@ class BinaryTable {
   }
 
   public Iter getIter1(int surr1) {
-    return new Iter(lookupByCol1(surr1), true);
+    return new Iter(restrict1(surr1), true);
   }
 
   public Iter getIter2(int surr2) {
-    return new Iter(lookupByCol2(surr2), true);
+    return new Iter(restrict2(surr2), true);
   }
 
   public void insert(int surr1, int surr2) {
