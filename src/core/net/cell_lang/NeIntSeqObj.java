@@ -39,6 +39,15 @@ abstract class NeIntSeqObj extends NeSeqObj {
       return super.internalOrder(other);
   }
 
+  @Override
+  public int hashcode() {
+    int len = getSize();
+    long hashcode = 0;
+    for (int i=0 ; i < len ; i++)
+      hashcode += getLongAt(i);
+    return (int) (hashcode ^ (hashcode >> 32));
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   public abstract void copy(int first, int count, long[] buffer, int destOffset);

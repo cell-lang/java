@@ -36,6 +36,11 @@ final class TaggedObj extends Obj {
     return obj.quickOrder(((TaggedObj) other).obj);
   }
 
+  @Override
+  public int hashcode() {
+    return super.hashcode() ^ obj.hashcode();
+  }
+
   public TypeCode getTypeCode() {
     return TypeCode.TAGGED_VALUE;
   }

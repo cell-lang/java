@@ -104,6 +104,15 @@ abstract class NeSeqObj extends SeqObj {
     return 0;
   }
 
+  @Override
+  public int hashcode() {
+    int len = getSize();
+    int hashcode = 0;
+    for (int i=0 ; i < len ; i++)
+      hashcode += getObjAt(i).hashcode();
+    return hashcode;
+  }
+
   public TypeCode getTypeCode() {
     return TypeCode.NE_SEQ;
   }
