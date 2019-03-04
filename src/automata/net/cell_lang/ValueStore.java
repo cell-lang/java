@@ -30,7 +30,7 @@ class ValueStore extends ValueStoreBase {
   }
 
   public int insertOrAddRef(Obj value) {
-    int surr = lookupValue(value);
+    int surr = valueToSurr(value);
     if (surr != -1) {
       addRef(surr);
       return surr;

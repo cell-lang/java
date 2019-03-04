@@ -77,8 +77,8 @@ class BinaryTableUpdater {
       int field1 = deleteList[2 * i];
       if (field1 != 0xFFFFFFFF) {
         int field2 = deleteList[2 * i + 1];
-        Miscellanea._assert(table.store1.lookupSurrogate(field1) != null);
-        Miscellanea._assert(table.store2.lookupSurrogate(field2) != null);
+        Miscellanea._assert(table.store1.surrToValue(field1) != null);
+        Miscellanea._assert(table.store2.surrToValue(field2) != null);
         table.store1.release(field1);
         table.store2.release(field2);
       }
@@ -372,8 +372,8 @@ class BinaryTableUpdater {
     for (int i=0 ; i < deleteCount ; i++) {
       int field1 = deleteList[2 * i];
       int field2 = deleteList[2 * i + 1];
-      Obj obj1 = store1.lookupSurrogateEx(field1);
-      Obj obj2 = store2.lookupSurrogateEx(field2);
+      Obj obj1 = store1.surrToValueEx(field1);
+      Obj obj2 = store2.surrToValueEx(field2);
       if (flipped) {
         Obj tmp = obj1;
         obj1 = obj2;
@@ -387,8 +387,8 @@ class BinaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++) {
       int field1 = insertList[2 * i];
       int field2 = insertList[2 * i + 1];
-      Obj obj1 = store1.lookupSurrogateEx(field1);
-      Obj obj2 = store2.lookupSurrogateEx(field2);
+      Obj obj1 = store1.surrToValueEx(field1);
+      Obj obj2 = store2.surrToValueEx(field2);
       if (flipped) {
         Obj tmp = obj1;
         obj1 = obj2;

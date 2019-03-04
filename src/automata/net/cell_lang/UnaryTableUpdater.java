@@ -42,7 +42,7 @@ class UnaryTableUpdater {
   //   Miscellanea._assert(elts.length == size);
   //   for (int i=0 ; i < size ; i++) {
   //     Obj val = elts[i];
-  //     int surr = store.lookupValueEx(val);
+  //     int surr = store.valueToSurrEx(val);
   //     if (surr == -1)
   //       surr = store.insert(val);
   //     insertList[i] = surr;

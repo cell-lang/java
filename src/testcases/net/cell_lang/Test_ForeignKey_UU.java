@@ -41,7 +41,7 @@ class Test_ForeignKey_UU {
     for (int i=0 ; i < targetInsertCount ; i++) {
       int idx = rand.nextInt(1000);
       Obj obj = IntObj.get(values[idx]);
-      int surr = storeUpdater.lookupValueEx(obj);
+      int surr = storeUpdater.valueToSurrEx(obj);
       if (surr == -1)
         surr = storeUpdater.insert(obj);
       targetUpdater.insert(surr);
@@ -66,7 +66,7 @@ class Test_ForeignKey_UU {
       for (int i=0 ; i < rand.nextInt(20) ; i++) {
         int idx = rand.nextInt(1000);
         Obj obj = IntObj.get(values[idx]);
-        int surr = storeUpdater.lookupValueEx(obj);
+        int surr = storeUpdater.valueToSurrEx(obj);
         if (surr == -1)
           surr = storeUpdater.insert(obj);
         if (sourceBitmap[idx])
@@ -80,7 +80,7 @@ class Test_ForeignKey_UU {
       for (int i=0 ; i < rand.nextInt(20) ; i++) {
         int idx = rand.nextInt(1000);
         Obj obj = IntObj.get(values[idx]);
-        int surr = storeUpdater.lookupValueEx(obj);
+        int surr = storeUpdater.valueToSurrEx(obj);
         if (surr == -1)
           surr = storeUpdater.insert(obj);
         if (targetBitmap[idx])
@@ -104,37 +104,37 @@ class Test_ForeignKey_UU {
         System.out.println("\nTarget only:");
         for (int i=0 ; i < 1000 ; i++)
           if (!newSourceBitmap[i] & newTargetBitmap[i])
-            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.lookupValueEx(IntObj.get(values[i])));
+            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.valueToSurrEx(IntObj.get(values[i])));
 
         System.out.println("\nSource only:");
         for (int i=0 ; i < 1000 ; i++)
           if (newSourceBitmap[i] & !newTargetBitmap[i])
-            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.lookupValueEx(IntObj.get(values[i])));
+            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.valueToSurrEx(IntObj.get(values[i])));
 
         System.out.println("\nBoth:");
         for (int i=0 ; i < 1000 ; i++)
           if (newSourceBitmap[i] & newTargetBitmap[i])
-            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.lookupValueEx(IntObj.get(values[i])));
+            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.valueToSurrEx(IntObj.get(values[i])));
 
         System.out.println("\nDeleted from source:");
         for (int i=0 ; i < 1000 ; i++)
           if (sourceBitmap[i] & !newSourceBitmap[i])
-            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.lookupValueEx(IntObj.get(values[i])));
+            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.valueToSurrEx(IntObj.get(values[i])));
 
         System.out.println("\nInserted into source:");
         for (int i=0 ; i < 1000 ; i++)
           if (!sourceBitmap[i] & newSourceBitmap[i])
-            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.lookupValueEx(IntObj.get(values[i])));
+            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.valueToSurrEx(IntObj.get(values[i])));
 
         System.out.println("\nDeleted from target:");
         for (int i=0 ; i < 1000 ; i++)
           if (targetBitmap[i] & !newTargetBitmap[i])
-            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.lookupValueEx(IntObj.get(values[i])));
+            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.valueToSurrEx(IntObj.get(values[i])));
 
         System.out.println("\nInserted into target:");
         for (int i=0 ; i < 1000 ; i++)
           if (!targetBitmap[i] & newTargetBitmap[i])
-            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.lookupValueEx(IntObj.get(values[i])));
+            System.out.printf("%03d: %4d -> %3d\n", i, values[i], storeUpdater.valueToSurrEx(IntObj.get(values[i])));
 
         System.out.println("\n");
 

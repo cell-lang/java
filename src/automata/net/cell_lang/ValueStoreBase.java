@@ -45,7 +45,7 @@ class ValueStoreBase {
     return slots != null ? slots.length : 0;
   }
 
-  public int lookupValue(Obj value) {
+  public int valueToSurr(Obj value) {
     if (count == 0)
       return -1;
     int hashcode = value.hashcode();
@@ -60,12 +60,7 @@ class ValueStoreBase {
     return -1;
   }
 
-  //## IS THIS A DUPLICATE OF GetValue()?
-  public Obj lookupSurrogate(int index) {
-    return slots[index];
-  }
-
-  public Obj getValue(int index) {
+  public Obj surrToValue(int index) {
     return slots[index];
   }
 

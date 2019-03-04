@@ -136,8 +136,8 @@ class SymBinaryTable {
         if (code != OverflowTable.EmptyMarker) {
           if (code >> 29 == 0) {
             if (iS <= code) {
-              objs1[next] = store.getValue(iS);
-              objs2[next++] = store.getValue(code);
+              objs1[next] = store.surrToValue(iS);
+              objs2[next++] = store.surrToValue(code);
             }
           }
           else {
@@ -147,9 +147,9 @@ class SymBinaryTable {
               int arg2 = it.get();
               if (iS <= arg2) {
                 if (val1 == null)
-                  val1 = store.getValue(iS);
+                  val1 = store.surrToValue(iS);
                 objs1[next] = val1;
-                objs2[next++] = store.getValue(arg2);
+                objs2[next++] = store.surrToValue(arg2);
               }
               it.next();
             }

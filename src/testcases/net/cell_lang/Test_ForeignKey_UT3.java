@@ -263,9 +263,9 @@ loop1:    for (int i1=0 ; i1 < r1 ; i1++)
               boolean inSource = sourceBitmap[i1][i2][i3];
               boolean inTarget = targetBitmap[i3];
 
-              int surr1 = store1.lookupValue(IntObj.get(values1[i1]));
-              int surr2 = store2.lookupValue(Conversions.stringToObj(values2[i2]));
-              int surr3 = store3.lookupValue(Conversions.convertText(values3[i3]));
+              int surr1 = store1.valueToSurr(IntObj.get(values1[i1]));
+              int surr2 = store2.valueToSurr(Conversions.stringToObj(values2[i2]));
+              int surr3 = store3.valueToSurr(Conversions.convertText(values3[i3]));
 
               if (surr3 == -1) {
                 // If the third argument is not in the corresponding value store,
