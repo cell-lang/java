@@ -240,7 +240,7 @@ Int Main(String* args) {
     ok = FileWrite("dump-code.txt", chars(_print_(code)));
   ;
 
-  opt_code = compiled_prg(
+  opt_code_1 = compiled_prg(
     typedefs:       code.typedefs,
     opt_reprs:      code.opt_reprs,
     bool_procs:     code.bool_procs,
@@ -254,6 +254,8 @@ Int Main(String* args) {
   if wait_for_key:
     unused_var = GetChar();
   ;
+
+  opt_code = optimize_compiled_code(opt_code_1);
 
   if print_intermediate:
     ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
