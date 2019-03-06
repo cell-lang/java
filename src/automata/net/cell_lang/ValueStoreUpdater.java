@@ -1,36 +1,59 @@
 package net.cell_lang;
 
 
-class ValueStoreUpdater extends ValueStoreBase {
-  int[] surrogates;
-  int   lastSurrogate = -1;
+class ValueStoreUpdater {
+  static final int INIT_SIZE = 32;
+
+  Obj[] values     = new Obj[INIT_SIZE];
+  int[] hashcodes  = new int[INIT_SIZE];
+  int[] surrogates = new int[INIT_SIZE];
+
+  int[] hashtable  = new int[INIT_SIZE];
+  int[] buckets    = new int[INIT_SIZE];
+
+  int count = 0;
+  int hashRange = 0;
+  int lastSurrogate = -1;
 
   ValueStore store;
 
+  //////////////////////////////////////////////////////////////////////////////
+
   public ValueStoreUpdater(ValueStore store) {
+    Miscellanea.arrayFill(hashtable, -1);
     this.store = store;
   }
 
   public int insert(Obj value) {
-    int capacity = slots != null ? slots.length : 0;
-    Miscellanea._assert(count <= capacity);
-
-    if (count == capacity)
-      resize(count+1);
+    Miscellanea._assert(count <= values.length);
 
     lastSurrogate = store.nextFreeIdx(lastSurrogate);
-    surrogates[count] = lastSurrogate;
-    insert(value, count);
-    return lastSurrogate;
-  }
+    int hashcode = value.hashcode();
 
-  @Override
-  public void resize(int minCapacity) {
-    super.resize(count+1);
-    int[] currSurrogates = surrogates;
-    surrogates = new int[slots.length];
-    if (count > 0)
-      Miscellanea.arrayCopy(currSurrogates, surrogates, count);
+    if (count == values.length)
+      resize();
+
+    values[count]     = value;
+    hashcodes[count]  = hashcode;
+    surrogates[count] = lastSurrogate;
+
+    if (count >= 16) {
+      if (count >= hashRange) {
+        if (hashRange != 0) {
+          Miscellanea.arrayFill(hashtable, hashRange, -1);
+          hashRange *= 2;
+        }
+        else
+          hashRange = 16;
+
+        for (int i=0 ; i < count ; i++)
+          insertIntoHashtable(i, hashcodes[i]);
+      }
+      insertIntoHashtable(count, hashcode);
+    }
+    count++;
+
+    return lastSurrogate;
   }
 
   public void apply() {
@@ -44,31 +67,40 @@ class ValueStoreUpdater extends ValueStoreBase {
       store.resize(reqCapacity);
 
     for (int i=0 ; i < count ; i++)
-      store.insert(slots[i], hashcodes[i], surrogates[i]);
-
-    reset();
+      store.insert(values[i], hashcodes[i], surrogates[i]);
   }
 
-  @Override
   public void reset() {
-    super.reset();
+    if (hashRange != 0)
+      Miscellanea.arrayFill(hashtable, hashRange, -1);
+
+    count = 0;
+    hashRange = 0;
     lastSurrogate = -1;
-    //## IS THIS NECESSARY?
-    if (surrogates != null) {
-      int len = surrogates.length;
-      for (int i=0 ; i < len ; i++)
-        surrogates[i] = 0;
-    }
   }
 
   public int valueToSurrEx(Obj value) {
     int surrogate = store.valueToSurr(value);
     if (surrogate != -1)
       return surrogate;
-    int index = valueToSurr(value);
-    if (index == -1)
-      return -1;
-    return surrogates[index];
+
+    if (count > 0) {
+      int hashcode = value.hashcode(); //## BAD BAD BAD: CALCULATING THE HASHCODE TWICE
+
+      if (hashRange == 0) {
+        for (int i=0 ; i < count ; i++)
+          if (hashcodes[i] == hashcode && values[i].isEq(value))
+            return surrogates[i];
+      }
+      else {
+        int hashIdx = Integer.remainderUnsigned(hashcode, hashRange);
+        for (int i = hashtable[hashIdx] ; i != -1 ; i = buckets[i])
+          if (hashcodes[i] == hashcode && values[i].isEq(value))
+            return surrogates[i];
+      }
+    }
+
+    return -1;
   }
 
   public int lookupOrInsertValue(Obj value) {
@@ -78,17 +110,45 @@ class ValueStoreUpdater extends ValueStoreBase {
     return insert(value);
   }
 
+  // Inefficient, but used only for debugging
   public Obj surrToValueEx(int surr) {
     for (int i=0 ; i < count ; i++)
       if (surrogates[i] == surr)
-        return surrToValue(i);
+        return values[i];
     return store.surrToValue(surr);
   }
 
-  @Override
-  public void dump() {
-    super.dump();
-    writeInts("surrogates", surrogates);
-    System.out.printf("lastSurrogate = {0}\n\n", lastSurrogate);
+  //////////////////////////////////////////////////////////////////////////////
+
+  private void insertIntoHashtable(int index, int hashcode) {
+    int hashIdx = Integer.remainderUnsigned(hashcode, hashRange);
+    buckets[index] = hashtable[hashIdx];
+    hashtable[hashIdx] = index;
+  }
+
+  private void resize() {
+    Miscellanea._assert(hashRange == values.length);
+
+    int currCapacity = values.length;
+    int newCapacity = 2 * currCapacity;
+
+    Obj[] currValues     = values;
+    int[] currHashcodes  = hashcodes;
+    int[] currSurrogates = surrogates;
+
+    values     = new Obj[newCapacity];
+    hashcodes  = new int[newCapacity];
+    hashtable  = new int[newCapacity];
+    buckets    = new int[newCapacity];
+    surrogates = new int[newCapacity];
+    hashRange  = newCapacity;
+
+    Miscellanea.arrayCopy(currValues, values, currCapacity);
+    Miscellanea.arrayCopy(currHashcodes, hashcodes, currCapacity);
+    Miscellanea.arrayCopy(currSurrogates, surrogates, currCapacity);
+    Miscellanea.arrayFill(hashtable, -1);
+
+    for (int i=0 ; i < count ; i++)
+      insertIntoHashtable(i, hashcodes[i]);
   }
 }

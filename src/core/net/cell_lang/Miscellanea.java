@@ -377,6 +377,18 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
+  public static void arrayFill(int[] array, int value) {
+    arrayFill(array, array.length, value);
+  }
+
+  public static void arrayFill(int[] array, int count, int value) {
+    for (int i=0 ; i < count ; i++)
+      array[i] = value;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
   public static boolean isHexDigit(byte b) {
     char ch = (char) b;
     return ('0' <= ch & ch <= '9') | ('a' <= ch & ch <= 'f') | ('A' <= ch & ch <= 'F');
