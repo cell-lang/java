@@ -44,7 +44,8 @@ abstract class NeIntSeqObj extends NeSeqObj {
     int len = getSize();
     long hashcode = 0;
     for (int i=0 ; i < len ; i++)
-      hashcode += getLongAt(i);
+      hashcode = 31 * hashcode + getLongAt(i);
+      // hashcode += getLongAt(i);
     return (int) (hashcode ^ (hashcode >> 32));
   }
 
