@@ -238,7 +238,6 @@ String native_expr(Int32NatOp expr, Bool parenthesized) =
   cast_int32(e?)        = "((int) " & native_expr(e, true) & ")",
   add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized),
   value_to_surr()       = native_method_call_expr(expr.store, "valueToSurr", (expr.value)),
-  value_to_surr_ex()    = native_method_call_expr(aux_struct_var_ref_name(expr.store), "valueToSurrEx", (expr.value)),
   get_unknown_arg()     = if expr.iter.arity == 1
                             then native_var_ref_name(expr.iter) & ".get()"
                             else native_var_ref_name(expr.iter) & ".get" & printed(expr.arg+1) & "()";

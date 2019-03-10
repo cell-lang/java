@@ -372,8 +372,8 @@ class BinaryTableUpdater {
     for (int i=0 ; i < deleteCount ; i++) {
       int field1 = deleteList[2 * i];
       int field2 = deleteList[2 * i + 1];
-      Obj obj1 = store1.surrToValueEx(field1);
-      Obj obj2 = store2.surrToValueEx(field2);
+      Obj obj1 = store1.surrToValue(field1);
+      Obj obj2 = store2.surrToValue(field2);
       if (flipped) {
         Obj tmp = obj1;
         obj1 = obj2;
@@ -387,8 +387,8 @@ class BinaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++) {
       int field1 = insertList[2 * i];
       int field2 = insertList[2 * i + 1];
-      Obj obj1 = store1.surrToValueEx(field1);
-      Obj obj2 = store2.surrToValueEx(field2);
+      Obj obj1 = store1.surrToValue(field1);
+      Obj obj2 = store2.surrToValue(field2);
       if (flipped) {
         Obj tmp = obj1;
         obj1 = obj2;

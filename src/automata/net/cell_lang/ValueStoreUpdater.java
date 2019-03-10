@@ -79,7 +79,7 @@ class ValueStoreUpdater {
     lastSurrogate = -1;
   }
 
-  public int valueToSurrEx(Obj value) {
+  public int valueToSurr(Obj value) {
     int surrogate = store.valueToSurr(value);
     if (surrogate != -1)
       return surrogate;
@@ -104,14 +104,14 @@ class ValueStoreUpdater {
   }
 
   public int lookupOrInsertValue(Obj value) {
-    int surr = valueToSurrEx(value);
+    int surr = valueToSurr(value);
     if (surr != -1)
       return surr;
     return insert(value);
   }
 
   // Inefficient, but used only for debugging
-  public Obj surrToValueEx(int surr) {
+  public Obj surrToValue(int surr) {
     for (int i=0 ; i < count ; i++)
       if (surrogates[i] == surr)
         return values[i];

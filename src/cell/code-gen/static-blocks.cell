@@ -21,16 +21,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       else ();
 
     full_check_code = full_check_method_code(block);
-    update_check_code = updates_check_code(block);
-    update_apply_code = updates_apply_code(block);
-    update_finish_code = updates_finish_code(block);
-
-    //copy_decl, copy_impl = updates_copy_code(block);
-
     // aux_cleanup_decl, aux_cleanup_impl = aux_struct_cleanup_code(block);
 
     methods_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.methods];
-    updates_code = [native_update_code(block.name, id, u.args_vars, u.body) : id, u <- block.updates];
+    updates_code = native_updates_code(block);
     accessors_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.accessors];
 
     class_name = native_name(block.name);
@@ -45,9 +39,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (""), indent_lines(reconstruct_method_code),
       (""), indent_lines(update_entry_point_code),
       (""), indent_lines(full_check_code),
-      (""), indent_lines(update_check_code),
-      (""), indent_lines(update_apply_code),
-      (""), indent_lines(update_finish_code),
       join((("") & indent_lines(c) : c <- isort(methods_code))),
       join((("") & indent_lines(c) : c <- isort(updates_code))),
       join((("") & indent_lines(c) : c <- isort(accessors_code))),
@@ -55,28 +46,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (""), indent_lines(updater_reset_code(block)),
       ("}")
     ));
-
-//      indent_lines(join((("", c) : c <- isort(const_data)))),
-//      ("") & indent_lines(ctor_code),
-//      join((("") & indent_lines(m) : m <- input_setters_code)),
-//      ("") & indent_lines(apply_method_code),
-//      join((("") & indent_lines(m) : m <- isort(node_update_methods_code))),
-//      join((("") & indent_lines(m) : m <- isort(queue_update_methods_code))),
-//      ("") & indent_lines(copy_state_code),
-//      ("") & indent_lines(set_state_code),
-//      join((("") & indent_lines(m) : m <- isort(user_def_methods_code))),
-//      ("") & indent_lines(insert_timer_method_code) if has_time_rules,
-//      ("") & indent_lines(clear_timer_method_code) if has_time_rules,
-
-//    struct_decl = ("struct " & native_name(block.name) & " {") & indent_lines(memb_decls) & ("};");
-//
-//    return join(intermix((
-//        (""), struct_decl, aux_struct_decl,
-//        init_impl, cleanup_impl, copy_state_impl, set_state_impl, aux_init_impl, aux_cleanup_impl, check_impl,
-//        copy_impl, apply_impl, finish_impl, entry_point_impl, set_state_entry_point_impl, methods_impls, updates_impls
-//      ),
-//      ("")
-//    ));
   }
 
 
@@ -132,22 +101,17 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     updater_reset_call = native_method_call("this", updater_reset_proc_name(block_name), ("updater"));
 
     body = (
-      "boolean ok = false;",
       // "int depth = get_call_stack_depth();",
       "try {",
       "  " & handler_call,
-      "  ok = " & updates_check_call,
-      "  if (ok) {",
-      "    " & updates_apply_call,
-      "    " & updates_finish_code,
-      "  }",
+      "  return true;",
       "}",
       "catch (Exception e) {",
+      "  " & updater_reset_call,
       // "  pop_try_mode_call_info(depth);",
       "  e.printStackTrace(System.err);" if debug_mode,
-      "}",
-      updater_reset_call,
-      "return ok;"
+      "  return false;",
+      "}"
     );
 
     name = update_entry_point_name(block_name);
@@ -209,178 +173,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (3, [0, 2]) -> "cols13AreKey",
       (3, [1, 2]) -> "cols23AreKey"
     ];
-  }
-
-
-  String* updates_check_code(StaticBlock block) {
-    keys = [(v, arity(t), k) : v, t <- block.tables, k <- t.keys];
-    all_keys = sort_by_key(keys & block.foreign_keys, order);
-    all_keys_check_code = (check_code(k) : k <- all_keys);
-
-    nested_blocks_check_code = isort([
-      "ok &= " & native_method_call(v, updates_check_proc_name(t), (aux_struct_var_ref_name(v)))
-      : v, t <- block.nested_blocks
-    ]);
-
-    body = ("boolean ok = true;") & all_keys_check_code & nested_blocks_check_code & ("return ok;");
-
-    sgn = "public boolean " & updates_check_proc_name(block.name) &  "(" & aux_struct_c_name(block.name) & " updater) {";
-    return (sgn) & indent_lines(body) & ("}");
-
-
-    String check_code((TableVar, NzNat, [+Nat]) key) {
-      var, arity, args = key;
-      var_name = pending_updates_var_ref_name(var);
-      method_name = key_check_method_name(arity, args);
-      return "ok &= " & native_method_call(var_name, method_name, ());
-    }
-
-
-    String check_code(BlockForeignKey key) {
-      origin = pending_updates_var_ref_name(key.origin);
-      target = pending_updates_var_ref_name(key.target);
-      method = foreign_key_check_method_name(key.type);
-      return "ok &= " & native_method_call(origin, method, (target));
-    }
-
-
-    String key_check_method_name(NzNat arity, [+Nat] key) =
-      "checkKey_" & key_check_method_suffixes(arity, key, !!);
-
-
-    [NzNat, [+Nat], String] key_check_method_suffixes = [
-      2,  [0],    "1";
-      2,  [1],    "2";
-      3,  [2],    "3";
-      3,  [0, 1], "12";
-      3,  [1, 2], "23";
-      3,  [0, 2], "13"
-    ];
-
-
-    String foreign_key_check_method_name(ForeignKeyType) =
-      unary_unary             = "checkForeignKeys",
-      unary_binary(i?)        = "checkForeignKeys_" & printed(i+1),
-      unary_ternary(i?)       = "checkForeignKeys_" & printed(i+1),
-
-      binary_unary(i?)        = "checkForeignKeys_" & printed(i+1),
-      binary_ternary          = "checkForeignKeys_12",
-
-      ternary_unary(i?)       = "checkForeignKeys_" & printed(i+1),
-      ternary_binary          = "checkForeignKeys_12",
-
-      unary_sym_binary        = "checkForeignKeys",
-      unary_sym_ternary       = "checkForeignKeys_1_2",
-
-      sym_binary_unary        = "checkForeignKeys_1_2",
-      sym_ternary_unary       = "checkForeignKeys_1_2",
-
-      sym_binary_sym_ternary  = "checkForeignKeys_12",
-      sym_ternary_sym_binary  = "checkForeignKeys_12";
-
-
-    Nat order((TableVar, NzNat, [+Nat]) key) {
-      unused_var, arity, args = key;
-      return key_check_orders(arity, args, !!);
-    }
-
-
-    [NzNat, [+Nat], Nat] key_check_orders = [
-      2,  [0],      0;
-      3,  [0, 1],   0;
-      2,  [1],      1;
-      3,  [1, 2],   1;
-      3,  [2],      2;
-      3,  [0, 2],   2
-    ];
-
-
-    Nat order(BlockForeignKey key) =
-      match (key.type)
-        unary_unary             = 0,
-        unary_binary(i?)        = i,
-        unary_ternary(i?)       = i,
-
-        binary_unary(i?)        = i,
-        binary_ternary          = 0,
-
-        ternary_unary(i?)       = i,
-        ternary_binary          = 0,
-
-        unary_sym_binary        = 0,
-        unary_sym_ternary       = 0,
-
-        sym_binary_unary        = 0,
-        sym_ternary_unary       = 0,
-
-        sym_binary_sym_ternary  = 0,
-        sym_ternary_sym_binary  = 0;
-  }
-
-
-  // (String, String*) updates_copy_code(StaticBlock block) {
-  //   var_ids = (bare_id(v) : v <- isort(keys(block.state_vars)));
-  //   vars_copy_code = join((var_copy_code(id) : id <- var_ids));
-
-  //   value_stores_copy_code = (
-  //     mk_gen_call("value_store_copy", (), (vs), (aux_struct_var_ref_name(vs)))
-  //     : vs <- isort(block.value_stores)
-  //   );
-
-  //   nested_blocks_copy_code = [
-  //     mk_gen_call(updates_copy_proc_name(t), ("&" & native_var_ref_name(v), aux_struct_var_ref_name(v)), (), ())
-  //     : v, t <- block.nested_blocks
-  //   ];
-
-  //   body = vars_copy_code & value_stores_copy_code & isort(nested_blocks_copy_code);
-
-  //   sgn = "void " & updates_copy_proc_name(block.name) & "(" & native_name(block.name) &
-  //         " *self, " & aux_struct_c_name(block.name) & " *self_aux)";
-
-  //   return (sgn & ";", (sgn & " {") & indent_lines(body) & ("}"));
-  // }
-
-
-  String* updates_apply_code(StaticBlock block) {
-    value_stores_apply_code = (
-      native_method_call(aux_struct_var_ref_name(vs), "apply", ())
-      : vs <- isort(block.value_stores)
-    );
-
-    tables_apply_code = [
-      native_method_call(pending_updates_var_ref_name(v), "apply", ())
-      : v, t <- block.tables
-    ];
-
-    nested_blocks_apply_code = [
-      native_method_call(v, updates_apply_proc_name(t), (aux_struct_var_ref_name(v)))
-      : v, t <- block.nested_blocks
-    ];
-
-    body = value_stores_apply_code & isort(tables_apply_code) & isort(nested_blocks_apply_code);
-
-    sgn = "public void " & updates_apply_proc_name(block.name) & "(" & aux_struct_c_name(block.name) & " updater) {";
-    return (sgn) & indent_lines(body) & ("}");
-  }
-
-
-  String* updates_finish_code(StaticBlock block) {
-    var_ids = (bare_id(v) : v <- isort(keys(block.state_vars)));
-    vars_copy_code = join((var_apply_code(id) : id <- var_ids));
-
-    tables_finish_code = [
-      native_method_call(pending_updates_var_ref_name(v), "finish", ()) : v, t <- block.tables
-    ];
-
-    nested_blocks_finish_code = [
-      native_method_call(v, updates_finish_proc_name(t), (aux_struct_var_ref_name(v)))
-      : v, t <- block.nested_blocks
-    ];
-
-    body = vars_copy_code & isort(tables_finish_code) & isort(nested_blocks_finish_code);
-
-    sgn = "public void " & updates_finish_proc_name(block.name) & "(" & aux_struct_c_name(block.name) & " updater) {";
-    return (sgn) & indent_lines(body) & ("}");
   }
 
 
@@ -487,12 +279,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-//  String* var_copy_code(Atom var_id) {
-//    psv_str = native_var_ref_name(pending_state_var(var_id));
-//    return (psv_str & " = copy_obj(" & psv_str & ");");
-//  }
-
-
   String* var_apply_code(Atom var_id) {
     psv_str = native_var_ref_name(pending_state_var(var_id));
     mv_str = native_var_ref_name(memb_var(var_id));
@@ -514,11 +300,203 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
+  [String*] native_updates_code(StaticBlock b) {
+    let block = b:
+      code = [native_update_code(b.name, id, u.args_vars, u.body) : id, u <- b.updates];
+    ;
+    return code;
+  }
+}
+
+
+implicit prg : CompiledPrg, block : StaticBlock, debug_mode : Bool {
   String* native_update_code(DBSymbol block_name, UpdateId update_id, <StdVar, FnArg>* args, Instr* body) {
     args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- args));
     sgn = "public void " & update_name(block_name, update_id) & "(" & args_str & aux_struct_c_name(block_name) & " updater, Env env) {";
     vars_decls = gen_vars_decls(body, [a : a <~ args, a :: StdVar]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
+
+    add_apply_code = match (update_id)
+      main_handler  = not (u, unused_var <- block.updates : u :: <handler_id(Nat)>),
+      handler_id()  = true,
+      update_id()   = false;
+
+    if add_apply_code:
+      memb_vars = []; ## IMPLEMENT IMPLEMENT IMPLEMENT
+      value_stores = [v : v <- updated_value_stores(update_id, ?)];
+      insertion_tables = [t : t <- table_vars_with_insertions(update_id, ?)];
+      deletion_tables = [t : t <- table_vars_with_deletions(update_id, ?)];
+      tables = insertion_tables & deletion_tables;
+
+      check_code = updates_check_code(block, insertion_tables, deletion_tables);
+      apply_code = updates_apply_code(memb_vars, value_stores, tables);
+      finish_code = updates_finish_code(deletion_tables);
+      reset_code = updates_reset_code(memb_vars, value_stores, tables);
+
+      body_text = body_text & check_code & apply_code & finish_code & reset_code;
+    ;
+
     return (sgn) & indent_lines(body_text) & ("}");
+  }
+}
+
+
+implicit prg : CompiledPrg, debug_mode : Bool {
+  String* updates_reset_code([MembVar] memb_vars, [ValueStoreId] value_stores, [TableVar] tables) {
+    memb_vars_code = (
+      native_var_ref_name(pending_state_var(bare_id(v))) & " = BlankObj.singleton;"
+      : v <- isort(memb_vars)
+    );
+    memb_vars_code = ("") & memb_vars_code if memb_vars != [];
+
+    value_stores_code = (
+      native_method_call(aux_struct_var_ref_name(vs), "reset", ())
+      : vs <- isort(value_stores)
+    );
+    value_stores_code = ("") & value_stores_code if value_stores != [];
+
+    tables_code = (
+      native_method_call(pending_updates_var_ref_name(t), "reset", ())
+      : t <- isort(tables)
+    );
+    tables_code = ("") & tables_code if tables != [];
+
+    return memb_vars_code & value_stores_code & tables_code;
+  }
+
+
+  String* updates_apply_code([MembVar] memb_vars, [ValueStoreId] value_stores, [TableVar] tables) {
+    memb_vars_code = join((var_apply_code(bare_id(v)) : v <- isort(memb_vars)));
+
+    value_stores_code = (
+      native_method_call(aux_struct_var_ref_name(vs), "apply", ())
+      : vs <- isort(value_stores)
+    );
+    value_stores_code = ("") & value_stores_code if value_stores != [];
+
+    tables_code = (
+      native_method_call(pending_updates_var_ref_name(t), "apply", ())
+      : t <- isort(tables)
+    );
+    tables_code = ("") & tables_code if tables != [];
+
+    return memb_vars_code & value_stores_code & tables_code;
+  }
+
+
+  String* updates_finish_code([TableVar] deletion_tables) = (
+    native_method_call(pending_updates_var_ref_name(t), "finish", ()) : t <- isort(deletion_tables)
+  );
+
+
+  String* updates_check_code(StaticBlock block, [TableVar] insertion_tables, [TableVar] deletion_tables) {
+    keys = [(v, arity(t), k) : v, t <- block.tables, insertion_tables(v), k <- t.keys];
+    check_exprs = (check_expr(k) : k <- sort_by_key(keys, order));
+    keys_check_code = join((
+      ( "if (!" & e & ")",
+        "  Miscellanea.softFail();"
+      ) : e <- check_exprs
+    ));
+    keys_check_code = ("") & keys_check_code if keys != [];
+
+    foreign_keys = [k : k <- block.foreign_keys, insertion_tables(k.origin) or deletion_tables(k.target)];
+    check_exprs = (check_expr(k) : k <- sort_by_key(foreign_keys, order));
+    foreign_keys_check_code = join((
+      ( "if (!" & e & ")",
+        "  Miscellanea.softFail();"
+      ) : e <- check_exprs
+    ));
+    foreign_keys_check_code = ("") & foreign_keys_check_code if foreign_keys != [];
+
+    return keys_check_code & foreign_keys_check_code;
+
+
+    String check_expr((TableVar, NzNat, [+Nat]) key) {
+      var, arity, args = key;
+      var_name = pending_updates_var_ref_name(var);
+      method_name = key_check_method_name(arity, args);
+      return native_method_call_expr(var_name, method_name, ());
+    }
+
+
+    String check_expr(BlockForeignKey key) {
+      origin = pending_updates_var_ref_name(key.origin);
+      target = pending_updates_var_ref_name(key.target);
+      method = foreign_key_check_method_name(key.type);
+      return native_method_call_expr(origin, method, (target));
+    }
+
+
+    String key_check_method_name(NzNat arity, [+Nat] key) =
+      "checkKey_" & key_check_method_suffixes(arity, key, !!);
+
+
+    [NzNat, [+Nat], String] key_check_method_suffixes = [
+      2,  [0],    "1";
+      2,  [1],    "2";
+      3,  [2],    "3";
+      3,  [0, 1], "12";
+      3,  [1, 2], "23";
+      3,  [0, 2], "13"
+    ];
+
+
+    String foreign_key_check_method_name(ForeignKeyType) =
+      unary_unary             = "checkForeignKeys",
+      unary_binary(i?)        = "checkForeignKeys_" & printed(i+1),
+      unary_ternary(i?)       = "checkForeignKeys_" & printed(i+1),
+
+      binary_unary(i?)        = "checkForeignKeys_" & printed(i+1),
+      binary_ternary          = "checkForeignKeys_12",
+
+      ternary_unary(i?)       = "checkForeignKeys_" & printed(i+1),
+      ternary_binary          = "checkForeignKeys_12",
+
+      unary_sym_binary        = "checkForeignKeys",
+      unary_sym_ternary       = "checkForeignKeys_1_2",
+
+      sym_binary_unary        = "checkForeignKeys_1_2",
+      sym_ternary_unary       = "checkForeignKeys_1_2",
+
+      sym_binary_sym_ternary  = "checkForeignKeys_12",
+      sym_ternary_sym_binary  = "checkForeignKeys_12";
+
+
+    Nat order((TableVar, NzNat, [+Nat]) key) {
+      unused_var, arity, args = key;
+      return key_check_orders(arity, args, !!);
+    }
+
+
+    [NzNat, [+Nat], Nat] key_check_orders = [
+      2,  [0],      0;
+      3,  [0, 1],   0;
+      2,  [1],      1;
+      3,  [1, 2],   1;
+      3,  [2],      2;
+      3,  [0, 2],   2
+    ];
+
+
+    Nat order(BlockForeignKey key) =
+      match (key.type)
+        unary_unary             = 0,
+        unary_binary(i?)        = i,
+        unary_ternary(i?)       = i,
+
+        binary_unary(i?)        = i,
+        binary_ternary          = 0,
+
+        ternary_unary(i?)       = i,
+        ternary_binary          = 0,
+
+        unary_sym_binary        = 0,
+        unary_sym_ternary       = 0,
+
+        sym_binary_unary        = 0,
+        sym_ternary_unary       = 0,
+
+        sym_binary_sym_ternary  = 0,
+        sym_ternary_sym_binary  = 0;
   }
 }
