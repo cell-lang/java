@@ -17,7 +17,7 @@ class ValueStore {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  protected ValueStore() {
+  public ValueStore() {
     Miscellanea.arrayFill(hashtable, -1);
     for (int i=0 ; i < INIT_SIZE ; i++)
       nextFreeIdx[i] = i + 1;

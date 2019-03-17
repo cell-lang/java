@@ -24,7 +24,47 @@ class ValueStoreUpdater {
     this.store = store;
   }
 
-  public int insert(Obj value) {
+  public void apply() {
+    if (count == 0)
+      return;
+
+    int storeCapacity = store.capacity();
+    int reqCapacity = store.count() + count;
+
+    if (storeCapacity < reqCapacity)
+      store.resize(reqCapacity);
+
+    for (int i=0 ; i < count ; i++)
+      store.insert(values[i], hashcodes[i], surrogates[i]);
+  }
+
+  public void reset() {
+    if (hashRange != 0)
+      Miscellanea.arrayFill(hashtable, hashRange, -1);
+
+    count = 0;
+    hashRange = 0;
+    lastSurrogate = -1;
+  }
+
+  public int lookupOrInsertValue(Obj value) {
+    int surr = valueToSurr(value);
+    if (surr != -1)
+      return surr;
+    return insert(value);
+  }
+
+  // Inefficient, but used only for debugging
+  public Obj surrToValue(int surr) {
+    for (int i=0 ; i < count ; i++)
+      if (surrogates[i] == surr)
+        return values[i];
+    return store.surrToValue(surr);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private int insert(Obj value) {
     Miscellanea._assert(count <= values.length);
 
     lastSurrogate = store.nextFreeIdx(lastSurrogate);
@@ -56,30 +96,7 @@ class ValueStoreUpdater {
     return lastSurrogate;
   }
 
-  public void apply() {
-    if (count == 0)
-      return;
-
-    int storeCapacity = store.capacity();
-    int reqCapacity = store.count() + count;
-
-    if (storeCapacity < reqCapacity)
-      store.resize(reqCapacity);
-
-    for (int i=0 ; i < count ; i++)
-      store.insert(values[i], hashcodes[i], surrogates[i]);
-  }
-
-  public void reset() {
-    if (hashRange != 0)
-      Miscellanea.arrayFill(hashtable, hashRange, -1);
-
-    count = 0;
-    hashRange = 0;
-    lastSurrogate = -1;
-  }
-
-  public int valueToSurr(Obj value) {
+  private int valueToSurr(Obj value) {
     int surrogate = store.valueToSurr(value);
     if (surrogate != -1)
       return surrogate;
@@ -101,29 +118,6 @@ class ValueStoreUpdater {
     }
 
     return -1;
-  }
-
-  public int lookupOrInsertValue(Obj value) {
-    int surr = valueToSurr(value);
-    if (surr != -1)
-      return surr;
-    return insert(value);
-  }
-
-  // Inefficient, but used only for debugging
-  public Obj surrToValue(int surr) {
-    for (int i=0 ; i < count ; i++)
-      if (surrogates[i] == surr)
-        return values[i];
-    return store.surrToValue(surr);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  private void insertIntoHashtable(int index, int hashcode) {
-    int hashIdx = Integer.remainderUnsigned(hashcode, hashRange);
-    buckets[index] = hashtable[hashIdx];
-    hashtable[hashIdx] = index;
   }
 
   private void resize() {
@@ -150,5 +144,11 @@ class ValueStoreUpdater {
 
     for (int i=0 ; i < count ; i++)
       insertIntoHashtable(i, hashcodes[i]);
+  }
+
+  private void insertIntoHashtable(int index, int hashcode) {
+    int hashIdx = Integer.remainderUnsigned(hashcode, hashRange);
+    buckets[index] = hashtable[hashIdx];
+    hashtable[hashIdx] = index;
   }
 }
