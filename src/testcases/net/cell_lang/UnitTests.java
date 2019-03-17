@@ -58,5 +58,7 @@ public class UnitTests {
     // System.out.println("ternary(a | b, _) -> binary(a | b)  OK");
     // Test_ForeignKey_BT12S.run();
     // System.out.println("binary(a | b) -> ternary(a | b, _)  OK");
+
+    Test_ValueStore.run();
   }
 }
