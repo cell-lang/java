@@ -61,6 +61,13 @@ implicit
   root_block_name : DBSymbol,
   duplicate_names : [String, Nat] {
 
+  (String*, String*) db_method_wrapper(MethodId method_id, OptCompMethod method, Bool is_gen_memb_tester) {
+    print "IMPLEMENT IMPLEMENT IMPLEMENT";
+    return ((), ());
+  }
+
+
+  ## WHAT'S THAT is_gen_memb_tester? WHY IS IT false WITH ACCESSORS?
   (String*, String*) db_method_wrapper(MethodId method_id, CompiledMethod method, Bool is_gen_memb_tester) {
     if not method_id.id?:
       ext_name = call_method_name(method_id);

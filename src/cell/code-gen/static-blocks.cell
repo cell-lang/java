@@ -23,7 +23,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     full_check_code = full_check_method_code(block);
     // aux_cleanup_decl, aux_cleanup_impl = aux_struct_cleanup_code(block);
 
-    methods_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.methods];
+    methods_code = [native_user_def_method_code(block.name, id, m) : id, m <- block.methods];
     updates_code = native_updates_code(block);
     accessors_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.accessors];
 
@@ -287,6 +287,15 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "  " & mv_str & " = " & psv_str & ";",
       "}"
     );
+  }
+
+
+  String* native_user_def_method_code(DBSymbol block_name, MethodId method_id, OptCompMethod method) {
+    args_str = append((native_var_type(a) & " " & native_var_decl_name(a) & ", " : a <- method.args));
+    sgn = "public " & native_type(method.ret_val_repr) & " " & user_def_method_name(block_name, method_id) & "(" & args_str & "Env env) {";
+    vars_decls = gen_vars_decls(method.body, set(method.args));
+    body_text = vars_decls & ("" if vars_decls != ()) & native_code(method.body, nothing);
+    return (sgn) & indent_lines(body_text) & ("}");
   }
 
 

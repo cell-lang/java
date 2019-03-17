@@ -83,7 +83,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     cls_var(<+> symb?) | capt_cls_var(symb?) = native_method_call(var, cls_var, "invoke", (args | "env"));
 
 
-  String native_push_call_info_code(<FnId, ProcSymbol> fn_name, ObjExpr* args) {
+  String native_push_call_info_code(<FnId, ProcSymbol, MethodSymbol> fn_name, ObjExpr* args) {
     fn_name_str = printed(user_repr(fn_name));
     args_strs = (native_expr(a) : a <- args);
     argv_str = if args != () then "new Obj[] {" & append(args_strs, ", ") & "}" else "null";
