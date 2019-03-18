@@ -6,7 +6,9 @@ class ValueStore {
                                                          // VALUE     NO VALUE
   private Obj[] values             = new Obj[INIT_SIZE]; //           null
   private int[] hashcodeOrNextFree = new int[INIT_SIZE]; // hashcode  index of the next free slot (can be out of bound)
-  private int[] references         = new int[INIT_SIZE]; //           0
+
+  private byte[] references = new byte[INIT_SIZE];
+  private IntCtrs extraRefs = new IntCtrs();
 
   private int[] hashtable = new int[INIT_SIZE]; // -1 when there's no value in that bucket
   private int[] buckets   = new int[INIT_SIZE]; // junk when there's no value
@@ -25,29 +27,29 @@ class ValueStore {
   //////////////////////////////////////////////////////////////////////////////
 
   public void printInfo(String name) {
-    int usedBuckets = 0;
-    int largeRefCounts = 0;
-    int[] refCountHistogram = new int[16];
-    for (int i=0 ; i < values.length ; i++)
-      if (values[i] != null) {
-        if (buckets[i] != -1)
-          usedBuckets++;
-        if (references[i] > 255)
-          largeRefCounts++;
-        else
-          refCountHistogram[references[i]/16]++;
-      }
-    // System.out.printf("%-16s: %d/%d (%f)\n", name + ":", usedBuckets, count, (double) usedBuckets / (double) count);
-    // System.out.printf("%-16s %6d/%7d (%f)\n", name + ":", largeRefCounts, count, (double) largeRefCounts / (double) count);
-    System.out.printf("%-14s %7d", name + ":", count);
-    int total = 0;
-    for (int i=0 ; i < 16 ; i++) {
-      // System.out.printf(" %7d", refCountHistogram[i]);
-      // System.out.printf(" %4f", refCountHistogram[i] / (double) count);
-      total += refCountHistogram[i];
-      System.out.printf(" %.4f", total / (double) count);
-    }
-    System.out.println();
+  //   int usedBuckets = 0;
+  //   int largeRefCounts = 0;
+  //   int[] refCountHistogram = new int[16];
+  //   for (int i=0 ; i < values.length ; i++)
+  //     if (values[i] != null) {
+  //       if (buckets[i] != -1)
+  //         usedBuckets++;
+  //       if (references[i] > 255)
+  //         largeRefCounts++;
+  //       else
+  //         refCountHistogram[references[i]/16]++;
+  //     }
+  //   // System.out.printf("%-16s: %d/%d (%f)\n", name + ":", usedBuckets, count, (double) usedBuckets / (double) count);
+  //   // System.out.printf("%-16s %6d/%7d (%f)\n", name + ":", largeRefCounts, count, (double) largeRefCounts / (double) count);
+  //   System.out.printf("%-14s %7d", name + ":", count);
+  //   int total = 0;
+  //   for (int i=0 ; i < 16 ; i++) {
+  //     // System.out.printf(" %7d", refCountHistogram[i]);
+  //     // System.out.printf(" %4f", refCountHistogram[i] / (double) count);
+  //     total += refCountHistogram[i];
+  //     System.out.printf(" %.4f", total / (double) count);
+  //   }
+  //   System.out.println();
   }
 
   public void insert(Obj value, int hashcode, int index) {
@@ -66,16 +68,24 @@ class ValueStore {
   }
 
   public void addRef(int index) {
-    references[index] = references[index] + 1;
+    int refs = Byte.toUnsignedInt(references[index]) + 1;
+    if (refs == 256) {
+      extraRefs.increment(index);
+      refs -= 64;
+    }
+    references[index] = (byte) refs;
   }
 
   public void release(int index) {
     Miscellanea._assert(references[index] > 0);
     Miscellanea._assert(values[index] != null);
 
-    int refCount = references[index];
-    references[index] = refCount - 1;
-    if (refCount == 1) {
+    int refs = Byte.toUnsignedInt(references[index]) - 1;
+    if (refs == 127) {
+      if (extraRefs.tryDecrement(index))
+        refs += 64;
+    }
+    else if (refs == 0) {
       removeFromHashtable(index);
 
       values[index] = null;
@@ -84,6 +94,7 @@ class ValueStore {
       count--;
       firstFree = index;
     }
+    references[index] = (byte) refs;
   }
 
   public int insertOrAddRef(Obj value) {
@@ -109,15 +120,15 @@ class ValueStore {
     while (newCapacity < minCapacity)
       newCapacity = 2 * newCapacity;
 
-    Obj[] currValues             = values;
-    int[] currHashcodeOrNextFree = hashcodeOrNextFree;
-    int[] currReferences         = references;
+    Obj[]  currValues             = values;
+    int[]  currHashcodeOrNextFree = hashcodeOrNextFree;
+    byte[] currReferences         = references;
 
     values             = new Obj[newCapacity];
     hashcodeOrNextFree = new int[newCapacity];
     hashtable          = new int[newCapacity];
     buckets            = new int[newCapacity];
-    references         = new int[newCapacity];
+    references         = new byte[newCapacity];
 
     Miscellanea.arrayCopy(currValues, values, currCapacity);
     Miscellanea.arrayCopy(currHashcodeOrNextFree, hashcodeOrNextFree, currCapacity);

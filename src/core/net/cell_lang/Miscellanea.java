@@ -290,6 +290,11 @@ class Miscellanea {
       dest[i] = src[i];
   }
 
+  public static void arrayCopy(byte[] src, byte[] dest, int count) {
+    for (int i=0 ; i < count ; i++)
+      dest[i] = src[i];
+  }
+
   public static void arrayCopy(int[] src, int[] dest, int count) {
     for (int i=0 ; i < count ; i++)
       dest[i] = src[i];

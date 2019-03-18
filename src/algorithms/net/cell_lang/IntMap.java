@@ -16,10 +16,10 @@ public class IntMap {
 
   public int get(int key) {
     Integer value = map.get(key);
-    return value.longValue();
+    return value.intValue();
   }
 
-  public int hasKey(int key) {
+  public boolean hasKey(int key) {
     return map.get(key) != null;
   }
 }
