@@ -6,13 +6,13 @@ class ValueStore {
                                                          // VALUE     NO VALUE
   private Obj[] values             = new Obj[INIT_SIZE]; //           null
   private int[] hashcodeOrNextFree = new int[INIT_SIZE]; // hashcode  index of the next free slot (can be out of bound)
-  private int[] refCounts          = new int[INIT_SIZE]; //           0
+  private int[] references         = new int[INIT_SIZE]; //           0
 
   private int[] hashtable = new int[INIT_SIZE]; // -1 when there's no value in that bucket
   private int[] buckets   = new int[INIT_SIZE]; // junk when there's no value
 
   private int count = 0;
-  private int firstFreeIdx = 0;
+  private int firstFree = 0;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -24,15 +24,41 @@ class ValueStore {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  public void printInfo(String name) {
+    int usedBuckets = 0;
+    int largeRefCounts = 0;
+    int[] refCountHistogram = new int[16];
+    for (int i=0 ; i < values.length ; i++)
+      if (values[i] != null) {
+        if (buckets[i] != -1)
+          usedBuckets++;
+        if (references[i] > 255)
+          largeRefCounts++;
+        else
+          refCountHistogram[references[i]/16]++;
+      }
+    // System.out.printf("%-16s: %d/%d (%f)\n", name + ":", usedBuckets, count, (double) usedBuckets / (double) count);
+    // System.out.printf("%-16s %6d/%7d (%f)\n", name + ":", largeRefCounts, count, (double) largeRefCounts / (double) count);
+    System.out.printf("%-14s %7d", name + ":", count);
+    int total = 0;
+    for (int i=0 ; i < 16 ; i++) {
+      // System.out.printf(" %7d", refCountHistogram[i]);
+      // System.out.printf(" %4f", refCountHistogram[i] / (double) count);
+      total += refCountHistogram[i];
+      System.out.printf(" %.4f", total / (double) count);
+    }
+    System.out.println();
+  }
+
   public void insert(Obj value, int hashcode, int index) {
-    Miscellanea._assert(firstFreeIdx == index);
+    Miscellanea._assert(firstFree == index);
     // Miscellanea._assert(nextFreeIdx[index] != -1);
     Miscellanea._assert(index < values.length);
     Miscellanea._assert(values[index] == null);
     Miscellanea._assert(hashcode == value.hashcode());
 
     count++;
-    firstFreeIdx = hashcodeOrNextFree[index];
+    firstFree = hashcodeOrNextFree[index];
     values[index] = value;
     hashcodeOrNextFree[index] = hashcode;
 
@@ -40,23 +66,23 @@ class ValueStore {
   }
 
   public void addRef(int index) {
-    refCounts[index] = refCounts[index] + 1;
+    references[index] = references[index] + 1;
   }
 
   public void release(int index) {
-    Miscellanea._assert(refCounts[index] > 0);
+    Miscellanea._assert(references[index] > 0);
     Miscellanea._assert(values[index] != null);
 
-    int refCount = refCounts[index];
-    refCounts[index] = refCount - 1;
+    int refCount = references[index];
+    references[index] = refCount - 1;
     if (refCount == 1) {
       removeFromHashtable(index);
 
       values[index] = null;
-      hashcodeOrNextFree[index] = firstFreeIdx;
+      hashcodeOrNextFree[index] = firstFree;
 
       count--;
-      firstFreeIdx = index;
+      firstFree = index;
     }
   }
 
@@ -71,8 +97,8 @@ class ValueStore {
       Miscellanea._assert(count <= capacity);
       if (count == capacity)
         resize(count+1);
-      int idx = firstFreeIdx;
-      insert(value, value.hashcode(), firstFreeIdx);
+      int idx = firstFree;
+      insert(value, value.hashcode(), firstFree);
       return idx;
     }
   }
@@ -85,17 +111,17 @@ class ValueStore {
 
     Obj[] currValues             = values;
     int[] currHashcodeOrNextFree = hashcodeOrNextFree;
-    int[] currRefCounts          = refCounts;
+    int[] currReferences         = references;
 
     values             = new Obj[newCapacity];
     hashcodeOrNextFree = new int[newCapacity];
     hashtable          = new int[newCapacity];
     buckets            = new int[newCapacity];
-    refCounts          = new int[newCapacity];
+    references         = new int[newCapacity];
 
     Miscellanea.arrayCopy(currValues, values, currCapacity);
-    Miscellanea.arrayCopy(currHashcodeOrNextFreeIdx, hashcodeOrNextFree, currCapacity);
-    Miscellanea.arrayCopy(currRefCounts, refCounts, currCapacity);
+    Miscellanea.arrayCopy(currHashcodeOrNextFree, hashcodeOrNextFree, currCapacity);
+    Miscellanea.arrayCopy(currReferences, references, currCapacity);
     Miscellanea.arrayFill(hashtable, -1);
 
     for (int i=0 ; i < currCapacity ; i++)
@@ -119,7 +145,7 @@ class ValueStore {
   public int nextFreeIdx(int index) {
     Miscellanea._assert(index == -1 || index >= values.length || values[index] == null);
     if (index == -1)
-      return firstFreeIdx;
+      return firstFree;
     if (index >= values.length)
       return index + 1;
     return hashcodeOrNextFree[index];
