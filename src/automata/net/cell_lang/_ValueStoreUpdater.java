@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-class ValueStoreUpdater {
+class _ValueStoreUpdater {
   static final int INIT_SIZE = 32;
 
   private Obj[] values     = new Obj[INIT_SIZE];
@@ -19,7 +19,7 @@ class ValueStoreUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public ValueStoreUpdater(ValueStore store) {
+  public _ValueStoreUpdater(ValueStore store) {
     Miscellanea.arrayFill(hashtable, -1);
     this.store = store;
   }
