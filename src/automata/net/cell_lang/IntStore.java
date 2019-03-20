@@ -1,16 +1,13 @@
 package net.cell_lang;
 
 
-class IntStore {
+final class IntStore extends ValueStore {
   static final int INIT_SIZE = 256;
 
   // Bits  0 - 31: 32-bit value, or index of 64-bit value
   // Bits 32 - 60: index of next value in the bucket if used or next free index otherwise
   // Bits 61 - 63: tag: 000 used (32 bit), 001 used (64 bit), 002 free
   private long[] slots = new long[INIT_SIZE];
-
-  private byte[]  references = new byte[INIT_SIZE];
-  private IntCtrs extraRefs  = new IntCtrs();
 
   private int[] hashtable = new int[INIT_SIZE/2]; // -1 when there's no value in that bucket
 
@@ -57,33 +54,8 @@ class IntStore {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public void addRef(int index) {
-    int refs = Byte.toUnsignedInt(references[index]) + 1;
-    if (refs == 256) {
-      extraRefs.increment(index);
-      refs -= 64;
-    }
-    references[index] = (byte) refs;
-  }
-
-  public void release(int index) {
-    Miscellanea._assert(references[index] > 0);
-    Miscellanea._assert(!isEmpty(slots[index]));
-
-    int refs = Byte.toUnsignedInt(references[index]) - 1;
-    if (refs == 127) {
-      if (extraRefs.tryDecrement(index))
-        refs += 64;
-    }
-    else if (refs == 0) {
-      free(index);
-    }
-    references[index] = (byte) refs;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
   public IntStore() {
+    super(INIT_SIZE);
     for (int i=0 ; i < INIT_SIZE ; i++)
       slots[i] = emptySlot(i+1);
     Miscellanea.arrayFill(hashtable, -1);
@@ -94,7 +66,7 @@ class IntStore {
   public void insert(long value, int index) {
     Miscellanea._assert(firstFree == index);
     Miscellanea._assert(index < slots.length);
-    Miscellanea._assert(references[index] == 0);
+    // Miscellanea._assert(references[index] == 0);
 
     count++;
     firstFree = nextFree(slots[index]);
@@ -126,17 +98,16 @@ class IntStore {
     while (newCapacity < minCapacity)
       newCapacity = 2 * newCapacity;
 
-    long[] currSlots      = slots;
-    byte[] currReferences = references;
+    super.resizeRefsArray(newCapacity);
 
-    slots      = new long[newCapacity];
-    references = new byte[newCapacity];
-    hashtable  = new int[newCapacity/2];
+    long[] currSlots = slots;
 
-    Miscellanea.arrayCopy(currReferences, references, currCapacity);
-    Miscellanea.arrayFill(hashtable, -1);
+    slots     = new long[newCapacity];
+    hashtable = new int[newCapacity/2];
 
     count = 0;
+    Miscellanea.arrayFill(hashtable, -1);
+
     for (int i=0 ; i < currCapacity ; i++) {
       long slot = currSlots[i];
       Miscellanea._assert(!isEmpty(slot));
@@ -178,13 +149,18 @@ class IntStore {
     return -1;
   }
 
-  public long surrToValue(int index) {
-    return value(slots[index]);
+  public long surrToValue(int surr) {
+    return value(slots[surr]);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private void free(int index) {
+  @Override
+  public Obj surrToObjValue(int surr) {
+    return IntObj.get(surrToValue(surr));
+  }
+
+  protected void free(int index) {
     long slot = slots[index];
     int hashIdx = hashIdx(value(slot));
 

@@ -1,14 +1,11 @@
 package net.cell_lang;
 
 
-class ObjStore {
+final class ObjStore extends ValueStore {
   static final int INIT_SIZE = 256;
                                                          // VALUE     NO VALUE
   private Obj[] values             = new Obj[INIT_SIZE]; //           null
   private int[] hashcodeOrNextFree = new int[INIT_SIZE]; // hashcode  index of the next free slot (can be out of bound)
-
-  private byte[]  references = new byte[INIT_SIZE];
-  private IntCtrs extraRefs  = new IntCtrs();
 
   private int[] hashtable = new int[INIT_SIZE/2]; // -1 when there's no value in that bucket
   private int[] buckets   = new int[INIT_SIZE]; // junk when there's no value
@@ -19,6 +16,7 @@ class ObjStore {
   //////////////////////////////////////////////////////////////////////////////
 
   public ObjStore() {
+    super(INIT_SIZE);
     Miscellanea.arrayFill(hashtable, -1);
     for (int i=0 ; i < INIT_SIZE ; i++)
       hashcodeOrNextFree[i] = i + 1;
@@ -57,36 +55,6 @@ class ObjStore {
     insertIntoHashtable(index, hashcode);
   }
 
-  public void addRef(int index) {
-    int refs = Byte.toUnsignedInt(references[index]) + 1;
-    if (refs == 256) {
-      extraRefs.increment(index);
-      refs -= 64;
-    }
-    references[index] = (byte) refs;
-  }
-
-  public void release(int index) {
-    Miscellanea._assert(references[index] > 0);
-    Miscellanea._assert(values[index] != null);
-
-    int refs = Byte.toUnsignedInt(references[index]) - 1;
-    if (refs == 127) {
-      if (extraRefs.tryDecrement(index))
-        refs += 64;
-    }
-    else if (refs == 0) {
-      removeFromHashtable(index);
-
-      values[index] = null;
-      hashcodeOrNextFree[index] = firstFree;
-
-      count--;
-      firstFree = index;
-    }
-    references[index] = (byte) refs;
-  }
-
   public int insertOrAddRef(Obj value) {
     int surr = valueToSurr(value);
     if (surr != -1) {
@@ -110,19 +78,18 @@ class ObjStore {
     while (newCapacity < minCapacity)
       newCapacity = 2 * newCapacity;
 
+    super.resizeRefsArray(newCapacity);
+
     Obj[]  currValues             = values;
     int[]  currHashcodeOrNextFree = hashcodeOrNextFree;
-    byte[] currReferences         = references;
 
     values             = new Obj[newCapacity];
     hashcodeOrNextFree = new int[newCapacity];
     hashtable          = new int[newCapacity/2];
     buckets            = new int[newCapacity];
-    references         = new byte[newCapacity];
 
     Miscellanea.arrayCopy(currValues, values, currCapacity);
     Miscellanea.arrayCopy(currHashcodeOrNextFree, hashcodeOrNextFree, currCapacity);
-    Miscellanea.arrayCopy(currReferences, references, currCapacity);
     Miscellanea.arrayFill(hashtable, -1);
 
     for (int i=0 ; i < currCapacity ; i++)
@@ -168,6 +135,24 @@ class ObjStore {
   }
 
   public Obj surrToValue(int index) {
+    return values[index];
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  @Override
+  protected void free(int index) {
+    Miscellanea._assert(values[index] != null);
+
+    removeFromHashtable(index);
+    values[index] = null;
+    hashcodeOrNextFree[index] = firstFree;
+    count--;
+    firstFree = index;
+  }
+
+  //## THIS IS REDUNDANT
+  public Obj surrToObjValue(int index) {
     return values[index];
   }
 
