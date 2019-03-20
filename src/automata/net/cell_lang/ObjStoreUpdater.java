@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-class ObjStoreUpdater {
+class ObjStoreUpdater extends ValueStoreUpdater {
   static final int INIT_SIZE = 32;
 
   private Obj[] values     = new Obj[INIT_SIZE];

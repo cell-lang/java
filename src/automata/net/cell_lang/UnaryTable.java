@@ -161,7 +161,7 @@ class UnaryTable {
         long mask = bitmap[j];
         for (int k=0 ; k < 64 ; k++)
           if (((mask >>> k) & 1) != 0)
-            objs[next++] = store.surrToValue(k + 64 * j);
+            objs[next++] = store.surrToObjValue(k + 64 * j);
       }
     }
     Miscellanea._assert(next == count);

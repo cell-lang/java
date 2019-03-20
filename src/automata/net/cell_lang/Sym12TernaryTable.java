@@ -612,9 +612,9 @@ class Sym12TernaryTable {
       for (int iS=0 ; iS < size ; iS++) {
         int arg2 = table.arg2OrEmptyMarker(iS);
         if (arg2 != Empty) {
-          col1[next] = store12.surrToValue(table.arg1OrNext(iS));
-          col2[next] = store12.surrToValue(arg2);
-          col3[next] = store3.surrToValue(table.arg3(iS));
+          col1[next] = store12.surrToObjValue(table.arg1OrNext(iS));
+          col2[next] = store12.surrToObjValue(arg2);
+          col3[next] = store3.surrToObjValue(table.arg3(iS));
           next++;
         }
       }

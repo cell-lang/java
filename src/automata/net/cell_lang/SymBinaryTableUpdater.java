@@ -82,8 +82,8 @@ class SymBinaryTableUpdater {
       int field1 = deleteList[2 * i];
       if (field1 != 0xFFFFFFFF) {
         int field2 = deleteList[2 * i + 1];
-        Miscellanea._assert(table.store.surrToValue(field1) != null);
-        Miscellanea._assert(table.store.surrToValue(field2) != null);
+        Miscellanea._assert(table.store.surrToObjValue(field1) != null);
+        Miscellanea._assert(table.store.surrToObjValue(field2) != null);
         table.store.release(field1);
         table.store.release(field2);
       }

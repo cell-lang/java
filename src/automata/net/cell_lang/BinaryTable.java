@@ -173,17 +173,17 @@ class BinaryTable {
       for (int iS=0 ; iS < column.length ; iS++) {
         int code = column[iS];
         if (code != OverflowTable.EmptyMarker) {
-          Obj val1 = store1.surrToValue(iS);
+          Obj val1 = store1.surrToObjValue(iS);
           if (code >> 29 == 0) {
             objs1[next] = val1;
-            objs2[next++] = store2.surrToValue(code);
+            objs2[next++] = store2.surrToObjValue(code);
           }
           else {
             OverflowTable.Iter it = table.table1.overflowTable.getIter(code);
             while (!it.done()) {
               int arg2 = it.get();
               objs1[next] = val1;
-              objs2[next++] = store2.surrToValue(arg2);
+              objs2[next++] = store2.surrToObjValue(arg2);
               it.next();
             }
           }

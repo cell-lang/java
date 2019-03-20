@@ -629,9 +629,9 @@ class TernaryTable {
       for (int iS=0 ; iS < size ; iS++) {
         int field2 = table.field2OrEmptyMarker(iS);
         if (field2 != Empty) {
-          objs1[next] = store1.surrToValue(table.field1OrNext(iS));
-          objs2[next] = store2.surrToValue(field2);
-          objs3[next] = store3.surrToValue(table.field3(iS));
+          objs1[next] = store1.surrToObjValue(table.field1OrNext(iS));
+          objs2[next] = store2.surrToObjValue(field2);
+          objs3[next] = store3.surrToObjValue(table.field3(iS));
           next++;
         }
       }

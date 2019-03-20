@@ -77,8 +77,8 @@ class BinaryTableUpdater {
       int field1 = deleteList[2 * i];
       if (field1 != 0xFFFFFFFF) {
         int field2 = deleteList[2 * i + 1];
-        Miscellanea._assert(table.store1.surrToValue(field1) != null);
-        Miscellanea._assert(table.store2.surrToValue(field2) != null);
+        Miscellanea._assert(table.store1.surrToObjValue(field1) != null);
+        Miscellanea._assert(table.store2.surrToObjValue(field2) != null);
         table.store1.release(field1);
         table.store2.release(field2);
       }

@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-class IntStoreUpdater {
+class IntStoreUpdater extends ValueStoreUpdater {
   static final int INIT_SIZE = 32;
 
   private long[] values     = new long[INIT_SIZE];
@@ -54,11 +54,11 @@ class IntStoreUpdater {
   }
 
   // Inefficient, but used only for debugging
-  public long surrToValue(int surr) {
+  public Obj surrToValue(int surr) {
     for (int i=0 ; i < count ; i++)
       if (surrogates[i] == surr)
         return values[i];
-    return store.surrToValue(surr);
+    return IntObj.get(store.surrToValue(surr));
   }
 
   //////////////////////////////////////////////////////////////////////////////
