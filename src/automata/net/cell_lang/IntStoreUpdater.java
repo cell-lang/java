@@ -57,7 +57,7 @@ class IntStoreUpdater extends ValueStoreUpdater {
   public Obj surrToValue(int surr) {
     for (int i=0 ; i < count ; i++)
       if (surrogates[i] == surr)
-        return values[i];
+        return IntObj.get(values[i]);
     return IntObj.get(store.surrToValue(surr));
   }
 
