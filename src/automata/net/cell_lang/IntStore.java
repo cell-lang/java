@@ -11,7 +11,7 @@ final class IntStore extends ValueStore {
   private long[] slots = new long[INIT_SIZE];
 
   // INV_IDX when there's no value in that bucket
-  private int[] hashtable = new int[INIT_SIZE/2];
+  private int[] hashtable = new int[INIT_SIZE/4];
 
   private int count = 0;
   private int firstFree = 0;
