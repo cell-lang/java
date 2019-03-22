@@ -2,7 +2,7 @@ package net.cell_lang;
 
 
 class Index {
-  final int Empty = 0xFFFFFFFF;
+  final static int Empty = 0xFFFFFFFF;
 
   public int[] hashtable;
   public int[] buckets;

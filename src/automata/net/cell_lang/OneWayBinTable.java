@@ -82,6 +82,29 @@ class OneWayBinTable {
     return surrs;
   }
 
+  public int restrict(int surr, int[] output) {
+    if (surr >= column.length)
+      return 0;
+    int code = column[surr];
+    if (code == OverflowTable.EmptyMarker)
+      return 0;
+
+    if (code >> 29 == 0) {
+      output[0] = code;
+      return 1;
+    }
+
+    int count = overflowTable.count(code);
+    OverflowTable.Iter it = overflowTable.getIter(code);
+    int next = 0;
+    while (!it.done()) {
+      output[next++] = it.get();
+      it.next();
+    }
+    Miscellanea._assert(next == count);
+    return count;
+  }
+
   public int lookup(int surr) {
     if (surr >= column.length)
       return -1;
@@ -101,6 +124,17 @@ class OneWayBinTable {
       return 0;
     return overflowTable.count(code);
   }
+
+  // public int zeroOneMany(int surr) {
+  //   if (surr >= column.length)
+  //     return 0;
+  //   int code = column[surr];
+  //   if (code == OverflowTable.EmptyMarker)
+  //     return 0;
+  //   if (code >> 29 == 0)
+  //     return 1;
+  //   return Integer.MAX_VALUE;
+  // }
 
   public void insert(int surr1, int surr2) {
     int size = column.length;
