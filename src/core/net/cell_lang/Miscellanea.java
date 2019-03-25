@@ -12,6 +12,10 @@ import java.io.IOException;
 
 
 class Miscellanea {
+  public static int[] emptyIntArray = new int[0];
+
+  //////////////////////////////////////////////////////////////////////////////
+
   public static void performProcessEndActions() {
 
   }
@@ -391,8 +395,19 @@ class Miscellanea {
       array[i] = value;
   }
 
+  public static void arrayFill(int[] array, int offset, int count, int value) {
+    for (int i=0 ; i < count ; i++)
+      array[offset + i] = value;
+  }
+
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
+
+  public static int extend(int size, int minSize) {
+    while (size < minSize)
+      size *= 2;
+    return size;
+  }
 
   public static boolean isHexDigit(byte b) {
     char ch = (char) b;
