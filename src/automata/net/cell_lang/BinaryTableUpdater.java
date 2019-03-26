@@ -4,13 +4,11 @@ import java.util.function.IntPredicate;
 
 
 class BinaryTableUpdater {
-  static int[] emptyArray = new int[0];
-
   int deleteCount = 0;
-  int[] deleteList = emptyArray;
+  int[] deleteList = Miscellanea.emptyIntArray;
 
   int insertCount = 0;
-  int[] insertList = emptyArray;
+  int[] insertList = Miscellanea.emptyIntArray;
 
   enum Ord {ORD_NONE, ORD_12, ORD_21};
   Ord currOrd = Ord.ORD_NONE;
@@ -92,9 +90,9 @@ class BinaryTableUpdater {
     insertCount = 0;
 
     if (deleteList.length > 2 * 1024)
-      deleteList = emptyArray;
+      deleteList = Miscellanea.emptyIntArray;
     if (insertList.length > 2 * 1024)
-      insertList = emptyArray;
+      insertList = Miscellanea.emptyIntArray;
 
     currOrd = Ord.ORD_NONE;
   }
