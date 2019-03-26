@@ -51,7 +51,7 @@ class ColumnUpdater {
     if (!updateMap.hasKey(index))
       Miscellanea.softFail();
 
-    updateMap.set(index, value);
+    updateMap.insert(index, value);
     if (index > maxIndex)
       maxIndex = index;
 
@@ -85,9 +85,10 @@ class ColumnUpdater {
       column[idx] = null;
     }
 
-    for (int it = updateMap.iter() ; !updateMap.done(it) ; it = updateMap.next(it)) {
-      int index = updateMap.key(it);
-      Obj value = updateMap.value(it);
+    int count = updateMap.count();
+    for (int i=0 ; i < count ; i++) {
+      int index = updateMap.keyAt(i);
+      Obj value = updateMap.valueAt(i);
       column[index] = value;
     }
   }
@@ -99,7 +100,7 @@ class ColumnUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public void reset() {
-    updateMap.reset();
+    updateMap.clear();
     flagged.clear();
     waitingForDelete = 0;
     maxIndex = -1;
@@ -130,8 +131,9 @@ class ColumnUpdater {
   // bin_rel(a, _) -> unary_rel(a);
   public boolean checkForeignKeys_1(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
-    for (int it = updateMap.iter() ; !updateMap.done(it) ; it = updateMap.next(it))
-      if (!target.contains(updateMap.key(it)))
+    int count = updateMap.count();
+    for (int i=0 ; i < count ; i++)
+      if (!target.contains(updateMap.keyAt(i)))
         return false;
 
     // Checking that no entries were invalidated by a deletion on the target table
