@@ -1,16 +1,13 @@
 package net.cell_lang;
 
-import java.util.HashMap;
 
-
-public class SurrObjMap {
+public class IntIdxMap {
   private static final int INIT_SIZE = 32;
 
   int count = 0;
   int hashRange = 0;
 
   long[] keychains = new long[INIT_SIZE];
-  Obj[]  values    = new Obj[INIT_SIZE];
   int[]  hashtable = new int[INIT_SIZE / 2];
 
   //////////////////////////////////////////////////////////////////////////////
@@ -19,7 +16,16 @@ public class SurrObjMap {
     long slot = (((long) next) << 32) | (long) value;
     Miscellanea._assert(slotValue(slot) == value);
     Miscellanea._assert(nextSlot(slot) == next);
+    Miscellanea._assert(slotFlags(slot) == 0);
     return slot;
+  }
+
+  private long setFlags(long slot, int flags) {
+    long newSlot = (slot & 0x1FFFFFFFFFFFFFFFL) | flags;
+    Miscellanea._assert(slotValue(newSlot) == slotValue(slot));
+    Miscellanea._assert(nextSlot(newSlot) == nextSlot(slot));
+    Miscellanea._assert(slotFlags(newSlot) == flags);
+    return newSlot;
   }
 
   private int slotValue(long slot) {
@@ -27,22 +33,26 @@ public class SurrObjMap {
   }
 
   private int nextSlot(long slot) {
-    return (int) (slot >>> 32);
+    return (int) ((slot >>> 32) & 0x1FFFFFFFL);
+  }
+
+  private int slotFlags(long slot) {
+    return (int) (slot >> 61);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public SurrObjMap() {
+  protected IntIdxMap() {
     Miscellanea.arrayFill(hashtable, -1);
   }
 
-  public void insert(int key, Obj value) {
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void insertKey(int key) {
     Miscellanea._assert(!hasKey(key));
 
     if (count == keychains.length)
       resize();
-
-    values[count] = value;
 
     if (count < 16) {
       Miscellanea._assert(hashRange == 0);
@@ -58,6 +68,11 @@ public class SurrObjMap {
     }
   }
 
+  public void setFlags(int index, int flags) {
+    Miscellanea._assert(index < count);
+    keychains[index] = setFlags(keychains[index], flags);
+  }
+
   public void clear() {
     //## TODO: RESET IF THE THING HAS BECOME TOO LARGE
     if (hashRange != 0)
@@ -66,11 +81,17 @@ public class SurrObjMap {
     hashRange = 0;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   public boolean hasKey(int key) {
+    return index(key) != -1;
+  }
+
+  public int index(int key) {
     if (hashRange == 0) {
       for (int i=0 ; i < count ; i++)
         if (keychains[i] == key)
-          return true;
+          return i;
     }
     else {
       int hashIdx = Integer.remainderUnsigned(key, hashRange);
@@ -78,11 +99,11 @@ public class SurrObjMap {
       while (idx != -1) {
         long slot = keychains[idx];
         if (slotValue(slot) == key)
-          return true;
+          return idx;
         idx = nextSlot(slot);
       }
     }
-    return false;
+    return -1;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -100,13 +121,10 @@ public class SurrObjMap {
 
     int newSize = 2 * count;
     long[] currKeychains = keychains;
-    Obj[]  currValues    = values;
 
     keychains = new long[newSize];
-    values    = new Obj[newSize];
     hashtable = new int[newSize / 2];
 
-    Miscellanea.arrayCopy(currValues, values, count);
     Miscellanea.arrayFill(hashtable, -1);
 
     hashRange = count;
@@ -124,7 +142,7 @@ public class SurrObjMap {
     return slotValue(keychains[idx]);
   }
 
-  public Obj valueAt(int idx) {
-    return values[idx];
+  public int flagsAt(int idx) {
+    return slotFlags(keychains[idx]);
   }
 }

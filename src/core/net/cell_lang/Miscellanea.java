@@ -403,11 +403,38 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
+  public static int[] arrayExtend(int[] array, int newSize) {
+    _assert(newSize > array.length);
+    int[] newArray = new int[newSize];
+    Miscellanea.arrayCopy(array, newArray, array.length);
+    return newArray;
+  }
+
+  public static long[] arrayExtend(long[] array, int newSize) {
+    _assert(newSize > array.length);
+    long[] newArray = new long[newSize];
+    Miscellanea.arrayCopy(array, newArray, array.length);
+    return newArray;
+  }
+
+  public static Obj[] arrayExtend(Obj[] array, int newSize) {
+    _assert(newSize > array.length);
+    Obj[] newArray = new Obj[newSize];
+    Miscellanea.arrayCopy(array, newArray, array.length);
+    return newArray;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
   public static int extend(int size, int minSize) {
     while (size < minSize)
       size *= 2;
     return size;
   }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
 
   public static boolean isHexDigit(byte b) {
     char ch = (char) b;

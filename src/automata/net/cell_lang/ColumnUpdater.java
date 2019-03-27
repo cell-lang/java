@@ -15,7 +15,7 @@ import java.util.function.IntPredicate;
 
 
 class ColumnUpdater {
-  SurrObjMap updateMap = new SurrObjMap();
+  IntObjMap updateMap = new IntObjMap();
   SurrSet flagged = new SurrSet();
   int waitingForDelete = 0;
   int maxIndex = -1;
@@ -80,7 +80,7 @@ class ColumnUpdater {
       colSetter.set(newCol);
     }
 
-    for (int it = flagged.iter() ; !flagged.done(it) ; it = flagged.next(it)) {
+    for (int it = flagged.first() ; !flagged.done(it) ; it = flagged.next(it)) {
       int idx = flagged.value(it);
       column[idx] = null;
     }
