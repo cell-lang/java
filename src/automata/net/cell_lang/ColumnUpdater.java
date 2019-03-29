@@ -48,7 +48,7 @@ class ColumnUpdater {
   }
 
   public void insert(int index, Obj value) {
-    if (!updateMap.hasKey(index))
+    if (updateMap.hasKey(index))
       Miscellanea.softFail();
 
     updateMap.insert(index, value);
