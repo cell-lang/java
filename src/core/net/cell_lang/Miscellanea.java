@@ -451,11 +451,11 @@ class Miscellanea {
   }
 
   public static int hashcode(int n1, int n2) {
-    return n1 ^ n2;
+    return Utils.hash6432shift(n1, n2);
   }
 
   public static int hashcode(int n1, int n2, int n3) {
-    return n1 ^ n2 ^ n3;
+    return Utils.jenkinsHash(n1, n2, n3);
   }
 
   public static int[] codePoints(String str) {
