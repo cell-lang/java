@@ -39,6 +39,41 @@ class Algs {
     return -1;
   }
 
+  // If the element exists, return its index
+  // Otherwise, return the -(I + 1) where I is the index of
+  // the first element that is greater than the searched one
+  public static int binSearchEx(Obj[] objs, int first, int count, Obj obj) {
+    int idx = _binSearchEx(objs, first, count, obj);
+    if (idx >= 0) {
+      Miscellanea._assert(objs[idx].isEq(obj));
+    }
+    else {
+      int insIdx = -idx - 1;
+      Miscellanea._assert(insIdx >= first & insIdx <= first + count);
+      Miscellanea._assert(insIdx == first || objs[insIdx-1].quickOrder(obj) < 0);
+      Miscellanea._assert(insIdx == first + count || obj.quickOrder(objs[insIdx]) <= 0);
+    }
+    return idx;
+  }
+
+  public static int _binSearchEx(Obj[] objs, int first, int count, Obj obj) {
+    int low = first;
+    int high = first + count - 1;
+
+    while (low <= high) {
+      int mid = (int) (((long) low + (long) high) / 2);
+      int res = obj.quickOrder(objs[mid]);
+      if (res == -1)
+        high = mid - 1; // objs[mid] > obj
+      else if (res == 1)
+        low = mid + 1;  // objs[mid] < obj
+      else
+        return mid;
+    }
+
+    return -low - 1;
+  }
+
   public static int[] binSearchRange(Obj[] objs, int offset, int length, Obj obj) {
     int first;
 

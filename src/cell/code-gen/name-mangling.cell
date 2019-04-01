@@ -76,13 +76,13 @@ String native_var_decl_name(MembIntVectVar v) =
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-String native_var_name(VecVar v)          = "vec" & printed(v.id);
-String native_var_name(ArrayVar var)      = "y" & printed(var.id) & "_" & native_type(var.repr);
-String native_var_name(SeqItVar v)        = "seqIt" & printed(bare_id_2(v));
-String native_var_name(SetItVar v)        = "setIt" & printed(bare_id_2(v));
-String native_var_name(BinRelItVar v)     = "binRelIt" & printed(bare_id_2(v));
-String native_var_name(TernRelItVar v)    = "ternRelIt" & printed(bare_id_2(v));
-String native_var_name(StreamVar v)       = "stream" & printed(bare_id_2(v));
+String native_var_name(VecVar v)        = "vec" & printed(v.id);
+String native_var_name(ArrayVar var)    = "y" & printed(var.id) & "_" & native_type(var.repr);
+String native_var_name(SeqItVar v)      = "seqIt" & printed(bare_id_2(v));
+String native_var_name(SetItVar v)      = "setIt" & printed(bare_id_2(v));
+String native_var_name(BinRelItVar v)   = "binRelIt" & printed(bare_id_2(v));
+String native_var_name(TernRelItVar v)  = "ternRelIt" & printed(bare_id_2(v));
+String native_var_name(StreamVar v)     = "stream" & printed(bare_id_2(v));
 
 String native_var_name(TableItVar v) {
   prefix = match (v.arity, v.symmetric)
@@ -369,6 +369,13 @@ String pending_updates_var_type(Table table) =
     2,  true    = "SymBinaryTableUpdater",
     3,  false   = "TernaryTableUpdater",
     3,  true    = "Sym12TernaryTableUpdater";
+
+String native_name(ValueStoreType) =
+  integer               |
+  mono_tagged_integer() = "IntStore",
+  object                = "ObjStore";
+
+String native_updater_type(ValueStoreType vs) = native_name(vs) & "Updater";
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

@@ -198,8 +198,8 @@ abstract class Obj implements Comparable<Obj> {
     return collObjData(size, hashcode);
   }
 
-  protected static long binRelObjData(int size, long hashcode) {
-    return collObjData(size, hashcode);
+  protected static long binRelObjData(int size) {
+    return collObjData(size, 0);
   }
 
   protected static long ternRelObjData(int size, long hashcode) {
@@ -323,6 +323,9 @@ abstract class Obj implements Comparable<Obj> {
 
   public BinRelIter getBinRelIterByCol1(Obj obj)        {throw Miscellanea.internalFail(this);}
   public BinRelIter getBinRelIterByCol2(Obj obj)        {throw Miscellanea.internalFail(this);}
+
+  public Obj setKeyValue(Obj key, Obj value)            {throw Miscellanea.internalFail(this);}
+  public Obj removeKey(Obj key)                         {throw Miscellanea.internalFail(this);}
 
   //////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Ternary relation operations ////////////////////////

@@ -12,6 +12,7 @@ import java.io.IOException;
 
 
 class Miscellanea {
+  public static Obj[] emptyObjArray = new Obj[0];
   public static int[] emptyIntArray = new int[0];
 
   //////////////////////////////////////////////////////////////////////////////

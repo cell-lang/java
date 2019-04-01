@@ -75,7 +75,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     get_table_iter()      = (native_get_table_iter_code(instr.it_var, instr.table, instr.args)),
     // set_table()           = (native_set_table_code(instr.relvar, instr.table, instr.state, instr.perm)),
     queue_deletes()       = (native_queue_deletes_code(instr.table_var, instr.args, instr.symmetric)),
-    queue_insert_value()  = (native_method_call(instr.res_var, aux_struct_var_ref_name(instr.store), "insert", (instr.value))),
+    // queue_insert_value()  = (native_method_call(instr.res_var, aux_struct_var_ref_name(instr.store), "insert", (instr.value))),
     lookup_or_queue_insert_value()  = (native_method_call(instr.res_var, aux_struct_var_ref_name(instr.store), "lookupOrInsertValue", (instr.value))),
     queue_insert_tuple()  = (native_queue_insert_tuple_code(instr.table_var, instr.tuple)),
 
@@ -83,7 +83,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     immediate_insert_tuple()      = native_immediate_insert_tuple(instr.table_var, instr.tuple);
 
 
-  String* native_immediate_insert_or_add_ref(Int32Var res_var, ValueStoreId store, AtomicExpr value) {
+  String* native_immediate_insert_or_add_ref(Int32Var res_var, ValueStoreId store, <AtomicExpr, IntExpr> value) {
     return (native_method_call(res_var, store, "insertOrAddRef", (value)));
   }
 

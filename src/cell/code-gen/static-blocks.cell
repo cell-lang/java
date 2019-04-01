@@ -2,7 +2,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String* native_static_block_decl(StaticBlock block) {
     links_decls = (native_name(l) & " *linkedAuto" & printed(i) & ";" : l @ i <- block.links);
     state_vars_decls = ["public Obj " & native_var_decl_name(v) & ";" : v, unused_var <- block.state_vars];
-    value_store_decls = ["public ObjStore " & native_var_decl_name(v) & " = new ObjStore();" : v <- block.value_stores];
+    value_store_decls = [{
+      type = native_name(t);
+      return "public " & type & " " & native_var_decl_name(v) & " = new " & type & "();";
+    } : v, t <- block.value_stores];
     table_decls = ["public " & native_table_type(t) & " " & native_var_decl_name(v) & ";" : v, t <- block.tables];
     nested_blocks_decls = ["public " & native_name(t) & " " & native_var_decl_name(v) & ";" : v, t <- block.nested_blocks];
 
@@ -188,7 +191,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     );
 
     aux_stores_decls = (
-      "public ObjStoreUpdater " & aux_struct_var_decl_name(vs) & ";" : vs <- isort(block.value_stores)
+      "public " & native_updater_type(t) & " " & aux_struct_var_decl_name(vs) & ";"
+      : vs, t <- isort(block.value_stores)
     );
 
     aux_tables_decls = (
@@ -220,8 +224,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     bool_vars_init_code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- bool_vars_ids);
 
     value_stores_init_code = (
-      native_new_call(aux_struct_var_ref_name(vs), "ObjStoreUpdater", (vs))
-      : vs <- isort(block.value_stores)
+      native_new_call(aux_struct_var_ref_name(vs), native_updater_type(t), (vs))
+      : vs, t <- isort(block.value_stores)
     );
 
     tables_init_code = ({
@@ -258,7 +262,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     bool_vars_reset_code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- bool_vars_ids);
 
     value_stores_reset_code = (
-      native_method_call(aux_struct_var_ref_name(vs), "reset", ()) : vs <- isort(block.value_stores)
+      native_method_call(aux_struct_var_ref_name(vs), "reset", ()) : vs, unused_var <- isort(block.value_stores)
     );
 
     tables_reset_code = (

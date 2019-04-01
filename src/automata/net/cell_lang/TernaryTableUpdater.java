@@ -221,7 +221,7 @@ class TernaryTableUpdater {
     while (!it.done()) {
       // Tuples in the [idx, idx+count) range are sorted in both 1/2/3
       // and 2/3/1 order, since the first argument is always the same
-      if (!Ints231.contains23(deleteList, idx, count, it.get2(), it.get3()))
+      if (!Ints231.contains23(deleteList, idx, count, it.get2(), it.get3())) //## BUG BUG BUG
         return true;
       it.next();
     }
@@ -247,7 +247,7 @@ class TernaryTableUpdater {
     while (!it.done()) {
       // Tuples in the [idx, idx+count) range are sorted in both 2/3/1
       // and 3/1/2 order, since the second argument is always the same
-      if (!Ints312.contains13(deleteList, idx, count, it.get1(), it.get3()))
+      if (!Ints312.contains13(deleteList, idx, count, it.get1(), it.get3())) //## BUG BUG BUG
         return true;
       it.next();
     }
@@ -299,7 +299,7 @@ class TernaryTableUpdater {
     while (!it.done()) {
       // Tuples in the [idx, idx+count) range are sorted in both 1/2/3
       // and 3/1/2 order, since the first two arguments are the same
-      if (!Ints312.contains3(deleteList, idx, count, it.get3()))
+      if (!Ints312.contains3(deleteList, idx, count, it.get3())) //## BUG BUG BUG
         return true;
       it.next();
     }
@@ -325,7 +325,7 @@ class TernaryTableUpdater {
     while (!it.done()) {
       // Tuples in the [idx, idx+count) range are sorted in both 3/1/2
       // and 2/3/1 order, since the first and last argument are the same
-      if (!Ints231.contains2(deleteList, idx, count, it.get2()))
+      if (!Ints231.contains2(deleteList, idx, count, it.get2())) //## BUG BUG BUG
         return true;
       it.next();
     }
@@ -350,7 +350,7 @@ class TernaryTableUpdater {
     TernaryTable.Iter it = table.getIter23(surr2, surr3);
     while (!it.done()) {
       // Tuples in the [idx, idx+count) range are sorted in any order, since two arguments are the same
-      if (!Ints123.contains1(deleteList, idx, count, it.get1()))
+      if (!Ints123.contains1(deleteList, idx, count, it.get1())) //## BUG BUG BUG
         return true;
       it.next();
     }

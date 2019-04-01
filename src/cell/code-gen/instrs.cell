@@ -222,6 +222,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     join_seqs()                 = native_method_call(var, expr.left, "concat",        (expr.right)),
     rev_seq()                   = native_method_call(var, expr.seq,  "reverse",       ()),
     internal_sort()             = native_method_call(var, expr.set,  "internalSort",  ()),
+    set_key_value()             = native_method_call(var, expr.map,  "setKeyValue",   (expr.key, expr.value)),
+    drop_key()                  = native_method_call(var, expr.map,  "dropKey",       (expr.key)),
     parse_value()               = native_static_call(var, "parse",                    (expr.value)),
     print_value()               = native_method_call(var, expr.value,"printed",       ()),
     _                           = auto_expr_native_code(expr, var);

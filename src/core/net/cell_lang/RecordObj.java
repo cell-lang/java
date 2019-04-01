@@ -13,17 +13,27 @@ class RecordObj extends NeBinRelObj {
     for (int i=1 ; i < labels.length ; i++)
       Miscellanea._assert(SymbTable.compSymbs(labels[i-1], labels[i]) == 1);
 
-    int size = labels.length;
-    long hashcode = 0;
-    for (int i=0 ; i < size ; i++)
-      hashcode += symbObjData(labels[i]) + values[i].data;
-    data = binRelObjData(size, hashcode);
+    data = binRelObjData(labels.length);
     extraData = neBinRelObjExtraData();
 
     this.labels = labels;
     col2 = values;
     isMap = true;
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public Obj setKeyValue(Obj key, Obj value) {
+    int size = labels.length;
+    Obj[] keys = new Obj[size];
+    for (int i=0 ; i < size ; i++)
+      keys[i] = SymbObj.get(labels[i]);
+    NeTreapMapObj treap = new NeTreapMapObj(keys, col2, 0, size);
+    return treap.setKeyValue(key, value);
+  }
+
+  // public Obj removeKey(Obj key) {
+  // }
 
   //////////////////////////////////////////////////////////////////////////////
 

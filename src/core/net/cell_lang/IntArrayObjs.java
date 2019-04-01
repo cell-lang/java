@@ -50,6 +50,11 @@ class IntArrayObjs {
     return new UnsignedByteArrayObj(data);
   }
 
+  static UnsignedByteArrayObj createUnsigned(byte[] data, int length) {
+    Miscellanea._assert(length > 0);
+    return new UnsignedByteArrayObj(Arrays.copyOf(data, length));
+  }
+
   static IntArraySliceObj createRightPadded(long value) {
     return PaddedIntArray.create(value);
   }
@@ -149,9 +154,10 @@ abstract class IntArrayObjBase extends NeIntSeqObj {
 
 final class IntArrayObj extends IntArrayObjBase {
   public IntArrayObj(long[] elts) {
-    int len = elts.length;
-    long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
-    data = seqObjData(len, hashcode);
+    // int len = elts.length;
+    // long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(elts.length, 0);
     extraData = neSeqObjExtraData();
     longs = elts;
   }
@@ -202,8 +208,9 @@ final class IntArraySliceObj extends IntArrayObjBase {
 
 
   public IntArraySliceObj(PaddedIntArray source, long[] elts, int offset, int len) {
-    long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
-    data = seqObjData(len, hashcode);
+    // long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(len, 0);
     extraData = neSeqObjExtraData();
     longs = elts;
     this.offset = offset;
@@ -282,7 +289,7 @@ final class PaddedIntArray {
     return new IntArraySliceObj(this, buffer, offset, length);
   }
 
-  public synchronized IntArraySliceObj append(int idx, long value) {
+  public /*synchronized*/ IntArraySliceObj append(int idx, long value) {
     if (idx == buffer.length) {
       // We run out of space, expanding the array buffer
       int size = buffer.length;
@@ -317,7 +324,7 @@ final class PaddedIntArray {
     }
   }
 
-  public synchronized IntArraySliceObj concat(int idx, NeIntSeqObj seq) {
+  public /*synchronized*/ IntArraySliceObj concat(int idx, NeIntSeqObj seq) {
     int seqLen = seq.getSize();
     int newLen = idx + seqLen;
 
@@ -437,9 +444,10 @@ abstract class ByteArrayObjBase extends IntArrayObjBase {
 
 final class ByteArrayObj extends ByteArrayObjBase {
   protected ByteArrayObj(byte[] elts) {
-    int len = elts.length;
-    long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
-    data = seqObjData(len, hashcode);
+    // int len = elts.length;
+    // long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(elts.length, 0);
     extraData = neSeqObjExtraData();
     bytes = elts;
   }
@@ -452,8 +460,9 @@ final class ByteArrayObj extends ByteArrayObjBase {
 
 final class ByteArraySliceObj extends ByteArrayObjBase {
   public ByteArraySliceObj(byte[] elts, int offset, int len) {
-    long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
-    data = seqObjData(len, hashcode);
+    // long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(len, 0);
     extraData = neSeqObjExtraData();
     bytes = elts;
     this.offset = offset;
@@ -516,14 +525,15 @@ abstract class UnsignedByteArrayObjBase extends IntArrayObjBase {
 
 final class UnsignedByteArrayObj extends UnsignedByteArrayObjBase {
   protected UnsignedByteArrayObj(byte[] elts) {
-    int len = elts.length;
-    long hashcode = unsigned(elts[0]);
-    if (len > 1) {
-      hashcode += unsigned(elts[len-1]);
-      if (len > 2)
-        hashcode += unsigned(elts[len/2]);
-    }
-    data = seqObjData(len, hashcode);
+    // int len = elts.length;
+    // long hashcode = unsigned(elts[0]);
+    // if (len > 1) {
+    //   hashcode += unsigned(elts[len-1]);
+    //   if (len > 2)
+    //     hashcode += unsigned(elts[len/2]);
+    // }
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(elts.length, 0);
     extraData = neSeqObjExtraData();
     bytes = elts;
   }
@@ -536,13 +546,14 @@ final class UnsignedByteArrayObj extends UnsignedByteArrayObjBase {
 
 final class UnsignedByteArraySliceObj extends UnsignedByteArrayObjBase {
   public UnsignedByteArraySliceObj(byte[] elts, int offset, int len) {
-    long hashcode = unsigned(elts[offset]);
-    if (len > 1) {
-      hashcode += unsigned(elts[offset+len-1]);
-      if (len > 2)
-        hashcode += unsigned(elts[offset+len/2]);
-    }
-    data = seqObjData(len, hashcode);
+    // long hashcode = unsigned(elts[offset]);
+    // if (len > 1) {
+    //   hashcode += unsigned(elts[offset+len-1]);
+    //   if (len > 2)
+    //     hashcode += unsigned(elts[offset+len/2]);
+    // }
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(len, 0);
     extraData = neSeqObjExtraData();
     bytes = elts;
     this.offset = offset;
@@ -599,9 +610,10 @@ abstract class ShortArrayObjBase extends IntArrayObjBase {
 
 final class ShortArrayObj extends ShortArrayObjBase {
   protected ShortArrayObj(short[] elts) {
-    int len = elts.length;
-    long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
-    data = seqObjData(len, hashcode);
+    // int len = elts.length;
+    // long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(elts.length, 0);
     extraData = neSeqObjExtraData();
     shorts = elts;
   }
@@ -614,8 +626,9 @@ final class ShortArrayObj extends ShortArrayObjBase {
 
 final class ShortArraySliceObj extends ShortArrayObjBase {
   public ShortArraySliceObj(short[] elts, int offset, int len) {
-    long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
-    data = seqObjData(len, hashcode);
+    // long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(len, 0);
     extraData = neSeqObjExtraData();
     shorts = elts;
     this.offset = offset;
@@ -672,9 +685,10 @@ abstract class Int32ArrayObjBase extends IntArrayObjBase {
 
 final class Int32ArrayObj extends Int32ArrayObjBase {
   protected Int32ArrayObj(int[] elts) {
-    int len = elts.length;
-    long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
-    data = seqObjData(len, hashcode);
+    // int len = elts.length;
+    // long hashcode = elts[0] + (len > 2 ? elts[len/2] : 0) + (len > 1 ? elts[len-1] : 0);
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(elts.length, 0);
     extraData = neSeqObjExtraData();
     ints = elts;
   }
@@ -687,8 +701,9 @@ final class Int32ArrayObj extends Int32ArrayObjBase {
 
 final class Int32ArraySliceObj extends Int32ArrayObjBase {
   public Int32ArraySliceObj(int[] elts, int offset, int len) {
-    long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
-    data = seqObjData(len, hashcode);
+    // long hashcode = elts[offset] + (len > 2 ? elts[offset+len/2] : 0) + (len > 1 ? elts[offset+len-1] : 0);
+    // data = seqObjData(len, hashcode);
+    data = seqObjData(len, 0);
     extraData = neSeqObjExtraData();
     ints = elts;
     this.offset = offset;

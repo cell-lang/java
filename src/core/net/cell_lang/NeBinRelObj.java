@@ -16,11 +16,7 @@ class NeBinRelObj extends Obj {
     Miscellanea._assert(col1.length > 0);
     Miscellanea._assert(col1.length == col2.length);
 
-    int size = col1.length;
-    long hashcode = 0;
-    for (int i=0 ; i < size ; i++)
-      hashcode += col1[i].data + col2[i].data;
-    data = binRelObjData(size, hashcode);
+    data = binRelObjData(col1.length);
     extraData = neBinRelObjExtraData();
 
     this.col1 = col1;
@@ -31,6 +27,20 @@ class NeBinRelObj extends Obj {
   protected NeBinRelObj() {
 
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public Obj setKeyValue(Obj key, Obj value) {
+    if (isMap) {
+      NeTreapMapObj treap = new NeTreapMapObj(col1, col2, 0, col1.length);
+      return treap.setKeyValue(key, value);
+    }
+    else
+      throw Miscellanea.internalFail(this);
+  }
+
+  // public Obj removeKey(Obj key) {
+  // }
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -125,6 +135,9 @@ class NeBinRelObj extends Obj {
     Miscellanea._assert(getSize() == other.getSize());
 
     if (other instanceof RecordObj)
+      return -other.internalOrder(this);
+
+    if (other instanceof NeTreapMapObj)
       return -other.internalOrder(this);
 
     NeBinRelObj otherRel = (NeBinRelObj) other;
