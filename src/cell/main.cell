@@ -240,22 +240,18 @@ Int Main(String* args) {
     ok = FileWrite("dump-code.txt", chars(_print_(code)));
   ;
 
-  opt_code_1 = compiled_prg(
-    typedefs:       code.typedefs,
-    opt_reprs:      code.opt_reprs,
-    bool_procs:     code.bool_procs,
-    procs:          [remove_dead_code(pd) : pd <- code.procs],
-    react_blocks:   [remove_dead_code(b)  : b  <- code.react_blocks],
-    static_blocks:  [remove_dead_code(b)  : b <- code.static_blocks],
-    int_seqs:       code.int_seqs
-  );
+  opt_code_1 = remove_dead_code(code);
+  opt_code_2 = merge_instrs(opt_code_1);
+  opt_code_3 = remove_dead_code(opt_code_2);
+  opt_code_4 = optimize_array_init(opt_code_3);
+
   t7 = _ticks_(:any_value_will_do);
   Print("Dead code removed\n");
   if wait_for_key:
     unused_var = GetChar();
   ;
 
-  opt_code = optimize_compiled_code(opt_code_1);
+  opt_code = optimize_compiled_code(opt_code_4);
 
   if print_intermediate:
     ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));

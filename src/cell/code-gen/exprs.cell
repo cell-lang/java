@@ -71,8 +71,8 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
 
     // is_gt()               = native_nary_op(" > ",  (expr.expr1, expr.expr2), parenthesized),
     // is_ge()               = native_nary_op(" >= ", (expr.expr1, expr.expr2), parenthesized),
-    is_lt()               = native_nary_op(" < ",  (expr.expr1, expr.expr2), parenthesized),
-    is_le()               = native_nary_op(" <= ", (expr.expr1, expr.expr2), parenthesized),
+    is_lt(e1?, e2?)       = native_nary_op(" < ",  (e1, e2), parenthesized),
+    is_le(e1?, e2?)       = native_nary_op(" <= ", (e1, e2), parenthesized),
 
 
     is_flt(e1?, e2?)      = native_nary_op(" < ",  (e1, e2), parenthesized),
@@ -185,7 +185,7 @@ String native_neq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   _,                  _                 = parenthesize("!" & native_eq_expr(expr1, expr2, true), parenthesized);
 
 
-String native_expr(IntExpr expr) = native_expr(expr, false);
+String native_expr(<IntExpr, Int32Var, Int32NatOp> expr) = native_expr(expr, false);
 
 
 String native_expr(Int value, Bool parenthesized) {
@@ -203,17 +203,18 @@ String native_expr(IntVar expr, Bool parenthesized) = native_var_ref_name(expr);
 String native_expr(IntNatOp expr, Bool parenthesized) =
   get_int_val(e?)       = native_get_int_val_expr(e, parenthesized),
   minus(e?)             = "-" & native_expr(e, true),
-  add()                 = native_nary_op(" + ", (expr.val1, expr.val2), parenthesized),
-  sub()                 = native_nary_op(" - ", (expr.val1, expr.val2), parenthesized),
-  mult()                = native_nary_op(" * ", (expr.val1, expr.val2), parenthesized),
-  div()                 = native_nary_op(" / ", (expr.val1, expr.val2), parenthesized),
-  mod()                 = native_nary_op(" % ", (expr.val1, expr.val2), parenthesized),
+  add(e1?, e2?)         = native_nary_op(" + ", (e1, e2), parenthesized),
+  sub(e1?, e2?)         = native_nary_op(" - ", (e1, e2), parenthesized),
+  mult(e1?, e2?)        = native_nary_op(" * ", (e1, e2), parenthesized),
+  div(e1?, e2?)         = native_nary_op(" / ", (e1, e2), parenthesized),
+  mod(e1?, e2?)         = native_nary_op(" % ", (e1, e2), parenthesized),
   bitwise_and(e1?, e2?) = native_nary_op(" & ", (e1, e2), parenthesized),
   bitwise_or(e1?, e2?)  = native_nary_op(" | ", (e1, e2), parenthesized),
   bitwise_xor(e1?, e2?) = native_nary_op(" ^ ", (e1, e2), parenthesized),
   float_bits(e?)        = native_expr(e) & ".floatBits()",
   mantissa(e?)          = "Miscellanea.mantissa(" & native_expr(e) & ")",
   dec_exp(e?)           = "Miscellanea.decimalExponent(" & native_expr(e) & ")",
+  upcast_int32(e?)      = parenthesize("(long) " & native_expr(e, true), parenthesized),
 
   surr_to_int_value()   = native_method_call_expr(expr.store, "surrToValue", (expr.surrogate)),
 

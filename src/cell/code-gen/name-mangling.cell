@@ -22,7 +22,7 @@
 //  V     StdVar, env. + ImplArg, internal var + description
 //  W
 //  X     update_source_var()
-//  Y
+//  Y     shadow_array_var()
 //  Z
 
 
@@ -77,12 +77,15 @@ String native_var_decl_name(MembIntVectVar v) =
 /////////////////////////////////////////////////////////////////////////////////////
 
 String native_var_name(VecVar v)        = "vec" & printed(v.id);
-String native_var_name(ArrayVar var)    = "y" & printed(var.id) & "_" & native_type(var.repr);
 String native_var_name(SeqItVar v)      = "seqIt" & printed(bare_id_2(v));
 String native_var_name(SetItVar v)      = "setIt" & printed(bare_id_2(v));
 String native_var_name(BinRelItVar v)   = "binRelIt" & printed(bare_id_2(v));
 String native_var_name(TernRelItVar v)  = "ternRelIt" & printed(bare_id_2(v));
 String native_var_name(StreamVar v)     = "stream" & printed(bare_id_2(v));
+
+String native_var_name(ArrayVar var) =
+  avar()              = "y" & printed(var.id) & "_" & native_type(var.repr),
+  shadow_array_var()  = printed(var.id) & "_Y_" & native_type(var.repr);
 
 String native_var_name(TableItVar v) {
   prefix = match (v.arity, v.symmetric)
@@ -197,8 +200,9 @@ String native_var_name(IntVar v, Bool add_prefix) {
 
 
 String native_var_name(Int32Var, Bool add_prefix) =
-  ivar32(n?)          = "i" & printed(n),
-  shadow_surr_var(v?) = _print_(bare_id(v)) & "_Vs";
+  ivar32(n?)                = "i" & printed(n),
+  shadow_surr_var(v?)       = _print_(bare_id(v)) & "_Vs",
+  shadow_array_size_var(s?) = _print_(s) & "_Yc";
 
 
 String native_var_name(FloatVar v, Bool add_prefix) =

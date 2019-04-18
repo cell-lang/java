@@ -99,13 +99,17 @@ class Builder {
   }
 
   public static Obj createTaggedObj(int tag, Obj obj) {
+    if (obj.isInt())
+      return createTaggedIntObj(tag, obj.getLong());
+
     if (tag == SymbTable.StringSymbId)
       obj = obj.packForString();
+
     return new TaggedObj(tag, obj);
   }
 
   public static Obj createTaggedIntObj(int tag, long value) {
-    return new TaggedObj(tag, IntObj.get(value));
+    return TaggedIntObj.fits(value) ? new TaggedIntObj(tag, value) : new TaggedObj(tag, IntObj.get(value));
   }
 
   //////////////////////////////////////////////////////////////////////////////

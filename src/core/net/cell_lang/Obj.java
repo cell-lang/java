@@ -80,7 +80,7 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final boolean isTagged() {
-    return extraData >= refTagObjId;
+    return extraData == tagIntObjId | extraData >= refTagObjId;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -190,8 +190,8 @@ abstract class Obj implements Comparable<Obj> {
     return packedHashcode(hashcode) | size;
   }
 
-  protected static long seqObjData(int length, long hashcode) {
-    return collObjData(length, hashcode);
+  protected static long seqObjData(int length) {
+    return collObjData(length, 0);
   }
 
   protected static long setObjData(int size, long hashcode) {
@@ -209,6 +209,11 @@ abstract class Obj implements Comparable<Obj> {
   // 32 bit hash code - 16 bit 0 padding - 16 bit tag id
   protected static long tagObjData(int tag, long hashcode) {
     return packedHashcode(hashcode) | (tag & 0xFFFF);
+  }
+
+  // 48 bit value - 16 bit tag id
+  protected static long tagIntObjData(int tag, long value) {
+    return value << 16 | (long) (tag & 0xFFFF);
   }
 
   // 32 bit hash code - 16 bit optional field mask - 16 bit tag id
@@ -229,6 +234,7 @@ abstract class Obj implements Comparable<Obj> {
   private static final int floatObjId           = 4;
   private static final int emptySeqObjId        = 5;
   private static final int emptyRelObjId        = 6;
+  private static final int tagIntObjId          = 7;
 
   private static final int neSeqObjId           = 16;
   private static final int neSetObjId           = 17;
@@ -249,6 +255,7 @@ abstract class Obj implements Comparable<Obj> {
   protected static int floatObjExtraData()          {return floatObjId;         }
   protected static int emptySeqObjExtraData()       {return emptySeqObjId;      }
   protected static int emptyRelObjExtraData()       {return emptyRelObjId;      }
+  protected static int tagIntObjExtraData()         {return tagIntObjId;        }
 
   protected static int neSeqObjExtraData()          {return neSeqObjId;         }
   protected static int neSetObjExtraData()          {return neSetObjId;         }

@@ -312,6 +312,30 @@ class Miscellanea {
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
+  // private void grow(int minCapacity) {
+  //     // overflow-conscious code
+  //     int oldCapacity = elementData.length;
+  //     int newCapacity = oldCapacity + (oldCapacity >> 1);
+  //     if (newCapacity - minCapacity < 0)
+  //         newCapacity = minCapacity;
+  //     if (newCapacity - MAX_ARRAY_SIZE > 0)
+  //         newCapacity = hugeCapacity(minCapacity);
+  //     // minCapacity is usually close to size, so this is a win:
+  //     elementData = Arrays.copyOf(elementData, newCapacity);
+  // }
+
+  // private static int hugeCapacity(int minCapacity) {
+  //     if (minCapacity < 0) // overflow
+  //         throw new OutOfMemoryError();
+  //     return (minCapacity > MAX_ARRAY_SIZE) ?
+  //         Integer.MAX_VALUE :
+  //         MAX_ARRAY_SIZE;
+  // }
+
+  //     // overflow-conscious code
+  //     if (minCapacity - elementData.length > 0)
+  //         grow(minCapacity);
+  // }
 
   public static int[] arrayAppend(int[] array, int count, int newValue) {
     Miscellanea._assert(count <= array.length);
@@ -335,6 +359,18 @@ class Miscellanea {
       long[] newArray = new long[newLen];
       arrayCopy(array, newArray, count);
       array = newArray;
+    }
+
+    array[count] = newValue;
+    return array;
+  }
+
+  public static Obj[] arrayAppend(Obj[] array, int count, Obj newValue) {
+    Miscellanea._assert(count <= array.length);
+
+    if (count == array.length) {
+      int newLen = Math.max(32, (3 * count) / 2);
+      array = Arrays.copyOf(array, newLen);
     }
 
     array[count] = newValue;

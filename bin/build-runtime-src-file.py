@@ -70,12 +70,10 @@ src_Sym12TernaryTableUpdater  = 'automata/net/cell_lang/Sym12TernaryTableUpdater
 src_SymBinaryTable            = 'automata/net/cell_lang/SymBinaryTable.java'
 src_SymBinaryTableUpdater     = 'automata/net/cell_lang/SymBinaryTableUpdater.java'
 src_TernaryTable              = 'automata/net/cell_lang/TernaryTable.java'
-src_TernaryTableBase          = 'automata/net/cell_lang/TernaryTableBase.java'
 src_TernaryTableUpdater       = 'automata/net/cell_lang/TernaryTableUpdater.java'
 src_UnaryTable                = 'automata/net/cell_lang/UnaryTable.java'
 src_UnaryTableUpdater         = 'automata/net/cell_lang/UnaryTableUpdater.java'
 src_ValueStore                = 'automata/net/cell_lang/ValueStore.java'
-src_ValueStoreBase            = 'automata/net/cell_lang/ValueStoreBase.java'
 src_ValueStoreUpdater         = 'automata/net/cell_lang/ValueStoreUpdater.java'
 
 src_Conversions               = 'misc/net/cell_lang/Conversions.java'
@@ -154,11 +152,9 @@ table_sources = [
   src_SymBinaryTable,
   src_SymBinaryTableUpdater,
   src_TernaryTable,
-  src_TernaryTableBase,
   src_TernaryTableUpdater,
   src_UnaryTable,
   src_UnaryTableUpdater,
-  src_ValueStoreBase,
   src_ValueStore,
   src_ValueStoreUpdater
 ]

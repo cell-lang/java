@@ -114,14 +114,7 @@ abstract class FloatArrayObjBase extends NeFloatSeqObj {
 
 final class FloatArrayObj extends FloatArrayObjBase {
   public FloatArrayObj(double[] elts) {
-    int len = elts.length;
-    long hashcode = floatObjData(elts[offset]);
-    if (len > 1) {
-      hashcode += floatObjData(elts[offset+len-1]);
-      if (len > 2)
-        hashcode += floatObjData(elts[offset+len/2]);
-    }
-    data = seqObjData(len, hashcode);
+    data = seqObjData(elts.length);
     extraData = neSeqObjExtraData();
     this.elts = elts;
   }
@@ -139,13 +132,7 @@ final class FloatArraySliceObj extends FloatArrayObjBase {
 
 
   public FloatArraySliceObj(PaddedFloatArray source, double[] elts, int offset, int len) {
-    long hashcode = floatObjData(elts[offset]);
-    if (len > 1) {
-      hashcode += floatObjData(elts[offset+len-1]);
-      if (len > 2)
-        hashcode += floatObjData(elts[offset+len/2]);
-    }
-    data = seqObjData(len, hashcode);
+    data = seqObjData(len);
     extraData = neSeqObjExtraData();
     this.elts = elts;
     this.offset = offset;

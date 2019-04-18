@@ -7,8 +7,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     init_stream(v?)       = (native_new_call(v, "java.util.ArrayList<Obj>", ())),
     append()              = (native_method_call(instr.stream, "add", (instr.obj))),
     set_at()              = (native_method_call(instr.var, "initAt", (instr.idx, instr.value))),
-    alloc_array()         = alloc_array_native_code(instr.var, instr.size),
-    write_array()         = write_array_native_code(instr.var, instr.idx, instr.value),
+    array_alloc()         = array_alloc_native_code(instr.var, instr.size),
+    array_write()         = array_write_native_code(instr.var, instr.idx, instr.value),
+    array_append()        = array_append_native_code(instr.array_var, instr.size_var, instr.value),
     write_rec_field()     = write_rec_field_native_code(instr.var, instr.label, instr.value, instr.optional),
     finish_init()         = (native_expr(instr.var) & ".finishInit();"),
     get_seq_iter()        = (native_method_call(instr.var, instr.src, "getSeqIter", ())),
@@ -66,16 +67,20 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* alloc_array_native_code(ArrayVar var, IntExpr size) {
+  String* array_alloc_native_code(ArrayVar var, Int32Expr size) {
     elt_type = native_elt_type(var);
     var_name = native_var_name(var);
     return (var_name & " = new " & elt_type & "[" & native_expr(size) & "];");
   }
 
 
-  String* write_array_native_code(ArrayVar var, IntExpr idx, AnyTypeExpr value) {
+  String* array_write_native_code(ArrayVar var, Int32Expr idx, AnyTypeExpr value) {
     return (native_var_name(var) & "[" & native_expr(idx, true) & "] = " & native_expr(value) & ";");
   }
+
+
+  String* array_append_native_code(ArrayVar array_var, Int32Var size_var, AnyTypeExpr value) =
+    (native_static_call("Miscellanea.arrayAppend", (array_var, native_var_ref_name(size_var) & "++", value)));
 
 
   String native_cls_call_code(AnyClsVar cls_var, WriteObjVar var, AtomicExpr+ args) =
@@ -204,7 +209,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_set_from_array()         = native_static_call(var, "Builder.createSet",        (expr.array, value(expr.size) if expr.size != nothing)),
     mk_seq_from_stream()        = native_static_call(var, "Builder.createSeq",        (expr.stream)),
     mk_seq()                    = native_static_call(var, "Builder.createSeq",        (expr.elems, expr.size)),
-    mk_seq_from_array()         = native_static_call(var, "Builder.createSeq",        (expr.array, value(expr.size) if expr.size != nothing)),
+    mk_seq_from_array()         = native_static_call(var, "Builder.createSeq",        (expr.array, expr.size)),
     build_const_int_seq()       = native_build_const_int_seq_code(expr.seq_id, var),
     mk_map_from_streams()       = native_static_call(var, "Builder.createMap",        (expr.key_stream, expr.value_stream)),
     mk_map()                    = native_static_call(var, "Builder.createMap",        (expr.keys, expr.values, expr.size)),
