@@ -10,6 +10,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     array_alloc()         = array_alloc_native_code(instr.var, instr.size),
     array_write()         = array_write_native_code(instr.var, instr.idx, instr.value),
     array_append()        = array_append_native_code(instr.array_var, instr.size_var, instr.value),
+    array_set_var()       = (native_assignment_code(instr.target, instr.source)),
     write_rec_field()     = write_rec_field_native_code(instr.var, instr.label, instr.value, instr.optional),
     finish_init()         = (native_expr(instr.var) & ".finishInit();"),
     get_seq_iter()        = (native_method_call(instr.var, instr.src, "getSeqIter", ())),
@@ -80,7 +81,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String* array_append_native_code(ArrayVar array_var, Int32Var size_var, AnyTypeExpr value) =
-    (native_static_call("Miscellanea.arrayAppend", (array_var, native_var_ref_name(size_var) & "++", value)));
+    (native_static_call(array_var, "Miscellanea.arrayAppend", (array_var, native_var_ref_name(size_var) & "++", value)));
 
 
   String native_cls_call_code(AnyClsVar cls_var, WriteObjVar var, AtomicExpr+ args) =

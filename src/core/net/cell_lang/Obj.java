@@ -83,6 +83,10 @@ abstract class Obj implements Comparable<Obj> {
     return extraData == tagIntObjId | extraData >= refTagObjId;
   }
 
+  public final boolean isTaggedInt() {
+    return (extraData == tagIntObjId || (extraData == refTagObjId && getInnerObj().isInt()));
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   public final boolean isSymb(int id) {
@@ -95,6 +99,10 @@ abstract class Obj implements Comparable<Obj> {
 
   public final boolean isFloat(double x) {
     return isFloat() && getDouble() == x;
+  }
+
+  public final boolean isTaggedInt(int tagId) {
+    return isTaggedInt() && getTagId() == tagId;
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -64,6 +64,8 @@
 
 ../compiler/src/stage-3/utils.cell
 ../compiler/src/stage-3/methods.cell
+../compiler/src/stage-3/search.cell
+../compiler/src/stage-3/rewriting.cell
 
 
 // Compiler steps
@@ -139,8 +141,10 @@
 ../compiler/src/H-code-generation/pattern-matching.cell
 ../compiler/src/H-code-generation/yield-actions.cell
 
+../compiler/src/I-code-optimization/instr-merging.cell
 ../compiler/src/I-code-optimization/dead-code-removal.cell
 ../compiler/src/I-code-optimization/code-optimization.cell
+../compiler/src/I-code-optimization/array-optimization.cell
 
 ../compiler/src/J-ref-counting/utils.cell
 ../compiler/src/J-ref-counting/code-graph.cell

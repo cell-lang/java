@@ -325,6 +325,110 @@ class Algs {
     return new int[] {0, 0};
   }
 
+  // public static Obj[] sortUnique(Obj[] objs, int count) {
+  //   Miscellanea._assert(count > 0);
+
+  //   int extraData0 = objs[0].extraData;
+  //   for (int i=1 ; i < count ; i++)
+  //     if (objs[i].extraData != extraData0)
+  //       return _sortUnique(objs, count);
+
+
+  //   int[] keysIdxs = new int[3*count];
+  //   for (int i=0 ; i < count ; i++) {
+  //     long data = objs[i].data;
+  //     int idx = 3 * i;
+  //     keysIdxs[idx]   = (int) (data >>> 32);
+  //     keysIdxs[idx+1] = (int) data;
+  //     keysIdxs[idx+2] = i;
+  //   }
+  //   Ints123.sort(keysIdxs, count);
+
+  //   Obj[] objs2 = new Obj[count];
+  //   int groupKey1 = keysIdxs[0];
+  //   int groupKey2 = keysIdxs[1];
+  //   int groupStartIdx = 0;
+  //   int nextIdx = 0;
+  //   for (int i=0 ; i < count ; i++) {
+  //     int i3 = 3 * i;
+  //     int key1 = keysIdxs[i3];
+  //     int key2 = keysIdxs[i3+1];
+  //     int idx  = keysIdxs[i3+2];
+
+  //     if (key1 != groupKey1 | key2 != groupKey2) {
+  //       if (nextIdx - groupStartIdx > 1)
+  //         nextIdx = sortUnique(objs2, groupStartIdx, nextIdx);
+  //       groupKey1 = key1;
+  //       groupKey2 = key2;
+  //       groupStartIdx = nextIdx;
+  //     }
+
+  //     objs2[nextIdx++] = objs[idx];
+  //   }
+  //   if (nextIdx - groupStartIdx > 1)
+  //     nextIdx = sortUnique(objs2, groupStartIdx, nextIdx);
+
+  //   if (nextIdx == count)
+  //     return objs2;
+  //   else
+  //     return Arrays.copyOf(objs2, nextIdx);
+  // }
+
+  private static long[] _indexesSortedByHashcode(Obj[] objs, int count) {
+    long[] keysIdxs = new long[count];
+    for (int i=0 ; i < count ; i++) {
+      keysIdxs[i] = (((long) objs[i].hashcode()) << 32) | i;
+    }
+    Arrays.sort(keysIdxs);
+    return keysIdxs;
+  }
+
+  public static Obj[] _sortUnique(Obj[] objs, int count) {
+    Miscellanea._assert(count > 0);
+
+    // long[] keysIdxs = new long[count];
+    // for (int i=0 ; i < count ; i++) {
+    //   keysIdxs[i] = (((long) objs[i].hashcode()) << 32) | i;
+    // }
+    // Arrays.sort(keysIdxs);
+    long[] keysIdxs = _indexesSortedByHashcode(objs, count);
+
+    Obj[] objs2 = new Obj[count];
+    int groupKey = (int) (keysIdxs[0] >>> 32);
+    int groupStartIdx = 0;
+    int nextIdx = 0;
+    for (int i=0 ; i < count ; i++) {
+      long keyIdx = keysIdxs[i];
+      int key = (int) (keyIdx >> 32);
+      int idx = (int) keyIdx;
+
+      if (key != groupKey) {
+        if (nextIdx - groupStartIdx > 1)
+          nextIdx = sortUnique(objs2, groupStartIdx, nextIdx);
+        groupKey = key;
+        groupStartIdx = nextIdx;
+      }
+
+      objs2[nextIdx++] = objs[idx];
+    }
+    if (nextIdx - groupStartIdx > 1)
+      nextIdx = sortUnique(objs2, groupStartIdx, nextIdx);
+
+    if (nextIdx == count)
+      return objs2;
+    else
+      return Arrays.copyOf(objs2, nextIdx);
+  }
+
+  private static int sortUnique(Obj[] objs, int first, int end) {
+    Arrays.sort(objs, first, end);
+    int prev = first;
+    for (int i=first+1 ; i < end ; i++)
+      if (!objs[prev].isEq(objs[i]))
+        if (i != ++prev)
+          objs[prev] = objs[i];
+    return prev + 1;
+  }
 
   public static Obj[] sortUnique(Obj[] objs, int count) {
     Miscellanea._assert(count > 0);

@@ -241,9 +241,34 @@ Int Main(String* args) {
   ;
 
   opt_code_1 = remove_dead_code(code);
+
+  if print_intermediate:
+    ok = FileWrite("dump-opt-code-1.txt", chars(_print_(opt_code_1)));
+  ;
+
   opt_code_2 = merge_instrs(opt_code_1);
+
+  if print_intermediate:
+    ok = FileWrite("dump-opt-code-2.txt", chars(_print_(opt_code_2)));
+  ;
+
   opt_code_3 = remove_dead_code(opt_code_2);
+
+  if print_intermediate:
+    ok = FileWrite("dump-opt-code-3.txt", chars(_print_(opt_code_3)));
+  ;
+
   opt_code_4 = optimize_array_init(opt_code_3);
+
+  if print_intermediate:
+    ok = FileWrite("dump-opt-code-4.txt", chars(_print_(opt_code_4)));
+  ;
+
+  opt_code_5 = remove_dead_code(opt_code_4);
+
+  if print_intermediate:
+    ok = FileWrite("dump-opt-code-5.txt", chars(_print_(opt_code_5)));
+  ;
 
   t7 = _ticks_(:any_value_will_do);
   Print("Dead code removed\n");
@@ -251,7 +276,7 @@ Int Main(String* args) {
     unused_var = GetChar();
   ;
 
-  opt_code = optimize_compiled_code(opt_code_4);
+  opt_code = optimize_compiled_code(opt_code_5);
 
   if print_intermediate:
     ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
