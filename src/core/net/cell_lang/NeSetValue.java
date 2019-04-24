@@ -23,8 +23,12 @@ class NeSetValue extends ValueBase {
   public Obj asObj() {
     int len = values.length;
     Obj[] objs = new Obj[len];
-    for (int i=0 ; i < len ; i++)
-      objs[i] = values[i].asObj();
-    return new NeSetObj(objs);
+    int [] hashcodes = new int[len];
+    for (int i=0 ; i < len ; i++) {
+      Obj obj = values[i].asObj();
+      objs[i] = obj;
+      hashcodes[i] = obj.hashcode();
+    }
+    return new NeSetObj(objs, hashcodes);
   }
 }

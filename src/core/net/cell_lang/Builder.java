@@ -16,8 +16,8 @@ class Builder {
   public static Obj createSet(Obj[] objs, long count) {
     Miscellanea._assert(objs.length >= count);
     if (count != 0) {
-      Obj[] normObjs = Algs.sortUnique(objs, (int) count);
-      return new NeSetObj(normObjs);
+      Object[] res = Algs._sortUnique(objs, (int) count);
+      return new NeSetObj((Obj[]) res[0], (int[]) res[1]);
     }
     else
       return EmptyRelObj.singleton;

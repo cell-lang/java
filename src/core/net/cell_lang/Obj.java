@@ -105,6 +105,10 @@ abstract class Obj implements Comparable<Obj> {
     return isTaggedInt() && getTagId() == tagId;
   }
 
+  public final boolean isTaggedInt(int tagId, long value) {
+    return isTaggedInt() && (getTagId() == tagId & getInnerLong() == value);
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   public final int getSymbId() {
@@ -202,8 +206,8 @@ abstract class Obj implements Comparable<Obj> {
     return collObjData(length, 0);
   }
 
-  protected static long setObjData(int size, long hashcode) {
-    return collObjData(size, hashcode);
+  protected static long setObjData(int size) {
+    return collObjData(size, 0);
   }
 
   protected static long binRelObjData(int size) {
@@ -426,8 +430,6 @@ abstract class Obj implements Comparable<Obj> {
   public byte[] getByteArray() {
     return getUnsignedByteArray();
   }
-
-  public void initAt(long i, Obj v) {throw Miscellanea.internalFail(this);}
 
   public long mantissa() {throw Miscellanea.internalFail(this);}
   public long decExp()   {throw Miscellanea.internalFail(this);}

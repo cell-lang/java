@@ -374,26 +374,13 @@ class Algs {
   //     return Arrays.copyOf(objs2, nextIdx);
   // }
 
-  private static long[] _indexesSortedByHashcode(Obj[] objs, int count) {
-    long[] keysIdxs = new long[count];
-    for (int i=0 ; i < count ; i++) {
-      keysIdxs[i] = (((long) objs[i].hashcode()) << 32) | i;
-    }
-    Arrays.sort(keysIdxs);
-    return keysIdxs;
-  }
-
-  public static Obj[] _sortUnique(Obj[] objs, int count) {
+  public static Object[] _sortUnique(Obj[] objs, int count) {
     Miscellanea._assert(count > 0);
 
-    // long[] keysIdxs = new long[count];
-    // for (int i=0 ; i < count ; i++) {
-    //   keysIdxs[i] = (((long) objs[i].hashcode()) << 32) | i;
-    // }
-    // Arrays.sort(keysIdxs);
-    long[] keysIdxs = _indexesSortedByHashcode(objs, count);
+    long[] keysIdxs = indexesSortedByHashcode(objs, count);
 
-    Obj[] objs2 = new Obj[count];
+    Obj[] sortedObjs = new Obj[count];
+    int[] hashcodes = new int[count];
     int groupKey = (int) (keysIdxs[0] >>> 32);
     int groupStartIdx = 0;
     int nextIdx = 0;
@@ -404,20 +391,33 @@ class Algs {
 
       if (key != groupKey) {
         if (nextIdx - groupStartIdx > 1)
-          nextIdx = sortUnique(objs2, groupStartIdx, nextIdx);
+          nextIdx = sortUnique(sortedObjs, groupStartIdx, nextIdx);
+        for (int j=groupStartIdx ; j < nextIdx ; j++)
+          hashcodes[j] = groupKey;
         groupKey = key;
         groupStartIdx = nextIdx;
       }
 
-      objs2[nextIdx++] = objs[idx];
+      sortedObjs[nextIdx++] = objs[idx];
     }
     if (nextIdx - groupStartIdx > 1)
-      nextIdx = sortUnique(objs2, groupStartIdx, nextIdx);
+      nextIdx = sortUnique(sortedObjs, groupStartIdx, nextIdx);
+    for (int j=groupStartIdx ; j < nextIdx ; j++)
+      hashcodes[j] = groupKey;
 
     if (nextIdx == count)
-      return objs2;
+      return new Object[] {sortedObjs, hashcodes};
     else
-      return Arrays.copyOf(objs2, nextIdx);
+      return new Object[] {Arrays.copyOf(sortedObjs, nextIdx), Arrays.copyOf(hashcodes, nextIdx)};
+  }
+
+  private static long[] indexesSortedByHashcode(Obj[] objs, int count) {
+    long[] keysIdxs = new long[count];
+    for (int i=0 ; i < count ; i++) {
+      keysIdxs[i] = (((long) objs[i].hashcode()) << 32) | i;
+    }
+    Arrays.sort(keysIdxs);
+    return keysIdxs;
   }
 
   private static int sortUnique(Obj[] objs, int first, int end) {
@@ -441,7 +441,6 @@ class Algs {
     int len = prev + 1;
     return Arrays.copyOf(objs, len);
   }
-
 
   public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, int count) {
     Miscellanea._assert(count > 0);

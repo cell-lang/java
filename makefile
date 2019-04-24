@@ -85,6 +85,11 @@ compiler-test-loop:
 	java -jar cellc-java.jar projects/compiler.txt tmp/gen/
 	cmp tmp/gen/Generated.java tmp/Generated.java
 
+update-cellc-java.jar:
+	rm -rf cellc-java.jar tmp/net/
+	javac -d tmp/ tmp/gen/*.java
+	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
+
 ################################################################################
 ################################################################################
 

@@ -6,22 +6,30 @@ import java.io.Writer;
 
 final class NeSetObj extends Obj {
   Obj[] elts;
+  int[] hashcodes;
   int minPrintedSize = -1;
 
-  public NeSetObj(Obj[] elts) {
+  public NeSetObj(Obj[] elts, int[] hashcodes) {
     Miscellanea._assert(elts.length > 0);
 
-    int size = elts.length;
-    long hashcode = 0;
-    for (int i=0 ; i < elts.length ; i++)
-      hashcode += elts[i].data;
-    data = setObjData(size, hashcode);
+    data = setObjData(elts.length);
     extraData = neSetObjExtraData();
     this.elts = elts;
+    this.hashcodes = hashcodes;
   }
 
   public boolean hasElem(Obj obj) {
-    return Algs.binSearch(elts, obj) != -1;
+    int hashcode = obj.hashcode();
+    int idx = Arrays.binarySearch(hashcodes, hashcode);
+    if (idx >= 0) {
+      for (int i=idx ; i < elts.length && hashcodes[i] == hashcode ; i++)
+        if (elts[i].isEq(obj))
+          return true;
+      for (int i=idx-1 ; i >= 0 && hashcodes[i] == hashcode ; i--)
+        if (elts[i].isEq(obj))
+          return true;
+    }
+    return false;
   }
 
   public SetIter getSetIter() {
@@ -57,6 +65,18 @@ final class NeSetObj extends Obj {
     }
     return 0;
   }
+
+  // public int hashcode() {
+  //   if (hashcode == Integer.MIN_VALUE) {
+  //     int len = getSize();
+  //     long hashcode64 = 0;
+  //     for (int i=0 ; i < len ; i++)
+  //       hashcode64 = 31 * hashcode64 + getLongAt(i);
+  //       // hashcode64 += getLongAt(i);
+  //     hashcode = (int) (hashcode64 ^ (hashcode64 >> 32));
+  //   }
+  //   return hashcode;
+  // }
 
   public TypeCode getTypeCode() {
     return TypeCode.NE_SET;

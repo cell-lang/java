@@ -414,9 +414,9 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static Obj arrayAt(Obj[] array, int size, long idx) {
+  public static Obj arrayAt(boolean[] array, int size, long idx) {
     if (idx >= 0 & idx < size)
-      return array[(int) idx];
+      return SymbObj.get(array[(int) idx]);
     else
       throw softFail();
   }
@@ -431,6 +431,13 @@ class Miscellanea {
   public static Obj arrayAt(double[] array, int size, long idx) {
     if (idx >= 0 & idx < size)
       return new FloatObj(array[(int) idx]);
+    else
+      throw softFail();
+  }
+
+  public static Obj arrayAt(Obj[] array, int size, long idx) {
+    if (idx >= 0 & idx < size)
+      return array[(int) idx];
     else
       throw softFail();
   }

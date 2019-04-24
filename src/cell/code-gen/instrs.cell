@@ -6,7 +6,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String* native_code(Instr instr, Maybe[Nat] block_id) =
     init_stream(v?)       = (native_new_call(v, "java.util.ArrayList<Obj>", ())),
     append()              = (native_method_call(instr.stream, "add", (instr.obj))),
-    set_at()              = (native_method_call(instr.var, "initAt", (instr.idx, instr.value))),
     array_alloc()         = array_alloc_native_code(instr.var, instr.size),
     array_write()         = array_write_native_code(instr.var, instr.idx, instr.value),
     array_append()        = array_append_native_code(instr.array_var, instr.size_var, instr.value),
