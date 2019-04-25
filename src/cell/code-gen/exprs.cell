@@ -98,8 +98,26 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
 
     and(es?)              = native_nary_op(" & ",  es, parenthesized),
     or(es?)               = native_nary_op(" | ",  es, parenthesized),
-    and_then(es?)         = native_nary_op(" && ", es, parenthesized),
+    and_then(es?)         = native_and_then_expr(es, parenthesized),
     or_else(es?)          = native_nary_op(" || ", es, parenthesized);
+}
+
+
+String native_and_then_expr(BoolExpr+ exprs, Bool parenthesized) {
+  default = native_nary_op(" && ", exprs, parenthesized);
+
+  return match (exprs)
+    (is_tagged_obj(e1?), is_int(get_inner_obj(e2?))) =
+      if e1 == e2
+        then native_expr(e1, true) & ".isTaggedInt()"
+        else default,
+
+    (is_tagged_obj(e1?), is_int(get_inner_obj(e2?)), are_eq(get_tag(e3?), object(<+> s?))) =
+      if e1 == e2 and e2 == e3
+        then native_expr(e1, true) & ".isTaggedInt(" & symb_idx_name(s) & ")"
+        else default,
+
+    _ = default;
 }
 
 
