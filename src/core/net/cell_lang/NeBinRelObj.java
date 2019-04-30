@@ -30,14 +30,14 @@ class NeBinRelObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public Obj setKeyValue(Obj key, Obj value) {
-    if (isMap) {
-      NeTreapMapObj treap = new NeTreapMapObj(col1, col2, 0, col1.length);
-      return treap.setKeyValue(key, value);
-    }
-    else
-      throw Miscellanea.internalFail(this);
-  }
+  // public Obj setKeyValue(Obj key, Obj value) {
+  //   if (isMap) {
+  //     NeTreapMapObj treap = new NeTreapMapObj(col1, col2, 0, col1.length);
+  //     return treap.setKeyValue(key, value);
+  //   }
+  //   else
+  //     throw Miscellanea.internalFail(this);
+  // }
 
   // public Obj removeKey(Obj key) {
   // }
@@ -138,6 +138,9 @@ class NeBinRelObj extends Obj {
       return -other.internalOrder(this);
 
     if (other instanceof NeTreapMapObj)
+      return -other.internalOrder(this);
+
+    if (other instanceof NeTreeMapObj)
       return -other.internalOrder(this);
 
     NeBinRelObj otherRel = (NeBinRelObj) other;

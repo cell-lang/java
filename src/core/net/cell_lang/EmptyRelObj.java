@@ -13,7 +13,7 @@ final class EmptyRelObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public Obj setKeyValue(Obj key, Obj value) {
-    return new NeTreapMapObj(key, value);
+    return new NeTreeMapObj(key, value);
   }
 
   // public Obj removeKey(Obj key) {
