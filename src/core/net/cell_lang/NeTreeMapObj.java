@@ -10,8 +10,8 @@ class NeTreeMapObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private NeTreeMapObj(int size, Node rootNode) {
-    data = binRelObjData(size);
+  private NeTreeMapObj(Node rootNode) {
+    data = binRelObjData(rootNode.size());
     extraData = neBinRelObjExtraData();
     this.rootNode = rootNode;
   }
@@ -31,34 +31,18 @@ class NeTreeMapObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public Obj setKeyValue(Obj key, Obj value) {
-    if (rootNode != null) {
-      int hashcode = key.hashcode();
-      Obj currValue = rootNode.lookup(key, hashcode);
-      if (currValue != null) {
-        if (currValue.isEq(value))
-          return this;
-        StdNode node = rootNode.insert(key, value, hashcode);
-        return new NeTreeMapObj(getSize(), node);
-      }
-      else {
-        StdNode node = rootNode.insert(key, value, hashcode);
-        return new NeTreeMapObj(getSize() + 1, node);
-      }
-    }
+    if (rootNode != null)
+      return new NeTreeMapObj(rootNode.insert(key, value, key.hashcode()));
     else
       return packedRepr.setKeyValue(key, value);
   }
 
   public Obj removeKey(Obj key) {
     if (rootNode != null) {
-      int hashcode = key.hashcode();
-      Obj currValue = rootNode.lookup(key, hashcode);
-      if (currValue != null) {
-        Node node = rootNode.remove(key, hashcode);
-        return node != null ? new NeTreeMapObj(getSize()-1, node) : EmptyRelObj.singleton;
-      }
-      else
+      Node newRoot = rootNode.remove(key, key.hashcode());
+      if (newRoot == rootNode)
         return this;
+      return newRoot != null ? new NeTreeMapObj(newRoot) : EmptyRelObj.singleton;
     }
     else
       return packedRepr.removeKey(key);
@@ -183,6 +167,7 @@ class NeTreeMapObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   private interface Node {
+    int size();
     Obj lookup(Obj key, int hashcode);
 
     StdNode insert(Obj key, Obj value, int hashcode);
@@ -211,14 +196,16 @@ class NeTreeMapObj extends Obj {
   private static final class StdNode implements Node {
     Obj key;
     Obj value;
-    int hashcode;
     Node left, right;
+    int size;
+    int hashcode;
 
 
     private StdNode(Obj key, Obj value, int hashcode, Node left, Node right) {
       this.key = key;
       this.value = value;
       this.hashcode = hashcode;
+      this.size = 1 + (left != null ? left.size() : 0) + (right != null ? right.size() : 0);
       this.left = left;
       this.right = right;
     }
@@ -226,10 +213,15 @@ class NeTreeMapObj extends Obj {
     private StdNode(Obj key, Obj value, int hashcode) {
       this.key = key;
       this.value = value;
+      this.size = 1;
       this.hashcode = hashcode;
     }
 
     ////////////////////////////////////////////////////////////////////////////
+
+    public int size() {
+      return size;
+    }
 
     public Obj lookup(Obj aKey, int aHashcode) {
       int ord = order(aKey, aHashcode);
