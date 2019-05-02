@@ -48,24 +48,13 @@ class Builder {
     return createBinRel(col1, col2, col1.length);
   }
 
-  public static Obj createBinRel(Obj[] col1, Obj[] col2, long count) {
-    Miscellanea._assert(count <= col1.length & count <= col2.length);
-    if (count != 0) {
-      Obj[][] normCols = Algs.sortUnique(col1, col2, (int) count);
-      Obj[] normCol1 = normCols[0];
-      boolean isMap = !Algs.sortedArrayHasDuplicates(normCol1);
-      return new NeBinRelObj(normCol1, normCols[1], isMap);
-    }
-    else
-      return EmptyRelObj.singleton;
+  public static Obj createBinRel(Obj obj1, Obj obj2) {
+    return createBinRel(new Obj[] {obj1}, new Obj[] {obj2}, 1);
   }
 
-  public static Obj createBinRel(Obj obj1, Obj obj2) {
-    Obj[] col1 = new Obj[1];
-    Obj[] col2 = new Obj[1];
-    col1[0] = obj1;
-    col2[0] = obj2;
-    return new NeBinRelObj(col1, col2, true);
+  public static Obj createBinRel(Obj[] col1, Obj[] col2, long count) {
+    Miscellanea._assert(count <= col1.length & count <= col2.length);
+    return count != 0 ? NeBinRelObj.create(col1, col2, (int) count) : EmptyRelObj.singleton;
   }
 
   public static Obj createTernRel(ArrayList<Obj> col1, ArrayList<Obj> col2, ArrayList<Obj> col3) {

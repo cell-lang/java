@@ -8,6 +8,9 @@ class BinRelIter {
   int next;
   int last;
 
+  public static BinRelIter emptyIter =
+    new BinRelIter(Miscellanea.emptyObjArray, Miscellanea.emptyObjArray, 0, -1);
+
   public BinRelIter(Obj[] col1, Obj[] col2, int[] idxs, int next, int last) {
     Miscellanea._assert(col1.length == col2.length);
     Miscellanea._assert(idxs == null || col1.length == idxs.length);

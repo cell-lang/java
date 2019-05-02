@@ -179,7 +179,8 @@ class NeTreapMapObj extends Obj {
       Obj[] values = new Obj[size];
       int count = rootNode.traverse(keys, values, 0);
       Miscellanea._assert(count == size);
-      packedRepr = new NeBinRelObj(keys, values, true);
+      //## BAD BAD BAD: INEFFICIENT
+      packedRepr = NeBinRelObj.create(keys, values, size);
       rootNode = null;
     }
   }

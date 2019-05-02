@@ -430,48 +430,54 @@ class Algs {
     return prev + 1;
   }
 
-  public static Obj[] sortUnique(Obj[] objs, int count) {
-    Miscellanea._assert(count > 0);
-    Arrays.sort(objs, 0, count);
-    int prev = 0;
-    for (int i=1 ; i < count ; i++)
-      if (!objs[prev].isEq(objs[i]))
-        if (i != ++prev)
-          objs[prev] = objs[i];
-    int len = prev + 1;
-    return Arrays.copyOf(objs, len);
-  }
+  // public static Obj[] sortUnique(Obj[] objs, int count) {
+  //   Miscellanea._assert(count > 0);
+  //   Arrays.sort(objs, 0, count);
+  //   int prev = 0;
+  //   for (int i=1 ; i < count ; i++)
+  //     if (!objs[prev].isEq(objs[i]))
+  //       if (i != ++prev)
+  //         objs[prev] = objs[i];
+  //   int len = prev + 1;
+  //   return Arrays.copyOf(objs, len);
+  // }
 
-  public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, int count) {
-    Miscellanea._assert(count > 0);
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
-    int[] idxs = new int[count];
-    for (int i=0 ; i < count ; i++)
-      idxs[i] = i;
+  // public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, int count) {
+  //   Miscellanea._assert(count > 0);
 
-    sortIdxs(idxs, 0, count-1, col1, col2);
+  //   int[] idxs = new int[count];
+  //   for (int i=0 ; i < count ; i++)
+  //     idxs[i] = i;
 
-    int prev = 0;
-    for (int i=1 ; i < count ; i++) {
-      int j = idxs[i];
-      int k = idxs[i-1];
-      if (!col1[j].isEq(col1[k]) || !col2[j].isEq(col2[k]))
-        if (i != ++prev)
-          idxs[prev] = idxs[i];
-    }
+  //   sortIdxs(idxs, 0, count-1, col1, col2);
 
-    int size = prev + 1;
-    Obj[] normCol1 = new Obj[size];
-    Obj[] normCol2 = new Obj[size];
+  //   int prev = 0;
+  //   for (int i=1 ; i < count ; i++) {
+  //     int j = idxs[i];
+  //     int k = idxs[i-1];
+  //     if (!col1[j].isEq(col1[k]) || !col2[j].isEq(col2[k]))
+  //       if (i != ++prev)
+  //         idxs[prev] = idxs[i];
+  //   }
 
-    for (int i=0 ; i < size ; i++) {
-      int j = idxs[i];
-      normCol1[i] = col1[j];
-      normCol2[i] = col2[j];
-    }
+  //   int size = prev + 1;
+  //   Obj[] normCol1 = new Obj[size];
+  //   Obj[] normCol2 = new Obj[size];
 
-    return new Obj[][] {normCol1, normCol2};
-  }
+  //   for (int i=0 ; i < size ; i++) {
+  //     int j = idxs[i];
+  //     normCol1[i] = col1[j];
+  //     normCol2[i] = col2[j];
+  //   }
+
+  //   return new Obj[][] {normCol1, normCol2};
+  // }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
   public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, Obj[] col3, int count) {
     Miscellanea._assert(count > 0);

@@ -14,6 +14,8 @@ import java.io.IOException;
 class Miscellanea {
   public static Obj[] emptyObjArray = new Obj[0];
   public static int[] emptyIntArray = new int[0];
+  public static double[] emptyDoubleArray = new double[0];
+  public static boolean[] emptyBooleanArray = new boolean[0];
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -158,6 +160,22 @@ class Miscellanea {
 
   public static long decimalExponent(double x) {
     throw implFail("_dec_expr_() has not been implemented yet");
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static void sort(long[] array) {
+    Arrays.sort(array);
+  }
+
+  public static void sort(long[] array, int start, int end) {
+    Arrays.sort(array, start, end);
+  }
+
+  public static int indexIntoSortedArray(int[] array, int value) {
+    int idx = Arrays.binarySearch(array, value);
+    return idx >= 0 ? idx : -1;
   }
 
   ////////////////////////////////////////////////////////////////////////////
