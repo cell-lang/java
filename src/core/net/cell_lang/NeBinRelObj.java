@@ -86,7 +86,7 @@ class NeBinRelObj extends Obj {
         int endIdx = keyRangeEnd(idx, col1, hashcodes1, obj1);
         //## BAD BAD BAD: LINEAR SEARCH, INEFFICIENT
         for (int i=idx ; i < endIdx ; i++)
-          if (col2[idx].isEq(obj2))
+          if (col2[i].isEq(obj2))
             return true;
       }
       return false;
@@ -314,7 +314,7 @@ class NeBinRelObj extends Obj {
 
   private static int keyRangeEnd(int rangeStart, Obj[] objs, int[] hashcodes, Obj key) {
     int idx = rangeStart + 1;
-    int hashcode = hashcodes[idx];
+    int hashcode = hashcodes[rangeStart];
     while (idx < objs.length && hashcodes[idx] == hashcode && objs[idx].isEq(key))
       idx++;
     return idx;
@@ -322,6 +322,71 @@ class NeBinRelObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
+
+  private void selfCheck(Obj[] _col1, Obj[] _col2, int _count) {
+    int len = col1.length;
+    check(len <= _count);
+    check(col2.length == len);
+    check(hashcodes1.length == len);
+
+    for (int i=0 ; i < len ; i++)
+      check(hashcodes1[i] == col1[i].hashcode());
+
+    boolean _isMap = true;
+    for (int i=1 ; i < len ; i++) {
+      check(hashcodes1[i-1] <= hashcodes1[i]);
+
+      if (hashcodes1[i] == hashcodes1[i-1]) {
+        int ord1 = col1[i-1].quickOrder(col1[i]);
+        check(ord1 <= 0);
+        if (ord1 == 0) {
+          _isMap = false;
+          check(col2[i-1].quickOrder(col2[i]) < 0);
+        }
+      }
+    }
+
+    check(isMap == _isMap);
+
+    for (int i=0 ; i < len ; i++) {
+      Obj key = col1[i];
+      int start = keyRangeStart(col1, hashcodes1, key);
+      check(start >= 0);
+      int end = keyRangeEnd(start, col1, hashcodes1, key);
+      check(!isMap || start + 1 == end);
+      check(i >= start);
+      check(i < end);
+    }
+
+    if (isMap) {
+      for (int i=0 ; i < len ; i++) {
+        Obj key = col1[i];
+        Obj value = col2[i];
+        check(lookup(key).isEq(value));
+      }
+
+      for (int i=0 ; i < _count ; i++)
+        check(lookup(_col1[i]).isEq(_col2[i]));
+    }
+
+    for (int i=0 ; i < _count ; i++) {
+      check(hasPair(_col1[i], _col2[i]));
+    }
+  }
+
+  private static void dump(NeBinRelObj rel, Obj[] _col1, Obj[] _col2, int _count) {
+    System.out.println(rel.toString());
+    System.out.println();
+    for (int i=0 ; i < _count ; i++)
+      System.out.printf("%s -> %s\n", _col1[i].toString(), _col2[i].toString());
+  }
+
+  private static void check(boolean cond) {
+    if (!cond)
+      throw new RuntimeException();
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
 
   public static NeBinRelObj create(Obj[] col1, Obj[] col2, int count) {
     Miscellanea._assert(count > 0);
@@ -331,7 +396,7 @@ class NeBinRelObj extends Obj {
 
     long[] keysIdxs = indexesSortedByHashcode(col1, count);
 
-    boolean isMap = false;
+    boolean isMap = true;
 
     int writeIdx = 0;
     int hashStartIdx = 0;
@@ -350,13 +415,15 @@ class NeBinRelObj extends Obj {
         do {
           Obj key = col1[leastSignificant(keysIdxs[keyStartIdx])];
           int keyEndIdx = keyStartIdx + 1;
-          while (keyEndIdx <= hashEndIdx && key.isEq(col1[leastSignificant(keysIdxs[keyEndIdx])]))
+          while (keyEndIdx < hashEndIdx && key.isEq(col1[leastSignificant(keysIdxs[keyEndIdx])]))
             keyEndIdx++;
 
           int uniqueKeyEndIdx = keyEndIdx;
           if (keyEndIdx - keyStartIdx > 1) {
-            for (int i=keyStartIdx ; i < keyEndIdx ; i++)
-              keysIdxs[i] = (((long) col2[i].hashcode()) << 32) | leastSignificant(keysIdxs[i]);
+            for (int i=keyStartIdx ; i < keyEndIdx ; i++) {
+              int idx = leastSignificant(keysIdxs[i]);
+              keysIdxs[i] = (((long) col2[idx].hashcode()) << 32) | idx;
+            }
             Miscellanea.sort(keysIdxs, keyStartIdx, keyEndIdx);
 
             if (sorter2 == null)
@@ -379,6 +446,11 @@ class NeBinRelObj extends Obj {
           keyStartIdx = keyEndIdx;
         } while (keyStartIdx < hashEndIdx);
       }
+      else {
+        if (hashStartIdx != writeIdx)
+          keysIdxs[writeIdx] = keysIdxs[hashStartIdx];
+        writeIdx++;
+      }
 
       hashStartIdx = hashEndIdx;
     } while (hashStartIdx < count);
@@ -394,7 +466,9 @@ class NeBinRelObj extends Obj {
       sortedCol2[i] = col2[idx];
     }
 
-    return new NeBinRelObj(sortedCol1, sortedCol2, hashcodes, isMap);
+    NeBinRelObj relObj = new NeBinRelObj(sortedCol1, sortedCol2, hashcodes, isMap);
+    // relObj.selfCheck(col1, col2, count);
+    return relObj;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -417,8 +491,8 @@ class NeBinRelObj extends Obj {
             keysIdxs[writeIdx] = keysIdxs[idx];
           writeIdx++;
 
-          Obj obj = objs[idx];
-          while (idx < hashEndIdx && obj.isEq(objs[idx]))
+          Obj obj = objs[leastSignificant(keysIdxs[idx++])];
+          while (idx < hashEndIdx && obj.isEq(objs[leastSignificant(keysIdxs[idx])]))
             idx++;
         } while (idx < hashEndIdx);
       }

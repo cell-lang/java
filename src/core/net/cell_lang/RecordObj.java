@@ -172,8 +172,12 @@ class RecordObj extends NeBinRelObj {
     if (col1 == null) {
       int len = labels.length;
       col1 = new Obj[len];
-      for (int i=0 ; i < len ; i++)
-        col1[i] = SymbTable.get(labels[i]);
+      hashcodes1 = new int[len];
+      for (int i=0 ; i < len ; i++) {
+        Obj symbObj = SymbTable.get(labels[i]);
+        col1[i] = symbObj;
+        hashcodes1[i] = symbObj.hashcode();
+      }
     }
   }
 }
