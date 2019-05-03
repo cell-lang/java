@@ -173,9 +173,12 @@ class Miscellanea {
     Arrays.sort(array, start, end);
   }
 
-  public static int indexIntoSortedArray(int[] array, int value) {
-    int idx = Arrays.binarySearch(array, value);
-    return idx >= 0 ? idx : -1;
+  public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int value) {
+    return Arrays.binarySearch(array, value);
+  }
+
+  public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int start, int end, int value) {
+    return Arrays.binarySearch(array, start, end, value);
   }
 
   ////////////////////////////////////////////////////////////////////////////

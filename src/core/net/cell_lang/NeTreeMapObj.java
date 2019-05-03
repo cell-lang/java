@@ -22,11 +22,11 @@ class NeTreeMapObj extends Obj {
     rootNode = new StdNode(key, value, key.hashcode());
   }
 
-  // public NeTreeMapObj(Obj[] keys, Obj[] values, int first, int count) {
-  //   data = binRelObjData(count);
-  //   extraData = neBinRelObjExtraData();
-  //   rootNode = newNode(keys, values, first, count);
-  // }
+  public NeTreeMapObj(Obj[] keys, Obj[] values, int[] hashcodes, int first, int count) {
+    data = binRelObjData(count);
+    extraData = neBinRelObjExtraData();
+    rootNode = newNode(keys, values, hashcodes, first, count);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -182,13 +182,13 @@ class NeTreeMapObj extends Obj {
   }
 
 
-  // private static Node newNode(Obj[] keys, Obj[] values, int first, int count) {
-  //   Miscellanea._assert(count > 0);
-  //   if (count > 1)
-  //     return newNode(keys, values, first, count);
-  //   else
-  //     return new StdNode(keys[first], values[first], random.nextInt());
-  // }
+  private static Node newNode(Obj[] keys, Obj[] values, int[] hashcodes, int first, int count) {
+    Miscellanea._assert(count > 0);
+    if (count > 1)
+      return newNode(keys, values, hashcodes, first, count);
+    else
+      return new StdNode(keys[first], values[first], hashcodes[first]);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
@@ -337,178 +337,238 @@ class NeTreeMapObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  // private static final class ArraysNode implements Node {
-  //   Obj[] keys;
-  //   Obj[] values;
-  //   int first;
-  //   int count;
-
-  //   public String[] toStrings() {
-  //     String[] strs = new String[count+1];
-  //     strs[0] = "ArraysNode";
-  //     for (int i=0 ; i < count ; i++)
-  //       strs[i+1] = "  " + keys[first+i].toString() + " -> " + values[first+i].toString();
-  //     return strs;
-  //   }
+  private static final class ArraysNode implements Node {
+    Obj[] keys;
+    Obj[] values;
+    int[] hashcodes;
+    int first;
+    int count;
 
 
-  //   ArraysNode(Obj[] keys, Obj[] values, int first, int count) {
-  //     Miscellanea._assert(count >= 2);
-  //     this.keys = keys;
-  //     this.values = values;
-  //     this.first = first;
-  //     this.count = count;
-  //   }
+    ArraysNode(Obj[] keys, Obj[] values, int[] hashcodes, int first, int count) {
+      Miscellanea._assert(count >= 2);
+      this.keys = keys;
+      this.values = values;
+      this.hashcodes = hashcodes;
+      this.first = first;
+      this.count = count;
+    }
 
-  //   public Obj lookup(Obj key) {
-  //     int idx = Algs.binSearch(keys, first, count, key);
-  //     return idx != -1 ? values[idx] : null;
-  //   }
+    ////////////////////////////////////////////////////////////////////////////
 
-  //   ////////////////////////////////////////////////////////////////////////////
+    public int size() {
+      return count;
+    }
 
-  //   public int traverse(Obj[] keys, Obj[] values, int offset) {
-  //     for (int i=0 ; i < count ; i++) {
-  //       keys[offset] = this.keys[first+i];
-  //       values[offset++] = this.values[first+i];
-  //     }
-  //     return offset;
-  //   }
+    public Obj lookup(Obj key, int hashcode) {
+      int idx = keyIdx(key, hashcode);
+      return idx >= 0 ? values[idx] : null;
+    }
 
-  //   public boolean keysAreSymbols() {
-  //     for (int i=0 ; i < count ; i++)
-  //       if (!keys[first+i].isSymb())
-  //         return false;
-  //     return true;
-  //   }
+    ////////////////////////////////////////////////////////////////////////////
 
-  //   ////////////////////////////////////////////////////////////////////////////
+    public int traverse(Obj[] keys, Obj[] values, int offset) {
+      for (int i=0 ; i < count ; i++) {
+        keys[offset] = this.keys[first+i];
+        values[offset++] = this.values[first+i];
+      }
+      return offset;
+    }
 
-  //   public StdNode insert(Obj key, Obj value, int priority) {
-  //     Node right = null, left = null;
+    public boolean keysAreSymbols() {
+      for (int i=0 ; i < count ; i++)
+        if (!keys[first+i].isSymb())
+          return false;
+      return true;
+    }
 
-  //     int lastIdx = first + count - 1;
-  //     int idx = Algs.binSearchEx(keys, first, count, key);
+    ////////////////////////////////////////////////////////////////////////////
 
-  //     if (idx >= 0) {
-  //       // <key> was found
-  //       int leftCount = idx - first;
-  //       if (leftCount > 1)
-  //         left = newNode(keys, values, first, leftCount);
-  //       else if (leftCount == 1)
-  //         left = new StdNode(keys[first], values[first], priority); //## BAD BAD BAD: REUSING priority
+    public StdNode insert(Obj key, Obj value, int hashcode) {
+      Node right = null, left = null;
 
-  //       int rightCount = lastIdx - idx;
-  //       if (rightCount > 1)
-  //         right = newNode(keys, values, idx + 1, rightCount);
-  //       else if (rightCount == 1)
-  //         right = new StdNode(keys[lastIdx], values[lastIdx], priority); //## BAD BAD BAD: REUSING priority
-  //     }
-  //     else {
-  //       // <key> was not found
-  //       int insIdx = -idx - 1;
+      int lastIdx = first + count - 1;
+      int idx = keyIdx(key, hashcode);
 
-  //       int leftCount = insIdx - first;
-  //       if (leftCount > 1)
-  //         left = newNode(keys, values, first, leftCount);
-  //       else if (leftCount == 1)
-  //         left = new StdNode(keys[first], values[first], priority); //## BAD BAD BAD: REUSING priority
+      if (idx >= 0) {
+        // <key> was found
+        int leftCount = idx - first;
+        if (leftCount > 1)
+          left = newNode(keys, values, hashcodes, first, leftCount);
+        else if (leftCount == 1)
+          left = new StdNode(keys[first], values[first], hashcodes[first]);
 
-  //       int rightCount = lastIdx - insIdx + 1;
-  //       if (rightCount > 1)
-  //         right = newNode(keys, values, insIdx, rightCount);
-  //       else if (rightCount == 1)
-  //         right = new StdNode(keys[insIdx], values[insIdx], priority); //## BAD BAD BAD: REUSING priority
-  //     }
+        int rightCount = lastIdx - idx;
+        if (rightCount > 1)
+          right = newNode(keys, values, hashcodes, idx + 1, rightCount);
+        else if (rightCount == 1)
+          right = new StdNode(keys[lastIdx], values[lastIdx], hashcodes[lastIdx]);
+      }
+      else {
+        // <key> was not found
+        int insIdx = -idx - 1;
 
-  //     return new StdNode(key, value, priority, left, right);
-  //   }
+        int leftCount = insIdx - first;
+        if (leftCount > 1)
+          left = newNode(keys, values, hashcodes, first, leftCount);
+        else if (leftCount == 1)
+          left = new StdNode(keys[first], values[first], hashcodes[first]);
 
-  //   ////////////////////////////////////////////////////////////////////////////
+        int rightCount = lastIdx - insIdx + 1;
+        if (rightCount > 1)
+          right = newNode(keys, values, hashcodes, insIdx, rightCount);
+        else if (rightCount == 1)
+          right = new StdNode(keys[insIdx], values[insIdx], hashcodes[first]);
+      }
 
-  //   public Node remove(Obj key) {
-  //     int idx = Algs.binSearch(keys, first, count, key);
-  //     if (idx == -1)
-  //       return this;
+      return new StdNode(key, value, hashcode, left, right);
+    }
 
-  //     int lastIdx = first + count - 1;
+    ////////////////////////////////////////////////////////////////////////////
 
-  //     int countl = idx - first;
-  //     int countr = lastIdx - idx;
+    public Node remove(Obj key, int hashcode) {
+      int idx = keyIdx(key, hashcode);
+      if (idx < 0)
+        return this;
 
-  //     if (countl > 1) {
-  //       if (countr > 1) {
-  //         if (countl > countr) { // countl > countr >= 2  =>  countl >= 3
-  //           Node left = newNode(keys, values, first, countl-1);
-  //           Node right = newNode(keys, values, idx+1, countr);
-  //           return new StdNode(keys[idx-1], values[idx-1], random.nextInt(), left, right);
-  //         }
-  //         else { // countr >= countl >= 2
-  //           Node left = newNode(keys, values, first, countl);
-  //           Node right = newNode(keys, values, idx+2, countr-1);
-  //           return new StdNode(keys[idx+1], values[idx+1], random.nextInt(), left, right);
-  //         }
-  //       }
-  //       else if (countr == 1) {
-  //         Node left = newNode(keys, values, first, countl);
-  //         return new StdNode(keys[lastIdx], values[lastIdx], random.nextInt(), left, null);
-  //       }
-  //       else {
-  //         return newNode(keys, values, first, countl);
-  //       }
-  //     }
-  //     else if (countl == 1) {
-  //       if (countr > 1) {
-  //         Node right = newNode(keys, values, idx+1, countr);
-  //         return new StdNode(keys[first], values[first], random.nextInt(), null, right);
-  //       }
-  //       else if (countr == 1) {
-  //         Obj[] remKeys = new Obj[2];
-  //         Obj[] remValues = new Obj[2];
-  //         remKeys[0] = keys[first];
-  //         remKeys[1] = keys[lastIdx];
-  //         remValues[0] = values[first];
-  //         remValues[1] = values[lastIdx];
-  //         return newNode(remKeys, remValues, 0, 2);
-  //       }
-  //       else {
-  //         return new StdNode(keys[first], values[first], random.nextInt());
-  //       }
-  //     }
-  //     else {
-  //       if (countr > 1) {
-  //         return newNode(keys, values, idx+1, countr);
-  //       }
-  //       else if (countr == 1) {
-  //         return new StdNode(keys[lastIdx], values[lastIdx], random.nextInt());
-  //       }
-  //       else {
-  //         return null;
-  //       }
-  //     }
-  //   }
+      int lastIdx = first + count - 1;
 
-  //   ////////////////////////////////////////////////////////////////////////////
+      int countl = idx - first;
+      int countr = lastIdx - idx;
 
-  //   public Node merge(Node aNode) {
-  //     if (aNode instanceof StdNode) {
-  //       StdNode node = (StdNode) aNode;
-  //       Node newLeft = node.left != null ? merge(node.left) : this;
-  //       return new StdNode(node.key, node.value, node.priority, newLeft, node.right);
-  //     }
-  //     else {
-  //       ArraysNode node = (ArraysNode) aNode;
-  //       if (count > node.count) { // count > node.count >= 2  =>  count >= 3
-  //         Node left = newNode(keys, values, first, count-1);
-  //         int idx = first + count - 1;
-  //         return new StdNode(keys[idx], values[idx], random.nextInt(), left, node);
+      if (countl > 1) {
+        if (countr > 1) {
+          if (countl > countr) { // countl > countr >= 2  =>  countl >= 3
+            Node left = newNode(keys, values, hashcodes, first, countl-1);
+            Node right = newNode(keys, values, hashcodes, idx+1, countr);
+            return new StdNode(keys[idx-1], values[idx-1], hashcodes[idx-1], left, right);
+          }
+          else { // countr >= countl >= 2
+            Node left = newNode(keys, values, hashcodes, first, countl);
+            Node right = newNode(keys, values, hashcodes, idx+2, countr-1);
+            return new StdNode(keys[idx+1], values[idx+1], hashcodes[idx+1], left, right);
+          }
+        }
+        else if (countr == 1) {
+          Node left = newNode(keys, values, hashcodes, first, countl);
+          return new StdNode(keys[lastIdx], values[lastIdx], hashcodes[lastIdx], left, null);
+        }
+        else {
+          return newNode(keys, values, hashcodes, first, countl);
+        }
+      }
+      else if (countl == 1) {
+        if (countr > 1) {
+          Node right = newNode(keys, values, hashcodes, idx+1, countr);
+          return new StdNode(keys[first], values[first], hashcodes[first], null, right);
+        }
+        else if (countr == 1) {
+          Obj[] remKeys = new Obj[2];
+          Obj[] remValues = new Obj[2];
+          int[] remHashcodes = new int[2];
+          remKeys[0] = keys[first];
+          remKeys[1] = keys[lastIdx];
+          remValues[0] = values[first];
+          remValues[1] = values[lastIdx];
+          remHashcodes[0] = hashcodes[first];
+          remHashcodes[1] = hashcodes[lastIdx];
+          return newNode(remKeys, remValues, remHashcodes, 0, 2);
+        }
+        else {
+          return new StdNode(keys[first], values[first], hashcodes[first]);
+        }
+      }
+      else {
+        if (countr > 1) {
+          return newNode(keys, values, hashcodes, idx+1, countr);
+        }
+        else if (countr == 1) {
+          return new StdNode(keys[lastIdx], values[lastIdx], hashcodes[lastIdx]);
+        }
+        else {
+          return null;
+        }
+      }
+    }
 
-  //       }
-  //       else { // node.count >= count >= 2  =>  count >= 2
-  //         Node right = newNode(node.keys, node.values, node.first+1, node.count-1);
-  //         return new StdNode(node.keys[node.first], values[node.first], random.nextInt(), this, right);
-  //       }
-  //     }
-  //   }
-  // }
+    ////////////////////////////////////////////////////////////////////////////
+
+    public Node merge(Node aNode) {
+      if (aNode instanceof StdNode) {
+        StdNode node = (StdNode) aNode;
+        Node newLeft = node.left != null ? merge(node.left) : this;
+        return new StdNode(node.key, node.value, node.hashcode, newLeft, node.right);
+      }
+      else {
+        ArraysNode node = (ArraysNode) aNode;
+        if (count > node.count) { // count > node.count >= 2  =>  count >= 3
+          Node left = newNode(keys, values, hashcodes, first, count-1);
+          int idx = first + count - 1;
+          return new StdNode(keys[idx], values[idx], hashcodes[idx], left, node);
+
+        }
+        else { // node.count >= count >= 2  =>  count >= 2
+          Node right = newNode(node.keys, node.values, node.hashcodes, node.first+1, node.count-1);
+          return new StdNode(node.keys[node.first], values[node.first], hashcodes[node.first], this, right);
+        }
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+
+    public String[] toStrings() {
+      String[] strs = new String[count+1];
+      strs[0] = "ArraysNode";
+      for (int i=0 ; i < count ; i++)
+        strs[i+1] = "  " + keys[first+i].toString() + " -> " + values[first+i].toString();
+      return strs;
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+
+    private int keyIdx(Obj key, int hashcode) {
+      int res = _keyIdx(key, hashcode);
+      int end = first + count;
+      int last = end - 1;
+      if (res >= 0) {
+        Miscellanea._assert(res >= first & res <= last);
+        Miscellanea._assert(key.isEq(keys[res]));
+        Miscellanea._assert(res == first || key.quickOrder(keys[res-1]) > 0); // keys[res-1] < key
+        Miscellanea._assert(res == last  || key.quickOrder(keys[res+1]) < 0); // key < keys[res+1]
+      }
+      else {
+        int insIdx = -res - 1;
+        Miscellanea._assert(insIdx >= first & insIdx <= end);
+        Miscellanea._assert(insIdx == first || key.quickOrder(keys[insIdx-1]) > 0); // keys[insIdx-1] < key
+        Miscellanea._assert(insIdx == end   || key.quickOrder(keys[insIdx])   < 0); // key < keys[ins]
+      }
+      return res;
+    }
+
+    private int _keyIdx(Obj key, int hashcode) {
+      int end = first + count;
+      int idx = Miscellanea.anyIndexOrEncodeInsertionPointIntoSortedArray(hashcodes, first, end, hashcode);
+      if (idx < 0)
+        return idx;
+
+      int ord = key.quickOrder(keys[idx]);
+      if (ord == 0)
+        return idx;
+
+      while (idx > 0 && hashcodes[idx-1] == hashcode)
+        idx--;
+
+      while (idx < end && hashcodes[idx] == hashcode) {
+        ord = key.quickOrder(keys[idx]);
+        if (ord == 0)
+          return idx;
+        else if (ord < 0)
+          idx++;
+        else
+          break;
+      }
+
+      return -idx - 1;
+    }
+  }
 }

@@ -32,17 +32,24 @@ class NeBinRelObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  // public Obj setKeyValue(Obj key, Obj value) {
-  //   if (isMap) {
-  //     NeTreapMapObj treap = new NeTreapMapObj(col1, col2, 0, col1.length);
-  //     return treap.setKeyValue(key, value);
-  //   }
-  //   else
-  //     throw Miscellanea.internalFail(this);
-  // }
+  public Obj setKeyValue(Obj key, Obj value) {
+    if (!isMap)
+      throw Miscellanea.internalFail(this);
 
-  // public Obj removeKey(Obj key) {
-  // }
+    NeTreeMapObj tree = new NeTreeMapObj(col1, col2, hashcodes1, 0, col1.length);
+    return tree.setKeyValue(key, value);
+  }
+
+  public Obj removeKey(Obj key) {
+    if (!isMap)
+      throw Miscellanea.internalFail(this);
+
+    if (!hasKey(key))
+      return this;
+
+    NeTreeMapObj tree = new NeTreeMapObj(col1, col2, hashcodes1, 0, col1.length);
+    return tree.removeKey(key);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -290,9 +297,9 @@ class NeBinRelObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  private static int keyRangeStart(Obj[] objs, int[] hashcodes, Obj key) {
+  public static int keyRangeStart(Obj[] objs, int[] hashcodes, Obj key) {
     int hashcode = key.hashcode();
-    int idx = Miscellanea.indexIntoSortedArray(hashcodes, hashcode);
+    int idx = Miscellanea.anyIndexOrEncodeInsertionPointIntoSortedArray(hashcodes, hashcode);
     if (idx < 0)
       return idx;
 

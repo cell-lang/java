@@ -23,17 +23,17 @@ class RecordObj extends NeBinRelObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  // public Obj setKeyValue(Obj key, Obj value) {
-  //   int size = labels.length;
-  //   Obj[] keys = new Obj[size];
-  //   for (int i=0 ; i < size ; i++)
-  //     keys[i] = SymbObj.get(labels[i]);
-  //   NeTreapMapObj treap = new NeTreapMapObj(keys, col2, 0, size);
-  //   return treap.setKeyValue(key, value);
-  // }
+  public Obj setKeyValue(Obj key, Obj value) {
+    buildCol1();
+    return super.setKeyValue(key, value);
+  }
 
-  // public Obj removeKey(Obj key) {
-  // }
+  public Obj removeKey(Obj key) {
+    if (!hasKey(key))
+      return this;
+    buildCol1();
+    return super.removeKey(key);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
 
