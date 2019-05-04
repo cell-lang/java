@@ -28,11 +28,11 @@ class RecordObj extends NeBinRelObj {
     return super.setKeyValue(key, value);
   }
 
-  public Obj removeKey(Obj key) {
+  public Obj dropKey(Obj key) {
     if (!hasKey(key))
       return this;
     buildCol1();
-    return super.removeKey(key);
+    return super.dropKey(key);
   }
 
   //////////////////////////////////////////////////////////////////////////////

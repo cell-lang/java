@@ -344,7 +344,7 @@ abstract class Obj implements Comparable<Obj> {
   public BinRelIter getBinRelIterByCol2(Obj obj)        {throw Miscellanea.internalFail(this);}
 
   public Obj setKeyValue(Obj key, Obj value)            {throw Miscellanea.internalFail(this);}
-  public Obj removeKey(Obj key)                         {throw Miscellanea.internalFail(this);}
+  public Obj dropKey(Obj key)                           {throw Miscellanea.internalFail(this);}
 
   //////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Ternary relation operations ////////////////////////

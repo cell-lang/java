@@ -40,7 +40,7 @@ class NeBinRelObj extends Obj {
     return tree.setKeyValue(key, value);
   }
 
-  public Obj removeKey(Obj key) {
+  public Obj dropKey(Obj key) {
     if (!isMap)
       throw Miscellanea.internalFail(this);
 
@@ -48,7 +48,7 @@ class NeBinRelObj extends Obj {
       return this;
 
     NeTreeMapObj tree = new NeTreeMapObj(col1, col2, hashcodes1, 0, col1.length);
-    return tree.removeKey(key);
+    return tree.dropKey(key);
   }
 
   //////////////////////////////////////////////////////////////////////////////

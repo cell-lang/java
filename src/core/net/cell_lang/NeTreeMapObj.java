@@ -37,7 +37,7 @@ class NeTreeMapObj extends Obj {
       return packedRepr.setKeyValue(key, value);
   }
 
-  public Obj removeKey(Obj key) {
+  public Obj dropKey(Obj key) {
     if (rootNode != null) {
       Node newRoot = rootNode.remove(key, key.hashcode());
       if (newRoot == rootNode)
@@ -45,7 +45,7 @@ class NeTreeMapObj extends Obj {
       return newRoot != null ? new NeTreeMapObj(newRoot) : EmptyRelObj.singleton;
     }
     else
-      return packedRepr.removeKey(key);
+      return packedRepr.dropKey(key);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -185,7 +185,7 @@ class NeTreeMapObj extends Obj {
   private static Node newNode(Obj[] keys, Obj[] values, int[] hashcodes, int first, int count) {
     Miscellanea._assert(count > 0);
     if (count > 1)
-      return newNode(keys, values, hashcodes, first, count);
+      return new ArraysNode(keys, values, hashcodes, first, count);
     else
       return new StdNode(keys[first], values[first], hashcodes[first]);
   }
@@ -516,15 +516,34 @@ class NeTreeMapObj extends Obj {
 
     ////////////////////////////////////////////////////////////////////////
 
+    public String toString() {
+      String[] strs = toStrings();
+      String str = "";
+      for (int i=0 ; i < strs.length ; i++) {
+        if (i > 0)
+          str += "\n";
+        str += strs[i];
+      }
+      return str;
+    }
+
     public String[] toStrings() {
       String[] strs = new String[count+1];
       strs[0] = "ArraysNode";
       for (int i=0 ; i < count ; i++)
-        strs[i+1] = "  " + keys[first+i].toString() + " -> " + values[first+i].toString();
+        strs[i+1] = String.format("%13d:  %-40s -> %s", hashcodes[first+i], keys[first+i], values[first+i]);
       return strs;
     }
 
     ////////////////////////////////////////////////////////////////////////
+
+    private boolean lowerThan(Obj key, int hashcode, int idx) {
+      return hashcode < hashcodes[idx] || (hashcode == hashcodes[idx] && key.quickOrder(keys[idx]) < 0);
+    }
+
+    private boolean greaterThan(Obj key, int hashcode, int idx) {
+      return hashcode > hashcodes[idx] || (hashcode == hashcodes[idx] && key.quickOrder(keys[idx]) > 0);
+    }
 
     private int keyIdx(Obj key, int hashcode) {
       int res = _keyIdx(key, hashcode);
@@ -533,14 +552,14 @@ class NeTreeMapObj extends Obj {
       if (res >= 0) {
         Miscellanea._assert(res >= first & res <= last);
         Miscellanea._assert(key.isEq(keys[res]));
-        Miscellanea._assert(res == first || key.quickOrder(keys[res-1]) > 0); // keys[res-1] < key
-        Miscellanea._assert(res == last  || key.quickOrder(keys[res+1]) < 0); // key < keys[res+1]
+        Miscellanea._assert(res == first || greaterThan(key, hashcode, res-1)); // keys[res-1] < key
+        Miscellanea._assert(res == last  || lowerThan(key, hashcode, res+1));   // key < keys[res+1]
       }
       else {
         int insIdx = -res - 1;
         Miscellanea._assert(insIdx >= first & insIdx <= end);
-        Miscellanea._assert(insIdx == first || key.quickOrder(keys[insIdx-1]) > 0); // keys[insIdx-1] < key
-        Miscellanea._assert(insIdx == end   || key.quickOrder(keys[insIdx])   < 0); // key < keys[ins]
+        Miscellanea._assert(insIdx == first || greaterThan(key, hashcode, insIdx-1)); // keys[insIdx-1] < key
+        Miscellanea._assert(insIdx == end   || lowerThan(key, hashcode, insIdx));     // key < keys[insIdx]
       }
       return res;
     }
@@ -562,7 +581,7 @@ class NeTreeMapObj extends Obj {
         ord = key.quickOrder(keys[idx]);
         if (ord == 0)
           return idx;
-        else if (ord < 0)
+        else if (ord > 0)
           idx++;
         else
           break;

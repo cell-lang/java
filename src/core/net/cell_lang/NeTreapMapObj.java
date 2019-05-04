@@ -57,7 +57,7 @@ class NeTreapMapObj extends Obj {
       return packedRepr.setKeyValue(key, value);
   }
 
-  public Obj removeKey(Obj key) {
+  public Obj dropKey(Obj key) {
     if (rootNode != null) {
       Obj currValue = rootNode.lookup(key);
       if (currValue != null) {
@@ -68,7 +68,7 @@ class NeTreapMapObj extends Obj {
         return this;
     }
     else
-      return packedRepr.removeKey(key);
+      return packedRepr.dropKey(key);
   }
 
   //////////////////////////////////////////////////////////////////////////////
