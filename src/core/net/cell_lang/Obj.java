@@ -325,6 +325,9 @@ abstract class Obj implements Comparable<Obj> {
   public SeqObj  internalSort()     {throw Miscellanea.internalFail(this);}
   public Obj     randElem()         {throw Miscellanea.internalFail(this);}
 
+  public Obj     insert(Obj obj)    {throw Miscellanea.internalFail(this);}
+  public Obj     remove(Obj obj)    {throw Miscellanea.internalFail(this);}
+
   //////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Binary relation operations /////////////////////////
 

@@ -18,6 +18,24 @@ final class NeSetObj extends Obj {
     this.hashcodes = hashcodes;
   }
 
+  public Obj insert(Obj obj) {
+    if (!hasElem(obj))
+      return this;
+
+    NeTreeSetObj treeSet = new NeTreeSetObj(elts, hashcodes, 0, elts.length);
+    return treeSet.insert(obj);
+  }
+
+  public Obj remove(Obj obj) {
+    if (!hasElem(obj))
+      return this;
+
+    NeTreeSetObj treeSet = new NeTreeSetObj(elts, hashcodes, 0, elts.length);
+    return treeSet.remove(obj);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   public boolean hasElem(Obj obj) {
     int hashcode = obj.hashcode();
     int idx = Arrays.binarySearch(hashcodes, hashcode);
