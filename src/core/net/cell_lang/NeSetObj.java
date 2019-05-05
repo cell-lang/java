@@ -73,6 +73,9 @@ final class NeSetObj extends Obj {
   public int internalOrder(Obj other) {
     Miscellanea._assert(getSize() == other.getSize());
 
+    if (other instanceof NeTreeSetObj)
+      return -other.internalOrder(this);
+
     NeSetObj otherSet = (NeSetObj) other;
     int size = getSize();
     Obj[] otherElts = otherSet.elts;
