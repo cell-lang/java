@@ -291,13 +291,13 @@ class NeTreeMapObj extends Obj {
 
       if (ord > 0) {
         // search key < node key
-        Node node = left.remove(aKey, aHashcode);
-        return new StdNode(key, value, hashcode, node, right);
+        Node node = left != null ? left.remove(aKey, aHashcode) : null;
+        return node != left ? new StdNode(key, value, hashcode, node, right) : this;
       }
       else if (ord < 0) {
         // node key < search key
-        Node node = right.remove(aKey, aHashcode);
-        return new StdNode(key, value, hashcode, left, node);
+        Node node = right != null ? right.remove(aKey, aHashcode) : null;
+        return node != right ? new StdNode(key, value, hashcode, left, node) : this;
       }
       else {
         if (left == null)
