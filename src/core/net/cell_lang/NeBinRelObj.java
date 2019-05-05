@@ -310,7 +310,7 @@ class NeBinRelObj extends Obj {
       int ord = key.quickOrder(objs[idx]);
       if (ord > 0) // objs[idx] < key, checking the next slot
         idx++;
-      else if (idx < 0) // key < objs[idx], search failed
+      else if (ord < 0) // key < objs[idx], search failed
         return -1;
       else
         return idx;

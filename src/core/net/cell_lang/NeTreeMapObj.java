@@ -208,6 +208,40 @@ class NeTreeMapObj extends Obj {
       this.size = 1 + (left != null ? left.size() : 0) + (right != null ? right.size() : 0);
       this.left = left;
       this.right = right;
+
+      if (left != null) {
+        if (left instanceof StdNode) {
+          StdNode node = (StdNode) left;
+          if (!(node.hashcode < hashcode || (node.hashcode == hashcode && node.key.quickOrder(key) < 0))) {
+            throw new RuntimeException();
+          }
+        }
+        else {
+          ArraysNode node = (ArraysNode) left;
+          int last = node.first + node.count - 1;
+          if (!(node.hashcodes[last] < hashcode ||
+               (node.hashcodes[last] == hashcode && node.keys[last].quickOrder(key) < 0))) {
+            throw new RuntimeException();
+          }
+        }
+      }
+
+      if (right != null) {
+        if (right instanceof StdNode) {
+          StdNode node = (StdNode) right;
+          if (!(hashcode < node.hashcode || (node.hashcode == hashcode && key.quickOrder(node.key) < 0))) {
+            throw new RuntimeException();
+          }
+        }
+        else {
+          ArraysNode node = (ArraysNode) right;
+          int first = node.first;
+          if (!(hashcode < node.hashcodes[first] ||
+               (node.hashcodes[first] == hashcode && key.quickOrder(node.keys[first]) < 0))) {
+            throw new RuntimeException();
+          }
+        }
+      }
     }
 
     private StdNode(Obj key, Obj value, int hashcode) {
@@ -281,14 +315,8 @@ class NeTreeMapObj extends Obj {
       return aHashcode < hashcode ? 1 : (aHashcode > hashcode ? -1 : key.quickOrder(aKey));
     }
 
-    public Node merge(Node _other) {
-      StdNode other = (StdNode) _other;
-      if (this.right == null)
-        return new StdNode(key, value, hashcode, left, other);
-      else if (other.left == null)
-        return new StdNode(other.key, other.value, other.hashcode, this, other.right);
-      else
-        return new StdNode(key, value, hashcode, left, right.merge(other));
+    public Node merge(Node other) {
+      return new StdNode(key, value, hashcode, left, right != null ? right.merge(other) : other);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -418,7 +446,7 @@ class NeTreeMapObj extends Obj {
         if (rightCount > 1)
           right = newNode(keys, values, hashcodes, insIdx, rightCount);
         else if (rightCount == 1)
-          right = new StdNode(keys[insIdx], values[insIdx], hashcodes[first]);
+          right = new StdNode(keys[insIdx], values[insIdx], hashcodes[insIdx]);
       }
 
       return new StdNode(key, value, hashcode, left, right);
@@ -509,7 +537,7 @@ class NeTreeMapObj extends Obj {
         }
         else { // node.count >= count >= 2  =>  count >= 2
           Node right = newNode(node.keys, node.values, node.hashcodes, node.first+1, node.count-1);
-          return new StdNode(node.keys[node.first], values[node.first], hashcodes[node.first], this, right);
+          return new StdNode(node.keys[node.first], node.values[node.first], node.hashcodes[node.first], this, right);
         }
       }
     }
@@ -557,6 +585,12 @@ class NeTreeMapObj extends Obj {
       }
       else {
         int insIdx = -res - 1;
+        if (!(insIdx >= first & insIdx <= end)) {
+          res = _keyIdx(key, hashcode);
+          System.out.printf("res = %d\n", res);
+          System.out.printf("first = %d, count = %d, end = %d, insIdx = %d\n", first, count, end, insIdx);
+          System.out.println(toString());
+        }
         Miscellanea._assert(insIdx >= first & insIdx <= end);
         Miscellanea._assert(insIdx == first || greaterThan(key, hashcode, insIdx-1)); // keys[insIdx-1] < key
         Miscellanea._assert(insIdx == end   || lowerThan(key, hashcode, insIdx));     // key < keys[insIdx]
@@ -574,7 +608,7 @@ class NeTreeMapObj extends Obj {
       if (ord == 0)
         return idx;
 
-      while (idx > 0 && hashcodes[idx-1] == hashcode)
+      while (idx > first && hashcodes[idx-1] == hashcode)
         idx--;
 
       while (idx < end && hashcodes[idx] == hashcode) {
