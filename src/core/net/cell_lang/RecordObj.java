@@ -47,20 +47,27 @@ class RecordObj extends NeBinRelObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean hasKey(Obj obj) {
+  public boolean contains1(Obj obj) {
     return obj.isSymb() && hasField(obj.getSymbId());
   }
 
-  public boolean hasField(int symbId) {
-    return getFieldIdx(symbId) != -1;
+  public boolean contains2(Obj obj) {
+    for (int i=0 ; i < col2.length ; i++)
+      if (col2[i].isEq(obj))
+        return true;
+    return false;
   }
 
-  public boolean hasPair(Obj obj1, Obj obj2) {
+  public boolean contains(Obj obj1, Obj obj2) {
     if (!obj1.isSymb())
       return false;
     int keyId = obj1.getSymbId();
     int idx = getFieldIdx(obj1.getSymbId());
     return idx != -1 && col2[idx].isEq(obj2);
+  }
+
+  public boolean hasField(int symbId) {
+    return getFieldIdx(symbId) != -1;
   }
 
   public BinRelIter getBinRelIter() {

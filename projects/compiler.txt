@@ -67,6 +67,11 @@
 ../compiler/src/stage-3/search.cell
 ../compiler/src/stage-3/rewriting.cell
 
+../compiler/src/stage-3-flow-graph/code-graph.cell
+../compiler/src/stage-3-flow-graph/flow-map.cell
+../compiler/src/stage-3-flow-graph/live-vars.cell
+../compiler/src/stage-3-flow-graph/utils.cell
+
 
 // Compiler steps
 
@@ -145,11 +150,6 @@
 ../compiler/src/I-code-optimization/dead-code-removal.cell
 ../compiler/src/I-code-optimization/code-optimization.cell
 ../compiler/src/I-code-optimization/array-optimization.cell
-
-../compiler/src/J-ref-counting/utils.cell
-../compiler/src/J-ref-counting/code-graph.cell
-../compiler/src/J-ref-counting/flow-map.cell
-../compiler/src/J-ref-counting/live-vars.cell
 
 src/cell/code-gen/auto-instrs.cell
 src/cell/code-gen/exprs.cell

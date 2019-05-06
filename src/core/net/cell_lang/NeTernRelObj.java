@@ -53,7 +53,39 @@ final class NeTernRelObj extends Obj {
     this.col3 = col3;
   }
 
-  public boolean hasTriple(Obj obj1, Obj obj2, Obj obj3) {
+  public boolean contains1(Obj val) {
+    return Algs.binSearchRange(col1, 0, col1.length, val)[1] > 0;
+  }
+
+  public boolean contains2(Obj val) {
+    if (idxs231 == null)
+      idxs231 = Algs.sortedIndexes(col2, col3, col1);
+    return Algs.binSearchRange(idxs231, col2, val)[1] > 0;
+  }
+
+  public boolean contains3(Obj val) {
+    if (idxs312 == null)
+      idxs312 = Algs.sortedIndexes(col3, col1, col2);
+    return Algs.binSearchRange(idxs312, col3, val)[1] > 0;
+  }
+
+  public boolean contains12(Obj val1, Obj val2) {
+    return Algs.binSearchRange(col1, col2, val1, val2)[1] > 0;
+  }
+
+  public boolean contains13(Obj val1, Obj val3) {
+    if (idxs312 == null)
+      idxs312 = Algs.sortedIndexes(col3, col1, col2);
+    return Algs.binSearchRange(idxs312, col3, col1, val3, val1)[1] > 0;
+  }
+
+  public boolean contains23(Obj val2, Obj val3) {
+    if (idxs231 == null)
+      idxs231 = Algs.sortedIndexes(col2, col3, col1);
+    return Algs.binSearchRange(idxs231, col2, col3, val2, val3)[1] > 0;
+  }
+
+  public boolean contains(Obj obj1, Obj obj2, Obj obj3) {
     int[] firstAndCount = Algs.binSearchRange(col1, 0, col1.length, obj1);
     int first = firstAndCount[0];
     int count = firstAndCount[1];

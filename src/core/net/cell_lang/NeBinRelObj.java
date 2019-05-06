@@ -44,7 +44,7 @@ class NeBinRelObj extends Obj {
     if (!isMap)
       throw Miscellanea.internalFail(this);
 
-    if (!hasKey(key))
+    if (!contains1(key))
       return this;
 
     NeTreeMapObj tree = new NeTreeMapObj(col1, col2, hashcodes1, 0, col1.length);
@@ -69,20 +69,18 @@ class NeBinRelObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean hasKey(Obj key) {
+  public boolean contains1(Obj key) {
     Miscellanea._assert(isMap);
     return keyRangeStart(col1, hashcodes1, key) >= 0;
   }
 
-  public boolean hasField(int symbId) {
-    int len = col1.length;
-    for (int i=0 ; i < len ; i++)
-      if (col1[i].isSymb(symbId))
-        return true;
-    return false;
+  public boolean contains2(Obj obj) {
+    if (revIdxs == null)
+      revIdxs = Algs.sortedIndexes(col2, col1);
+    return Algs.binSearchRange(revIdxs, col2, obj)[1] > 0;
   }
 
-  public boolean hasPair(Obj obj1, Obj obj2) {
+  public boolean contains(Obj obj1, Obj obj2) {
     if (isMap) {
       int idx = keyRangeStart(col1, hashcodes1, obj1);
       return idx >= 0 && col2[idx].isEq(obj2);
@@ -98,6 +96,14 @@ class NeBinRelObj extends Obj {
       }
       return false;
     }
+  }
+
+  public boolean hasField(int symbId) {
+    int len = col1.length;
+    for (int i=0 ; i < len ; i++)
+      if (col1[i].isSymb(symbId))
+        return true;
+    return false;
   }
 
   public BinRelIter getBinRelIter() {
@@ -377,7 +383,7 @@ class NeBinRelObj extends Obj {
     }
 
     for (int i=0 ; i < _count ; i++) {
-      check(hasPair(_col1[i], _col2[i]));
+      check(contains(_col1[i], _col2[i]));
     }
   }
 

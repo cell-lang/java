@@ -6,7 +6,7 @@ import java.io.Writer;
 
 class NeTreeMapObj extends Obj {
   Node rootNode;
-  NeBinRelObj packedRepr;
+  NeBinRelObj packed;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@ class NeTreeMapObj extends Obj {
     if (rootNode != null)
       return new NeTreeMapObj(rootNode.insert(key, value, key.hashcode()));
     else
-      return packedRepr.setKeyValue(key, value);
+      return packed.setKeyValue(key, value);
   }
 
   public Obj dropKey(Obj key) {
@@ -45,7 +45,7 @@ class NeTreeMapObj extends Obj {
       return newRoot != null ? new NeTreeMapObj(newRoot) : EmptyRelObj.singleton;
     }
     else
-      return packedRepr.dropKey(key);
+      return packed.dropKey(key);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -55,33 +55,38 @@ class NeTreeMapObj extends Obj {
   }
 
   public boolean isNeRecord() {
-    return rootNode != null ? rootNode.keysAreSymbols() : packedRepr.isNeRecord();
+    return rootNode != null ? rootNode.keysAreSymbols() : packed.isNeRecord();
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean hasKey(Obj key) {
-    return rootNode != null ? rootNode.lookup(key, key.hashcode()) != null : packedRepr.hasKey(key);
+  public boolean contains1(Obj key) {
+    return rootNode != null ? rootNode.lookup(key, key.hashcode()) != null : packed.contains1(key);
   }
 
-  public boolean hasField(int symbId) {
-    return hasKey(SymbObj.get(symbId));
+  public boolean contains2(Obj obj) {
+    return packed().contains2(obj);
   }
 
-  public boolean hasPair(Obj key, Obj value) {
+  public boolean contains(Obj key, Obj value) {
     if (rootNode != null) {
       Obj currValue = rootNode.lookup(key, key.hashcode());
       return currValue != null && currValue.isEq(value);
     }
     else
-      return packedRepr.hasPair(key, value);
+      return packed.contains(key, value);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean hasField(int symbId) {
+    return contains1(SymbObj.get(symbId));
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   public BinRelIter getBinRelIter() {
-    pack();
-    return packedRepr.getBinRelIter();
+    return packed().getBinRelIter();
   }
 
   public BinRelIter getBinRelIterByCol1(Obj key) {
@@ -93,12 +98,11 @@ class NeTreeMapObj extends Obj {
         return new BinRelIter(Miscellanea.emptyObjArray, Miscellanea.emptyObjArray);
     }
     else
-      return packedRepr.getBinRelIterByCol1(key);
+      return packed.getBinRelIterByCol1(key);
   }
 
   public BinRelIter getBinRelIterByCol2(Obj obj) {
-    pack();
-    return packedRepr.getBinRelIterByCol2(obj);
+    return packed().getBinRelIterByCol2(obj);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -111,7 +115,7 @@ class NeTreeMapObj extends Obj {
       return value;
     }
     else
-      return packedRepr.lookup(key);
+      return packed.lookup(key);
   }
 
   public Obj lookupField(int symbId) {
@@ -121,8 +125,7 @@ class NeTreeMapObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public int internalOrder(Obj other) {
-    pack();
-    return packedRepr.internalOrder(other);
+    return packed().internalOrder(other);
   }
 
   public TypeCode getTypeCode() {
@@ -132,35 +135,33 @@ class NeTreeMapObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
-    pack();
-    packedRepr.print(writer, maxLineLen, newLine, indentLevel);
+    packed().print(writer, maxLineLen, newLine, indentLevel);
   }
 
   public int minPrintedSize() {
-    pack();
-    return packedRepr.minPrintedSize();
+    return packed().minPrintedSize();
   }
 
   public ValueBase getValue() {
-    pack();
-    return packedRepr.getValue();
+    return packed().getValue();
   }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  private void pack() {
+  private NeBinRelObj packed() {
     if (rootNode != null) {
-      Miscellanea._assert(packedRepr == null);
+      Miscellanea._assert(packed == null);
       int size = getSize();
       Obj[] keys = new Obj[size];
       Obj[] values = new Obj[size];
       int count = rootNode.traverse(keys, values, 0);
       Miscellanea._assert(count == size);
-      // packedRepr = new NeBinRelObj(keys, values, true);
-      packedRepr = (NeBinRelObj) Builder.createMap(keys, values); //## BAD BAD BAD
+      // packed = new NeBinRelObj(keys, values, true);
+      packed = (NeBinRelObj) Builder.createMap(keys, values); //## BAD BAD BAD
       rootNode = null;
     }
+    return packed;
   }
 
   //////////////////////////////////////////////////////////////////////////////

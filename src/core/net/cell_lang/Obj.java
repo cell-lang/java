@@ -320,7 +320,8 @@ abstract class Obj implements Comparable<Obj> {
   //////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Set operations ///////////////////////////////
 
-  public boolean hasElem(Obj obj)   {throw Miscellanea.internalFail(this);}
+  public boolean contains(Obj obj)  {throw Miscellanea.internalFail(this);}
+
   public SetIter getSetIter()       {throw Miscellanea.internalFail(this);}
   public SeqObj  internalSort()     {throw Miscellanea.internalFail(this);}
   public Obj     randElem()         {throw Miscellanea.internalFail(this);}
@@ -334,9 +335,11 @@ abstract class Obj implements Comparable<Obj> {
   public boolean isNeMap()                              {return false;}
   public boolean isNeRecord()                           {return false;}
 
-  public boolean hasKey(Obj o)                          {throw Miscellanea.internalFail(this);}
+  public boolean contains1(Obj val)                     {throw Miscellanea.internalFail(this);}
+  public boolean contains2(Obj val)                     {throw Miscellanea.internalFail(this);}
+  public boolean contains(Obj val1, Obj val2)           {throw Miscellanea.internalFail(this);}
+
   public boolean hasField(int id)                       {throw Miscellanea.internalFail(this);}
-  public boolean hasPair(Obj o1, Obj o2)                {throw Miscellanea.internalFail(this);}
 
   public Obj lookup(Obj key)                            {throw Miscellanea.internalFail(this);}
   public Obj lookupField(int id)                        {throw Miscellanea.internalFail(this);}
@@ -352,7 +355,13 @@ abstract class Obj implements Comparable<Obj> {
   //////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Ternary relation operations ////////////////////////
 
-  public boolean hasTriple(Obj o1, Obj o2, Obj o3)              {throw Miscellanea.internalFail(this);}
+  // public boolean contains1(Obj val)                             {throw Miscellanea.internalFail(this);}
+  // public boolean contains2(Obj val)                             {throw Miscellanea.internalFail(this);}
+  public boolean contains3(Obj val)                             {throw Miscellanea.internalFail(this);}
+  public boolean contains12(Obj val1, Obj val2)                 {throw Miscellanea.internalFail(this);}
+  public boolean contains13(Obj val1, Obj val3)                 {throw Miscellanea.internalFail(this);}
+  public boolean contains23(Obj val2, Obj val3)                 {throw Miscellanea.internalFail(this);}
+  public boolean contains(Obj val1, Obj val2, Obj val3)         {throw Miscellanea.internalFail(this);}
 
   public TernRelIter getTernRelIter()                           {throw Miscellanea.internalFail(this);}
 
@@ -425,6 +434,22 @@ abstract class Obj implements Comparable<Obj> {
 
   //////////////////////////////////////////////////////////////////////////////
   ////////////////////////// OBSOLETE STUFF TO REMOVE //////////////////////////
+
+  public boolean hasElem(Obj obj) {
+    return contains(obj);
+  }
+
+  public boolean hasKey(Obj obj) {
+    return contains1(obj);
+  }
+
+  public boolean hasPair(Obj obj1, Obj obj2) {
+    return contains(obj1, obj2);
+  }
+
+  public boolean hasTriple(Obj obj1, Obj obj2, Obj obj3) {
+    return contains(obj1, obj2, obj3);
+  }
 
   public long[] getLongArray() {
     return getArray((long[]) null);

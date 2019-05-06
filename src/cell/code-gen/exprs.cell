@@ -70,8 +70,6 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
 
     are_eq(e1?, e2?)      = native_eq_expr(e1, e2, parenthesized),
 
-    // is_gt()               = native_nary_op(" > ",  (expr.expr1, expr.expr2), parenthesized),
-    // is_ge()               = native_nary_op(" >= ", (expr.expr1, expr.expr2), parenthesized),
     is_lt(e1?, e2?)       = native_nary_op(" < ",  (e1, e2), parenthesized),
     is_le(e1?, e2?)       = native_nary_op(" <= ", (e1, e2), parenthesized),
 
@@ -84,10 +82,9 @@ String native_expr(BoolExpr expr, Bool parenthesized) {
     is_blank(v?)          = native_var_ref_name(v) & ".isBlankObj()",
     is_null(v?)           = native_var_ref_name(v) & ".isNullObj()",
 
-    has_elem()            = native_expr(expr.set) & ".hasElem(" & native_expr(expr.elt) & ")",
     has_field()           = native_expr(expr.record) & ".hasField(" & symb_idx_name(expr.field) & ")",
 
-    contains()            = native_contains_expr(expr.coll, expr.entry),
+    rel_obj_contains()    = native_rel_obj_contains_expr(expr.rel, expr.args),
     table_contains()      = native_table_contains(expr.table, expr.tuple, expr.symmetric),
 
     is_member()           = native_fn_name(expr.pred) & "(" & native_expr(expr.obj) & ")",
@@ -142,16 +139,21 @@ String native_table_contains(AnyTableVar table, Maybe[Int32Var]+ tuple, Bool sym
 }
 
 
-String native_contains_expr(ObjExpr rel, ObjExpr+ tuple) {
-  fn_name = fn_names_by_arity[|tuple|];
-  return native_method_call_expr(rel, fn_name, tuple);
-  // return native_expr(rel) & "." & fn_name & "(" & append((native_expr(a) : a <- tuple), ", ") & ")";
+String native_rel_obj_contains_expr(ObjExpr rel, Maybe[ObjExpr]+ args) {
+  fn_name = "contains" & match (args)
+    (just())                    = "",
+    (just(),  just())           = "",
+    (just(),  just(),  just())  = "",
+    (just(),  nothing)          = "1",
+    (nothing, just())           = "2",
+    (just(),  nothing, nothing) = "1",
+    (nothing, just(),  nothing) = "2",
+    (nothing, nothing, just())  = "3",
+    (just(),  just(),  nothing) = "12",
+    (just(),  nothing, just())  = "13",
+    (nothing, just(),  just())  = "23";
 
-  [NzNat -> String] fn_names_by_arity = [
-    1 -> "hasElem",
-    2 -> "hasPair",
-    3 -> "hasTriple"
-  ];
+  return native_method_call_expr(rel, fn_name, values(args));
 }
 
 

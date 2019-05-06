@@ -19,7 +19,7 @@ final class NeSetObj extends Obj {
   }
 
   public Obj insert(Obj obj) {
-    if (!hasElem(obj))
+    if (!contains(obj))
       return this;
 
     NeTreeSetObj treeSet = new NeTreeSetObj(elts, hashcodes, 0, elts.length);
@@ -27,7 +27,7 @@ final class NeSetObj extends Obj {
   }
 
   public Obj remove(Obj obj) {
-    if (!hasElem(obj))
+    if (!contains(obj))
       return this;
 
     NeTreeSetObj treeSet = new NeTreeSetObj(elts, hashcodes, 0, elts.length);
@@ -36,7 +36,7 @@ final class NeSetObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean hasElem(Obj obj) {
+  public boolean contains(Obj obj) {
     int hashcode = obj.hashcode();
     int idx = Arrays.binarySearch(hashcodes, hashcode);
     if (idx >= 0) {

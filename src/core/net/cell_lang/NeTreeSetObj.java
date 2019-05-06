@@ -55,8 +55,8 @@ class NeTreeSetObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean hasElem(Obj obj) {
-    return rootNode != null ? rootNode.hasElem(obj, obj.hashcode()) : packed.hasElem(obj);
+  public boolean contains(Obj obj) {
+    return rootNode != null ? rootNode.contains(obj, obj.hashcode()) : packed.contains(obj);
   }
 
   public SetIter getSetIter() {
@@ -121,7 +121,7 @@ class NeTreeSetObj extends Obj {
 
   private interface Node {
     int size();
-    boolean hasElem(Obj obj, int hashcode);
+    boolean contains(Obj obj, int hashcode);
 
     StdNode insert(Obj obj, int hashcode);
     Node remove(Obj obj, int hashcode);
@@ -205,13 +205,13 @@ class NeTreeSetObj extends Obj {
       return size;
     }
 
-    public boolean hasElem(Obj obj, int objHash) {
+    public boolean contains(Obj obj, int objHash) {
       int ord = order(obj, objHash);
 
       if (ord > 0) // search elt < node elt, searching the left node
-        return left != null && left.hasElem(obj, objHash);
+        return left != null && left.contains(obj, objHash);
       else if (ord < 0) // node elt < search elt, searching the right node
-        return right != null && right.hasElem(obj, objHash);
+        return right != null && right.contains(obj, objHash);
       else
         return true;
     }
@@ -333,7 +333,7 @@ class NeTreeSetObj extends Obj {
       return count;
     }
 
-    public boolean hasElem(Obj obj, int hashcode) {
+    public boolean contains(Obj obj, int hashcode) {
       return eltIdx(obj, hashcode) >= 0;
     }
 

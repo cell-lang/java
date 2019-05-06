@@ -30,23 +30,45 @@ final class EmptyRelObj extends Obj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean hasElem(Obj obj) {
+  public boolean contains(Obj obj) {
     return false;
   }
 
-  public boolean hasKey(Obj key) {
+  public boolean contains(Obj val1, Obj val2) {
     return false;
   }
+
+  public boolean contains(Obj val1, Obj val2, Obj val3) {
+    return false;
+  }
+
+  public boolean contains1(Obj val) {
+    return false;
+  }
+
+  public boolean contains2(Obj val) {
+    return false;
+  }
+
+  public boolean contains3(Obj val) {
+    return false;
+  }
+
+  public boolean contains12(Obj val1, Obj val2) {
+    return false;
+  }
+
+  public boolean contains13(Obj val1, Obj val3) {
+    return false;
+  }
+
+  public boolean contains23(Obj val2, Obj val3) {
+    return false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public boolean hasField(int id) {
-    return false;
-  }
-
-  public boolean hasPair(Obj obj1, Obj obj2) {
-    return false;
-  }
-
-  public boolean hasTriple(Obj obj1, Obj obj2, Obj obj3) {
     return false;
   }
 
