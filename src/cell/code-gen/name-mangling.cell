@@ -120,7 +120,9 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
     else "";
 
   return match (var)
-    var(<+> a?)                   = _print_(a) & "_V",
+    var(<+> a?)                   = if   a == hidden_var_0_id then "h0"
+                                    elif a == hidden_var_1_id then "h1"
+                                                              else _print_(a) & "_V",
     fn_arg(<*..*> n?)             = "a" & printed(n),
     impl_arg(<+> a?)              = prefix & _print_(a) & "_V",
     capt_var(<*..*> n?)           = "capt_var_"  & printed(n),
