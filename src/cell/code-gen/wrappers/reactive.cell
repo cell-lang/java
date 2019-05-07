@@ -366,7 +366,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
-  (String*, String*) method_wrapper(MethodId method_id, CompiledMethod method,
+  (String*, String*) method_wrapper(MethodId method_id, <CompiledMethod, OptCompMethod> method,
     <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name,
     String method_path, Bool is_gen_memb_tester) {
     args_inter_types = (interface_type(t) : t <- method.args_types);
