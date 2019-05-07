@@ -154,9 +154,6 @@ class NeBinRelObj extends Obj {
     if (other instanceof RecordObj)
       return -other.internalOrder(this);
 
-    if (other instanceof NeTreapMapObj)
-      return -other.internalOrder(this);
-
     if (other instanceof NeTreeMapObj)
       return -other.internalOrder(this);
 
