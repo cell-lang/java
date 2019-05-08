@@ -164,6 +164,8 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   object(true),       bool_obj(e2?)     = native_expr(e2, parenthesized),
   object(false),      bool_obj(e2?)     = native_expr(neg(e2), parenthesized),
 
+  int_obj(upcast_int32(e?)), int_obj(<*..*> n?) = native_nary_op(" == ", (e, n), parenthesized),
+
   int_obj(e1?),       int_obj(e2?)      = native_nary_op(" == ", (e1, e2), parenthesized),
   int_obj(e1?),       object(<*..*> n?) = native_nary_op(" == ", (e1, n), parenthesized),
   object(<*..*> n?),  int_obj(e2?)      = native_nary_op(" == ", (n, e2), parenthesized),
@@ -198,6 +200,8 @@ String native_neq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   bool_obj(e1?),      object(false)     = native_expr(e1, parenthesized),
   object(true),       bool_obj(e2?)     = native_expr(neg(e2), parenthesized),
   object(false),      bool_obj(e2?)     = native_expr(e2, parenthesized),
+
+  int_obj(upcast_int32(e?)), int_obj(<*..*> n?) = native_nary_op(" != ", (e, n), parenthesized),
 
   int_obj(e1?),       int_obj(e2?)      = native_nary_op(" != ", (e1, e2), parenthesized),
   int_obj(e1?),       object(<*..*> n?) = native_nary_op(" != ", (e1, n), parenthesized),
