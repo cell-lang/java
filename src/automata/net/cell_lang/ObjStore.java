@@ -68,6 +68,7 @@ final class ObjStore extends ValueStore {
         resize(count+1);
       int idx = firstFree;
       insert(value, value.hashcode(), firstFree);
+      addRef(idx);
       return idx;
     }
   }

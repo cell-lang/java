@@ -96,6 +96,7 @@ final class IntStore extends ValueStore {
         resize(count + 1);
       int idx = firstFree;
       insert(value, idx);
+      addRef(idx);
       return idx;
     }
   }

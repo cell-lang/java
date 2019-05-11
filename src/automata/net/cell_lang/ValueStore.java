@@ -30,7 +30,6 @@ abstract class ValueStore {
 
   public void release(int index) {
     Miscellanea._assert(references[index] > 0);
-    // Miscellanea._assert(values[index] != null);
 
     int refs = Byte.toUnsignedInt(references[index]) - 1;
     if (refs == 127) {
