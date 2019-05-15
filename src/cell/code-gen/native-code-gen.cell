@@ -399,7 +399,13 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     String* gen_args_list(ObjProcDef pd) {
       args = (native_var_type(v) & " " & native_var_decl_name(v) : v <- pd.args);
       cls_args = ("Lambda " & native_var_decl_name(a.var) : a <- pd.cls_args);
-      args_list = args & cls_args;
+      rel_auto_args = join((
+        ( native_name(a.type) & " " & native_var_decl_name(a.var),
+          aux_struct_c_name(a.type) & " " & aux_struct_var_decl_name(a.var)
+        ) : a <- pd.rel_auto_args
+      ));
+      react_auto_args = (native_name(a.type) & " " & native_var_decl_name(a.var) : a <- pd.react_auto_args);
+      args_list = args & cls_args & rel_auto_args & react_auto_args;
       args_list = (args_list | "Env env") if not pd.name :: ConvFnId;
       return args_list;
     }
