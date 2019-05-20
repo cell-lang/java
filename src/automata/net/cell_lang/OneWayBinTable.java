@@ -162,7 +162,11 @@ class OneWayBinTable {
     }
   }
 
+  private boolean[] deleted = new boolean[1];
+
   public void delete(int surr1, int surr2) {
+    //## BUG BUG BUG: WHAT IF surr1 >= column.length?
+    //## THIS KIND OF BUG MAY BE PRESENT ELSEWHERE IN THIS CLASS
     int code = column[surr1];
     if (code == OverflowTable.EmptyMarker)
       return;
@@ -171,7 +175,7 @@ class OneWayBinTable {
       count--;
     }
     else if (code >> 29 != 0) {
-      boolean[] deleted = new boolean[1];
+      deleted[0] = false;
       column[surr1] = overflowTable.delete(code, surr2, deleted);
       if (deleted[0])
         count--;
