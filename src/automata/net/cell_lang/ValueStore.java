@@ -29,9 +29,8 @@ abstract class ValueStore {
   }
 
   public void release(int index) {
-    Miscellanea._assert(references[index] > 0);
-
     int refs = Byte.toUnsignedInt(references[index]) - 1;
+    Miscellanea._assert(refs >= 0);
     if (refs == 127) {
       if (extraRefs.tryDecrement(index))
         refs += 64;
@@ -43,6 +42,10 @@ abstract class ValueStore {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+
+  protected int refCount(int index) {
+    return Byte.toUnsignedInt(references[index]) + 64 * extraRefs.get(index);
+  }
 
   protected void resizeRefsArray(int newCapacity) {
     byte[] currReferences = references;

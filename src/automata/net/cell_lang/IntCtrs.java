@@ -24,6 +24,10 @@ class IntCtrs {
       return false;
   }
 
+  public int get(int id) {
+    return map.hasKey(id) ? map.get(id) : 0;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   //## REPLACE WITH IntIntMap ONCE DELETION AND UPDATE HAVE BEEN IMPLEMENTED

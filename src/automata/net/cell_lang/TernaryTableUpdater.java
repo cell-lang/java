@@ -299,7 +299,7 @@ class TernaryTableUpdater {
     while (!it.done()) {
       // Tuples in the [idx, idx+count) range are sorted in both 1/2/3
       // and 3/1/2 order, since the first two arguments are the same
-      if (!Ints312.contains3(deleteList, idx, count, it.get3())) //## BUG BUG BUG
+      if (!Ints312.contains3(deleteList, idx, count, it.get1()))
         return true;
       it.next();
     }
