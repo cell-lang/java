@@ -412,7 +412,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     ));
     keys_check_code = ("") & keys_check_code if keys != [];
 
-    foreign_keys = [k : k <- block.foreign_keys, insertion_tables(k.origin) or deletion_tables(k.target)];
+    foreign_keys  = [k : k <- block.insert_checked_foreign_keys, insertion_tables(k.origin)] &
+                    [k : k <- block.delete_checked_foreign_keys, deletion_tables(k.target)];
+
     check_exprs = (check_expr(k) : k <- sort_by_key(foreign_keys, order));
     foreign_keys_check_code = join((
       ( "if (!" & e & ")",
