@@ -1,8 +1,7 @@
 String native_expr(InlineObj) =
-  object(<+> a?)    = "SymbObj.get(" & symb_idx_name(a) & ")",
-  object(<*..*> n?) = "IntObj.get(" & printed(n) & "L)",
-  empty_seq         = "EmptySeqObj.singleton",
-  empty_rel         = "EmptyRelObj.singleton";
+  object(s?)  = "SymbObj.get(" & symb_idx_name(s) & ")",
+  empty_seq   = "EmptySeqObj.singleton",
+  empty_rel   = "EmptyRelObj.singleton";
 
 
 String native_expr(StdObjVar var) = native_var_ref_name(var);
@@ -10,7 +9,7 @@ String native_expr(StdObjVar var) = native_var_ref_name(var);
 
 String native_expr(ObjNatOp expr) =
   at()                = native_expr(expr.seq)    & ".getObjAt(" & native_expr(expr.idx) & ")",
-  array_at()          = "Miscellanea.arrayAt(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")",
+  array_at()          = "Array.at(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")",
   lookup()            = native_expr(expr.rel)    & ".lookup(" & native_expr(expr.key) & ")",
   lookup_field()      = native_lookup_field_expr(expr.record, expr.field, expr.repr),
   get_tag(e?)         = native_expr(e)           & ".getTag()",
@@ -109,7 +108,7 @@ String native_and_then_expr(BoolExpr+ exprs, Bool parenthesized) {
         then native_expr(e1, true) & ".isTaggedInt()"
         else default,
 
-    (is_tagged_obj(e1?), is_int(get_inner_obj(e2?)), are_eq(get_tag(e3?), object(<+> s?))) =
+    (is_tagged_obj(e1?), is_int(get_inner_obj(e2?)), are_eq(get_tag(e3?), object(s?))) =
       if e1 == e2 and e2 == e3
         then native_expr(e1, true) & ".isTaggedInt(" & symb_idx_name(s) & ")"
         else default,
@@ -167,8 +166,6 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   int_obj(upcast_int32(e?)), int_obj(<*..*> n?) = native_nary_op(" == ", (e, n), parenthesized),
 
   int_obj(e1?),       int_obj(e2?)      = native_nary_op(" == ", (e1, e2), parenthesized),
-  int_obj(e1?),       object(<*..*> n?) = native_nary_op(" == ", (e1, n), parenthesized),
-  object(<*..*> n?),  int_obj(e2?)      = native_nary_op(" == ", (n, e2), parenthesized),
   int_obj(e1?),       _                 = native_expr(expr2) & ".isInt(" & native_expr(e1) & ")",
   _,                  int_obj(e2?)      = native_expr(expr1) & ".isInt(" & native_expr(e2) & ")",
 
@@ -176,14 +173,11 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
                                             then native_expr(expr1.record) & "." & opt_rec_field_name(untag(expr1.field))
                                             else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
 
-  get_tag(e?),        object(<+> s?)    = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
-  object(<+> s?),     get_tag(e?)       = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
+  get_tag(e?),        object(s?)        = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
+  object(s?),         get_tag(e?)       = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
 
-  object(<+> s?),     _                 = native_expr(expr2) & ".isSymb(" & symb_idx_name(s) & ")",
-  _,                  object(<+> s?)    = native_expr(expr1) & ".isSymb(" & symb_idx_name(s) & ")",
-
-  object(<*..*> n?),  _                 = native_expr(expr2) & ".isInt(" & native_expr(n) & ")",
-  _,                  object(<*..*> n?) = native_expr(expr1) & ".isInt(" & native_expr(n) & ")",
+  object(s?),         _                 = native_expr(expr2) & ".isSymb(" & symb_idx_name(s) & ")",
+  _,                  object(s?)        = native_expr(expr1) & ".isSymb(" & symb_idx_name(s) & ")",
 
   empty_seq,          _                 = native_expr(expr2) & ".isEmptySeq()",
   _,                  empty_seq         = native_expr(expr1) & ".isEmptySeq()",
@@ -204,8 +198,6 @@ String native_neq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   int_obj(upcast_int32(e?)), int_obj(<*..*> n?) = native_nary_op(" != ", (e, n), parenthesized),
 
   int_obj(e1?),       int_obj(e2?)      = native_nary_op(" != ", (e1, e2), parenthesized),
-  int_obj(e1?),       object(<*..*> n?) = native_nary_op(" != ", (e1, n), parenthesized),
-  object(<*..*> n?),  int_obj(e2?)      = native_nary_op(" != ", (n, e2), parenthesized),
 
   _,                  _                 = parenthesize("!" & native_eq_expr(expr1, expr2, true), parenthesized);
 
@@ -257,6 +249,9 @@ String native_get_int_val_expr(ObjExpr expr, Bool parenthesized) =
                           then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
                           else native_expr(expr) & ".getLong()",
   get_inner_obj(e?)   = native_expr(e) & ".getInnerLong()",
+  array_at()          = if expr.array.repr == :int
+                          then "Array.longAt(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")"
+                          else native_expr(expr) & ".getLong()",
   _                   = native_expr(expr) & ".getLong()";
 
 
@@ -354,6 +349,9 @@ String native_float_value_expr(ObjExpr expr, Bool parenthesized) =
   at()            = native_expr(expr.seq) & ".getDoubleAt(" & native_expr(expr.idx) & ")",
   lookup_field()  = if expr.repr == just(:float) and expr.record :: OptTagRecExpr
                       then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
+                      else native_expr(expr) & ".getDouble()",
+  array_at()      = if expr.array.repr == :float
+                      then "Array.floatAt(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")"
                       else native_expr(expr) & ".getDouble()",
   _               = native_expr(expr) & ".getDouble()";
 

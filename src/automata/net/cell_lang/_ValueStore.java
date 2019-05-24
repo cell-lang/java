@@ -18,7 +18,7 @@ class _ValueStore {
   //////////////////////////////////////////////////////////////////////////////
 
   public _ValueStore() {
-    Miscellanea.arrayFill(hashtable, -1);
+    Array.fill(hashtable, -1);
     for (int i=0 ; i < INIT_SIZE ; i++)
       nextFreeIdx[i] = i + 1;
   }
@@ -99,11 +99,11 @@ class _ValueStore {
     refCounts   = new int[newCapacity];
     nextFreeIdx = new int[newCapacity];
 
-    Miscellanea.arrayCopy(currValues, values, currCapacity);
-    Miscellanea.arrayCopy(currHashcodes, hashcodes, currCapacity);
-    Miscellanea.arrayCopy(currRefCounts, refCounts, currCapacity);
-    Miscellanea.arrayCopy(currNextFreeIdx, nextFreeIdx, currCapacity);
-    Miscellanea.arrayFill(hashtable, -1);
+    Array.copy(currValues, values, currCapacity);
+    Array.copy(currHashcodes, hashcodes, currCapacity);
+    Array.copy(currRefCounts, refCounts, currCapacity);
+    Array.copy(currNextFreeIdx, nextFreeIdx, currCapacity);
+    Array.fill(hashtable, -1);
 
     for (int i=0 ; i < currCapacity ; i++)
       if (values[i] != null)

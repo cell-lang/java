@@ -536,7 +536,7 @@ class NeTreeSetObj extends Obj {
 
     private int _eltIdx(Obj elt, int hashcode) {
       int end = first + count;
-      int idx = Miscellanea.anyIndexOrEncodeInsertionPointIntoSortedArray(hashcodes, first, end, hashcode);
+      int idx = Array.anyIndexOrEncodeInsertionPointIntoSortedArray(hashcodes, first, end, hashcode);
       if (idx < 0)
         return idx;
 

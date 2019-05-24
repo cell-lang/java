@@ -10,7 +10,7 @@ public class IntObjMap extends IntIdxMap {
   public void insert(int key, Obj value) {
     int idx = count();
     if (idx == values.length)
-      values = Miscellanea.arrayExtend(values, 2 * idx);
+      values = Array.extend(values, 2 * idx);
     values[idx] = value;
     insertKey(key);
   }

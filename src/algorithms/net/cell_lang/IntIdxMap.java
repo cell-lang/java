@@ -43,7 +43,7 @@ public class IntIdxMap {
   //////////////////////////////////////////////////////////////////////////////
 
   protected IntIdxMap() {
-    Miscellanea.arrayFill(hashtable, -1);
+    Array.fill(hashtable, -1);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,7 @@ public class IntIdxMap {
   public void clear() {
     //## TODO: RESET IF THE THING HAS BECOME TOO LARGE
     if (hashRange != 0)
-      Miscellanea.arrayFill(hashtable, -1, hashRange);
+      Array.fill(hashtable, -1, hashRange);
     count = 0;
     hashRange = 0;
   }
@@ -125,7 +125,7 @@ public class IntIdxMap {
     keychains = new long[newSize];
     hashtable = new int[newSize / 2];
 
-    Miscellanea.arrayFill(hashtable, -1);
+    Array.fill(hashtable, -1);
 
     hashRange = count;
     for (int i=0 ; i < count ; i++)

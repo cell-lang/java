@@ -165,21 +165,21 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static void sort(long[] array) {
-    Arrays.sort(array);
-  }
+  // public static void sort(long[] array) {
+  //   Arrays.sort(array);
+  // }
 
-  public static void sort(long[] array, int start, int end) {
-    Arrays.sort(array, start, end);
-  }
+  // public static void sort(long[] array, int start, int end) {
+  //   Arrays.sort(array, start, end);
+  // }
 
-  public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int value) {
-    return Arrays.binarySearch(array, value);
-  }
+  // public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int value) {
+  //   return Arrays.binarySearch(array, value);
+  // }
 
-  public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int start, int end, int value) {
-    return Arrays.binarySearch(array, start, end, value);
-  }
+  // public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int start, int end, int value) {
+  //   return Arrays.binarySearch(array, start, end, value);
+  // }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
@@ -311,207 +311,100 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static <T> void arrayCopy(T[] src, T[] dest, int count) {
-    for (int i=0 ; i < count ; i++)
-      dest[i] = src[i];
-  }
-
-  public static void arrayCopy(byte[] src, byte[] dest, int count) {
-    for (int i=0 ; i < count ; i++)
-      dest[i] = src[i];
-  }
-
-  public static void arrayCopy(int[] src, int[] dest, int count) {
-    for (int i=0 ; i < count ; i++)
-      dest[i] = src[i];
-  }
-
-  public static void arrayCopy(long[] src, long[] dest, int count) {
-    for (int i=0 ; i < count ; i++)
-      dest[i] = src[i];
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
-  // private void grow(int minCapacity) {
-  //     // overflow-conscious code
-  //     int oldCapacity = elementData.length;
-  //     int newCapacity = oldCapacity + (oldCapacity >> 1);
-  //     if (newCapacity - minCapacity < 0)
-  //         newCapacity = minCapacity;
-  //     if (newCapacity - MAX_ARRAY_SIZE > 0)
-  //         newCapacity = hugeCapacity(minCapacity);
-  //     // minCapacity is usually close to size, so this is a win:
-  //     elementData = Arrays.copyOf(elementData, newCapacity);
+  // public static <T> void arrayCopy(T[] src, T[] dest, int count) {
+  //   Array.copy(src, dest, count);
   // }
 
-  // private static int hugeCapacity(int minCapacity) {
-  //     if (minCapacity < 0) // overflow
-  //         throw new OutOfMemoryError();
-  //     return (minCapacity > MAX_ARRAY_SIZE) ?
-  //         Integer.MAX_VALUE :
-  //         MAX_ARRAY_SIZE;
+  // public static void arrayCopy(byte[] src, byte[] dest, int count) {
+  //   Array.copy(src, dest, count);
   // }
 
-  //     // overflow-conscious code
-  //     if (minCapacity - elementData.length > 0)
-  //         grow(minCapacity);
+  // public static void arrayCopy(int[] src, int[] dest, int count) {
+  //   Array.copy(src, dest, count);
   // }
 
-  public static int[] arrayAppend(int[] array, int count, int newValue) {
-    Miscellanea._assert(count <= array.length);
-
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      int[] newArray = new int[newLen];
-      arrayCopy(array, newArray, count);
-      array = newArray;
-    }
-
-    array[count] = newValue;
-    return array;
-  }
-
-  public static long[] arrayAppend(long[] array, int count, long newValue) {
-    Miscellanea._assert(count <= array.length);
-
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      long[] newArray = new long[newLen];
-      arrayCopy(array, newArray, count);
-      array = newArray;
-    }
-
-    array[count] = newValue;
-    return array;
-  }
-
-  public static Obj[] arrayAppend(Obj[] array, int count, Obj newValue) {
-    Miscellanea._assert(count <= array.length);
-
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      array = Arrays.copyOf(array, newLen);
-    }
-
-    array[count] = newValue;
-    return array;
-  }
-
-  public static int[] array2Append(int[] array, int count, int val1, int val2) {
-    Miscellanea._assert(2 * count <= array.length);
-
-    if (array.length < 2 * (count + 1)) {
-      int newLen = Math.max(64, 2 * ((3 * count) / 2));
-      int[] newArray = new int[newLen];
-      arrayCopy(array, newArray, 2 * count);
-      array = newArray;
-    }
-
-    array[2 * count] = val1;
-    array[2 * count + 1] = val2;
-
-    return array;
-  }
-
-  public static int[] array3Append(int[] array, int count, int val1, int val2, int val3) {
-    Miscellanea._assert(3 * count <= array.length);
-
-    if (array.length < 3 * (count + 1)) {
-      int newLen = Math.max(96, 3 * ((3 * count) / 2));
-      int[] newArray = new int[newLen];
-      arrayCopy(array, newArray, 3 * count);
-      array = newArray;
-    }
-
-    int offset = 3 * count;
-    array[offset] = val1;
-    array[offset + 1] = val2;
-    array[offset + 2] = val3;
-
-    return array;
-  }
+  // public static void arrayCopy(long[] src, long[] dest, int count) {
+  //   Array.copy(src, dest, count);
+  // }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static Obj arrayAt(boolean[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
-      return SymbObj.get(array[(int) idx]);
-    else
-      throw softFail();
-  }
+  // public static int[] arrayAppend(int[] array, int count, int newValue) {
+  //   return Array.append(array, count, newValue);
+  // }
 
-  public static Obj arrayAt(long[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
-      return IntObj.get(array[(int) idx]);
-    else
-      throw softFail();
-  }
+  // public static long[] arrayAppend(long[] array, int count, long newValue) {
+  //   return Array.append(array, count, newValue);
+  // }
 
-  public static Obj arrayAt(double[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
-      return new FloatObj(array[(int) idx]);
-    else
-      throw softFail();
-  }
+  // public static Obj[] arrayAppend(Obj[] array, int count, Obj newValue) {
+  //   return Array.append(array, count, newValue);
+  // }
 
-  public static Obj arrayAt(Obj[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
-      return array[(int) idx];
-    else
-      throw softFail();
-  }
+  // public static int[] array2Append(int[] array, int count, int val1, int val2) {
+  //   return Array.append2(array, count, val1, val2);
+  // }
+
+  // public static int[] array3Append(int[] array, int count, int val1, int val2, int val3) {
+  //   return Array.append3(array, count, val1, val2, val3);
+  // }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static void arrayReset(long[] array) {
-    int len = array.length;
-    for (int i=0 ; i < len ; i++)
-      array[i] = 0;
-  }
+  // public static Obj arrayAt(boolean[] array, int size, long idx) {
+  //   return Array.at(array, size, idx);
+  // }
+
+  // public static Obj arrayAt(long[] array, int size, long idx) {
+  //   return Array.at(array, size, idx);
+  // }
+
+  // public static Obj arrayAt(double[] array, int size, long idx) {
+  //   return Array.at(array, size, idx);
+  // }
+
+  // public static Obj arrayAt(Obj[] array, int size, long idx) {
+  //   return Array.at(array, size, idx);
+  // }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static void arrayFill(int[] array, int value) {
-    arrayFill(array, array.length, value);
-  }
-
-  public static void arrayFill(int[] array, int count, int value) {
-    for (int i=0 ; i < count ; i++)
-      array[i] = value;
-  }
-
-  public static void arrayFill(int[] array, int offset, int count, int value) {
-    for (int i=0 ; i < count ; i++)
-      array[offset + i] = value;
-  }
+  // public static void arrayReset(long[] array) {
+  //   return Array.reset(array);
+  // }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static int[] arrayExtend(int[] array, int newSize) {
-    _assert(newSize > array.length);
-    int[] newArray = new int[newSize];
-    Miscellanea.arrayCopy(array, newArray, array.length);
-    return newArray;
-  }
+  // public static void arrayFill(int[] array, int value) {
+  //   Array.fill(array, value);
+  // }
 
-  public static long[] arrayExtend(long[] array, int newSize) {
-    _assert(newSize > array.length);
-    long[] newArray = new long[newSize];
-    Miscellanea.arrayCopy(array, newArray, array.length);
-    return newArray;
-  }
+  // public static void arrayFill(int[] array, int count, int value) {
+  //   Array.fill(array, count, value);
+  // }
 
-  public static Obj[] arrayExtend(Obj[] array, int newSize) {
-    _assert(newSize > array.length);
-    Obj[] newArray = new Obj[newSize];
-    Miscellanea.arrayCopy(array, newArray, array.length);
-    return newArray;
-  }
+  // public static void arrayFill(int[] array, int offset, int count, int value) {
+  //   Array.fill(array, offset, count, value);
+  // }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  // public static int[] arrayExtend(int[] array, int newSize) {
+  //   Array.extend(array, newSize);
+  // }
+
+  // public static long[] arrayExtend(long[] array, int newSize) {
+  //   Array.extend(array, newSize);
+  // }
+
+  // public static Obj[] arrayExtend(Obj[] array, int newSize) {
+  //   Array.extend(array, newSize);
+  // }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////

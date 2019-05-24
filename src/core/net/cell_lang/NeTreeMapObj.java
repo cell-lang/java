@@ -601,7 +601,7 @@ class NeTreeMapObj extends Obj {
 
     private int _keyIdx(Obj key, int hashcode) {
       int end = first + count;
-      int idx = Miscellanea.anyIndexOrEncodeInsertionPointIntoSortedArray(hashcodes, first, end, hashcode);
+      int idx = Array.anyIndexOrEncodeInsertionPointIntoSortedArray(hashcodes, first, end, hashcode);
       if (idx < 0)
         return idx;
 

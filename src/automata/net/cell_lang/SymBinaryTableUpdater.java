@@ -34,7 +34,7 @@ class SymBinaryTableUpdater {
       boolean swap = value1 > value2;
       int minorVal = swap ? value2 : value1;
       int majorVal = swap ? value1 : value2;
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, minorVal, majorVal);
+      deleteList = Array.append2(deleteList, deleteCount++, minorVal, majorVal);
     }
   }
 
@@ -45,7 +45,7 @@ class SymBinaryTableUpdater {
       boolean swap = value > otherVal;
       int minorVal = swap ? otherVal : value;
       int majorVal = swap ? value : otherVal;
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, minorVal, majorVal);
+      deleteList = Array.append2(deleteList, deleteCount++, minorVal, majorVal);
     }
   }
 
@@ -53,7 +53,7 @@ class SymBinaryTableUpdater {
     boolean swap = value1 > value2;
     int minorVal = swap ? value2 : value1;
     int majorVal = swap ? value1 : value2;
-    insertList = Miscellanea.array2Append(insertList, insertCount++, minorVal, majorVal);
+    insertList = Array.append2(insertList, insertCount++, minorVal, majorVal);
   }
 
   public void apply() {

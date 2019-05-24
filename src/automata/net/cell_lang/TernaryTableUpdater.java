@@ -31,7 +31,7 @@ class TernaryTableUpdater {
     deleteCount = 0;
     TernaryTable.Iter it = table.getIter();
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
       it.next();
     }
   }
@@ -55,24 +55,24 @@ class TernaryTableUpdater {
   //     int surr3 = store3.valueToSurrEx(val3);
   //     if (surr3 == -1)
   //       surr3 = store3.insert(val3);
-  //     insertList = Miscellanea.array3Append(insertList, insertCount++, surr1, surr2, surr3);
+  //     insertList = Array.append3(insertList, insertCount++, surr1, surr2, surr3);
   //     it.next();
   //   }
   // }
 
   public void insert(int value1, int value2, int value3) {
-    insertList = Miscellanea.array3Append(insertList, insertCount++, value1, value2, value3);
+    insertList = Array.append3(insertList, insertCount++, value1, value2, value3);
   }
 
   public void delete(int value1, int value2, int value3) {
     if (table.contains(value1, value2, value3))
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, value3);
+      deleteList = Array.append3(deleteList, deleteCount++, value1, value2, value3);
   }
 
   public void delete12(int value1, int value2) {
     TernaryTable.Iter it = table.getIter12(value1, value2);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, it.get1());
+      deleteList = Array.append3(deleteList, deleteCount++, value1, value2, it.get1());
       it.next();
     }
   }
@@ -80,7 +80,7 @@ class TernaryTableUpdater {
   public void delete13(int value1, int value3) {
     TernaryTable.Iter it = table.getIter13(value1, value3);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, it.get1(), value3);
+      deleteList = Array.append3(deleteList, deleteCount++, value1, it.get1(), value3);
       it.next();
     }
   }
@@ -88,7 +88,7 @@ class TernaryTableUpdater {
   public void delete23(int value2, int value3) {
     TernaryTable.Iter it = table.getIter23(value2, value3);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), value2, value3);
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), value2, value3);
       it.next();
     }
   }
@@ -96,7 +96,7 @@ class TernaryTableUpdater {
   public void delete1(int value1) {
     TernaryTable.Iter it = table.getIter1(value1);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, it.get1(), it.get2());
+      deleteList = Array.append3(deleteList, deleteCount++, value1, it.get1(), it.get2());
       it.next();
     }
   }
@@ -104,7 +104,7 @@ class TernaryTableUpdater {
   public void delete2(int value2) {
     TernaryTable.Iter it = table.getIter2(value2);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), value2, it.get2());
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), value2, it.get2());
       it.next();
     }
   }
@@ -112,7 +112,7 @@ class TernaryTableUpdater {
   public void delete3(int value3) {
     TernaryTable.Iter it = table.getIter3(value3);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), value3);
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), it.get2(), value3);
       it.next();
     }
   }

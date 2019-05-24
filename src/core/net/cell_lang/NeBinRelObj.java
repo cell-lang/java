@@ -302,7 +302,7 @@ class NeBinRelObj extends Obj {
 
   public static int keyRangeStart(Obj[] objs, int[] hashcodes, Obj key) {
     int hashcode = key.hashcode();
-    int idx = Miscellanea.anyIndexOrEncodeInsertionPointIntoSortedArray(hashcodes, hashcode);
+    int idx = Array.anyIndexOrEncodeInsertionPointIntoSortedArray(hashcodes, hashcode);
     if (idx < 0)
       return idx;
 
@@ -434,7 +434,7 @@ class NeBinRelObj extends Obj {
               int idx = leastSignificant(keysIdxs[i]);
               keysIdxs[i] = (((long) col2[idx].hashcode()) << 32) | idx;
             }
-            Miscellanea.sort(keysIdxs, keyStartIdx, keyEndIdx);
+            Array.sort(keysIdxs, keyStartIdx, keyEndIdx);
 
             if (sorter2 == null)
               sorter2 = new IdxSorter(col2);
@@ -525,7 +525,7 @@ class NeBinRelObj extends Obj {
     for (int i=0 ; i < count ; i++) {
       keysIdxs[i] = (((long) objs[i].hashcode()) << 32) | i;
     }
-    Miscellanea.sort(keysIdxs);
+    Array.sort(keysIdxs);
     return keysIdxs;
   }
 

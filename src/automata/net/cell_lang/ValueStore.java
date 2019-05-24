@@ -50,6 +50,6 @@ abstract class ValueStore {
   protected void resizeRefsArray(int newCapacity) {
     byte[] currReferences = references;
     references = new byte[newCapacity];
-    Miscellanea.arrayCopy(currReferences, references, currReferences.length);
+    Array.copy(currReferences, references, currReferences.length);
   }
 }

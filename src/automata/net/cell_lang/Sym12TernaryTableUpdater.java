@@ -32,7 +32,7 @@ class Sym12TernaryTableUpdater {
     deleteCount = 0;
     Sym12TernaryTable.Iter123 it = table.getIter();
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
       it.next();
     }
   }
@@ -43,7 +43,7 @@ class Sym12TernaryTableUpdater {
       value1 = value2;
       value2 = tmp;
     }
-    insertList = Miscellanea.array3Append(insertList, insertCount++, value1, value2, value3);
+    insertList = Array.append3(insertList, insertCount++, value1, value2, value3);
   }
 
   public void delete(int value1, int value2, int value3) {
@@ -53,7 +53,7 @@ class Sym12TernaryTableUpdater {
       value2 = tmp;
     }
     if (table.contains(value1, value2, value3))
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, value3);
+      deleteList = Array.append3(deleteList, deleteCount++, value1, value2, value3);
   }
 
   public void delete12(int value1, int value2) {
@@ -64,7 +64,7 @@ class Sym12TernaryTableUpdater {
     }
     Sym12TernaryTable.Iter12 it = table.getIter12(value1, value2);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, it.get1());
+      deleteList = Array.append3(deleteList, deleteCount++, value1, value2, it.get1());
       it.next();
     }
   }
@@ -78,7 +78,7 @@ class Sym12TernaryTableUpdater {
         arg1 = arg2;
         arg2 = arg12;
       }
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, arg1, arg2, arg3);
+      deleteList = Array.append3(deleteList, deleteCount++, arg1, arg2, arg3);
       it.next();
     }
   }
@@ -93,7 +93,7 @@ class Sym12TernaryTableUpdater {
         arg1 = arg2;
         arg2 = arg12;
       }
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, arg1, arg2, arg3);
+      deleteList = Array.append3(deleteList, deleteCount++, arg1, arg2, arg3);
       it.next();
     }
   }
@@ -102,7 +102,7 @@ class Sym12TernaryTableUpdater {
     Sym12TernaryTable.Iter3 it = table.getIter3(value3);
     while (!it.done()) {
       Miscellanea._assert(it.get1() <= it.get2());
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), value3);
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), it.get2(), value3);
       it.next();
     }
   }

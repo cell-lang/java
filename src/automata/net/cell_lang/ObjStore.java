@@ -17,7 +17,7 @@ final class ObjStore extends ValueStore {
 
   public ObjStore() {
     super(INIT_SIZE);
-    Miscellanea.arrayFill(hashtable, -1);
+    Array.fill(hashtable, -1);
     for (int i=0 ; i < INIT_SIZE ; i++)
       hashcodeOrNextFree[i] = i + 1;
   }
@@ -89,9 +89,9 @@ final class ObjStore extends ValueStore {
     hashtable          = new int[newCapacity/2];
     buckets            = new int[newCapacity];
 
-    Miscellanea.arrayCopy(currValues, values, currCapacity);
-    Miscellanea.arrayCopy(currHashcodeOrNextFree, hashcodeOrNextFree, currCapacity);
-    Miscellanea.arrayFill(hashtable, -1);
+    Array.copy(currValues, values, currCapacity);
+    Array.copy(currHashcodeOrNextFree, hashcodeOrNextFree, currCapacity);
+    Array.fill(hashtable, -1);
 
     for (int i=0 ; i < currCapacity ; i++)
       if (values[i] != null)

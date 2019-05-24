@@ -19,7 +19,7 @@ class IntStoreUpdater extends ValueStoreUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public IntStoreUpdater(IntStore store) {
-    Miscellanea.arrayFill(hashtable, -1);
+    Array.fill(hashtable, -1);
     this.store = store;
   }
 
@@ -39,7 +39,7 @@ class IntStoreUpdater extends ValueStoreUpdater {
 
   public void reset() {
     if (hashRange != 0)
-      Miscellanea.arrayFill(hashtable, hashRange, -1);
+      Array.fill(hashtable, hashRange, -1);
 
     count = 0;
     hashRange = 0;
@@ -82,7 +82,7 @@ class IntStoreUpdater extends ValueStoreUpdater {
     if (count >= 16) {
       if (count >= hashRange) {
         if (hashRange != 0) {
-          Miscellanea.arrayFill(hashtable, hashRange, -1);
+          Array.fill(hashtable, hashRange, -1);
           hashRange *= 2;
         }
         else
@@ -135,9 +135,9 @@ class IntStoreUpdater extends ValueStoreUpdater {
     surrogates = new int[newCapacity];
     hashRange  = newCapacity;
 
-    Miscellanea.arrayCopy(currValues, values, currCapacity);
-    Miscellanea.arrayCopy(currSurrogates, surrogates, currCapacity);
-    Miscellanea.arrayFill(hashtable, -1);
+    Array.copy(currValues, values, currCapacity);
+    Array.copy(currSurrogates, surrogates, currCapacity);
+    Array.fill(hashtable, -1);
 
     for (int i=0 ; i < count ; i++)
       insertIntoHashtable(i, hashcode(values[i]));

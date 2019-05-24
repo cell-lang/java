@@ -143,7 +143,7 @@ class OneWayBinTable {
       while (surr1 >= newSize)
         newSize *= 2;
       int[] newColumn = new int[newSize];
-      Miscellanea.arrayCopy(column, newColumn, size);
+      Array.copy(column, newColumn, size);
       for (int i=size ; i < newSize ; i++)
         newColumn[i] = OverflowTable.EmptyMarker;
       column = newColumn;

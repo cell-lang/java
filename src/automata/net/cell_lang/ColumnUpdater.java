@@ -75,7 +75,7 @@ class ColumnUpdater {
     if (maxIndex >= column.length) {
       int newSize = Miscellanea.extend(column.length, maxIndex + 1);
       Obj[] newCol = new Obj[newSize];
-      Miscellanea.arrayCopy(column, newCol, column.length);
+      Array.copy(column, newCol, column.length);
       column = newCol;
       colSetter.set(newCol);
     }

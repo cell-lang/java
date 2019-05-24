@@ -49,7 +49,7 @@ class TernaryTable {
     int len = flatTuples.length;
     Miscellanea._assert(3 * count == len);
     int[] newFlatTuples = new int[2 * len];
-    Miscellanea.arrayCopy(flatTuples, newFlatTuples, len);
+    Array.copy(flatTuples, newFlatTuples, len);
     flatTuples = newFlatTuples;
     int size = len / 3;
     for (int i=size ; i < 2 * size ; i++)
@@ -435,7 +435,7 @@ class TernaryTable {
 
       int idx = hashtable[i];
       while (idx != Empty) {
-        bucket = Miscellanea.arrayAppend(bucket, count++, flatTuples[3 * i]);
+        bucket = Array.append(bucket, count++, flatTuples[3 * i]);
         idx = index3.next(idx);
       }
 
@@ -488,7 +488,7 @@ class TernaryTable {
         long packedArgs = arg1 | (arg2 << 32);
         Miscellanea._assert(arg1 == (packedArgs & 0xFFFFFFFFL));
         Miscellanea._assert(arg2 == (packedArgs >>> 32));
-        bucket = Miscellanea.arrayAppend(bucket, count++, packedArgs);
+        bucket = Array.append(bucket, count++, packedArgs);
         idx = index.next(idx);
       }
 

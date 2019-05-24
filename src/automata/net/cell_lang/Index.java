@@ -10,13 +10,13 @@ class Index {
   public Index(int size) {
     hashtable = new int[size/2];
     buckets   = new int[size];
-    Miscellanea.arrayFill(hashtable, Empty);
-    Miscellanea.arrayFill(buckets, Empty); //## IS THIS NECESSARY?
+    Array.fill(hashtable, Empty);
+    Array.fill(buckets, Empty); //## IS THIS NECESSARY?
   }
 
   public void clear() {
-    Miscellanea.arrayFill(hashtable, Empty);
-    Miscellanea.arrayFill(buckets, Empty); //## IS THIS NECESSARY?
+    Array.fill(hashtable, Empty);
+    Array.fill(buckets, Empty); //## IS THIS NECESSARY?
   }
 
   public void insert(int index, int hashcode) {

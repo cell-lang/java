@@ -30,23 +30,23 @@ class BinaryTableUpdater {
 
   public void delete(int value1, int value2) {
     if (table.contains(value1, value2))
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, value1, value2);
+      deleteList = Array.append2(deleteList, deleteCount++, value1, value2);
   }
 
   public void delete1(int value) {
     int[] assocs = table.restrict1((int) value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, value, assocs[i]);
+      deleteList = Array.append2(deleteList, deleteCount++, value, assocs[i]);
   }
 
   public void delete2(int value) {
     int[] assocs = table.restrict2((int) value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, assocs[i], value);
+      deleteList = Array.append2(deleteList, deleteCount++, assocs[i], value);
   }
 
   public void insert(int value1, int value2) {
-    insertList = Miscellanea.array2Append(insertList, insertCount++, value1, value2);
+    insertList = Array.append2(insertList, insertCount++, value1, value2);
   }
 
   public void apply() {

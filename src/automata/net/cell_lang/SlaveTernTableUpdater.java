@@ -34,7 +34,7 @@ class SlaveTernTableUpdater {
     deleteCount = 0;
     SlaveTernTable.Iter it = table.getIter();
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), it.get2(), it.get3());
       it.next();
     }
   }
@@ -58,24 +58,24 @@ class SlaveTernTableUpdater {
   //     int surr3 = store3.valueToSurrEx(val3);
   //     if (surr3 == -1)
   //       surr3 = store3.insert(val3);
-  //     insertList = Miscellanea.array3Append(insertList, insertCount++, surr1, surr2, surr3);
+  //     insertList = Array.append3(insertList, insertCount++, surr1, surr2, surr3);
   //     it.next();
   //   }
   // }
 
   public void insert(int value1, int value2, int value3) {
-    insertList = Miscellanea.array3Append(insertList, insertCount++, value1, value2, value3);
+    insertList = Array.append3(insertList, insertCount++, value1, value2, value3);
   }
 
   public void delete(int value1, int value2, int value3) {
     if (table.contains(value1, value2, value3))
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, value3);
+      deleteList = Array.append3(deleteList, deleteCount++, value1, value2, value3);
   }
 
   public void delete12(int value1, int value2) {
     ArrayIter it = table.getIter12(value1, value2);
     while (!it.done()) {
-      deleteList = Miscellanea.array3Append(deleteList, deleteCount++, value1, value2, it.get());
+      deleteList = Array.append3(deleteList, deleteCount++, value1, value2, it.get());
       it.next();
     }
   }

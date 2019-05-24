@@ -80,7 +80,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String* array_append_native_code(ArrayVar array_var, Int32Var size_var, AnyTypeExpr value) =
-    (native_static_call(array_var, "Miscellanea.arrayAppend", (array_var, native_var_ref_name(size_var) & "++", value)));
+    (native_static_call(array_var, "Array.append", (array_var, native_var_ref_name(size_var) & "++", value)));
 
 
   String native_cls_call_code(AnyClsVar cls_var, WriteObjVar var, AtomicExpr+ args) =

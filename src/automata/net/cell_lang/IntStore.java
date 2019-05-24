@@ -65,7 +65,7 @@ final class IntStore extends ValueStore {
       slots[i] = emptySlot(i+1);
     for (int i=0 ; i < INIT_SIZE ; i++)
       Miscellanea._assert(isEmpty(slots[i]));
-    Miscellanea.arrayFill(hashtable, INV_IDX);
+    Array.fill(hashtable, INV_IDX);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -114,7 +114,7 @@ final class IntStore extends ValueStore {
     slots     = new long[newCapacity];
     hashtable = new int[newCapacity/2];
 
-    Miscellanea.arrayFill(hashtable, INV_IDX);
+    Array.fill(hashtable, INV_IDX);
 
     for (int i=0 ; i < currCapacity ; i++) {
       long slot = currSlots[i];
