@@ -125,6 +125,10 @@ class Builder {
     return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
   }
 
+  public static Obj createSeqUnsigned(byte[] vals) {
+    return vals.length != 0 ? IntArrayObjs.createUnsigned(vals) : EmptySeqObj.singleton;
+  }
+
   public static Obj createSeq(short[] vals) {
     return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
   }
@@ -185,6 +189,10 @@ class Builder {
 
   public static Obj createSeq(byte[] vals, int len) {
     return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeqUnsigned(byte[] vals, int len) {
+    return len != 0 ? IntArrayObjs.createUnsigned(vals, len) : EmptySeqObj.singleton;
   }
 
   public static Obj createSeq(short[] vals, int len) {
