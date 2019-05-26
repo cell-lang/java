@@ -140,53 +140,96 @@ class Array {
   ////////////////////////////////////////////////////////////////////////////
 
   public static Obj at(boolean[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
+    if (idx < size)
       return SymbObj.get(array[(int) idx]);
     else
       throw Miscellanea.softFail();
   }
 
   public static Obj at(long[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
+    if (idx < size)
       return IntObj.get(array[(int) idx]);
     else
       throw Miscellanea.softFail();
   }
 
   public static Obj at(double[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
+    if (idx < size)
       return new FloatObj(array[(int) idx]);
     else
       throw Miscellanea.softFail();
   }
 
   public static Obj at(Obj[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
+    if (idx < size)
       return array[(int) idx];
     else
       throw Miscellanea.softFail();
   }
 
   public static boolean boolAt(boolean[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
+    if (idx < size)
       return array[(int) idx];
     else
       throw Miscellanea.softFail();
   }
 
+  public static long longAt(byte[] array, int size, long idx) {
+    if (idx < size)
+      return array[(int) idx];
+    else
+      throw Miscellanea.softFail();
+  }
+
+  public static long unsignedAt(byte[] array, int size, long idx) {
+    if (idx < size)
+      return Byte.toUnsignedLong(array[(int) idx]);
+    else
+      throw Miscellanea.softFail();
+  }
+
+  public static long longAt(short[] array, int size, long idx) {
+    if (idx < size)
+      return array[(int) idx];
+    else
+      throw Miscellanea.softFail();
+  }
+
+  public static long longAt(char[] array, int size, long idx) {
+    if (idx < size)
+      return array[(int) idx];
+    else
+      throw Miscellanea.softFail();
+  }
+
+  public static long longAt(int[] array, int size, long idx) {
+    if (idx < size)
+      return array[(int) idx];
+    else
+      throw Miscellanea.softFail();
+  }
+
+  public static long unsignedAt(int[] array, int size, long idx) {
+    if (idx < size)
+      return Integer.toUnsignedLong(array[(int) idx]);
+    else
+      throw Miscellanea.softFail();
+  }
+
   public static long longAt(long[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
+    if (idx < size)
       return array[(int) idx];
     else
       throw Miscellanea.softFail();
   }
 
   public static double floatAt(double[] array, int size, long idx) {
-    if (idx >= 0 & idx < size)
+    if (idx < size)
       return array[(int) idx];
     else
       throw Miscellanea.softFail();
   }
+
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
