@@ -75,7 +75,17 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String* array_write_native_code(ArrayVar var, Int32Expr idx, AnyTypeExpr value) {
-    return (native_var_name(var) & "[" & native_expr(idx, false) & "] = " & native_expr(value) & ";");
+    idx_str = native_expr(idx, false);
+    value_str = native_expr(value);
+    value_str = match (var.repr)
+      int8    |
+      nat8    = "Array.asByte(" & value_str & ")",
+      int16   = "Array.asShort(" & value_str & ")",
+      int32   = "Array.asInt(" & value_str & ")",
+      _       = value_str;
+    return (native_var_name(var) & "[" & idx_str & "] = " & value_str & ";");
+
+
   }
 
 
