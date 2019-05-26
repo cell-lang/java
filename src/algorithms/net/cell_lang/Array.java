@@ -14,6 +14,11 @@ class Array {
       dest[i] = src[i];
   }
 
+  public static void copy(short[] src, short[] dest, int count) {
+    for (int i=0 ; i < count ; i++)
+      dest[i] = src[i];
+  }
+
   public static void copy(int[] src, int[] dest, int count) {
     for (int i=0 ; i < count ; i++)
       dest[i] = src[i];
@@ -27,7 +32,37 @@ class Array {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static int[] append(int[] array, int count, int newValue) {
+  public static byte[] append(byte[] array, int count, long value) {
+    // Miscellanea._assert(count <= array.length);
+    // Miscellanea._assert(value >= -128 & value <= 127);
+
+    if (count == array.length) {
+      int newLen = Math.max(32, (3 * count) / 2);
+      byte[] newArray = new byte[newLen];
+      copy(array, newArray, count);
+      array = newArray;
+    }
+
+    array[count] = (byte) value;
+    return array;
+  }
+
+  public static short[] append(short[] array, int count, long value) {
+    // Miscellanea._assert(count <= array.length);
+    // Miscellanea._assert(value >= -32768 & value <= 32767);
+
+    if (count == array.length) {
+      int newLen = Math.max(32, (3 * count) / 2);
+      short[] newArray = new short[newLen];
+      copy(array, newArray, count);
+      array = newArray;
+    }
+
+    array[count] = (short) value;
+    return array;
+  }
+
+  public static int[] append(int[] array, int count, int value) {
     Miscellanea._assert(count <= array.length);
 
     if (count == array.length) {
@@ -37,11 +72,11 @@ class Array {
       array = newArray;
     }
 
-    array[count] = newValue;
+    array[count] = value;
     return array;
   }
 
-  public static long[] append(long[] array, int count, long newValue) {
+  public static long[] append(long[] array, int count, long value) {
     Miscellanea._assert(count <= array.length);
 
     if (count == array.length) {
@@ -51,11 +86,11 @@ class Array {
       array = newArray;
     }
 
-    array[count] = newValue;
+    array[count] = value;
     return array;
   }
 
-  public static Obj[] append(Obj[] array, int count, Obj newValue) {
+  public static Obj[] append(Obj[] array, int count, Obj value) {
     Miscellanea._assert(count <= array.length);
 
     if (count == array.length) {
@@ -63,7 +98,7 @@ class Array {
       array = Arrays.copyOf(array, newLen);
     }
 
-    array[count] = newValue;
+    array[count] = value;
     return array;
   }
 
