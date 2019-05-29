@@ -94,7 +94,7 @@ class SlaveTernTable {
 
   public ArrayIter getIter12(int arg1, int arg2) {
     int idx = master.tupleIdx(arg1, arg2);
-    return new ArrayIter(idx != -1 ? table.restrict(idx) : Miscellanea.emptyIntArray);
+    return new ArrayIter(idx != -1 ? table.restrict(idx) : Array.emptyIntArray);
   }
 
   public Iter3 getIter3(int arg3) {

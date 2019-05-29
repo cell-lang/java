@@ -95,7 +95,7 @@ class NeTreeMapObj extends Obj {
       if (value != null)
         return new BinRelIter(new Obj[] {key}, new Obj[] {value});
       else
-        return new BinRelIter(Miscellanea.emptyObjArray, Miscellanea.emptyObjArray);
+        return new BinRelIter(Array.emptyObjArray, Array.emptyObjArray);
     }
     else
       return packed.getBinRelIterByCol1(key);

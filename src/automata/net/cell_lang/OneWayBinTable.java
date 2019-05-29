@@ -162,6 +162,36 @@ class OneWayBinTable {
     }
   }
 
+  // Assuming there's at most one entry whose first argument is surr1
+  public int update(int surr1, int surr2) {
+    int size = column.length;
+    if (surr1 >= size) {
+      int newSize = size == 0 ? MinCapacity : 2 * size;
+      while (surr1 >= newSize)
+        newSize *= 2;
+      int[] newColumn = new int[newSize];
+      Array.copy(column, newColumn, size);
+      for (int i=size ; i < newSize ; i++)
+        newColumn[i] = OverflowTable.EmptyMarker;
+      column = newColumn;
+    }
+
+    int code = column[surr1];
+
+    if (code == OverflowTable.EmptyMarker) {
+      column[surr1] = surr2;
+      count++;
+      return -1;
+    }
+    else if (code >> 29 == 0) {
+      column[surr1] = surr2;
+      return code;
+    }
+    else {
+      throw Miscellanea.internalFail();
+    }
+  }
+
   private boolean[] deleted = new boolean[1];
 
   public void delete(int surr1, int surr2) {

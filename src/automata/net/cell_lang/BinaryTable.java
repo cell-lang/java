@@ -113,9 +113,20 @@ class BinaryTable {
 
   public void insert(int surr1, int surr2) {
     table1.insert(surr1, surr2);
-    if (table2.count > 0)
+    if (table2.count > 0) //## BUG?
       table2.insert(surr2, surr1);
     check();
+  }
+
+  // Assuming there's at most one tuple that whose first argument is surr1
+  public int update1(int surr1, int surr2) {
+    int oldSurr2 = table1.update(surr1, surr2);
+    if (oldSurr2 != -1 && oldSurr2 != surr2 && table2.count > 0) { //## BUG?
+      table2.delete(oldSurr2, surr1);
+      table2.insert(surr2, surr1);
+    }
+    check();
+    return oldSurr2;
   }
 
   public void clear() {
@@ -126,7 +137,7 @@ class BinaryTable {
 
   public void delete(int surr1, int surr2) {
     table1.delete(surr1, surr2);
-    if (table2.count > 0)
+    if (table2.count > 0) //## BUG?
       table2.delete(surr2, surr1);
     check();
   }

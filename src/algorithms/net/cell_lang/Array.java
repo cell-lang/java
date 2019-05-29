@@ -4,6 +4,26 @@ import java.util.Arrays;
 
 
 class Array {
+  public static Obj[] emptyObjArray = new Obj[0];
+  public static int[] emptyIntArray = new int[0];
+  public static long[] emptyLongArray = new long[0];
+  public static double[] emptyDoubleArray = new double[0];
+  public static boolean[] emptyBooleanArray = new boolean[0];
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static int capacity(int curr, int min) {
+    int capacity = 256;
+    while (capacity < min)
+      capacity *= 2;
+    return capacity;
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
   public static <T> void copy(T[] src, T[] dest, int count) {
     for (int i=0 ; i < count ; i++)
       dest[i] = src[i];
@@ -36,13 +56,8 @@ class Array {
     // Miscellanea._assert(count <= array.length);
     // Miscellanea._assert(value >= -128 & value <= 127);
 
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      byte[] newArray = new byte[newLen];
-      copy(array, newArray, count);
-      array = newArray;
-    }
-
+    if (count == array.length)
+      array = extend(array, Math.max(32, 3 * count / 2));
     array[count] = (byte) value;
     return array;
   }
@@ -51,13 +66,8 @@ class Array {
     // Miscellanea._assert(count <= array.length);
     // Miscellanea._assert(value >= -32768 & value <= 32767);
 
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      short[] newArray = new short[newLen];
-      copy(array, newArray, count);
-      array = newArray;
-    }
-
+    if (count == array.length)
+      array = extend(array, Math.max(32, 3 * count / 2));
     array[count] = (short) value;
     return array;
   }
@@ -65,13 +75,8 @@ class Array {
   public static int[] append(int[] array, int count, int value) {
     Miscellanea._assert(count <= array.length);
 
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      int[] newArray = new int[newLen];
-      copy(array, newArray, count);
-      array = newArray;
-    }
-
+    if (count == array.length)
+      array = extend(array, Math.max(32, 3 * count / 2));
     array[count] = value;
     return array;
   }
@@ -79,13 +84,17 @@ class Array {
   public static long[] append(long[] array, int count, long value) {
     Miscellanea._assert(count <= array.length);
 
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      long[] newArray = new long[newLen];
-      copy(array, newArray, count);
-      array = newArray;
-    }
+    if (count == array.length)
+      array = extend(array, Math.max(32, 3 * count / 2));
+    array[count] = value;
+    return array;
+  }
 
+  public static double[] append(double[] array, int count, double value) {
+    Miscellanea._assert(count <= array.length);
+
+    if (count == array.length)
+      array = extend(array, Math.max(32, 3 * count / 2));
     array[count] = value;
     return array;
   }
@@ -93,10 +102,8 @@ class Array {
   public static Obj[] append(Obj[] array, int count, Obj value) {
     Miscellanea._assert(count <= array.length);
 
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      array = Arrays.copyOf(array, newLen);
-    }
+    if (count == array.length)
+      array = extend(array, Math.max(32, 3 * count / 2));
 
     array[count] = value;
     return array;
@@ -258,40 +265,62 @@ class Array {
   ////////////////////////////////////////////////////////////////////////////
 
   public static void fill(int[] array, int value) {
-    fill(array, array.length, value);
+    Arrays.fill(array, value);
+  }
+
+  public static void fill(long[] array, long value) {
+    Arrays.fill(array, value);
   }
 
   public static void fill(int[] array, int count, int value) {
-    for (int i=0 ; i < count ; i++)
-      array[i] = value;
+    Arrays.fill(array, 0, count, value);
   }
 
   public static void fill(int[] array, int offset, int count, int value) {
-    for (int i=0 ; i < count ; i++)
-      array[offset + i] = value;
+    Arrays.fill(array, offset, offset+count, value);
+  }
+
+  public static void fill(double[] array, int offset, int count, double value) {
+    Arrays.fill(array, offset, offset+count, value);
   }
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
+  public static byte[] extend(byte[] array, int newSize) {
+    Miscellanea._assert(newSize > array.length);
+    return Arrays.copyOf(array, newSize);
+  }
+
+  public static short[] extend(short[] array, int newSize) {
+    Miscellanea._assert(newSize > array.length);
+    return Arrays.copyOf(array, newSize);
+  }
+
   public static int[] extend(int[] array, int newSize) {
     Miscellanea._assert(newSize > array.length);
-    int[] newArray = new int[newSize];
-    copy(array, newArray, array.length);
-    return newArray;
+    return Arrays.copyOf(array, newSize);
   }
 
   public static long[] extend(long[] array, int newSize) {
     Miscellanea._assert(newSize > array.length);
-    long[] newArray = new long[newSize];
-    copy(array, newArray, array.length);
-    return newArray;
+    return Arrays.copyOf(array, newSize);
+  }
+
+  public static double[] extend(double[] array, int newSize) {
+    Miscellanea._assert(newSize > array.length);
+    return Arrays.copyOf(array, newSize);
   }
 
   public static Obj[] extend(Obj[] array, int newSize) {
     Miscellanea._assert(newSize > array.length);
-    Obj[] newArray = new Obj[newSize];
-    copy(array, newArray, array.length);
+    return Arrays.copyOf(array, newSize);
+  }
+
+  public static double[] extend(double[] array, int newSize, double defaultValue) {
+    Miscellanea._assert(newSize > array.length);
+    double[] newArray = Arrays.copyOf(array, newSize);
+    Arrays.fill(newArray, array.length, newSize, defaultValue);
     return newArray;
   }
 
