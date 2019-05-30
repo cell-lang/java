@@ -360,6 +360,11 @@ String native_table_type(Table table) =
     3,  false   = "TernaryTable",
     3,  true    = "Sym12TernaryTable";
 
+String native_table_type(Column column) =
+  match (column.type)
+    object    = "ObjColumn",
+    integer   = "IntColumn",
+    float     = "FloatColumn";
 
 String table_it_var_type(TableItVar var) =
   match (var.arity, var.symmetric)
@@ -377,6 +382,13 @@ String pending_updates_var_type(Table table) =
     2,  true    = "SymBinaryTableUpdater",
     3,  false   = "TernaryTableUpdater",
     3,  true    = "Sym12TernaryTableUpdater";
+
+String pending_updates_var_type(Column column) =
+  match (column.type)
+    object    = "ObjColumnUpdater",
+    integer   = "IntColumnUpdater",
+    float     = "FloatColumnUpdater";
+
 
 String native_name(ValueStoreType) =
   integer               |

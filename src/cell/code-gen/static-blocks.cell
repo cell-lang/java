@@ -52,11 +52,12 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* native_ctor_code(DBSymbol name, DBSymbol* links, [TableVar -> Table] tables, Instr* init_code) {
+  String* native_ctor_code(DBSymbol name, DBSymbol* links, [TableVar -> <Table, Column>] tables, Instr* init_code) {
     links_init_code = ("this.linkedAuto" & printed(i) & " = linkedAuto" & printed(i) & ";" : i < |links|);
     tables_init_code = ({
-      value_stores = t.value_stores;
-      value_stores = drop(value_stores, 1) if t.symmetric;
+      value_stores = match (t)
+        table()   = if t.symmetric then drop(t.value_stores, 1) else t.value_stores,
+        column()  = (t.value_store);
       arg_list = append((native_var_decl_name(vs) : vs <- value_stores), ", ");
       return native_var_ref_name(v) & " = new " & native_table_type(t) & "(" & arg_list & ");";
     } : v, t <- isort(tables));
@@ -146,7 +147,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "  return false;"
     ) : v <- isort(keys(block.nested_blocks))));
 
-    keys = [(v, arity(t), k) : v, t <- block.tables, k <- t.keys];
+    keys = [(v, arity(t), k) : v, t <- block.tables, k <- keys(t)];
     ord_keys = sort_by_key(keys, $(1));
     keys_check_code = join(({
       method_name = key_check_method_names((a, k), !!);
@@ -229,8 +230,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     );
 
     tables_init_code = ({
-      value_stores = t.value_stores;
-      value_stores = drop(value_stores, 1) if t.symmetric;
+      value_stores = match (t)
+        table()   = if t.symmetric then drop(t.value_stores, 1) else t.value_stores,
+        column()  = (t.value_store);
       return native_new_call(
         pending_updates_var_ref_name(v),
         pending_updates_var_type(t),
@@ -403,7 +405,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String* updates_check_code(StaticBlock block, [TableVar] insertion_tables, [TableVar] deletion_tables) {
-    keys = [(v, arity(t), k) : v, t <- block.tables, insertion_tables(v), k <- t.keys];
+    keys = [(v, arity(t), k) : v, t <- block.tables, insertion_tables(v), k <- keys(t)];
     check_exprs = (check_expr(k) : k <- sort_by_key(keys, order));
     keys_check_code = join((
       ( "if (!" & e & ")",
