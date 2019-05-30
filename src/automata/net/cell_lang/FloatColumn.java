@@ -19,10 +19,9 @@ final class FloatColumn {
       Miscellanea._assert(count > 0);
       this.column = column;
       this.left = count;
-      int idx = 0;
-      while (column[idx] == NULL)
-        idx++;
-      this.idx = idx;
+      this.idx = 0;
+      if (isNull(column[idx]))
+        next();
     }
 
     public static Iter newIter(double[] column, int count) {
@@ -37,17 +36,13 @@ final class FloatColumn {
       return idx;
     }
 
-    public int get2() {
-      return idx;
+    public double get2() {
+      return column[idx];
     }
-
-    // public double get2() {
-    //   return column[idx];
-    // }
 
     public void next() {
       int idx = this.idx + 1;
-      while (column[idx] == NULL)
+      while (isNull(column[idx]))
         idx++;
       this.idx = idx;
       left--;
@@ -57,41 +52,37 @@ final class FloatColumn {
   //////////////////////////////////////////////////////////////////////////////
 
   private static final int INIT_SIZE = 256;
-  // private final static double NULL = Double.longBitsToDouble(0x7FF8000000000000L);
-  // private final static double NULL = Double.longBitsToDouble(0x7FFFFFFFFFFFFFFFL);
-  private final static double NULL = Double.longBitsToDouble(0x7FFA3E90779F7D08L); // Random NaN
+
+  // private final static long NULL_BIT_MASK = 0x7FF8000000000000L;
+  // private final static long NULL_BIT_MASK = 0x7FFFFFFFFFFFFFFFL;
+  private final static long NULL_BIT_MASK = 0x7FFA3E90779F7D08L; // Random NaN
+
+  private final static double NULL = Double.longBitsToDouble(NULL_BIT_MASK);
 
   //////////////////////////////////////////////////////////////////////////////
 
   int count = 0;
   double[] column = new double[INIT_SIZE];
 
+  ValueStore store;
+
   //////////////////////////////////////////////////////////////////////////////
 
-  public FloatColumn() {
+  public FloatColumn(ValueStore store) {
     Miscellanea._assert(Double.isNaN(NULL));
-    for (int i=0 ; i < INIT_SIZE ; i++)
-      column[i] = NULL;
+    Array.fill(column, NULL);
+    this.store = store;
   }
 
-  // public boolean contains(int idx) {
-  //   return contains1(idx);
-  // }
-
   public boolean contains1(int idx) {
-    return idx < column.length && column[idx] != NULL;
+    return idx < column.length && !isNull(column[idx]);
   }
 
   public double lookup(int idx) {
     double value = column[idx];
-    if (value == NULL)
+    if (isNull(value))
       throw Miscellanea.softFail();
     return value;
-  }
-
-  // Replacement for store2.surrToValue()
-  public double surrToValue(int idx) {
-    return column[idx];
   }
 
   public Iter getIter() {
@@ -103,7 +94,7 @@ final class FloatColumn {
   public void insert(int index, double value) {
     if (index >= column.length)
       column = Array.extend(column, Array.capacity(column.length, index+1), NULL);
-    if (Double.doubleToRawLongBits(column[index]) == NULL)
+    if (!isNull(column[index]))
       throw Miscellanea.softFail();
     column[index] = Double.isNaN(value) ? Double.NaN : value;
   }
@@ -123,6 +114,12 @@ final class FloatColumn {
 
   public Obj copy() {
     throw Miscellanea.internalFail();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static boolean isNull(double value) {
+    return Double.doubleToRawLongBits(column[index]) == NULL_BIT_MASK;
   }
 }
 

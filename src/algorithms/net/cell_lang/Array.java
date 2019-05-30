@@ -272,6 +272,10 @@ class Array {
     Arrays.fill(array, value);
   }
 
+  public static void fill(double[] array, double value) {
+    Arrays.fill(array, value);
+  }
+
   public static void fill(int[] array, int count, int value) {
     Arrays.fill(array, 0, count, value);
   }

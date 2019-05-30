@@ -23,7 +23,7 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  FloatColumnUpdater(FloatColumn column) {
+  FloatColumnUpdater(FloatColumn column, ValueStoreUpdater storeUpdater) {
     this.column = column;
   }
 
@@ -31,6 +31,10 @@ final class FloatColumnUpdater {
 
   public void clear() {
     throw Miscellanea.internalFail();
+  }
+
+  public void delete1(int index) {
+    delete(index);
   }
 
   public void delete(int index) {
@@ -174,8 +178,11 @@ final class FloatColumnUpdater {
       //   cachedIdx = slotIdx;
       // }
       long slot = bitmap[slotIdx];
-      if (((slot >> bitsShift) & 2) != 0)
+      if (((slot >> bitsShift) & 2) != 0) {
+        System.out.printf("\n\nUpdate!\n\n");
+        System.exit(1);
         return false;
+      }
       bitmap[slotIdx] = slot | (3L << bitsShift);
       // slot |= 3L << bitsShift;
     }
@@ -191,8 +198,14 @@ final class FloatColumnUpdater {
       // }
       long slot = bitmap[slotIdx];
       int bits = (int) ((slot >> bitsShift) & 3);
-      if ((bits == 0 && column.contains1(idx)) | bits >= 2)
+      if ((bits == 0 && column.contains1(idx)) | bits >= 2) {
+        System.out.printf("\n\nInsert!\n\n");
+        System.out.printf("i = %d, idx = %d, slotIdx = %d, bitsShift = %d, slot = %x, bits = %x, column.contains1(idx) = %s\n",
+          i, idx, slotIdx, bitsShift, slot, bits, column.contains1(idx)
+        );
+        System.exit(1);
         return false;
+      }
       bitmap[slotIdx] = slot | (2L << bitsShift);
       // slot |= 2L << bitsShift;
     }
