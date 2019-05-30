@@ -98,6 +98,14 @@ String native_var_name(TableItVar v) {
   return prefix & "TableIt" & printed(v.id);
 }
 
+String native_var_name(ColumnItVar var) {
+  prefix = match (var.type)
+    object  = "obj",
+    integer = "int",
+    float   = "float";
+  return prefix & "ColIt" & printed(var.id);
+}
+
 String native_var_name(AnyClsVar v) =
   cls_var(<+> a?)     = _print_(a) & "_C",
   cls_var(<*..*> n?)  = "cls_" & printed(n),
@@ -317,6 +325,7 @@ String native_var_type(StreamVar v)    = "java.util.ArrayList<Obj>";
 
 String native_var_type(VecVar v)       = undefined;
 String native_var_type(TableItVar v)   = table_it_var_type(v);
+String native_var_type(ColumnItVar v)  = column_it_var_type(v);
 String native_var_type(ArrayVar v)     = native_elt_type(v) & "[]";
 
 String native_elt_type(ArrayVar var) = native_type(var.repr);
@@ -374,6 +383,11 @@ String table_it_var_type(TableItVar var) =
     3,  false   = "TernaryTable.Iter",
     3,  true    = "Sym12TernaryTable.Iter";
 
+String column_it_var_type(ColumnItVar var) =
+  match (var.type)
+    object    = "ObjColumn.Iter",
+    integer   = "IntColumn.Iter",
+    float     = "FloatColumn.Iter";
 
 String pending_updates_var_type(Table table) =
   match (arity(table), table.symmetric)

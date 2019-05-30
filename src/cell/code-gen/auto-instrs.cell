@@ -7,8 +7,13 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     read_pending_var(v?)      = native_var_ref_name(var) & " = " & native_var_ref_name(v) & ";";
 
 
-  String native_copy_rel_code(WriteObjVar res_var, [+TableVar -> Table] tables, [+Nat -> Nat] applied_perm) {
-    symmetric = only([t.symmetric : unused_var, t <- tables]);
+  String native_copy_rel_code(WriteObjVar res_var, [+TableVar -> <Table, Column>] tables, [+Nat -> Nat] applied_perm) {
+    symmetric = only([
+      match (t)
+        table()   = t.symmetric,
+        column()  = false
+      : unused_var, t <- tables
+    ]);
     assert not symmetric or (applied_perm == [0 -> 0, 1 -> 1] or applied_perm == [0 -> 0, 1 -> 1, 2 -> 2]);
 
     arity = |applied_perm|;
