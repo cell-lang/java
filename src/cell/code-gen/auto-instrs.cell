@@ -48,7 +48,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String* auto_instr_native_code(Instr instr, Maybe[Nat] block_id) =
     try_block()           = native_try_block_code(instr.var, instr.body, block_id),
 
-    queue_update()        = (native_method_call("this", queue_update_method_name(instr.type, instr.id), instr.args)),
+    queue_node_update()   = (native_method_call("this", queue_node_update_method_name(instr.type, instr.id), instr.args)),
 
     insert_timer()        = (native_method_call("this", insert_timer_method_name(instr.type), (instr.idx, instr.time))),
     clear_timer()         = (native_method_call("this", clear_timer_method_name(instr.type), (instr.idx))),

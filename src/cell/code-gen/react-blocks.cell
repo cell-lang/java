@@ -105,7 +105,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String* gen_queue_update_method(AutoSymbol block_name, BlockNodeId node_id, Instr* body, IntVar* args) {
-    method_name = queue_update_method_name(block_name, node_id);
+    method_name = queue_node_update_method_name(block_name, node_id);
     args_str = append((native_var_type(v) & " " & native_var_decl_name(v) : v <- args), ", ");
     sgn = "void " & method_name & "(" & args_str & ") {";
     vars_decl_text = gen_vars_decls(body, []);

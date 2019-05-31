@@ -473,7 +473,7 @@ String user_def_method_name(<AutoSymbol, DBSymbol> type, MethodId method) = nati
 String input_set_method_name(AutoSymbol auto, Atom input) = _print_(input) & "_S_set";
 
 String node_update_method_name(AutoSymbol auto_type,  BlockNodeId node_id) = node_specific_method_name_prefix(node_id, auto_type) & "_update";
-String queue_update_method_name(AutoSymbol auto_type, BlockNodeId node_id) = node_specific_method_name_prefix(node_id, auto_type) & "_invalidate";
+String queue_node_update_method_name(AutoSymbol auto_type, BlockNodeId node_id) = node_specific_method_name_prefix(node_id, auto_type) & "_invalidate";
 
 String node_specific_method_name_prefix(BlockNodeId id, AutoSymbol auto) =
   std_block_node_id(a?)   = _print_(a) & "_N",
