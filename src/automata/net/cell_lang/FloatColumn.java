@@ -20,8 +20,8 @@ final class FloatColumn {
       this.column = column;
       this.left = count;
       this.idx = 0;
-      if (isNull(column[idx]))
-        next();
+      while (isNull(column[idx]))
+        idx++;
     }
 
     public static Iter newIter(double[] column, int count) {
@@ -29,23 +29,22 @@ final class FloatColumn {
     }
 
     public boolean done() {
-      return left > 0;
+      return left <= 0;
     }
 
-    public int get1() {
+    public int getIdx() {
       return idx;
     }
 
-    public double get2() {
+    public double getValue() {
       return column[idx];
     }
 
     public void next() {
-      int idx = this.idx + 1;
-      while (isNull(column[idx]))
-        idx++;
-      this.idx = idx;
-      left--;
+      if (--left > 0)
+        do
+          idx++;
+        while (isNull(column[idx]));
     }
   }
 
@@ -97,17 +96,22 @@ final class FloatColumn {
     if (!isNull(column[index]))
       throw Miscellanea.softFail();
     column[index] = Double.isNaN(value) ? Double.NaN : value;
+    count++;
   }
 
   public void update(int index, double value) {
     if (index >= column.length)
       column = Array.extend(column, Array.capacity(column.length, index+1), NULL);
+    if (isNull(column[index]))
+      count++;
     column[index] = Double.isNaN(value) ? Double.NaN : value;
   }
 
   public void delete(int index) {
-    if (index < column.length)
+    if (index < column.length && !isNull(column[index])) {
       column[index] = NULL;
+      count--;
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -119,7 +123,7 @@ final class FloatColumn {
   //////////////////////////////////////////////////////////////////////////////
 
   private static boolean isNull(double value) {
-    return Double.doubleToRawLongBits(column[index]) == NULL_BIT_MASK;
+    return Double.doubleToRawLongBits(value) == NULL_BIT_MASK;
   }
 }
 

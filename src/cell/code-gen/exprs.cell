@@ -15,11 +15,22 @@ String native_expr(ObjNatOp expr) =
   get_tag(e?)         = native_expr(e)           & ".getTag()",
   get_inner_obj(e?)   = native_expr(e)           & ".getInnerObj()",
   get_curr_obj(v?)    = native_var_ref_name(v)   & ".get()",
-  rand_elem(e?)       = native_expr(e)           & ".randElem()",
   bool_obj(e?)        = "SymbObj.get(" & native_expr(e, true) & " ? " & symb_idx_name(true) & " : " & symb_idx_name(false) & ")",
   int_obj(e?)         = "IntObj.get("  & native_expr(e) & ")",
   float_obj(e?)       = "new FloatObj(" & native_expr(e) & ")",
-  get_curr_arg()      = native_get_curr_arg_expr(expr.var, expr.arg);
+  get_curr_arg()      = native_get_curr_arg_expr(expr.var, expr.arg),
+  column_lookup()     = native_column_lookup_expr(expr.var, expr.key, expr.repr),
+  get_value()         = native_var_ref_name(expr.var) & ".getValue()",
+  rand_elem(e?)       = native_expr(e)           & ".randElem()";
+
+
+String native_column_lookup_expr(AnyTableVar var, Int32Var key, ColumnRepr repr) {
+  expr = native_var_ref_name(var) & ".lookup(" & native_expr(key) & ")";
+  return match (repr)
+    object  = expr,
+    int     = "IntObj.get(" & expr & ")",
+    float   = "new FloatObj(" & expr & ")";
+}
 
 
 String native_lookup_field_expr(ObjExpr record, SymbObj field, Maybe[LowLevelRepr] repr) {
@@ -251,6 +262,9 @@ String native_get_int_val_expr(ObjExpr expr, Bool parenthesized) {
                             else native_expr(expr) & ".getLong()",
     get_inner_obj(e?)   = native_expr(e) & ".getInnerLong()",
     array_at()          = native_get_int_val_array_at_expr(expr.array, expr.size, expr.idx),
+    column_lookup()     = if expr.repr == :int
+                            then native_var_ref_name(expr.var) & ".lookup(" & native_expr(expr.key) & ")"
+                            else native_expr(expr) & ".getLong()",
     _                   = native_expr(expr) & ".getLong()";
 
 
@@ -283,7 +297,8 @@ String native_expr(Int32NatOp expr, Bool parenthesized) =
   value_to_surr()       = native_method_call_expr(expr.store, "valueToSurr", (expr.value)),
   get_unknown_arg()     = if expr.iter.arity == 1
                             then native_var_ref_name(expr.iter) & ".get()"
-                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.arg+1) & "()";
+                            else native_var_ref_name(expr.iter) & ".get" & printed(expr.arg+1) & "()",
+  get_col_index()       = native_var_ref_name(expr.iter) & ".getIdx()";
 
 
 // table_lookup(table: AnyTableVar, args: Maybe[Int32Var]+, symmetric: Bool),
@@ -368,6 +383,9 @@ String native_float_value_expr(ObjExpr expr, Bool parenthesized) =
                       else native_expr(expr) & ".getDouble()",
   array_at()      = if expr.array.repr == :float
                       then "Array.floatAt(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")"
+                      else native_expr(expr) & ".getDouble()",
+  column_lookup() = if expr.repr == :float
+                      then native_var_ref_name(expr.var) & ".lookup(" & native_expr(expr.key) & ")"
                       else native_expr(expr) & ".getDouble()",
   _               = native_expr(expr) & ".getDouble()";
 

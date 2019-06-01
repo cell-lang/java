@@ -103,18 +103,20 @@ final class FloatColumnUpdater {
     if (dirty) {
       dirty = false;
 
-      Array.fill(bitmap, 0);
+      int count = deleteCount + insertCount + updateCount;
 
-      // bitmap = Array.emptyLongArray;
+      if (3 * count < bitmap.length) {
+        for (int i=0 ; i < deleteCount ; i++)
+          bitmap[deleteIdxs[i] / 32] = 0;
 
-      // for (int i=0 ; i < deleteCount ; i++)
-      //   bitmap[deleteIdxs[i] / 32] = 0;
+        for (int i=0 ; i < updateCount ; i++)
+          bitmap[updateIdxs[i] / 32] = 0;
 
-      // for (int i=0 ; i < updateCount ; i++)
-      //   bitmap[updateIdxs[i] / 32] = 0;
-
-      // for (int i=0 ; i < insertCount ; i++)
-      //   bitmap[insertIdxs[i] / 32] = 0;
+        for (int i=0 ; i < insertCount ; i++)
+          bitmap[insertIdxs[i] / 32] = 0;
+      }
+      else
+        Array.fill(bitmap, 0);
     }
 
     deleteCount = 0;

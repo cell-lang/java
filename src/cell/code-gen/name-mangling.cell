@@ -99,9 +99,9 @@ String native_var_name(TableItVar v) {
 }
 
 String native_var_name(ColumnItVar var) {
-  prefix = match (var.type)
+  prefix = match (var.repr)
     object  = "obj",
-    integer = "int",
+    int     = "int",
     float   = "float";
   return prefix & "ColIt" & printed(var.id);
 }
@@ -370,9 +370,9 @@ String native_table_type(Table table) =
     3,  true    = "Sym12TernaryTable";
 
 String native_table_type(Column column) =
-  match (column.type)
+  match (column.repr)
     object    = "ObjColumn",
-    integer   = "IntColumn",
+    int       = "IntColumn",
     float     = "FloatColumn";
 
 String table_it_var_type(TableItVar var) =
@@ -384,9 +384,9 @@ String table_it_var_type(TableItVar var) =
     3,  true    = "Sym12TernaryTable.Iter";
 
 String column_it_var_type(ColumnItVar var) =
-  match (var.type)
+  match (var.repr)
     object    = "ObjColumn.Iter",
-    integer   = "IntColumn.Iter",
+    int       = "IntColumn.Iter",
     float     = "FloatColumn.Iter";
 
 String pending_updates_var_type(Table table) =
@@ -398,9 +398,9 @@ String pending_updates_var_type(Table table) =
     3,  true    = "Sym12TernaryTableUpdater";
 
 String pending_updates_var_type(Column column) =
-  match (column.type)
+  match (column.repr)
     object    = "ObjColumnUpdater",
-    integer   = "IntColumnUpdater",
+    int       = "IntColumnUpdater",
     float     = "FloatColumnUpdater";
 
 
