@@ -140,6 +140,15 @@ class TernaryTable {
     }
   }
 
+  public int containsAt(int field1, int field2, int field3) {
+    int hashcode = Miscellanea.hashcode(field1, field2, field3);
+    for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx)) {
+      if (field1OrNext(idx) == field1 & field2OrEmptyMarker(idx) == field2 & field3(idx) == field3)
+        return idx;
+    }
+    return -1;
+  }
+
   public boolean contains(int field1, int field2, int field3) {
     int hashcode = Miscellanea.hashcode(field1, field2, field3);
     for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx)) {
@@ -508,6 +517,82 @@ class TernaryTable {
     return true;
   }
 
+  public boolean deleteAt(int index) {
+    int field2 = field2OrEmptyMarker(index);
+    if (field2 == Empty)
+      return false;
+
+    int field1 = field1OrNext(index);
+    int field3 = field3(index);
+
+    // Removing the tuple
+    setEntry(index, firstFree, Empty, 0);
+    firstFree = index;
+    count--;
+
+    // Updating the indexes
+    index123.delete(index, Miscellanea.hashcode(field1, field2, field3));
+    index12.delete(index, Miscellanea.hashcode(field1, field2));
+    if (index13 != null)
+      index13.delete(index, Miscellanea.hashcode(field1, field3));
+    if (index23 != null)
+      index23.delete(index, Miscellanea.hashcode(field2, field3));
+    if (index1 != null)
+      index1.delete(index, Miscellanea.hashcode(field1));
+    if (index2 != null)
+      index2.delete(index, Miscellanea.hashcode(field2));
+    if (index3 != null)
+      index3.delete(index, Miscellanea.hashcode(field3));
+
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  Index getIndex123() {
+    if (index123 == null)
+      buildIndex123();
+    return index123;
+  }
+
+  Index getIndex12() {
+    if (index12 == null)
+      buildIndex12();
+    return index12;
+  }
+
+  Index getIndex13() {
+    if (index13 == null)
+      buildIndex13();
+    return index13;
+  }
+
+  Index getIndex23() {
+    if (index23 == null)
+      buildIndex23();
+    return index23;
+  }
+
+  Index getIndex1() {
+    if (index1 == null)
+      buildIndex1();
+    return index1;
+  }
+
+  Index getIndex2() {
+    if (index2 == null)
+      buildIndex2();
+    return index2;
+  }
+
+  Index getIndex3() {
+    if (index3 == null)
+      buildIndex3();
+    return index3;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   void deleteAt(int index, int hashcode) {
     int field1 = field1OrNext(index);
     int field2 = field2OrEmptyMarker(index);
@@ -654,6 +739,10 @@ class TernaryTable {
 
     public boolean done() {
       return index == Empty;
+    }
+
+    public int index() {
+      return index;
     }
 
     public int get1() {
