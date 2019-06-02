@@ -38,30 +38,6 @@ class TernaryTableUpdater {
     }
   }
 
-  // public void set(Obj value, int idx1, int idx2, int idx3) {
-  //   Miscellanea._assert(deleteCount == 0 || deleteCount == table.count);
-  //   Miscellanea._assert(insertCount == 0);
-
-  //   clear();
-  //   TernRelIter it = value.getTernRelIter();
-  //   while (!it.done()) {
-  //     Obj val1 = idx1 == 0 ? it.get1() : (idx1 == 1 ? it.get2() : it.get3());
-  //     Obj val2 = idx2 == 0 ? it.get1() : (idx2 == 1 ? it.get2() : it.get3());
-  //     Obj val3 = idx3 == 0 ? it.get1() : (idx3 == 1 ? it.get2() : it.get3());
-  //     int surr1 = store1.valueToSurrEx(val1);
-  //     if (surr1 == -1)
-  //       surr1 = store1.insert(val1);
-  //     int surr2 = store2.valueToSurrEx(val2);
-  //     if (surr2 == -1)
-  //       surr2 = store2.insert(val2);
-  //     int surr3 = store3.valueToSurrEx(val3);
-  //     if (surr3 == -1)
-  //       surr3 = store3.insert(val3);
-  //     insertList = Array.append3(insertList, insertCount++, surr1, surr2, surr3);
-  //     it.next();
-  //   }
-  // }
-
   public void insert(int value1, int value2, int value3) {
     insertList = Array.append3(insertList, insertCount++, value1, value2, value3);
   }
@@ -75,7 +51,7 @@ class TernaryTableUpdater {
   }
 
   public void delete12(int value1, int value2) {
-    TernaryTable.Iter it = table.getIter12(value1, value2);
+    TernaryTable.Iter12 it = table.getIter12(value1, value2);
     while (!it.done()) {
       deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
       deleteList = Array.append3(deleteList, deleteCount++, value1, value2, it.get1());
@@ -84,7 +60,7 @@ class TernaryTableUpdater {
   }
 
   public void delete13(int value1, int value3) {
-    TernaryTable.Iter it = table.getIter13(value1, value3);
+    TernaryTable.Iter13 it = table.getIter13(value1, value3);
     while (!it.done()) {
       deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
       deleteList = Array.append3(deleteList, deleteCount++, value1, it.get1(), value3);
@@ -93,7 +69,7 @@ class TernaryTableUpdater {
   }
 
   public void delete23(int value2, int value3) {
-    TernaryTable.Iter it = table.getIter23(value2, value3);
+    TernaryTable.Iter23 it = table.getIter23(value2, value3);
     while (!it.done()) {
       deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
       deleteList = Array.append3(deleteList, deleteCount++, it.get1(), value2, value3);
@@ -102,7 +78,7 @@ class TernaryTableUpdater {
   }
 
   public void delete1(int value1) {
-    TernaryTable.Iter it = table.getIter1(value1);
+    TernaryTable.Iter1 it = table.getIter1(value1);
     while (!it.done()) {
       deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
       deleteList = Array.append3(deleteList, deleteCount++, value1, it.get1(), it.get2());
@@ -111,25 +87,29 @@ class TernaryTableUpdater {
   }
 
   public void delete2(int arg2) {
-    Index index = table.getIndex2();
-    int hashcode = Miscellanea.hashcode(arg2);
-    for (int idx = index.head(hashcode) ; idx != TernaryTable.Empty ; idx = index.next(idx))
-      if (table.field2OrEmptyMarker(idx) == arg2) {
-        if (deleteCount >= deleteIdxs.length) {
-          int capacity = Array.nextCapacity(deleteIdxs.length);
-          deleteIdxs = Array.extend(deleteIdxs, capacity);
-          deleteList = Array.extend(deleteList, 3 * capacity);
-        }
-        deleteIdxs[deleteCount] = idx;
-        int offset = 3 * deleteCount;
-        deleteList[offset]   = table.field1OrNext(idx);
-        deleteList[offset+1] = arg2;
-        deleteList[offset+2] = table.field3(idx);
+    TernaryTable.Iter2 it = table.getIter2(arg2);
+    while (!it.done()) {
+      if (deleteCount >= deleteIdxs.length) {
+        int capacity = Array.nextCapacity(deleteIdxs.length);
+        deleteIdxs = Array.extend(deleteIdxs, capacity);
+        deleteList = Array.extend(deleteList, 3 * capacity);
       }
+      deleteIdxs[deleteCount] = it.index();
+      int offset = 3 * deleteCount;
+      deleteList[offset]   = it.get1();
+      deleteList[offset+1] = arg2;
+      deleteList[offset+2] = it.get2();
+      deleteCount++;
+
+      // deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
+      // deleteList = Array.append3(deleteList, deleteCount++, it.get1(), arg2, it.get2());
+
+      it.next();
+    }
   }
 
   public void delete3(int value3) {
-    TernaryTable.Iter it = table.getIter3(value3);
+    TernaryTable.Iter3 it = table.getIter3(value3);
     while (!it.done()) {
       deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
       deleteList = Array.append3(deleteList, deleteCount++, it.get1(), it.get2(), value3);
