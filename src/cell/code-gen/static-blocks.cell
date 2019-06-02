@@ -83,7 +83,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     vars_decls = gen_vars_decls(code, []);
     body = vars_decls & ("" if vars_decls != ()) & native_code(code, nothing);
     sgn = "public Obj " & copy_state_proc_name(name) & "() {";
-    return (sgn) & indent_lines(body) & ("}");
+    // return (sgn) & indent_lines(body) & ("}");
+    return (sgn, "  return null;", "}");
   }
 
 
@@ -93,7 +94,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     //body = vars_decls & ("" if vars_decls != (), aux_struct_init_call) & native_code(code, nothing);
     body = vars_decls & native_code(code, nothing);
     sgn = "public boolean " & set_state_proc_name(name) & "(Obj a0) {";
-    return (sgn) & indent_lines(body) & ("}");
+    // return (sgn) & indent_lines(body) & ("}");
+    return (sgn, "  return true;", "}");
   }
 
 
@@ -166,7 +168,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     body = join(intermix(sections, ("")));
 
     sgn = "public boolean " & full_check_proc_name(block.name) & "() {";
-    return (sgn) & indent_lines(body) & ("}");
+    // return (sgn) & indent_lines(body) & ("}");
+    return (sgn, "  return true;", "}");
 
 
     [(NzNat, [+Nat]) -> String] key_check_method_names = [
