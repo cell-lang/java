@@ -19,6 +19,7 @@ String native_expr(ObjNatOp expr) =
   int_obj(e?)         = "IntObj.get("  & native_expr(e) & ")",
   float_obj(e?)       = "new FloatObj(" & native_expr(e) & ")",
   get_curr_arg()      = native_get_curr_arg_expr(expr.var, expr.arg),
+  surr_to_value()     = native_var_ref_name(expr.store) & ".surrToValue(" & native_expr(expr.surrogate) & ")",
   column_lookup()     = native_column_lookup_expr(expr.var, expr.key, expr.repr),
   get_value()         = native_var_ref_name(expr.var) & ".getValue()",
   rand_elem(e?)       = native_expr(e)           & ".randElem()";

@@ -3,7 +3,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     copy_state()              = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
     copy_rel()                = native_copy_rel_code(var, expr.tables, expr.applied_perm),
     copy_persistent_state()   = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
-    surr_to_value()           = native_method_call(var, expr.store, "surrToValue", (expr.surrogate)),
     read_pending_var(v?)      = native_var_ref_name(var) & " = " & native_var_ref_name(v) & ";";
 
 
