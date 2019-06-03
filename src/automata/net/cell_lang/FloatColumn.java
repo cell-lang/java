@@ -93,10 +93,15 @@ final class FloatColumn {
   public void insert(int index, double value) {
     if (index >= column.length)
       column = Array.extend(column, Array.capacity(column.length, index+1), NULL);
-    if (!isNull(column[index]))
-      throw Miscellanea.softFail();
-    column[index] = Double.isNaN(value) ? Double.NaN : value;
-    count++;
+    double currValue = column[index];
+    if (!isNull(currValue)) {
+      if (value != currValue)
+        throw Miscellanea.softFail();
+    }
+    else {
+      column[index] = Double.isNaN(value) ? Double.NaN : value;
+      count++;
+    }
   }
 
   public void update(int index, double value) {
