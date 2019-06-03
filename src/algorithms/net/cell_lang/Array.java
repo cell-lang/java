@@ -324,6 +324,13 @@ class Array {
     return Arrays.copyOf(array, newSize);
   }
 
+  public static long[] extend(long[] array, int newSize, long defaultValue) {
+    Miscellanea._assert(newSize > array.length);
+    long[] newArray = Arrays.copyOf(array, newSize);
+    Arrays.fill(newArray, array.length, newSize, defaultValue);
+    return newArray;
+  }
+
   public static double[] extend(double[] array, int newSize, double defaultValue) {
     Miscellanea._assert(newSize > array.length);
     double[] newArray = Arrays.copyOf(array, newSize);
