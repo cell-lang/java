@@ -73,6 +73,10 @@ final class FloatColumn {
     this.store = store;
   }
 
+  public int size() {
+    return count;
+  }
+
   public boolean contains1(int idx) {
     return idx < column.length && !isNull(column[idx]);
   }
@@ -117,6 +121,13 @@ final class FloatColumn {
       column[index] = NULL;
       count--;
     }
+  }
+
+  public void clear() {
+    count = 0;
+    if (column.length != INIT_SIZE)
+      column = new double[INIT_SIZE];
+    Array.fill(column, NULL);
   }
 
   //////////////////////////////////////////////////////////////////////////////

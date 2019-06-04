@@ -4,6 +4,7 @@ import java.util.function.IntPredicate;
 
 
 final class FloatColumnUpdater {
+  boolean clear = false;
   int deleteCount = 0;
   int[] deleteIdxs = Array.emptyIntArray;
 
@@ -15,8 +16,10 @@ final class FloatColumnUpdater {
   int[] updateIdxs = Array.emptyIntArray;
   double[] updateValues = Array.emptyDoubleArray;
 
+  // int minIdx = Integer.MAX_VALUE; //## IMPLEMENT THIS
   int maxIdx = -1;
   boolean dirty = false;
+  boolean col1KeyViolated = false;
   long[] bitmap = Array.emptyLongArray;
 
   FloatColumn column;
@@ -30,7 +33,8 @@ final class FloatColumnUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public void clear() {
-    throw Miscellanea.internalFail();
+    clear = true;
+    deleteCount = 0;
   }
 
   public void delete1(int index) {
@@ -38,12 +42,14 @@ final class FloatColumnUpdater {
   }
 
   public void delete(int index) {
-    if (deleteCount < deleteIdxs.length)
-      deleteIdxs[deleteCount++] = index;
-    else
-      deleteIdxs = Array.append(deleteIdxs, deleteCount++, index);
-    if (index > maxIdx)
-      maxIdx = index;
+    if (!clear) {
+      if (deleteCount < deleteIdxs.length)
+        deleteIdxs[deleteCount++] = index;
+      else
+        deleteIdxs = Array.append(deleteIdxs, deleteCount++, index);
+      if (index > maxIdx)
+        maxIdx = index;
+    }
   }
 
   public void insert(int index, double value) {
@@ -73,9 +79,14 @@ final class FloatColumnUpdater {
   }
 
   public void apply() {
-    for (int i=0 ; i < deleteCount ; i++) {
-      int index = deleteIdxs[i];
-      column.delete(index);
+    if (clear) {
+      column.clear();
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int index = deleteIdxs[i];
+        column.delete(index);
+      }
     }
 
     for (int i=0 ; i < updateCount ; i++) {
@@ -102,10 +113,11 @@ final class FloatColumnUpdater {
 
     if (dirty) {
       dirty = false;
+      col1KeyViolated = false;
 
       int count = deleteCount + insertCount + updateCount;
 
-      if (3 * count < bitmap.length) {
+      if (!clear && 3 * count < bitmap.length) {
         for (int i=0 ; i < deleteCount ; i++)
           bitmap[deleteIdxs[i] / 32] = 0;
 
@@ -118,6 +130,8 @@ final class FloatColumnUpdater {
       else
         Array.fill(bitmap, 0);
     }
+
+    clear = false;
 
     deleteCount = 0;
     insertCount = 0;
@@ -140,7 +154,22 @@ final class FloatColumnUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public boolean contains1(int surr1) {
-    throw Miscellanea.internalFail();
+    if (surr1 > maxIdx)
+      return !clear && column.contains1(surr1);
+
+    buildBitmap();
+
+    int slotIdx = surr1 / 32;
+    int bitsShift = 2 * (surr1 % 32);
+    long slot = bitmap[slotIdx];
+    long status = slot >> bitsShift;
+
+    if ((status & 2) != 0)
+      return true;  // Inserted/updated
+    else if ((status & 1) != 0)
+      return false; // Deleted and not reinserted
+    else
+      return column.contains1(surr1); // Untouched
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -149,6 +178,15 @@ final class FloatColumnUpdater {
     if (insertCount == 0 & updateCount == 0)
       return true;
     Miscellanea._assert(maxIdx != -1);
+    buildBitmap();
+    return !col1KeyViolated;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private void buildBitmap() {
+    if (dirty)
+      return;
 
     if (maxIdx / 32 >= bitmap.length)
       bitmap = Array.extend(bitmap, Array.capacity(bitmap.length, maxIdx / 32 + 1));
@@ -160,11 +198,16 @@ final class FloatColumnUpdater {
 
     dirty = true;
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int idx = deleteIdxs[i];
-      int slotIdx = idx / 32;
-      int bitsShift = 2 * (idx % 32);
-      bitmap[slotIdx] |= 1L << bitsShift;
+    if (clear) {
+      Array.fill(bitmap, 0x5555555555555555L); //## BAD: THIS CAN BE MADE MORE EFFICIENT
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int idx = deleteIdxs[i];
+        int slotIdx = idx / 32;
+        int bitsShift = 2 * (idx % 32);
+        bitmap[slotIdx] |= 1L << bitsShift;
+      }
     }
 
     for (int i=0 ; i < updateCount ; i++) {
@@ -173,7 +216,7 @@ final class FloatColumnUpdater {
       int bitsShift = 2 * (idx % 32);
       long slot = bitmap[slotIdx];
       if (((slot >> bitsShift) & 2) != 0)
-        return false;
+        col1KeyViolated = true;
       bitmap[slotIdx] = slot | (3L << bitsShift);
     }
 
@@ -184,11 +227,9 @@ final class FloatColumnUpdater {
       long slot = bitmap[slotIdx];
       int bits = (int) ((slot >> bitsShift) & 3);
       if ((bits == 0 && column.contains1(idx)) | bits >= 2)
-        return false;
+        col1KeyViolated = true;
       bitmap[slotIdx] = slot | (2L << bitsShift);
     }
-
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
