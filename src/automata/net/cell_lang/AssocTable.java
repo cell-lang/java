@@ -26,7 +26,7 @@ class AssocTable {
       int idx = firstFree;
       firstFree = next(slots[idx]);
       slots[idx] = tuple;
-      index.insert(idx, Miscellanea.hashcode(arg1, arg2));
+      index.insert(idx, Hashing.hashcode(arg1, arg2));
       if (table1 != null)
         table1.insert(arg1, arg2);
       if (table2 != null)
@@ -42,7 +42,7 @@ class AssocTable {
     for (int i=0 ; i < count ; i++) {
       long slot = currSlots[i];
       slots[i] = slot;
-      index.insert(i, Miscellanea.hashcode(arg1(slot), arg2(slot)));
+      index.insert(i, Hashing.hashcode(arg1(slot), arg2(slot)));
     }
     for (int i=count ; i < 2 * count ; i++)
       slots[i] = emptySlot(i + 1);
@@ -64,7 +64,7 @@ class AssocTable {
       count--;
       slots[idx] = emptySlot(firstFree);
       firstFree = idx;
-      index.delete(idx, Miscellanea.hashcode(arg1, arg2));
+      index.delete(idx, Hashing.hashcode(arg1, arg2));
       if (table1 != null)
         table1.delete(arg1, arg2);
       if (table2 != null)
@@ -129,7 +129,7 @@ class AssocTable {
 
   public int tupleIdx(int arg1, int arg2) {
     long tuple = filledSlot(arg1, arg2);
-    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int hashcode = Hashing.hashcode(arg1, arg2);
     for (int idx = index.head(hashcode) ; idx != Index.Empty ; idx = index.next(idx))
       if (slots[idx] == tuple)
         return idx;

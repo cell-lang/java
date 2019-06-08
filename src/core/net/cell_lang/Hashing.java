@@ -1,8 +1,26 @@
 package net.cell_lang;
 
 
-class Utils {
-  public static int jenkinsHash(int a, int b, int c) {
+class Hashing {
+  public static int hashcode(int n) {
+    return n;
+  }
+
+  public static int hashcode64(long n) {
+    return hashcode((int) n, (int) (n >> 32));
+  }
+
+  public static int hashcode(int n1, int n2) {
+    return hash6432shift(n1, n2);
+  }
+
+  public static int hashcode(int n1, int n2, int n3) {
+    return jenkinsHash(n1, n2, n3);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static int jenkinsHash(int a, int b, int c) {
     a= a - b;  a = a - c;  a = a^ (c >>> 13);
     b= b - c;  b = b - a;  b = b^ (a << 8);
     c= c - a;  c = c - b;  c = c^ (b >>> 13);
@@ -15,7 +33,7 @@ class Utils {
     return c;
   }
 
-  public static int hash6432shift(int a, int b) {
+  private static int hash6432shift(int a, int b) {
     long key = ((long) a) | (((long) b) << 32);
     key = (~key) + (key << 18); // key = (key << 18) - key - 1;
     key = key ^ (key >>> 31);
@@ -35,11 +53,11 @@ class Utils {
     return h;
   }
 
-  public static int murmur64to32(int a, int b) {
+  private static int murmur64to32(int a, int b) {
     return (int) murmur64(((long) a) | (((long) b) << 32));
   }
 
-  public static int wang32hash(int key) {
+  private static int wang32hash(int key) {
     key = ~key + (key << 15); // key = (key << 15) - key - 1;
     key = key ^ (key >>> 12);
     key = key + (key << 2);
