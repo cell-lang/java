@@ -16,6 +16,11 @@ class IntObj extends Obj {
     throw Miscellanea.internalFail(this);
   }
 
+  @Override
+  public int hashcode() {
+    return hashcode(getLong());
+  }
+
   public TypeCode getTypeCode() {
     return TypeCode.INTEGER;
   }
@@ -59,5 +64,9 @@ class IntObj extends Obj {
 
   public static int compare(long x1, long x2) {
     return x1 == x2 ? 0 : (x1 < x2 ? -1 : 1);
+  }
+
+  public static int hashcode(long x) {
+    return Hashing.hashcode64(x);
   }
 }

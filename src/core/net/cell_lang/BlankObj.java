@@ -14,6 +14,11 @@ final class BlankObj extends Obj {
     throw Miscellanea.internalFail(this);
   }
 
+  @Override
+  public int hashcode() {
+    throw Miscellanea.internalFail();
+  }
+
   public TypeCode getTypeCode() {
     throw Miscellanea.internalFail(this);
   }

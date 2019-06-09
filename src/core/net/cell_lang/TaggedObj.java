@@ -8,7 +8,7 @@ final class TaggedObj extends Obj {
   int minPrintedSize = -1;
 
   public TaggedObj(int tag, Obj obj) {
-    data = tagObjData(tag, obj.data);
+    data = tagObjData(tag);
     extraData = refTagObjExtraData();
     this.obj = obj;
   }
@@ -38,7 +38,7 @@ final class TaggedObj extends Obj {
 
   @Override
   public int hashcode() {
-    return super.hashcode() ^ obj.hashcode();
+    return Hashing.hashcode(getTagId(), obj.hashcode());
   }
 
   public TypeCode getTypeCode() {

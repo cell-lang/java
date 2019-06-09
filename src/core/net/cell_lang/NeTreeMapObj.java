@@ -128,6 +128,11 @@ class NeTreeMapObj extends Obj {
     return packed().internalOrder(other);
   }
 
+  @Override
+  public int hashcode() {
+    return packed().hashcode();
+  }
+
   public TypeCode getTypeCode() {
     return TypeCode.NE_BIN_REL;
   }

@@ -30,6 +30,11 @@ final class TaggedIntObj extends Obj {
     throw Miscellanea.internalFail(this);
   }
 
+  @Override
+  public int hashcode() {
+    return Hashing.hashcode(getTagId(), IntObj.hashcode(getInnerLong()));
+  }
+
   public TypeCode getTypeCode() {
     return TypeCode.TAGGED_VALUE;
   }

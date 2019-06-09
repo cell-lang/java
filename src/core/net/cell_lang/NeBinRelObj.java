@@ -9,6 +9,7 @@ class NeBinRelObj extends Obj {
   int[] hashcodes1;
   int[] revIdxs;
   boolean isMap;
+  int hashcode = Integer.MIN_VALUE;
   int minPrintedSize = -1;
 
 
@@ -177,6 +178,18 @@ class NeBinRelObj extends Obj {
     }
 
     return 0;
+  }
+
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      for (int i=0 ; i < col1.length ; i++)
+        hcode += Hashing.hashcode(hashcodes1[i], col2[i].hashcode());
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
   }
 
   public TypeCode getTypeCode() {

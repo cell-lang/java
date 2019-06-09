@@ -94,6 +94,20 @@ abstract class FloatArrayObjBase extends NeFloatSeqObj {
       return super.internalOrder(other);
   }
 
+  @Override
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      int len = getSize();
+      for (int i=0 ; i < len ; i++)
+        hcode = 31 * hcode + FloatObj.hashcode(elts[offset+i]);
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   public void copy(int first, int count, double[] array, int destOffset) {

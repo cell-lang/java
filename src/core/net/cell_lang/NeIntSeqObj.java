@@ -2,8 +2,6 @@ package net.cell_lang;
 
 
 abstract class NeIntSeqObj extends NeSeqObj {
-  private int hashcode = Integer.MIN_VALUE;
-
   public Obj getObjAt(long idx) {
     return IntObj.get(getLongAt(idx));
   }
@@ -44,12 +42,13 @@ abstract class NeIntSeqObj extends NeSeqObj {
   @Override
   public int hashcode() {
     if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
       int len = getSize();
-      long hashcode64 = 0;
       for (int i=0 ; i < len ; i++)
-        hashcode64 = 31 * hashcode64 + getLongAt(i);
-        // hashcode64 += getLongAt(i);
-      hashcode = (int) (hashcode64 ^ (hashcode64 >> 32));
+        hcode = 31 * hcode + IntObj.hashcode(getLongAt(i));
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
     }
     return hashcode;
   }

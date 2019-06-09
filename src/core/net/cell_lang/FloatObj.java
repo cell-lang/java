@@ -15,6 +15,11 @@ final class FloatObj extends Obj {
     throw Miscellanea.internalFail(this);
   }
 
+  @Override
+  public int hashcode() {
+    return hashcode(getDouble());
+  }
+
   public TypeCode getTypeCode() {
     return TypeCode.FLOAT;
   }
@@ -42,5 +47,9 @@ final class FloatObj extends Obj {
 
   public static int compare(double x1, double x2) {
     return IntObj.compare(floatObjData(x1), floatObjData(x2));
+  }
+
+  public static int hashcode(double x) {
+    return Hashing.hashcode64(Double.doubleToRawLongBits(x));
   }
 }

@@ -141,6 +141,18 @@ class RecordObj extends NeBinRelObj {
     return 0;
   }
 
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      for (int i=0 ; i < labels.length ; i++)
+        hcode += Hashing.hashcode(SymbObj.hashcode(labels[i]), col2[i].hashcode());
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {

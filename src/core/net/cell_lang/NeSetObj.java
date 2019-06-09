@@ -7,6 +7,7 @@ import java.io.Writer;
 final class NeSetObj extends Obj {
   Obj[] elts;
   int[] hashcodes;
+  int hashcode = Integer.MIN_VALUE;
   int minPrintedSize = -1;
 
   public NeSetObj(Obj[] elts, int[] hashcodes) {
@@ -87,17 +88,18 @@ final class NeSetObj extends Obj {
     return 0;
   }
 
-  // public int hashcode() {
-  //   if (hashcode == Integer.MIN_VALUE) {
-  //     int len = getSize();
-  //     long hashcode64 = 0;
-  //     for (int i=0 ; i < len ; i++)
-  //       hashcode64 = 31 * hashcode64 + getLongAt(i);
-  //       // hashcode64 += getLongAt(i);
-  //     hashcode = (int) (hashcode64 ^ (hashcode64 >> 32));
-  //   }
-  //   return hashcode;
-  // }
+  @Override
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      for (int i=0 ; i < hashcodes.length ; i++)
+        hcode += hashcodes[i];
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
+  }
 
   public TypeCode getTypeCode() {
     return TypeCode.NE_SET;

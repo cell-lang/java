@@ -134,6 +134,11 @@ final class EmptyRelObj extends Obj {
     throw Miscellanea.internalFail(this);
   }
 
+  @Override
+  public int hashcode() {
+    return 0;
+  }
+
   public TypeCode getTypeCode() {
     return TypeCode.EMPTY_REL;
   }

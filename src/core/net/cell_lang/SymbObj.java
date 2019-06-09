@@ -25,6 +25,11 @@ final class SymbObj extends Obj {
     throw Miscellanea.internalFail(this);
   }
 
+  @Override
+  public int hashcode() {
+    return hashcode(getSymbId());
+  }
+
   public TypeCode getTypeCode() {
     return TypeCode.SYMBOL;
   }
@@ -57,5 +62,9 @@ final class SymbObj extends Obj {
   //## THIS COULD BE OPTIMIZED
   public static SymbObj get(boolean b) {
     return SymbTable.get(b ? SymbTable.TrueSymbId : SymbTable.FalseSymbId);
+  }
+
+  public static int hashcode(int symbId) {
+    return symbId;
   }
 }

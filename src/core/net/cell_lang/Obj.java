@@ -176,12 +176,12 @@ abstract class Obj implements Comparable<Obj> {
     return internalOrder(other);
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   // Called only when data == other.data and extraData == other.extraData
   public abstract int internalOrder(Obj other);
 
-  public int hashcode() {
-    return Utils.jenkinsHash((int) (data >>> 32), (int) data, extraData);
-  }
+  public abstract int hashcode();
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -197,30 +197,30 @@ abstract class Obj implements Comparable<Obj> {
     return Double.doubleToRawLongBits(value);
   }
 
-  // 32 bit hash code - 32 bit size/length
-  private static long collObjData(int size, long hashcode) {
-    return packedHashcode(hashcode) | size;
+  // 32 bit 0 padding - 32 bit size/length
+  private static long collObjData(int size) {
+    return size;
   }
 
   protected static long seqObjData(int length) {
-    return collObjData(length, 0);
+    return collObjData(length);
   }
 
   protected static long setObjData(int size) {
-    return collObjData(size, 0);
+    return collObjData(size);
   }
 
   protected static long binRelObjData(int size) {
-    return collObjData(size, 0);
+    return collObjData(size);
   }
 
-  protected static long ternRelObjData(int size, long hashcode) {
-    return collObjData(size, hashcode);
+  protected static long ternRelObjData(int size) {
+    return collObjData(size);
   }
 
-  // 32 bit hash code - 16 bit 0 padding - 16 bit tag id
-  protected static long tagObjData(int tag, long hashcode) {
-    return packedHashcode(hashcode) | (tag & 0xFFFF);
+  // 48 bit 0 padding - 16 bit tag id
+  protected static long tagObjData(int tag) {
+    return tag & 0xFFFF;
   }
 
   // 48 bit value - 16 bit tag id
@@ -228,13 +228,9 @@ abstract class Obj implements Comparable<Obj> {
     return value << 16 | (long) (tag & 0xFFFF);
   }
 
-  // 32 bit hash code - 16 bit optional field mask - 16 bit tag id
-  public static long optTagRecObjData(int tag, long hashcode, int optFieldsMask) {
-    return packedHashcode(hashcode) | (((long) optFieldsMask) << 16) | (tag & 0xFFFF);
-  }
-
-  private static long packedHashcode(long hashcode) {
-    return (hashcode ^ (hashcode << 32)) & ~0xFFFFFFFFL;
+  // 32 bit 0 padding - 16 bit optional field mask - 16 bit tag id
+  public static long optTagRecObjData(int tag, long _UNUSED_HASHCODE_REMOVE, int optFieldsMask) {
+    return (((long) optFieldsMask) << 16) | (tag & 0xFFFF);
   }
 
   //////////////////////////////////////////////////////////////////////////////

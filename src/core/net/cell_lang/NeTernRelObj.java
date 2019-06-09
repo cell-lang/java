@@ -10,6 +10,7 @@ final class NeTernRelObj extends Obj {
   Obj[] col3;
   int[] idxs231;
   int[] idxs312;
+  int hashcode = Integer.MIN_VALUE;
   int minPrintedSize = -1;
 
   public void dump() {
@@ -42,10 +43,7 @@ final class NeTernRelObj extends Obj {
     Miscellanea._assert(col1.length > 0);
 
     int size = col1.length;
-    long hashcode = 0;
-    for (int i=0 ; i < size ; i++)
-      hashcode += col1[i].data + col2[i].data + col3[i].data;
-    data = ternRelObjData(size, hashcode);
+    data = ternRelObjData(size);
     extraData = neTernRelObjExtraData();
 
     this.col1 = col1;
@@ -189,6 +187,19 @@ final class NeTernRelObj extends Obj {
     }
 
     return 0;
+  }
+
+  @Override
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      for (int i=0 ; i < col1.length ; i++)
+        hcode += Hashing.hashcode(col1[i].hashcode(), col2[i].hashcode(), col3[i].hashcode());
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
   }
 
   public TypeCode getTypeCode() {
