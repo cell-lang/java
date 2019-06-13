@@ -166,7 +166,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "  return false;"
     ) : v <- isort(keys(block.nested_blocks))));
 
-    keys = [(v, arity(t), k) : v, t <- block.tables, k <- keys(t)];
+    keys = [(v, arity(t), k) : v, t <- block.tables, needs_keys_check(t), k <- keys(t)];
     ord_keys = sort_by_key(keys, $(1));
     keys_check_code = join(({
       method_name = key_check_method_names((a, k), !!);
@@ -185,8 +185,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     body = join(intermix(sections, ("")));
 
     sgn = "public boolean " & full_check_proc_name(block.name) & "() {";
-    // return (sgn) & indent_lines(body) & ("}");
-    return (sgn, "  return true;", "}");
+    return (sgn) & indent_lines(body) & ("}");
 
 
     [(NzNat, [+Nat]) -> String] key_check_method_names = [
@@ -197,6 +196,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (3, [0, 2]) -> "cols13AreKey",
       (3, [1, 2]) -> "cols23AreKey"
     ];
+
+
+    True  needs_keys_check(Table)  = true;
+    False needs_keys_check(Column) = false;
   }
 
 
