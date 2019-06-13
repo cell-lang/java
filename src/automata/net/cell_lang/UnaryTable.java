@@ -39,10 +39,10 @@ class UnaryTable {
   long[] bitmap = new long[InitSize];
   int count = 0;
 
-  public ValueStore store;
+  public SurrObjMapper mapper;
 
-  public UnaryTable(ValueStore store) {
-    this.store = store;
+  public UnaryTable(SurrObjMapper mapper) {
+    this.mapper = mapper;
   }
 
   public int size() {
@@ -155,13 +155,13 @@ class UnaryTable {
     int next = 0;
     for (int i=0 ; i < tables.length ; i++) {
       UnaryTable table = tables[i];
-      ValueStore store = table.store;
+      SurrObjMapper mapper = table.mapper;
       long[] bitmap = table.bitmap;
       for (int j=0 ; j < bitmap.length ; j++) {
         long mask = bitmap[j];
         for (int k=0 ; k < 64 ; k++)
           if (((mask >>> k) & 1) != 0)
-            objs[next++] = store.surrToObjValue(k + 64 * j);
+            objs[next++] = mapper.surrToObj(k + 64 * j);
       }
     }
     Miscellanea._assert(next == count);

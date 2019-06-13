@@ -67,8 +67,8 @@ class AssocTableUpdater {
       int field2 = insertList[2 * i + 1];
       if (!table.contains(field1, field2)) {
         table.insert(field1, field2);
-        table.store1.addRef(field1);
-        table.store2.addRef(field2);
+        store1.addRef(field1);
+        store2.addRef(field2);
       }
     }
   }
@@ -80,8 +80,8 @@ class AssocTableUpdater {
         int field2 = deleteList[2 * i + 1];
         Miscellanea._assert(table.store1.surrToObjValue(field1) != null);
         Miscellanea._assert(table.store2.surrToObjValue(field2) != null);
-        table.store1.release(field1);
-        table.store2.release(field2);
+        store1.release(field1);
+        store2.release(field2);
       }
     }
   }

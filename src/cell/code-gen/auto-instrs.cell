@@ -7,6 +7,14 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String native_copy_rel_code(WriteObjVar res_var, [+TableVar -> <Table, Column>] tables, [+Nat -> Nat] applied_perm) {
+    is_column = only([
+      match (t)
+        table()   = false,
+        column()  = true
+      : unused_var, t <- tables
+    ]);
+    assert not is_column or applied_perm == [0 -> 0, 1 -> 1];
+
     symmetric = only([
       match (t)
         table()   = t.symmetric,
@@ -16,7 +24,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     assert not symmetric or (applied_perm == [0 -> 0, 1 -> 1] or applied_perm == [0 -> 0, 1 -> 1, 2 -> 2]);
 
     arity = |applied_perm|;
-    if arity == 1:
+    if arity == 1 or is_column:
       perm_args = ();
     elif arity == 2:
       assert applied_perm == [0 -> 0, 1 -> 1] or applied_perm == [0 -> 1, 1 -> 0];
@@ -28,19 +36,18 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     table_vars = keys(tables);
 
-    if |tables| == 1:
-      return native_method_call(res_var, only(table_vars), "copy", perm_args);
-
+    if is_column:
+      class_name = "ColumnBase";
     else
       class_name = match (arity)
         1 = "UnaryTable",
         2 = if symmetric then "SymBinaryTable" else "BinaryTable",
         3 = if symmetric then "Sym12TernaryTable" else "TernaryTable";
-
-      tables_names = (native_var_ref_name(v) : v <- isort(table_vars));
-      table_array_new = "new " & class_name & "[] {" & append(tables_names, ", ") & "}";
-      return native_static_call(res_var, class_name & ".copy", (table_array_new) & perm_args);
     ;
+
+    tables_names = (native_var_ref_name(v) : v <- isort(table_vars));
+    table_array_new = "new " & class_name & "[] {" & append(tables_names, ", ") & "}";
+    return native_static_call(res_var, class_name & ".copy", (table_array_new) & perm_args);
   }
 
 
@@ -86,7 +93,13 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     column_insert_deferred()  = native_column_insert_deferred_code(instr.table_var, instr.key_surr, instr.value, instr.forced),
 
     immediate_insert_or_add_ref() = native_immediate_insert_or_add_ref(instr.res_var, instr.store, instr.value),
-    immediate_insert_tuple()      = native_immediate_insert_tuple(instr.table_var, instr.tuple);
+    immediate_insert_tuple()      = native_immediate_insert_tuple(instr.table_var, instr.tuple),
+    column_insert_immediate() = native_column_insert_immediate_code(instr.table_var, instr.key_surr, instr.value);
+
+
+  String* native_column_insert_immediate_code(TableVar table_var, Int32Var key_surr, AnyTypeExpr value) {
+    return (native_method_call(table_var, "insert", (key_surr, value)));
+  }
 
 
   String* native_column_insert_deferred_code(TableVar table_var, Int32Var key_surr, AnyTypeExpr value, Bool forced) {

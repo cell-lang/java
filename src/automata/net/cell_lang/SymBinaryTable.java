@@ -35,13 +35,13 @@ class SymBinaryTable {
 
 
   OneWayBinTable table = new OneWayBinTable();
-  public ValueStore store;
+  public SurrObjMapper mapper;
 
   int eqCount = 0;
 
 
-  public SymBinaryTable(ValueStore store) {
-    this.store = store;
+  public SymBinaryTable(SurrObjMapper mapper) {
+    this.mapper = mapper;
     check();
   }
 
@@ -130,14 +130,14 @@ class SymBinaryTable {
     for (int iT=0 ; iT < tables.length ; iT++) {
       SymBinaryTable table = tables[iT];
       int[] column = table.table.column;
-      ValueStore store = table.store;
+      SurrObjMapper mapper = table.mapper;
       for (int iS=0 ; iS < column.length ; iS++) {
         int code = table.table.column[iS];
         if (code != OverflowTable.EmptyMarker) {
           if (code >> 29 == 0) {
             if (iS <= code) {
-              objs1[next] = store.surrToObjValue(iS);
-              objs2[next++] = store.surrToObjValue(code);
+              objs1[next] = mapper.surrToObj(iS);
+              objs2[next++] = mapper.surrToObj(code);
             }
           }
           else {
@@ -147,9 +147,9 @@ class SymBinaryTable {
               int arg2 = it.get();
               if (iS <= arg2) {
                 if (val1 == null)
-                  val1 = store.surrToObjValue(iS);
+                  val1 = mapper.surrToObj(iS);
                 objs1[next] = val1;
-                objs2[next++] = store.surrToObjValue(arg2);
+                objs2[next++] = mapper.surrToObj(arg2);
               }
               it.next();
             }

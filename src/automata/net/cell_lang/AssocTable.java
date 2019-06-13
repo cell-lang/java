@@ -13,7 +13,7 @@ class AssocTable {
 
   private OneWayBinTable table1, table2;
 
-  public ValueStore store1, store2;
+  public SurrObjMapper mapper1, mapper2;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -112,11 +112,11 @@ class AssocTable {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public AssocTable(ValueStore store1, ValueStore store2) {
+  public AssocTable(SurrObjMapper mapper1, SurrObjMapper mapper2) {
     for (int i=0 ; i < MIN_SIZE ; i++)
       slots[i] = emptySlot(i+1);
-    this.store1 = store1;
-    this.store2 = store2;
+    this.mapper1 = mapper1;
+    this.mapper2 = mapper2;
   }
 
   public int size() {
@@ -253,13 +253,13 @@ class AssocTable {
     for (int iT=0 ; iT < tables.length ; iT++) {
       AssocTable table = tables[iT];
       long[] slots = table.slots;
-      ValueStore store1 = table.store1;
-      ValueStore store2 = table.store2;
+      SurrObjMapper mapper1 = table.mapper1;
+      SurrObjMapper mapper2 = table.mapper2;
       for (int iS=0 ; iS < slots.length ; iS++) {
         long slot = slots[iS];
         if (!isEmpty(slot)) {
-          objs1[next]   = store1.surrToObjValue(arg1(slot));
-          objs2[next++] = store2.surrToObjValue(arg2(slot));
+          objs1[next]   = mapper1.surrToObj(arg1(slot));
+          objs2[next++] = mapper2.surrToObj(arg2(slot));
         }
       }
     }

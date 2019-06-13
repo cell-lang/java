@@ -3,7 +3,7 @@ package net.cell_lang;
 import java.util.HashSet;
 
 
-final class IntColumn {
+final class IntColumn extends ColumnBase {
   public class Iter {
     private int left; // Includes current value
     private int idx;
@@ -46,18 +46,15 @@ final class IntColumn {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  int count = 0;
   long[] column = new long[INIT_SIZE];
-
   HashSet<Integer> collisions = new HashSet<Integer>();
-
-  ValueStore store;
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public IntColumn(ValueStore store) {
+  public IntColumn(SurrObjMapper mapper) {
+    super(mapper);
     Array.fill(column, NULL);
-    this.store = store;
+    this.mapper = mapper;
   }
 
   public boolean contains1(int idx) {
@@ -134,12 +131,6 @@ final class IntColumn {
         count--;
       }
     }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Obj copy() {
-    throw Miscellanea.internalFail();
   }
 
   //////////////////////////////////////////////////////////////////////////////

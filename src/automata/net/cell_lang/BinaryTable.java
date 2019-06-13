@@ -37,12 +37,12 @@ class BinaryTable {
   OneWayBinTable table1 = new OneWayBinTable();
   OneWayBinTable table2 = new OneWayBinTable();
 
-  public ValueStore store1;
-  public ValueStore store2;
+  public SurrObjMapper mapper1, mapper2;
 
-  public BinaryTable(ValueStore store1, ValueStore store2) {
-    this.store1 = store1;
-    this.store2 = store2;
+
+  public BinaryTable(SurrObjMapper mapper1, SurrObjMapper mapper2) {
+    this.mapper1 = mapper1;
+    this.mapper2 = mapper2;
     check();
   }
 
@@ -179,22 +179,22 @@ class BinaryTable {
     for (int iT=0 ; iT < tables.length ; iT++) {
       BinaryTable table = tables[iT];
       int[] column = table.table1.column;
-      ValueStore store1 = table.store1;
-      ValueStore store2 = table.store2;
+      SurrObjMapper mapper1 = table.mapper1;
+      SurrObjMapper mapper2 = table.mapper2;
       for (int iS=0 ; iS < column.length ; iS++) {
         int code = column[iS];
         if (code != OverflowTable.EmptyMarker) {
-          Obj val1 = store1.surrToObjValue(iS);
+          Obj val1 = mapper1.surrToObj(iS);
           if (code >> 29 == 0) {
             objs1[next] = val1;
-            objs2[next++] = store2.surrToObjValue(code);
+            objs2[next++] = mapper2.surrToObj(code);
           }
           else {
             OverflowTable.Iter it = table.table1.overflowTable.getIter(code);
             while (!it.done()) {
               int arg2 = it.get();
               objs1[next] = val1;
-              objs2[next++] = store2.surrToObjValue(arg2);
+              objs2[next++] = mapper2.surrToObj(arg2);
               it.next();
             }
           }

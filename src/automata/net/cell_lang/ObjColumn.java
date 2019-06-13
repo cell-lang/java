@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-final class ObjColumn {
+final class ObjColumn extends ColumnBase {
   public static class Iter {
     private Obj[] column;
     private int left; // Includes current value
@@ -54,15 +54,13 @@ final class ObjColumn {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  int count = 0;
   Obj[] column = new Obj[INIT_SIZE];
-
-  ValueStore store;
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public ObjColumn(ValueStore store) {
-    this.store = store;
+  public ObjColumn(SurrObjMapper mapper) {
+    super(mapper);
+    this.mapper = mapper;
   }
 
   public boolean contains1(int idx) {
@@ -107,12 +105,6 @@ final class ObjColumn {
       column[idx] = null;
       count--;
     }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Obj copy() {
-    throw Miscellanea.internalFail();
   }
 }
 

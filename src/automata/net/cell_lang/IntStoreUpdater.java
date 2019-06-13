@@ -19,6 +19,7 @@ class IntStoreUpdater extends ValueStoreUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public IntStoreUpdater(IntStore store) {
+    super(store);
     Array.fill(hashtable, -1);
     this.store = store;
   }

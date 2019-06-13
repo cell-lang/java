@@ -74,11 +74,11 @@ class BinaryTableUpdater {
       int oldArg2 = table.update1(arg1, arg2);
 
       if (oldArg2 == -1) {
-        table.store1.addRef(arg1);
-        table.store2.addRef(arg2);
+        store1.addRef(arg1);
+        store2.addRef(arg2);
       }
       else if (arg2 != oldArg2) {
-        table.store2.addRef(arg2);
+        store2.addRef(arg2);
         // Storing the value of the old surrogate so that it can be released later
         updateList[releaseCount++] = oldArg2;
       }
@@ -91,8 +91,8 @@ class BinaryTableUpdater {
       int arg2 = insertList[2 * i + 1];
       if (!table.contains(arg1, arg2)) {
         table.insert(arg1, arg2);
-        table.store1.addRef(arg1);
-        table.store2.addRef(arg2);
+        store1.addRef(arg1);
+        store2.addRef(arg2);
       }
     }
   }
@@ -102,10 +102,10 @@ class BinaryTableUpdater {
       int arg1 = deleteList[2 * i];
       if (arg1 != 0xFFFFFFFF) {
         int arg2 = deleteList[2 * i + 1];
-        Miscellanea._assert(table.store1.surrToObjValue(arg1) != null);
-        Miscellanea._assert(table.store2.surrToObjValue(arg2) != null);
-        table.store1.release(arg1);
-        table.store2.release(arg2);
+        // Miscellanea._assert(table.store1.surrToObjValue(arg1) != null);
+        // Miscellanea._assert(table.store2.surrToObjValue(arg2) != null);
+        store1.release(arg1);
+        store2.release(arg2);
       }
     }
 
@@ -114,8 +114,8 @@ class BinaryTableUpdater {
         int arg2 = updateList[i];
         if (arg2 == -1)
           break;
-        Miscellanea._assert(table.store2.surrToObjValue(arg2) != null);
-        table.store2.release(arg2);
+        // Miscellanea._assert(table.store2.surrToObjValue(arg2) != null);
+        store2.release(arg2);
       }
     }
   }

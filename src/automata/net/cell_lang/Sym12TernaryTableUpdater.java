@@ -128,9 +128,9 @@ class Sym12TernaryTableUpdater {
 
       if (!table.contains(arg1, arg2, arg3)) {
         table.insert(arg1, arg2, arg3);
-        table.store12.addRef(arg1);
-        table.store12.addRef(arg2);
-        table.store3.addRef(arg3);
+        store12.addRef(arg1);
+        store12.addRef(arg2);
+        store3.addRef(arg3);
       }
     }
   }
@@ -141,9 +141,9 @@ class Sym12TernaryTableUpdater {
       if (arg1 != 0xFFFFFFFF) {
         int arg2 = deleteList[3 * i + 1];
         int arg3 = deleteList[3 * i + 2];
-        table.store12.release(arg1);
-        table.store12.release(arg2);
-        table.store3.release(arg3);
+        store12.release(arg1);
+        store12.release(arg2);
+        store3.release(arg3);
       }
     }
   }

@@ -9,16 +9,16 @@ class SlaveTernTable {
   private OneWayBinTable table = new OneWayBinTable();
   private OneWayBinTable revTable;
   private AssocTable master;
-  public  ValueStore store1, store2, store3;
+  public  SurrObjMapper mapper1, mapper2, mapper3;
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public SlaveTernTable(AssocTable master, ValueStore store1, ValueStore store2, ValueStore store3) {
+  public SlaveTernTable(AssocTable master, SurrObjMapper mapper1, SurrObjMapper mapper2, SurrObjMapper mapper3) {
     Miscellanea._assert(master != null);
     this.master = master;
-    this.store1 = store1;
-    this.store2 = store2;
-    this.store3 = store3;
+    this.mapper1 = mapper1;
+    this.mapper2 = mapper2;
+    this.mapper3 = mapper3;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -141,18 +141,18 @@ class SlaveTernTable {
     int next = 0;
     for (int iT=0 ; iT < tables.length ; iT++) {
       SlaveTernTable table = tables[iT];
-      ValueStore store1 = table.store1;
-      ValueStore store2 = table.store2;
-      ValueStore store3 = table.store3;
+      SurrObjMapper mapper1 = table.mapper1;
+      SurrObjMapper mapper2 = table.mapper2;
+      SurrObjMapper mapper3 = table.mapper3;
 
       for (AssocTable.Iter masterIt = table.master.getIter() ; !masterIt.done() ; masterIt.next()) {
         int surr1 = masterIt.get1();
         int surr2 = masterIt.get2();
         for (ArrayIter it = table.getIter12(surr1, surr2) ; it.done() ; it.next()) {
           int surr3 = it.get();
-          objs1[next] = store1.surrToObjValue(surr1);
-          objs2[next] = store2.surrToObjValue(surr2);
-          objs3[next++] = store3.surrToObjValue(surr3);
+          objs1[next] = mapper1.surrToObj(surr1);
+          objs2[next] = mapper2.surrToObj(surr2);
+          objs3[next++] = mapper3.surrToObj(surr3);
         }
       }
     }

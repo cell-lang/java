@@ -82,7 +82,7 @@ class UnaryTableUpdater {
       int surr = insertList[i];
       if (!table.contains(surr)) {
         table.insert(surr);
-        table.store.addRef(surr);
+        store.addRef(surr);
       }
     }
   }
@@ -95,14 +95,14 @@ class UnaryTableUpdater {
         int base = 64 * i;
         for (int j=0 ; j < 64 ; j++)
           if (((mask >>> j) & 1) != 0)
-            table.store.release(base + j);
+            store.release(base + j);
       }
     }
     else {
       for (int i=0 ; i < deleteCount ; i++) {
         int surr = deleteList[i];
         if (surr != 0xFFFFFFFF)
-          table.store.release(surr);
+          store.release(surr);
       }
     }
   }

@@ -110,9 +110,9 @@ class SlaveTernTableUpdater {
 
       if (!table.contains(field1, field2, field3)) {
         table.insert(field1, field2, field3);
-        table.store1.addRef(field1);
-        table.store2.addRef(field2);
-        table.store3.addRef(field3);
+        store1.addRef(field1);
+        store2.addRef(field2);
+        store3.addRef(field3);
       }
     }
   }
@@ -123,9 +123,9 @@ class SlaveTernTableUpdater {
       if (field1 != 0xFFFFFFFF) {
         int field2 = deleteList[3 * i + 1];
         int field3 = deleteList[3 * i + 2];
-        table.store1.release(field1);
-        table.store2.release(field2);
-        table.store3.release(field3);
+        store1.release(field1);
+        store2.release(field2);
+        store3.release(field3);
       }
     }
   }

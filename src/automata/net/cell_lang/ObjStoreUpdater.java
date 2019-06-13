@@ -20,6 +20,7 @@ class ObjStoreUpdater extends ValueStoreUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public ObjStoreUpdater(ObjStore store) {
+    super(store);
     Array.fill(hashtable, -1);
     this.store = store;
   }

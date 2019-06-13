@@ -71,8 +71,8 @@ class SymBinaryTableUpdater {
       int field2 = insertList[2 * i + 1];
       if (!table.contains(field1, field2)) {
         table.insert(field1, field2);
-        table.store.addRef(field1);
-        table.store.addRef(field2);
+        store.addRef(field1);
+        store.addRef(field2);
       }
     }
   }
@@ -82,10 +82,10 @@ class SymBinaryTableUpdater {
       int field1 = deleteList[2 * i];
       if (field1 != 0xFFFFFFFF) {
         int field2 = deleteList[2 * i + 1];
-        Miscellanea._assert(table.store.surrToObjValue(field1) != null);
-        Miscellanea._assert(table.store.surrToObjValue(field2) != null);
-        table.store.release(field1);
-        table.store.release(field2);
+        // Miscellanea._assert(table.store.surrToObjValue(field1) != null);
+        // Miscellanea._assert(table.store.surrToObjValue(field2) != null);
+        store.release(field1);
+        store.release(field2);
       }
     }
   }

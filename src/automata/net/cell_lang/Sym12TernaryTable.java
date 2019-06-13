@@ -14,7 +14,7 @@ class Sym12TernaryTable {
 
   public Index index123, index12, index13, index23, index1, index2, index3;
 
-  public ValueStore store12, store3;
+  public SurrObjMapper mapper12, mapper3;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -58,15 +58,15 @@ class Sym12TernaryTable {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public Sym12TernaryTable(ValueStore store12, ValueStore store3) {
+  public Sym12TernaryTable(SurrObjMapper mapper12, SurrObjMapper mapper3) {
     for (int i=0 ; i < MinSize ; i++)
       setEntry(i, i+1, Empty, 0);
 
     index123 = new Index(MinSize);
     index12  = new Index(MinSize);
 
-    this.store12 = store12;
-    this.store3 = store3;
+    this.mapper12 = mapper12;
+    this.mapper3 = mapper3;
   }
 
   public int size() {
@@ -606,15 +606,15 @@ class Sym12TernaryTable {
     int next = 0;
     for (int iT=0 ; iT < tables.length ; iT++) {
       Sym12TernaryTable table = tables[iT];
-      ValueStore store12 = table.store12;
-      ValueStore store3 = table.store3;
+      SurrObjMapper mapper12 = table.mapper12;
+      SurrObjMapper mapper3 = table.mapper3;
       int size = table.capacity();
       for (int iS=0 ; iS < size ; iS++) {
         int arg2 = table.arg2OrEmptyMarker(iS);
         if (arg2 != Empty) {
-          col1[next] = store12.surrToObjValue(table.arg1OrNext(iS));
-          col2[next] = store12.surrToObjValue(arg2);
-          col3[next] = store3.surrToObjValue(table.arg3(iS));
+          col1[next] = mapper12.surrToObj(table.arg1OrNext(iS));
+          col2[next] = mapper12.surrToObj(arg2);
+          col3[next] = mapper3.surrToObj(table.arg3(iS));
           next++;
         }
       }

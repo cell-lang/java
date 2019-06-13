@@ -14,6 +14,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     ctor_code = native_ctor_code(block.name, block.links, block.tables, block.init_code);
     // cleanup_code = native_cleanup_code(block.name, block.cleanup_code);
 
+    surr_obj_mappers = native_surr_obj_mappers(block.value_stores);
+
     copy_state_code = native_copy_state_code(block.name, block.copy_state_code);
     set_state_code = native_set_state_code(block.name, block.set_state_code);
 
@@ -37,6 +39,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       ("", "", "static class " & class_name & " {"),
       indent_lines(memb_decls),
       (""), indent_lines(ctor_code),
+      (""), indent_lines(surr_obj_mappers),
       (""), indent_lines(copy_state_code),
       (""), indent_lines(set_state_code),
       (""), indent_lines(reconstruct_method_code),
@@ -58,7 +61,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       value_stores = match (t)
         table()   = if t.symmetric then drop(t.value_stores, 1) else t.value_stores,
         column()  = (t.value_store);
-      arg_list = append((native_var_decl_name(vs) : vs <- value_stores), ", ");
+      arg_list = append(("this::" & native_surr_obj_mapper_name(vs) : vs <- value_stores), ", ");
       return native_var_ref_name(v) & " = new " & native_table_type(t) & "(" & arg_list & ");";
     } : v, t <- isort(tables));
     vars_decl = gen_vars_decls(init_code, []);
@@ -67,6 +70,22 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     link_args = append((native_name(l) & " linkedAuto" & printed(i) & ", " : l @ i <- links));
     signature = "public " & native_name(name) & "(" & link_args & "Env env) {";
     return (signature) & indent_lines(body) & ("}");
+  }
+
+
+  String* native_surr_obj_mappers([ValueStoreId -> ValueStoreType] value_stores) {
+    return join(intermix((surr_obj_mapper(id, type) : id, type <- isort(value_stores)), ("")));
+
+
+    String* surr_obj_mapper(ValueStoreId id, ValueStoreType type) {
+      name = native_surr_obj_mapper_name(id);
+      vs_name = native_var_ref_name(id);
+      sign = "private Obj " & name & "(int surr) {";
+      body = "  return " & match (type)
+        object | integer        = vs_name & ".surrToObjValue(surr);",
+        mono_tagged_integer(s?) = "new TaggedIntObj(" & symb_idx_name(s) & ", " & vs_name & ".surrToValue(surr));";
+      return (sign, body, "}");
+    }
   }
 
 
@@ -83,8 +102,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     vars_decls = gen_vars_decls(code, []);
     body = vars_decls & ("" if vars_decls != ()) & native_code(code, nothing);
     sgn = "public Obj " & copy_state_proc_name(name) & "() {";
-    // return (sgn) & indent_lines(body) & ("}");
-    return (sgn, "  return null;", "}");
+    return (sgn) & indent_lines(body) & ("}");
   }
 
 
@@ -94,8 +112,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     //body = vars_decls & ("" if vars_decls != (), aux_struct_init_call) & native_code(code, nothing);
     body = vars_decls & native_code(code, nothing);
     sgn = "public boolean " & set_state_proc_name(name) & "(Obj a0) {";
-    // return (sgn) & indent_lines(body) & ("}");
-    return (sgn, "  return true;", "}");
+    return (sgn) & indent_lines(body) & ("}");
   }
 
 

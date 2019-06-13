@@ -14,7 +14,7 @@ class TernaryTable {
 
   public Index index123, index12, index13, index23, index1, index2, index3;
 
-  public ValueStore store1, store2, store3;
+  public SurrObjMapper mapper1, mapper2, mapper3;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -58,16 +58,16 @@ class TernaryTable {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public TernaryTable(ValueStore store1, ValueStore store2, ValueStore store3) {
+  public TernaryTable(SurrObjMapper mapper1, SurrObjMapper mapper2, SurrObjMapper mapper3) {
     for (int i=0 ; i < MinSize ; i++)
       setEntry(i, i+1, Empty, 0);
 
     index123 = new Index(MinSize);
     index12  = new Index(MinSize);
 
-    this.store1 = store1;
-    this.store2 = store2;
-    this.store3 = store3;
+    this.mapper1 = mapper1;
+    this.mapper2 = mapper2;
+    this.mapper3 = mapper3;
   }
 
   public int size() {
@@ -707,16 +707,16 @@ class TernaryTable {
     int next = 0;
     for (int iT=0 ; iT < tables.length ; iT++) {
       TernaryTable table = tables[iT];
-      ValueStore store1 = table.store1;
-      ValueStore store2 = table.store2;
-      ValueStore store3 = table.store3;
+      SurrObjMapper mapper1 = table.mapper1;
+      SurrObjMapper mapper2 = table.mapper2;
+      SurrObjMapper mapper3 = table.mapper3;
       int size = table.capacity();
       for (int iS=0 ; iS < size ; iS++) {
         int field2 = table.field2OrEmptyMarker(iS);
         if (field2 != Empty) {
-          objs1[next] = store1.surrToObjValue(table.field1OrNext(iS));
-          objs2[next] = store2.surrToObjValue(field2);
-          objs3[next] = store3.surrToObjValue(table.field3(iS));
+          objs1[next] = mapper1.surrToObj(table.field1OrNext(iS));
+          objs2[next] = mapper2.surrToObj(field2);
+          objs3[next] = mapper3.surrToObj(table.field3(iS));
           next++;
         }
       }

@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-final class FloatColumn {
+final class FloatColumn extends ColumnBase {
   public static class Iter {
     private double[] column;
     private int left; // Includes current value
@@ -60,17 +60,15 @@ final class FloatColumn {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  int count = 0;
   double[] column = new double[INIT_SIZE];
-
-  ValueStore store;
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public FloatColumn(ValueStore store) {
+  public FloatColumn(SurrObjMapper mapper) {
+    super(mapper);
     Miscellanea._assert(Double.isNaN(NULL));
     Array.fill(column, NULL);
-    this.store = store;
+    this.mapper = mapper;
   }
 
   public int size() {
@@ -128,12 +126,6 @@ final class FloatColumn {
     if (column.length != INIT_SIZE)
       column = new double[INIT_SIZE];
     Array.fill(column, NULL);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Obj copy() {
-    throw Miscellanea.internalFail();
   }
 
   //////////////////////////////////////////////////////////////////////////////
