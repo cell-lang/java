@@ -379,6 +379,11 @@ String native_table_type(Column column) =
     int       = "IntColumn",
     float     = "FloatColumn";
 
+
+String native_table_base_type(Table table)    = native_table_type(table);
+String native_table_base_type(Column column)  = "ColumnBase";
+
+
 String table_it_var_type(TableItVar var) =
   match (var.arity, var.symmetric)
     1,  false   = "UnaryTable.Iter",
@@ -447,6 +452,7 @@ String native_name(UpdateId id) =
 ## THE PARAMETER SHOULD BE REMOVED...
 
 String copy_state_proc_name         (DBSymbol db_type) = "copyState";
+String write_state_proc_name        (DBSymbol db_type) = "writeState";
 String set_state_proc_name          (DBSymbol db_type) = "setState";
 String reconstruct_proc_name        (DBSymbol db_type) = "reconstruct";
 String updater_creation_proc_name   (DBSymbol db_type) = "newUpdater";

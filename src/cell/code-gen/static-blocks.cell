@@ -17,6 +17,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     surr_obj_mappers = native_surr_obj_mappers(block.value_stores);
 
     copy_state_code = native_copy_state_code(block.name, block.copy_state_code);
+    write_state_code = native_write_state_code(block);
     set_state_code = native_set_state_code(block.name, block.set_state_code);
 
     reconstruct_method_code = reconstruct_method_code(block.name);
@@ -41,6 +42,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (""), indent_lines(ctor_code),
       (""), indent_lines(surr_obj_mappers),
       (""), indent_lines(copy_state_code),
+      (""), indent_lines(write_state_code),
       (""), indent_lines(set_state_code),
       (""), indent_lines(reconstruct_method_code),
       (""), indent_lines(update_entry_point_code),
@@ -103,6 +105,53 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     body = vars_decls & ("" if vars_decls != ()) & native_code(code, nothing);
     sgn = "public Obj " & copy_state_proc_name(name) & "() {";
     return (sgn) & indent_lines(body) & ("}");
+  }
+
+  String* native_write_state_code(StaticBlock block) {
+    has_rel_vars = block.tables != [];
+    has_nested_autos = block.nested_blocks != [];
+
+    code = (
+      "public void writeState(Writer writer) throws IOException {",
+      "  writer.write(\"( \");"
+    );
+
+    first = true;
+
+    state_vars = isort(keys(block.state_vars));
+    for v @ i <- state_vars:
+      code = (code | "writer.write(\"  \");") if not first;
+      code = (code |
+        "  writer.write(SymbTable.idxToStr(" & symb_idx_name(bare_id(v)) & "));",
+        "  writer.write(\": \");",
+        "  writer.write(" & native_var_ref_name(v) & ".toString());",
+        if i < |state_vars| - 1 or has_rel_vars or has_nested_autos
+          then "  writer.write(\",\\n\");"
+          else "  writer.write(\"\\n\");"
+      );
+      first = false;
+    ;
+
+    tables_by_relvar = isort(group_by(keys(block.tables), logical_rel_var(original_rel_var($))));
+    for rv, tvs @ i <- tables_by_relvar:
+      symb = symb_idx_name(bare_id(rv));
+      tables = append((native_var_ref_name(tv) : tv <- isort(tvs)), ", ");
+      tables_type = only([native_table_base_type(block.tables(tv)) : tv <- tvs]);
+      indent_first_line = _print_(not first);
+      write_separator = _print_(i < |tables_by_relvar| - 1 or has_nested_autos);
+      instr = "  TextWriter.write(writer, " & symb & ", new " & tables_type & "[] {" & tables &
+              "}, 2, " & indent_first_line & ", " & write_separator & ");";
+      code = (code | instr);
+      first = false;
+    ;
+
+    code = (code |
+      "  writer.write(\")\\n\");",
+      "  writer.flush();",
+      "}"
+    );
+
+    return code;
   }
 
 

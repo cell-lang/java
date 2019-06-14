@@ -214,11 +214,6 @@ class SlaveTernTable {
 
     public int get3() {
       Miscellanea._assert(!done());
-
-if (idx3 >= values3.length) {
-  System.out.printf("idx3 = %d, count3 = %d, values3.length = %d\n", idx3, count3, values3.length);
-}
-
       return values3[idx3];
     }
   }

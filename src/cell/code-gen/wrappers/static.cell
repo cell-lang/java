@@ -45,8 +45,8 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*,
       "wait",             2;
 
       // Always present methods
-      "readState",        0;
-      "setState",         1;
+      "load",             1;
+      "save",             1;
       "execute",          1
     ];
   }
@@ -160,9 +160,13 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "    updater = automaton.newUpdater();",
       "  }",
       "",
-      "  public net.cell_lang.Value readState() {",
-      "    Obj " & native_method_call("obj", "automaton", copy_state_proc_name(root_block.name), ()),
-      "    return Conversions.exportAsValue(obj);",
+      "  public void save(Writer writer) {",
+      "    try {",
+      "      " & native_method_call("automaton", write_state_proc_name(root_block.name), ("writer")),
+      "    }",
+      "    catch(IOException e) {",
+      "      throw new RuntimeException(e);",
+      "    }",
       "  }",
       "",
       "  public void setState(String text) {",
@@ -197,10 +201,10 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "class " & class_name & " {",
       "  " & class_name & "(" & append(ctor_impl_args, ", ") & ");",
       "",
-      "  Value readState();",
-      "  void setState(String);",
-      "  void execute(String);" if has_any_updates
+      "  void load(Reader);",
+      "  void save(Writer);"
     );
+    class_docs = (class_docs | "", "  void execute(String);") if has_any_updates;
     class_docs = class_docs & accessors_docs if accessors_docs != ();
     class_docs = (class_docs | "}");
 
