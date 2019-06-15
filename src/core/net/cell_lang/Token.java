@@ -25,4 +25,8 @@ class Token {
   public Token(int offset, int length, TokenType type, double value) {
     this(offset, length, type, Double.valueOf(value));
   }
+
+  public String toString() {
+    return String.format("%4d  %-12s  %-12s", offset, type, value != null ? value : "");
+  }
 };

@@ -171,6 +171,10 @@ class Lexer extends CodePointStream {
     return lexer.lex();
   }
 
+  public static TokenStream tokenStream(Source src, int len) {
+    return new TokenArray(lex(src, len));
+  }
+
   Lexer(Source src, int len) {
     super(src, len);
   }

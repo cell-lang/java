@@ -123,7 +123,7 @@ public class TextWriter {
             writer.write(" -> ");
             writer.write(Long.toString(value));
             written++;
-            writer.write(written < count ? ";\n" : "\n");
+            writer.write(written < count ? ",\n" : "\n");
             it.next();
           }
         }
@@ -138,7 +138,7 @@ public class TextWriter {
             writer.write(" -> ");
             writer.write(Double.toString(value));
             written++;
-            writer.write(written < count ? ";\n" : "\n");
+            writer.write(written < count ? ",\n" : "\n");
             it.next();
           }
         }
@@ -153,7 +153,7 @@ public class TextWriter {
             writer.write(" -> ");
             value.print(writer, Integer.MAX_VALUE, true, 0);
             written++;
-            writer.write(written < count ? ";\n" : "\n");
+            writer.write(written < count ? ",\n" : "\n");
             it.next();
           }
         }

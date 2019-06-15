@@ -3,54 +3,56 @@ package net.cell_lang;
 import java.util.ArrayList;
 
 
-class TokenStream {
-  Token[] tokens;
-  int offset = 0;
-  int length;
+class TokenStreamProcessor {
+  TokenStream tokens;
+  Token currToken = null;
+  Token bookmark = null;
 
-  protected TokenStream(Token[] tokens) {
+
+  protected TokenStreamProcessor(TokenStream tokens) {
     this.tokens = tokens;
-    this.length = tokens.length;
+    if (!tokens.eof())
+      currToken = tokens.read();
   }
 
   protected void checkEof() {
-    failHereIf(offset != length);
+    failHereIf(currToken != null);
   }
 
   protected final boolean nextIs(TokenType type) {
-    return offset < length && tokens[offset].type == type;
+    return currToken != null && currToken.type == type;
   }
 
-  protected final boolean nextIs(TokenType type, int delta) {
-    int index = offset + delta;
-    return index < length && tokens[index].type == type;
+  protected final boolean nextIs(TokenType type, int off) {
+    Token token = tokens.peek(off - 1);
+    return token != null && token.type == type;
   }
 
   protected final Token read() {
-    failHereIf(offset >= length);
-    return tokens[offset++];
+    failHereIf(currToken == null);
+    Token token = currToken;
+    currToken = tokens.eof() ? null : tokens.read();
+    return token;
   }
 
   protected final Token forceRead(TokenType type) {
-    failHereIf(offset >= length);
-    Token token = tokens[offset++];
+    Token token = read();
     failHereIf(token.type != type);
     return token;
   }
 
   protected final Token peek() {
-    failHereIf(offset >= length);
-    return tokens[offset];
+    failHereIf(currToken == null);
+    return currToken;
   }
 
   protected final void consume(TokenType type) {
-    failHereIf(offset >= length || tokens[offset].type != type);
-    offset++;
+    forceRead(type);
   }
 
   protected final boolean tryConsuming(TokenType type) {
-    if (offset < length && tokens[offset].type == type) {
-      offset++;
+    if (currToken != null && currToken.type == type) {
+      read();
       return true;
     }
     else
@@ -63,19 +65,36 @@ class TokenStream {
   }
 
   protected final ParsingException failHere() {
-    int textOffset = 0;
-    if (offset < length)
-      textOffset = tokens[offset].offset;
-    else if (length > 0)
-      textOffset = tokens[length-1].offset + tokens[length-1].length;
-    throw new ParsingException(textOffset);
+    return tokens.fail();
+  }
+
+  protected final void bookmark() {
+    bookmark = currToken;
+  }
+
+  protected final ParsingException failAtBookmark() {
+    if (bookmark != null)
+      throw new ParsingException(bookmark.offset);
+    else
+      throw Miscellanea.internalFail();
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-abstract class Parser extends TokenStream {
-  Parser(Token[] tokens) {
+abstract class Parser extends TokenStreamProcessor {
+  Parser(TokenStream tokens) {
     super(tokens);
+  }
+
+  //## THIS IS HERE ONLY FOR BACKWARD COMPATIBILITY WITH THE OLD COMPILER.
+  //## REMOVE AS SOON AS POSSIBLE, ALONG WITH TokenArray
+  Parser(Token[] tokens) {
+    super(new TokenArray(tokens));
+  }
+
+  void skipValue() {
+    parseObj(); //## IMPLEMENT FOR REAL
   }
 
   Obj parseObj() {

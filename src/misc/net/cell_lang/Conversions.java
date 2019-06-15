@@ -7,13 +7,13 @@ class Conversions {
   public static Obj convertText(String text) {
     int len = text.length();
     int count = text.codePointCount(0, len);
-    Token[] tokens;
+    TokenStream tokens;
     if (count == len) {
-      tokens = Lexer.lex(text::charAt, len);
+      tokens = Lexer.tokenStream(text::charAt, len);
     }
     else {
       int[] codePoints = text.codePoints().toArray();
-      tokens = Lexer.lex(i -> codePoints[i], count);
+      tokens = Lexer.tokenStream(i -> codePoints[i], count);
     }
     Parser parser = new Generated.Parser(tokens);
     Obj obj = parser.parseObj();
