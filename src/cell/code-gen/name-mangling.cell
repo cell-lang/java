@@ -454,6 +454,7 @@ String native_name(UpdateId id) =
 String copy_state_proc_name         (DBSymbol db_type) = "copyState";
 String write_state_proc_name        (DBSymbol db_type) = "writeState";
 String set_state_proc_name          (DBSymbol db_type) = "setState";
+String load_state_proc_name         (DBSymbol db_type) = "loadState";
 String reconstruct_proc_name        (DBSymbol db_type) = "reconstruct";
 String updater_creation_proc_name   (DBSymbol db_type) = "newUpdater";
 String updater_reset_proc_name      (DBSymbol db_type) = "resetUpdater";

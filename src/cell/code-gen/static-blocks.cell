@@ -19,8 +19,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     copy_state_code = native_copy_state_code(block.name, block.copy_state_code);
     write_state_code = native_write_state_code(block);
     set_state_code = native_set_state_code(block.name, block.set_state_code);
+    load_state_code = native_load_state_code(block.name, block.rel_vars_load_code);
 
-    reconstruct_method_code = reconstruct_method_code(block.name);
+    reconstruct_methods_code = reconstruct_methods_code(block.name);
 
     update_entry_point_code = if block.updates(main_handler, *)
       then update_entry_point(block.name)
@@ -44,7 +45,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       (""), indent_lines(copy_state_code),
       (""), indent_lines(write_state_code),
       (""), indent_lines(set_state_code),
-      (""), indent_lines(reconstruct_method_code),
+      (""), indent_lines(load_state_code),
+      (""), indent_lines(reconstruct_methods_code),
       (""), indent_lines(update_entry_point_code),
       (""), indent_lines(full_check_code),
       join((("") & indent_lines(c) : c <- isort(methods_code))),
@@ -165,6 +167,174 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
+  String* native_load_state_code(DBSymbol name, [RelVar -> (LocVar+, BoolExpr, Instr+)] rel_vars_load_code) {
+    header = (
+      "public void " & load_state_proc_name(name) & "(Reader reader) throws IOException {",
+      "  Obj v0, v1, v2;",
+      "  int i0, i1, i2;",
+      "",
+      "  char[] buff = new char[1000000];",
+      "  int count = reader.read(buff);",
+      "  char[] chars = Arrays.copyOf(buff, count);",
+      "  TokenStream tokens = Lexer.tokenStream(i -> chars[i], count);",
+      "  Parser parser = new Parser(tokens);",
+      "",
+      "  parser.consume(TokenType.OpenPar);",
+      "",
+      "  while (parser.nextIs(TokenType.Symbol)) {",
+      "    int field = ((SymbObj) parser.forceRead(TokenType.Symbol).value).getSymbId();",
+      "    parser.consume(TokenType.Colon);",
+      "",
+      "    switch (field) {"
+    );
+
+    footer = (
+      "",
+      "      default:",
+      "        parser.skipValue();",
+      "    }",
+      "",
+      "    if (!parser.tryConsuming(TokenType.Comma))",
+      "      break;",
+      "  }",
+      "",
+      "  parser.consume(TokenType.ClosePar);",
+      "}"
+    );
+
+    cases = ({
+      vars, guard_expr, instrs = rel_vars_load_code(rv);
+      case = match (vars)
+        (v?)            = native_load_state_case(rv, v, guard_expr, instrs),
+        (v1?, v2?)      = native_load_state_case(rv, v1, v2, guard_expr, instrs),
+        (v1?, v2?, v3?) = native_load_state_case(rv, v1, v2, v3, guard_expr, instrs);
+      return indent_lines(case, 3);
+    } : rv <- isort(keys(rel_vars_load_code)));
+
+    return header & join(intermix(cases, (""))) & footer;
+
+
+    String* native_load_state_case(RelVar rel_var, LocVar var, BoolExpr guard_expr, Instr+ code) {
+      symb_str = symb_idx_name(bare_id(rel_var));
+      var_str = native_var_ref_name(var);
+      guard_expr_str = native_expr(guard_expr);
+
+      header = (
+        "case " & symb_str & ":",
+        "  parser.consume(TokenType.OpenBracket);",
+        "  while (!parser.nextIs(TokenType.CloseBracket)) {",
+        "    parser.bookmark();",
+        "    " & var_str & " = parser.parseObj();",
+        "    if (!(" & guard_expr_str & "))",
+        "      parser.failAtBookmark();"
+      );
+
+      footer = (
+        "    if (!parser.tryConsuming(TokenType.Comma))",
+        "      break;",
+        "  }",
+        "  parser.consume(TokenType.CloseBracket);",
+        "  break;"
+      );
+
+      return header & indent_lines(native_code(code, nothing), 2) & footer;
+    }
+
+
+    String* native_load_state_case(RelVar rel_var, LocVar var1, LocVar var2, BoolExpr guard_expr, Instr+ code) {
+      symb_str = symb_idx_name(bare_id(rel_var));
+      var1_str = native_var_ref_name(var1);
+      var2_str = native_var_ref_name(var2);
+      guard_expr_str = native_expr(guard_expr);
+
+      header = (
+        "case " & symb_str & ":",
+        "  parser.consume(TokenType.OpenBracket);",
+        "  if (!parser.nextIs(TokenType.CloseBracket)) {",
+        "    parser.bookmark();",
+        "    " & var1_str & " = parser.parseObj();",
+        "    if (parser.tryConsuming(TokenType.Arrow)) {",
+        "      " & var2_str & " = parser.parseObj();",
+        "      for ( ; ; ) {",
+        "        if (!(" & guard_expr_str & "))",
+        "          parser.failAtBookmark();"
+      );
+
+      middle = (
+        "        if (!parser.tryConsuming(TokenType.Comma) || parser.nextIs(TokenType.CloseBracket))",
+        "          break;",
+        "",
+        "        parser.bookmark();",
+        "        " & var1_str & " = parser.parseObj();",
+        "        parser.consume(TokenType.Arrow);",
+        "        " & var2_str & " = parser.parseObj();",
+        "      }",
+        "    }",
+        "    else {",
+        "      parser.consume(TokenType.Comma);",
+        "      " & var2_str & " = parser.parseObj();",
+        "      for ( ; ; ) {",
+        "        if (!(" & guard_expr_str & "))",
+        "          parser.failAtBookmark();"
+      );
+
+      footer = (
+        "        if (!parser.tryConsuming(TokenType.Semicolon))",
+        "          break;",
+        "        if (parser.nextIs(TokenType.CloseBracket))",
+        "          break;",
+        "",
+        "        parser.bookmark();",
+        "        " & var1_str & " = parser.parseObj();",
+        "        parser.consume(TokenType.Comma);",
+        "        " & var2_str & " = parser.parseObj();",
+        "      }",
+        "    }",
+        "  }",
+        "  parser.consume(TokenType.CloseBracket);",
+        "  break;"
+      );
+
+      return join(intermix((header, middle, footer), indent_lines(native_code(code, nothing), 4)));
+    }
+
+
+    String* native_load_state_case(RelVar rel_var, LocVar var1, LocVar var2, LocVar var3, BoolExpr guard_expr, Instr+ code) {
+      symb_str = symb_idx_name(bare_id(rel_var));
+      var1_str = native_var_ref_name(var1);
+      var2_str = native_var_ref_name(var2);
+      var3_str = native_var_ref_name(var3);
+      guard_expr_str = native_expr(guard_expr);
+
+      header = (
+        "case worked_together_in_year_A:",
+        "  parser.consume(TokenType.OpenBracket);",
+        "  for (int i=0 ; !parser.nextIs(TokenType.CloseBracket) ; i++) {",
+        "    parser.bookmark();",
+        "    " & var1_str & " = parser.parseObj();",
+        "    parser.consume(TokenType.Comma);",
+        "    " & var2_str & " = parser.parseObj();",
+        "    parser.consume(TokenType.Comma);",
+        "    " & var3_str & " = parser.parseObj();",
+        "    if (!(" & guard_expr_str & "))",
+        "      parser.failAtBookmark();"
+      );
+
+      footer = (
+        "  if (i == 0)",
+        "    parser.consume(TokenType.Semicolon);",
+        "  else if (!parser.tryConsuming(TokenType.Semicolon))",
+        "    break;",
+        "}",
+        "parser.consume(TokenType.CloseBracket);",
+        "break;"
+      );
+
+      return header & indent_lines(native_code(code, nothing), 2) & footer;
+    }
+  }
+
+
   String* update_entry_point(DBSymbol block_name) {
     handler_call = native_method_call("this", update_name(block_name, main_handler), (fn_arg(0), "updater", "env"));
     updates_check_call = native_method_call("this", updates_check_proc_name(block_name), ("updater"));
@@ -193,19 +363,28 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* reconstruct_method_code(DBSymbol block_name) {
+  String* reconstruct_methods_code(DBSymbol block_name) {
     meth_name = reconstruct_proc_name(block_name);
     class_name = native_name(block_name);
-    set_state_call = "instance." & set_state_proc_name(block_name) & "(state)";
-    full_check_call = "instance." & full_check_proc_name(block_name) & "()";
-    body = (
-      class_name & " instance = new " & class_name & "(env);",
-      "boolean ok = " & set_state_call & " && " & full_check_call & ";",
-      "return ok ? instance : null;"
-    );
+    set_state_call = set_state_proc_name(block_name);
+    load_state_call = load_state_proc_name(block_name);
+    full_check_call = full_check_proc_name(block_name);
 
-    sgn = "public static " & class_name & " " & meth_name & "(Obj state, Env env) {";
-    return (sgn) & indent_lines(body) & ("}");
+    return (
+      "public static " & class_name & " " & meth_name & "(Obj state, Env env) {",
+      "  " & class_name & " instance = new " & class_name & "(env);",
+      "  boolean ok = instance." & set_state_call & "(state) && instance." & full_check_call & "();",
+      "  return ok ? instance : null;",
+      "}",
+      "",
+      "public static " & class_name & " " & meth_name & "(Reader reader, Env env) throws IOException {",
+      "  " & class_name & " instance = new " & class_name & "(env);",
+      "  instance." & load_state_call & "(reader);",
+      "  if (!instance." & full_check_call & "())",
+      "    throw new RuntimeException(\"Invalid state\");",
+      "  return instance;",
+      "}"
+    );
   }
 
 

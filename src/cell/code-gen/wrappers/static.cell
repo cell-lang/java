@@ -169,13 +169,14 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "    }",
       "  }",
       "",
-      "  public void setState(String text) {",
-      "    Obj obj = Conversions.convertText(text);",
-      "    Generated." & db_name & " instance = Generated." & db_name & ".reconstruct(obj, env);",
-      "    if (instance == null)",
-      "      throw new RuntimeException(\"Invalid state\");",
-      "    automaton = instance;",
-      "    updater = automaton.newUpdater();",
+      "  public void load(Reader reader) {",
+      "    try {",
+      "      automaton = Generated." & db_name & ".reconstruct(reader, env);",
+      "      updater = automaton.newUpdater();",
+      "    }",
+      "    catch(IOException e) {",
+      "      throw new RuntimeException(e);",
+      "    }",
       "  }"
     );
 
