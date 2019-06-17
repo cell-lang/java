@@ -317,6 +317,11 @@ class Array {
     return Arrays.copyOf(array, newSize);
   }
 
+  public static char[] extend(char[] array, int newSize) {
+    Miscellanea._assert(newSize > array.length);
+    return Arrays.copyOf(array, newSize);
+  }
+
   public static int[] extend(int[] array, int newSize) {
     Miscellanea._assert(newSize > array.length);
     return Arrays.copyOf(array, newSize);

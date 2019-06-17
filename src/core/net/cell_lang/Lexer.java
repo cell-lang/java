@@ -160,7 +160,7 @@ class CodePointStream {
   //////////////////////////////////////////////////////////////////////////////
 
   public static int hexDigitValue(int ch) {
-    return (int) (isDigit(ch) ? ch - '0' : ch - 'a');
+    return isDigit(ch) ? ch - '0' : ch - 'a';
   }
 }
 
