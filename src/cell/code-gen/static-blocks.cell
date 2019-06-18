@@ -304,7 +304,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       guard_expr_str = native_expr(guard_expr);
 
       header = (
-        "case worked_together_in_year_A:",
+        "case " & symb_str & ":",
         "  parser.consume(TokenType.OpenBracket);",
         "  for (int i=0 ; !parser.nextIs(TokenType.CloseBracket) ; i++) {",
         "    parser.bookmark();",
