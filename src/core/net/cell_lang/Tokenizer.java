@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.ArrayList;
-
 
 class CharStreamProcessor {
   CharStream src;
@@ -13,7 +11,7 @@ class CharStreamProcessor {
     currChar = src.read();
   }
 
-  protected final int readChar() {
+  protected final int read() {
     failHereIf(currChar == CharStream.EOF);
     int result = currChar;
     currChar = src.read();
@@ -23,7 +21,7 @@ class CharStreamProcessor {
 
   protected final int readHex() {
     failHereIf(!nextIsHex());
-    return readChar();
+    return read();
   }
 
   protected final long peek() {
@@ -35,20 +33,20 @@ class CharStreamProcessor {
     return offset;
   }
 
-  protected final boolean charEof() {
+  protected final boolean eof() {
     return currChar == CharStream.EOF;
   }
 
   protected final boolean consumeNextIfItIs(char ch) {
     boolean res = nextIs(ch);
     if (res)
-      readChar();
+      read();
     return res;
   }
 
   protected void consumeWhiteSpace() {
     while (isWhiteSpace(currChar))
-      readChar();
+      read();
   }
 
   protected final boolean nextIs(char ch) {
@@ -141,39 +139,15 @@ class CharStreamProcessor {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class Tokenizer extends CharStreamProcessor implements TokenStream {
-  Token[] buffer = new Token[32];
-  int offset = 0;
-
-
+class Tokenizer extends CharStreamProcessor {
   public Tokenizer(CharStream src) {
     super(src);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Token read() {
-    throw new RuntimeException();
-  }
-
-  public Token peek(int off) {
-    throw new RuntimeException();
-  }
-
-  public boolean eof() {
-    throw new RuntimeException();
-  }
-
-  public ParsingException fail() {
-    throw new RuntimeException();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  Token readToken() {
+  public Token readToken() {
     consumeWhiteSpace();
 
-    if (charEof())
+    if (eof())
       return null;
 
     boolean negate = false;
@@ -192,7 +166,7 @@ class Tokenizer extends CharStreamProcessor implements TokenStream {
 
     // Symbols
     if (nextIsLower())
-      readSymbol();
+      return readSymbol();
 
     // Strings
     if (nextIs('"'))
@@ -200,7 +174,7 @@ class Tokenizer extends CharStreamProcessor implements TokenStream {
 
     // Single character tokens
     TokenType type;
-    switch (readChar()) {
+    switch (read()) {
       case ',':
         type = TokenType.Comma;
         break;
@@ -240,7 +214,7 @@ class Tokenizer extends CharStreamProcessor implements TokenStream {
     int count = 0;
     long value = 0;
     while (nextIsDigit()) {
-      int digit = readChar() - '0';
+      int digit = read() - '0';
       if (++count == 19)
         failHereIf(value > 922337203685477580L | (value == 922337203685477580L & digit > 7));
       value = 10 * value + digit;
@@ -293,7 +267,7 @@ class Tokenizer extends CharStreamProcessor implements TokenStream {
         checkNextIsAlphaNum();
       }
       else if (nextIsAlphaNum())
-        ch = readChar();
+        ch = read();
       else
         break;
       if (len >= chars.length)
@@ -313,12 +287,13 @@ class Tokenizer extends CharStreamProcessor implements TokenStream {
     int len = 0;
     char[] chars = new char[32];
 
+    read();
     for ( ; ; ) {
-      int ch = readChar();
+      int ch = read();
       failHereIf(!Character.isBmpCodePoint(ch));
 
       if (ch == '\\') {
-        ch = readChar();
+        ch = read();
         if (ch == '\\' | ch == '"') {
           // Nothing to do here
         }
