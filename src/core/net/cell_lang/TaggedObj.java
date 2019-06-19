@@ -98,7 +98,7 @@ final class TaggedObj extends Obj {
           writer.write('\\');
           for (int j=0 ; j < 4 ; j++) {
             int hexDigit = (code >> (12 - 4 * j)) % 16;
-            char ch = (char) ((hexDigit < 10 ? '0' : 'A') + hexDigit);
+            char ch = (char) (hexDigit < 10 ? '0' + hexDigit : 'a' - 10 + hexDigit);
             writer.write(ch);
           }
         }
