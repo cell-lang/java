@@ -2,30 +2,38 @@ package net.cell_lang;
 
 
 class JustInTimeTokenStream implements TokenStream {
+  final static int POOL_SIZE = 16;
+
   Tokenizer tokenizer;
-  Token[] buffer = new Token[16];
+  Token[] tokens = new Token[POOL_SIZE];
   int offset = 0;
   int count = 0;
 
 
   public JustInTimeTokenStream(CharStream chars) {
     tokenizer = new Tokenizer(chars);
+    for (int i=0 ; i < tokens.length ; i++)
+      tokens[i] = new Token();
   }
 
   public Token read() {
+    int idx = offset++ % POOL_SIZE;
     if (count > 0) {
       count--;
-      return buffer[offset++ % 16];
+      return tokens[idx];
     }
-    else
-      return tokenizer.readToken();
+    else {
+      Token token = tokens[idx];
+      tokenizer.readToken(token);
+      return token;
+    }
   }
 
   public Token peek(int idx) {
-    Miscellanea._assert(idx < 16);
+    Miscellanea._assert(idx < POOL_SIZE);
     while (count <= idx)
-      buffer[(offset + count++) % 16] = tokenizer.readToken();
-    return buffer[(offset + idx) % 16];
+      tokenizer.readToken(tokens[(offset + count++) % POOL_SIZE]);
+    return tokens[(offset + idx) % POOL_SIZE];
   }
 
   public boolean eof() {

@@ -101,6 +101,47 @@ class Builder {
     return TaggedIntObj.fits(value) ? new TaggedIntObj(tag, value) : new TaggedObj(tag, IntObj.get(value));
   }
 
+  public static TaggedObj createString(char[] chars, int len) {
+    if (len == 0)
+      return new TaggedObj(SymbTable.StringSymbId, EmptySeqObj.singleton);
+
+    int max = 0;
+    for (int i=0 ; i < len ; i++) {
+      char ch = chars[i];
+      if (ch > max)
+        max = ch;
+    }
+
+    Obj charArray;
+
+    if (max <= 127) {
+      byte[] bytes = new byte[len];
+      for (int i=0 ; i < len ; i++)
+        bytes[i] = (byte) chars[i];
+      charArray = IntArrayObjs.create(bytes);
+    }
+    else if (max <= 255) {
+      byte[] bytes = new byte[len];
+      for (int i=0 ; i < len ; i++)
+        bytes[i] = (byte) chars[i];
+      charArray = IntArrayObjs.createUnsigned(bytes);
+    }
+    else if (max <= 32767) {
+      short[] shorts = new short[len];
+      for (int i=0 ; i < len ; i++)
+        shorts[i] = (short) chars[i];
+      charArray = IntArrayObjs.create(shorts);
+    }
+    else {
+      int[] ints = new int[len];
+      for (int i=0 ; i < len ; i++)
+        ints[i] = (int) chars[i];
+      charArray = IntArrayObjs.create(ints);
+    }
+
+    return new TaggedObj(SymbTable.StringSymbId, charArray);
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 

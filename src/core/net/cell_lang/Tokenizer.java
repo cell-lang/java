@@ -143,33 +143,41 @@ class Tokenizer extends CharStreamProcessor {
     super(src);
   }
 
-  public Token readToken() {
+  public void readToken(Token token) {
     consumeWhiteSpace();
 
     if (eof())
-      return null;
+      return;
 
     boolean negate = false;
     if (consumeNextIfItIs('-')) {
       // Arrow
-      if (consumeNextIfItIs('>'))
-        return new Token(offset() - 1, 2, TokenType.Arrow);
+      if (consumeNextIfItIs('>')) {
+        token.set(TokenType.Arrow);
+        return;
+      }
 
       checkNextIsDigit();
       negate = true;
     }
 
     // Integer and floating point numbers
-    if (nextIsDigit())
-      return readNumber(negate);
+    if (nextIsDigit()) {
+      readNumber(token, negate);
+      return;
+    }
 
     // Symbols
-    if (nextIsLower())
-      return readSymbol();
+    if (nextIsLower()) {
+      readSymbol(token);
+      return;
+    }
 
     // Strings
-    if (nextIs('"'))
-      return readString();
+    if (nextIs('"')) {
+      readString(token);
+      return;
+    }
 
     // Single character tokens
     TokenType type;
@@ -206,7 +214,7 @@ class Tokenizer extends CharStreamProcessor {
         throw failHere();
     }
 
-    return new Token(offset()-1, 1, type);
+    token.set(type);
   }
 
   long readNat() {
@@ -221,7 +229,7 @@ class Tokenizer extends CharStreamProcessor {
     return value;
   }
 
-  Token readNumber(boolean negate) {
+  void readNumber(Token token, boolean negate) {
     int startOffset = offset();
 
     long intValue = readNat();
@@ -229,8 +237,10 @@ class Tokenizer extends CharStreamProcessor {
     if (nextIsLower())
       checkNextIs('e');
 
-    if (!nextIs('.') & !nextIs('e'))
-      return new Token(startOffset, offset - startOffset, TokenType.Int, negate ? -intValue : intValue);
+    if (!nextIs('.') & !nextIs('e')) {
+      token.set(negate ? -intValue : intValue);
+      return;
+    }
 
     double floatValue = intValue;
     if (consumeNextIfItIs('.')) {
@@ -248,10 +258,10 @@ class Tokenizer extends CharStreamProcessor {
 
     failHereIf(nextIsLower());
 
-    return new Token(startOffset, offset() - startOffset, TokenType.Float, negate ? -floatValue : floatValue);
+    token.set(negate ? -floatValue : floatValue);
   }
 
-  Token readSymbol() {
+  void readSymbol(Token token) {
     Miscellanea._assert(nextIsLower());
 
     int offset = offset();
@@ -275,10 +285,10 @@ class Tokenizer extends CharStreamProcessor {
     }
 
     SymbObj obj = SymbObj.get(SymbTable.strToIdx(new String(chars, 0, len)));
-    return new Token(offset, len, TokenType.Symbol, obj);
+    token.set(obj);
   }
 
-  Token readString() {
+  void readString(Token token) {
     Miscellanea._assert(nextIs('"'));
 
     int offset = offset();
@@ -319,6 +329,6 @@ class Tokenizer extends CharStreamProcessor {
       chars[len++] = (char) ch;
     }
 
-    return new Token(offset, offset() - offset, TokenType.String, new String(chars, 0, len));
+    token.set(Builder.createString(chars, len));
   }
 }

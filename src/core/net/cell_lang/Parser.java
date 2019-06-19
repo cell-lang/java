@@ -111,11 +111,11 @@ abstract class Parser extends TokenStreamProcessor {
 
       case Int:
         read();
-        return IntObj.get(((Long) token.value).longValue());
+        return IntObj.get(token.longValue);
 
       case Float:
         read();
-        return new FloatObj(((Double) token.value).doubleValue());
+        return new FloatObj(token.doubleValue);
 
       case Symbol:
         return parseSymbOrTaggedObj();
@@ -131,7 +131,7 @@ abstract class Parser extends TokenStreamProcessor {
 
       case String:
         read();
-        return Miscellanea.strToObj((String) token.value);
+        return token.objValue;
 
       default:
         throw new RuntimeException("Internal error"); // Unreachable code
@@ -170,7 +170,7 @@ abstract class Parser extends TokenStreamProcessor {
     consume(TokenType.OpenPar);
 
     for ( ; ; ) {
-      labels.add((SymbObj) forceRead(TokenType.Symbol).value);
+      labels.add(forceRead(TokenType.Symbol).objValue);
       consume(TokenType.Colon);
       values.add(parseObj());
       if (!tryConsuming(TokenType.Comma))
@@ -185,8 +185,14 @@ abstract class Parser extends TokenStreamProcessor {
   ////////////////////////////////////////////////////////////////////////////////
 
   Obj parseSymbOrTaggedObj() {
-    SymbObj symbObj = (SymbObj) forceRead(TokenType.Symbol).value;
+    SymbObj symbObj = (SymbObj) forceRead(TokenType.Symbol).objValue;
     if (nextIs(TokenType.OpenPar)) {
+      if (nextIs(TokenType.Int, 1) && nextIs(TokenType.ClosePar, 2)) {
+        read();
+        long value = read().longValue;
+        read();
+        return Builder.createTaggedIntObj(symbObj.getSymbId(), value);
+      }
       Obj innerObj = isRecord() ? parseRec() : parseSeq();
       if (innerObj.isSeq() && innerObj.getSize() == 1)
         innerObj = innerObj.getObjAt(0);

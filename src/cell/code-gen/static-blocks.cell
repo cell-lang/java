@@ -179,7 +179,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "  parser.consume(TokenType.OpenPar);",
       "",
       "  while (parser.nextIs(TokenType.Symbol)) {",
-      "    int field = ((SymbObj) parser.forceRead(TokenType.Symbol).value).getSymbId();",
+      "    field = parser.read().objValue.getSymbId();",
       "    parser.consume(TokenType.Colon);",
       "",
       "    switch (field) {"
