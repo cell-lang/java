@@ -99,8 +99,7 @@ class CharStreamProcessor {
   }
 
   protected final ParsingException failHere() {
-    src.fail();
-    throw (RuntimeException) null;
+    return src.fail();
   }
 
   //////////////////////////////////////////////////////////////////////////////
