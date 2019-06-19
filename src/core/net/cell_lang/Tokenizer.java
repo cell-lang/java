@@ -312,8 +312,7 @@ class Tokenizer extends CharStreamProcessor {
           ch = (char) (4096 * d3 + 256 * d2 + 16 * d1 + d0);
         }
       }
-
-      if (ch == '"')
+      else if (ch == '"')
         break;
 
       if (len >= chars.length)
