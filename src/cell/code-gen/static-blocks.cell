@@ -176,11 +176,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "  TokenStream tokens = new JustInTimeTokenStream(new ReaderCharStream(reader));",
       "  Parser parser = new Parser(tokens);",
       "",
-      "  parser.consume(TokenType.OpenPar);",
+      "  parser.consumeOpenPar();",
       "",
       "  while (parser.nextIs(TokenType.Symbol)) {",
       "    field = parser.read().objValue.getSymbId();",
-      "    parser.consume(TokenType.Colon);",
+      "    parser.consumeColon();",
       "",
       "    switch (field) {"
     );
@@ -191,11 +191,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "        parser.skipValue();",
       "    }",
       "",
-      "    if (!parser.tryConsuming(TokenType.Comma))",
+      "    if (!parser.tryConsumingComma())",
       "      break;",
       "  }",
       "",
-      "  parser.consume(TokenType.ClosePar);",
+      "  parser.consumeClosePar();",
       "}"
     );
 
@@ -218,8 +218,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
       header = (
         "case " & symb_str & ":",
-        "  parser.consume(TokenType.OpenBracket);",
-        "  while (!parser.nextIs(TokenType.CloseBracket)) {",
+        "  parser.consumeOpenBracket();",
+        "  while (!parser.nextIsCloseBracket()) {",
         "    parser.bookmark();",
         "    " & var_str & " = parser.parseObj();",
         "    if (!(" & guard_expr_str & "))",
@@ -227,10 +227,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       );
 
       footer = (
-        "    if (!parser.tryConsuming(TokenType.Comma))",
+        "    if (!parser.tryConsumingComma())",
         "      break;",
         "  }",
-        "  parser.consume(TokenType.CloseBracket);",
+        "  parser.consumeCloseBracket();",
         "  break;"
       );
 
@@ -246,11 +246,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
       header = (
         "case " & symb_str & ":",
-        "  parser.consume(TokenType.OpenBracket);",
-        "  if (!parser.nextIs(TokenType.CloseBracket)) {",
+        "  parser.consumeOpenBracket();",
+        "  if (!parser.nextIsCloseBracket()) {",
         "    parser.bookmark();",
         "    " & var1_str & " = parser.parseObj();",
-        "    if (parser.tryConsuming(TokenType.Arrow)) {",
+        "    if (parser.tryConsumingArrow()) {",
         "      " & var2_str & " = parser.parseObj();",
         "      for ( ; ; ) {",
         "        if (!(" & guard_expr_str & "))",
@@ -258,17 +258,17 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       );
 
       middle = (
-        "        if (!parser.tryConsuming(TokenType.Comma) || parser.nextIs(TokenType.CloseBracket))",
+        "        if (!parser.tryConsumingComma() || parser.nextIsCloseBracket())",
         "          break;",
         "",
         "        parser.bookmark();",
         "        " & var1_str & " = parser.parseObj();",
-        "        parser.consume(TokenType.Arrow);",
+        "        parser.consumeArrow();",
         "        " & var2_str & " = parser.parseObj();",
         "      }",
         "    }",
         "    else {",
-        "      parser.consume(TokenType.Comma);",
+        "      parser.consumeComma();",
         "      " & var2_str & " = parser.parseObj();",
         "      for ( ; ; ) {",
         "        if (!(" & guard_expr_str & "))",
@@ -276,19 +276,19 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       );
 
       footer = (
-        "        if (!parser.tryConsuming(TokenType.Semicolon))",
+        "        if (!parser.tryConsumingSemicolon())",
         "          break;",
-        "        if (parser.nextIs(TokenType.CloseBracket))",
+        "        if (parser.nextIsCloseBracket())",
         "          break;",
         "",
         "        parser.bookmark();",
         "        " & var1_str & " = parser.parseObj();",
-        "        parser.consume(TokenType.Comma);",
+        "        parser.consumeComma();",
         "        " & var2_str & " = parser.parseObj();",
         "      }",
         "    }",
         "  }",
-        "  parser.consume(TokenType.CloseBracket);",
+        "  parser.consumeCloseBracket();",
         "  break;"
       );
 
@@ -305,13 +305,13 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
       header = (
         "case " & symb_str & ":",
-        "  parser.consume(TokenType.OpenBracket);",
-        "  for (int i=0 ; !parser.nextIs(TokenType.CloseBracket) ; i++) {",
+        "  parser.consumeOpenBracket();",
+        "  for (int i=0 ; !parser.nextIsCloseBracket() ; i++) {",
         "    parser.bookmark();",
         "    " & var1_str & " = parser.parseObj();",
-        "    parser.consume(TokenType.Comma);",
+        "    parser.consumeComma();",
         "    " & var2_str & " = parser.parseObj();",
-        "    parser.consume(TokenType.Comma);",
+        "    parser.consumeComma();",
         "    " & var3_str & " = parser.parseObj();",
         "    if (!(" & guard_expr_str & "))",
         "      parser.failAtBookmark();"
@@ -319,11 +319,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
       footer = (
         "  if (i == 0)",
-        "    parser.consume(TokenType.Semicolon);",
-        "  else if (!parser.tryConsuming(TokenType.Semicolon))",
+        "    parser.consumeSemicolon();",
+        "  else if (!parser.tryConsumingSemicolon())",
         "    break;",
         "}",
-        "parser.consume(TokenType.CloseBracket);",
+        "parser.consumeCloseBracket();",
         "break;"
       );
 

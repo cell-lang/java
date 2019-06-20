@@ -46,4 +46,68 @@ class TokenArray implements TokenStream {
       System.out.println(tokens[i].toString());
     System.out.print("\n\n\n");
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean nextIs(TokenType type, int off) {
+    throw Miscellanea.internalFail();
+  }
+
+  public void bookmark() {
+    throw Miscellanea.internalFail();
+  }
+
+  public ParsingException failAtBookmark() {
+    throw Miscellanea.internalFail();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean nextIsCloseBracket() {
+    throw Miscellanea.internalFail();
+  }
+
+  public void consumeArrow() {
+    throw Miscellanea.internalFail();
+  }
+
+  public void consumeCloseBracket() {
+    throw Miscellanea.internalFail();
+  }
+
+  public void consumeClosePar() {
+    throw Miscellanea.internalFail();
+  }
+
+  public void consumeColon() {
+    throw Miscellanea.internalFail();
+  }
+
+  public void consumeComma() {
+    throw Miscellanea.internalFail();
+  }
+
+  public void consumeOpenBracket() {
+    throw Miscellanea.internalFail();
+  }
+
+  public void consumeOpenPar() {
+    throw Miscellanea.internalFail();
+  }
+
+  public void consumeSemicolon() {
+    throw Miscellanea.internalFail();
+  }
+
+  public boolean tryConsumingSemicolon() {
+    throw Miscellanea.internalFail();
+  }
+
+  public boolean tryConsumingArrow() {
+    throw Miscellanea.internalFail();
+  }
+
+  public boolean tryConsumingComma() {
+    throw Miscellanea.internalFail();
+  }
 }

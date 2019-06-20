@@ -65,7 +65,7 @@ class Token {
     objValue = str;
   }
 
-  // public String toString() {
-  //   // return String.format("%4d  %-12s  %-12s", offset, type, value != null ? value : "");
-  // }
+  public String toString() {
+    return String.format("%-12s %8d %10f %-12s", type, longValue, doubleValue, objValue != null ? objValue : "");
+  }
 };

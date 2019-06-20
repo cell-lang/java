@@ -2,11 +2,11 @@ package net.cell_lang;
 
 
 class CharStreamProcessor {
-  CharStream src;
+  ReaderCharStream src;
   int currChar;
   int offset = 0;
 
-  protected CharStreamProcessor(CharStream src) {
+  protected CharStreamProcessor(ReaderCharStream src) {
     this.src = src;
     currChar = src.read();
   }
@@ -35,6 +35,49 @@ class CharStreamProcessor {
 
   protected final boolean eof() {
     return currChar == CharStream.EOF;
+  }
+
+  protected final void consume(char ch) {
+    while (isWhiteSpace(currChar))
+      currChar = src.read();
+    failHereIf(currChar != ch);
+    currChar = src.read();
+    offset++;
+  }
+
+  protected final void consume(char ch1, char ch2) {
+    while (isWhiteSpace(currChar))
+      currChar = src.read();
+    failHereIf(currChar != ch1);
+    currChar = src.read();
+    offset++;
+    failHereIf(currChar != ch2);
+    currChar = src.read();
+    offset++;
+  }
+
+  protected final boolean tryConsuming(char ch) {
+    while (isWhiteSpace(currChar))
+      currChar = src.read();
+    if (currChar == ch) {
+      currChar = src.read();
+      offset++;
+      return true;
+    }
+    else
+      return false;
+  }
+
+  protected final boolean tryConsuming(char ch1, char ch2) {
+    while (isWhiteSpace(currChar))
+      currChar = src.read();
+    if (currChar == ch1 && src.peek() == ch2) {
+      src.read();
+      currChar = src.read();
+      offset += 2;
+      return true;
+    }
+    return false;
   }
 
   protected final boolean consumeNextIfItIs(char ch) {
@@ -139,22 +182,22 @@ class CharStreamProcessor {
 ////////////////////////////////////////////////////////////////////////////////
 
 class Tokenizer extends CharStreamProcessor {
-  public Tokenizer(CharStream src) {
+  public Tokenizer(ReaderCharStream src) {
     super(src);
   }
 
-  public void readToken(Token token) {
+  public boolean readToken(Token token) {
     consumeWhiteSpace();
 
     if (eof())
-      return;
+      return false;
 
     boolean negate = false;
     if (consumeNextIfItIs('-')) {
       // Arrow
       if (consumeNextIfItIs('>')) {
         token.set(TokenType.Arrow);
-        return;
+        return true;
       }
 
       checkNextIsDigit();
@@ -164,19 +207,19 @@ class Tokenizer extends CharStreamProcessor {
     // Integer and floating point numbers
     if (nextIsDigit()) {
       readNumber(token, negate);
-      return;
+      return true;
     }
 
     // Symbols
     if (nextIsLower()) {
       readSymbol(token);
-      return;
+      return true;
     }
 
     // Strings
     if (nextIs('"')) {
       readString(token);
-      return;
+      return true;
     }
 
     // Single character tokens
@@ -215,6 +258,7 @@ class Tokenizer extends CharStreamProcessor {
     }
 
     token.set(type);
+    return true;
   }
 
   long readNat() {

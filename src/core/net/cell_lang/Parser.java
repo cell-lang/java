@@ -5,34 +5,29 @@ import java.util.ArrayList;
 
 class TokenStreamProcessor {
   TokenStream tokens;
-  Token currToken = null;
-  Token bookmark = null;
-
 
   protected TokenStreamProcessor(TokenStream tokens) {
     this.tokens = tokens;
-    if (!tokens.eof())
-      currToken = tokens.read();
   }
 
   protected void checkEof() {
-    failHereIf(currToken != null);
+    failHereIf(!tokens.eof());
   }
 
   protected final boolean nextIs(TokenType type) {
-    return currToken != null && currToken.type == type;
+    return tokens.nextIs(type, 0);
   }
 
   protected final boolean nextIs(TokenType type, int off) {
-    Token token = tokens.peek(off - 1);
-    return token != null && token.type == type;
+    return tokens.nextIs(type, off);
+  }
+
+  public final boolean nextIsCloseBracket() {
+    return tokens.nextIsCloseBracket();
   }
 
   protected final Token read() {
-    failHereIf(currToken == null);
-    Token token = currToken;
-    currToken = tokens.eof() ? null : tokens.read();
-    return token;
+    return tokens.read();
   }
 
   protected final Token forceRead(TokenType type) {
@@ -42,16 +37,16 @@ class TokenStreamProcessor {
   }
 
   protected final Token peek() {
-    failHereIf(currToken == null);
-    return currToken;
+    return tokens.peek(0);
   }
 
   protected final void consume(TokenType type) {
-    forceRead(type);
+    Token token = read();
+    failHereIf(token.type != type);
   }
 
   protected final boolean tryConsuming(TokenType type) {
-    if (currToken != null && currToken.type == type) {
+    if (nextIs(type)) {
       read();
       return true;
     }
@@ -69,14 +64,58 @@ class TokenStreamProcessor {
   }
 
   protected final void bookmark() {
-    bookmark = currToken;
+    tokens.bookmark();
   }
 
   protected final ParsingException failAtBookmark() {
-    if (bookmark != null)
-      throw new ParsingException(bookmark.offset);
-    else
-      throw Miscellanea.internalFail();
+    throw tokens.failAtBookmark();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  protected final void consumeArrow() {
+    tokens.consumeArrow();
+  }
+
+  protected final void consumeCloseBracket() {
+    tokens.consumeCloseBracket();
+  }
+
+  protected final void consumeClosePar() {
+    tokens.consumeClosePar();
+  }
+
+  protected final void consumeColon() {
+    tokens.consumeColon();
+  }
+
+  protected final void consumeComma() {
+    tokens.consumeComma();
+  }
+
+  protected final void consumeOpenBracket() {
+    tokens.consumeOpenBracket();
+  }
+
+  protected final void consumeOpenPar() {
+    tokens.consumeOpenPar();
+  }
+
+  protected final void consumeSemicolon() {
+    tokens.consumeSemicolon();
+  }
+
+  protected final boolean tryConsumingSemicolon() {
+    return tokens.tryConsumingSemicolon();
+  }
+
+  protected final boolean tryConsumingArrow() {
+    return tokens.tryConsumingArrow();
+  }
+
+  protected final boolean tryConsumingComma() {
+    return tokens.tryConsumingComma();
   }
 }
 
