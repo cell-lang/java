@@ -71,7 +71,7 @@ class CharStreamProcessor {
   protected final boolean tryConsuming(char ch1, char ch2) {
     while (isWhiteSpace(currChar))
       currChar = src.read();
-    if (currChar == ch1 && src.peek() == ch2) {
+    if (currChar == ch1 && src.peek(0) == ch2) {
       src.read();
       currChar = src.read();
       offset += 2;
