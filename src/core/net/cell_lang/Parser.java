@@ -129,12 +129,6 @@ abstract class Parser extends TokenStreamProcessor {
     super(tokens);
   }
 
-  //## THIS IS HERE ONLY FOR BACKWARD COMPATIBILITY WITH THE OLD COMPILER.
-  //## REMOVE AS SOON AS POSSIBLE, ALONG WITH TokenArray AND Lexer
-  Parser(Token[] tokens) {
-    super(new TokenArray(tokens));
-  }
-
   void skipValue() {
     parseObj(); //## IMPLEMENT FOR REAL
   }
