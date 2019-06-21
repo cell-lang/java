@@ -4,13 +4,17 @@ package net.cell_lang;
 final class JustInTimeTokenStream implements TokenStream {
   final static int POOL_SIZE = 16;
 
+  ReaderCharStream charStream;
   Tokenizer tokenizer;
   Token[] tokens = new Token[POOL_SIZE];
   int offset = 0;
+  int line = -1;
+  int col = -1;
 
 
-  public JustInTimeTokenStream(ReaderCharStream chars) {
-    tokenizer = new Tokenizer(chars);
+  public JustInTimeTokenStream(ReaderCharStream charStream) {
+    this.charStream = charStream;
+    tokenizer = new Tokenizer(charStream);
     for (int i=0 ; i < tokens.length ; i++)
       tokens[i] = new Token();
   }
@@ -38,11 +42,13 @@ final class JustInTimeTokenStream implements TokenStream {
   //////////////////////////////////////////////////////////////////////////////
 
   public final void bookmark() {
-    //## IMPLEMENT IMPLEMENT IMPLEMENT
+    line = charStream.line();
+    col = charStream.column();
   }
 
   public final ParsingException failAtBookmark() {
-    throw new RuntimeException(); //## IMPLEMENT IMPLEMENT IMPLEMENT
+    Miscellanea._assert(line != -1 & col != -1);
+    throw new ParsingException(line + 1, col + 1);
   }
 
   //////////////////////////////////////////////////////////////////////////////

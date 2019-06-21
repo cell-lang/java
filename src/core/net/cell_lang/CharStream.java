@@ -6,5 +6,9 @@ public interface CharStream {
 
   int read();
   int peek(int idx);
+
+  int line();
+  int column();
+
   ParsingException fail();
 }

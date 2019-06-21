@@ -49,8 +49,16 @@ final class ReaderCharStream implements CharStream {
     return buffer[offset + idx];
   }
 
+  public final int line() {
+    return line;
+  }
+
+  public final int column() {
+    return col;
+  }
+
   public ParsingException fail() {
-    throw new ParsingException(line, col);
+    throw new ParsingException(line + 1, col + 1);
   }
 
   //////////////////////////////////////////////////////////////////////////////
