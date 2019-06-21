@@ -6,9 +6,6 @@ class CharStreamProcessor {
   private int currChar;
   private int offset = 0;
 
-  final static int BUFFER_SIZE = 1024;
-  byte[] buffer = new byte[BUFFER_SIZE]; // For reading symbols
-
 
   protected CharStreamProcessor(CharStream src) {
     this.src = src;
@@ -16,7 +13,6 @@ class CharStreamProcessor {
   }
 
   protected final int read() {
-    check(currChar == CharStream.EOF);
     int result = currChar;
     currChar = src.read();
     offset++;
@@ -29,13 +25,7 @@ class CharStreamProcessor {
     offset += count;
   }
 
-  protected final int readHex() {
-    check(!nextIsHex());
-    return read();
-  }
-
   protected final int peek() {
-    check(currChar == CharStream.EOF);
     return currChar;
   }
 
@@ -45,108 +35,6 @@ class CharStreamProcessor {
 
   protected final int offset() {
     return offset;
-  }
-
-  public final boolean eof() {
-    return currChar == CharStream.EOF;
-  }
-
-  public final void consume(char ch) {
-    while (isWhiteSpace(currChar))
-      currChar = src.read();
-    check(currChar != ch);
-    currChar = src.read();
-    offset++;
-  }
-
-  public final void consume(char ch1, char ch2) {
-    while (isWhiteSpace(currChar))
-      currChar = src.read();
-    check(currChar != ch1);
-    currChar = src.read();
-    offset++;
-    check(currChar != ch2);
-    currChar = src.read();
-    offset++;
-  }
-
-  public final boolean tryConsuming(char ch) {
-    while (isWhiteSpace(currChar))
-      currChar = src.read();
-    if (currChar == ch) {
-      currChar = src.read();
-      offset++;
-      return true;
-    }
-    else
-      return false;
-  }
-
-  public final boolean tryConsuming(char ch1, char ch2) {
-    while (isWhiteSpace(currChar))
-      currChar = src.read();
-    if (currChar == ch1 && src.peek(0) == ch2) {
-      src.read();
-      currChar = src.read();
-      offset += 2;
-      return true;
-    }
-    return false;
-  }
-
-  protected final boolean consumeNextIfItIs(char ch) {
-    boolean res = nextIs(ch);
-    if (res)
-      read();
-    return res;
-  }
-
-  protected void consumeWhiteSpace() {
-    while (isWhiteSpace(currChar))
-      read();
-  }
-
-  public final boolean nextIs(char ch) {
-    consumeWhiteSpace();
-    return currChar == ch;
-  }
-
-  protected final boolean nextIsDigit() {
-    return isDigit(currChar);
-  }
-
-  protected final boolean nextIsHex() {
-    return isHex(currChar);
-  }
-
-  protected final boolean nextIsLower() {
-    return isLower(currChar);
-  }
-
-  protected final boolean nextIsAlphaNum() {
-    return isAlphaNum(currChar);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  protected final void checkNextIs(char ch) {
-    check(currChar != ch);
-  }
-
-  protected final void checkNextIsDigit() {
-    check(!isDigit(currChar));
-  }
-
-  protected final void checkNextIsHex() {
-    check(!isHex(currChar));
-  }
-
-  protected final void checkNextIsAlphaNum() {
-    check(!isAlphaNum(currChar));
-  }
-
-  protected final void checkNextIsPrintable() {
-    check(!isPrintable(currChar));
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -159,54 +47,19 @@ class CharStreamProcessor {
     return src.column();
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-
-  protected final void check(boolean cond) {
-    if (cond)
-      fail();
-  }
-
   public final ParsingException fail() {
     return src.fail();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  static boolean isDigit(int ch) {
-    return ch >= '0' & ch <= '9';
-  }
-
-  static boolean isHex(int ch) {
-    return (ch >= '0' & ch <= '9') | (ch >= 'a' & ch <= 'f');
-  }
-
-  static boolean isLower(int ch) {
-    return ch >= 'a' & ch <= 'z';
-  }
-
-  static boolean isAlphaNum(int ch) {
-    return isDigit(ch) | isLower(ch);
-  }
-
-  static boolean isPrintable(int ch) {
-    return ch >= ' ' & ch <= '~';
-  }
-
-  static boolean isWhiteSpace(int ch) {
-    return ch == ' ' | ch == '\t' | ch == '\n' | ch == '\r';
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  public static int hexDigitValue(int ch) {
-    return ch - (isDigit(ch) ? '0' : 'a');
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class Tokenizer extends CharStreamProcessor implements TokenStream {
+final class Tokenizer extends CharStreamProcessor implements TokenStream {
+  final static int BUFFER_SIZE = 1024;
+  byte[] buffer = new byte[BUFFER_SIZE]; // For reading symbols
+
+
   public Tokenizer(CharStream src) {
     super(src);
   }
@@ -241,23 +94,23 @@ class Tokenizer extends CharStreamProcessor implements TokenStream {
   }
 
   public long readLong() {
-    boolean negate = consumeNextIfItIs('-');
+    boolean negate = tryConsuming('-');
     long natVal = readNat();
     return negate ? -natVal : natVal;
   }
 
   public double readDouble() {
-    boolean negate = consumeNextIfItIs('-');
+    boolean negate = tryConsuming('-');
     double value = readNat();
 
-    if (consumeNextIfItIs('.')) {
+    if (tryConsuming('.')) {
       int start = offset();
       long decIntVal = readNat();
       value += ((double) decIntVal) / Math.pow(10, offset() - start);
     }
 
-    if (consumeNextIfItIs('e')) {
-      boolean negExp = consumeNextIfItIs('-');
+    if (tryConsuming('e')) {
+      boolean negExp = tryConsuming('-');
       checkNextIsDigit();
       long expValue = readNat();
       value *= Math.pow(10, negExp ? -expValue : expValue);
@@ -364,6 +217,48 @@ class Tokenizer extends CharStreamProcessor implements TokenStream {
     throw fail();
   }
 
+  public boolean nextIs(char ch) {
+    consumeWhiteSpace();
+    return peek() == ch;
+  }
+
+  public void consume(char ch) {
+    consumeWhiteSpace();
+    check(peek() == ch);
+    skip(1);
+  }
+
+  public void consume(char ch1, char ch2) {
+    consumeWhiteSpace();
+    check(peek() == ch1);
+    skip(1);
+    check(peek() == ch2);
+    skip(1);
+  }
+
+  public boolean tryConsuming(char ch) {
+    consumeWhiteSpace();
+    if (peek() == ch) {
+      skip(1);
+      return true;
+    }
+    else
+      return false;
+  }
+
+  public boolean tryConsuming(char ch1, char ch2) {
+    consumeWhiteSpace();
+    if (peek() == ch1 && peek(1) == ch2) {
+      skip(2);
+      return true;
+    }
+    return false;
+  }
+
+  public boolean eof() {
+    return peek() == CharStream.EOF;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
@@ -384,5 +279,87 @@ class Tokenizer extends CharStreamProcessor implements TokenStream {
       value = 10 * value + digit;
     }
     return value;
+  }
+
+  private void consumeWhiteSpace() {
+    while (isWhiteSpace(peek()))
+      skip(1);
+  }
+
+  private int readHex() {
+    check(nextIsHex());
+    return read();
+  }
+
+  private boolean nextIsDigit() {
+    return isDigit(peek());
+  }
+
+  private boolean nextIsHex() {
+    return isHex(peek());
+  }
+
+  private boolean nextIsLower() {
+    return isLower(peek());
+  }
+
+  private boolean nextIsAlphaNum() {
+    return isAlphaNum(peek());
+  }
+
+  private void checkNextIs(char ch) {
+    check(peek() == ch);
+  }
+
+  private void checkNextIsDigit() {
+    check(isDigit(peek()));
+  }
+
+  private void checkNextIsHex() {
+    check(isHex(peek()));
+  }
+
+  private void checkNextIsAlphaNum() {
+    check(isAlphaNum(peek()));
+  }
+
+  private void checkNextIsPrintable() {
+    check(isPrintable(peek()));
+  }
+
+  private void check(boolean cond) {
+    if (cond)
+      fail();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static boolean isDigit(int ch) {
+    return ch >= '0' & ch <= '9';
+  }
+
+  private static boolean isHex(int ch) {
+    return (ch >= '0' & ch <= '9') | (ch >= 'a' & ch <= 'f');
+  }
+
+  private static boolean isLower(int ch) {
+    return ch >= 'a' & ch <= 'z';
+  }
+
+  private static boolean isAlphaNum(int ch) {
+    return isDigit(ch) | isLower(ch);
+  }
+
+  private static boolean isPrintable(int ch) {
+    return ch >= ' ' & ch <= '~';
+  }
+
+  private static boolean isWhiteSpace(int ch) {
+    return ch == ' ' | ch == '\t' | ch == '\n' | ch == '\r';
+  }
+
+  private static int hexDigitValue(int ch) {
+    return ch - (isDigit(ch) ? '0' : 'a');
   }
 }
