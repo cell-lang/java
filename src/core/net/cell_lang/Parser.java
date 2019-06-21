@@ -5,6 +5,8 @@ import java.util.ArrayList;
 
 class TokenStreamProcessor {
   private TokenStream tokens;
+  int line = -1;
+  int col = -1;
 
   protected TokenStreamProcessor(TokenStream tokens) {
     this.tokens = tokens;
@@ -12,10 +14,6 @@ class TokenStreamProcessor {
 
   protected void checkEof() {
     failHereIf(!tokens.eof());
-  }
-
-  protected final Token read() {
-    return tokens.read();
   }
 
   public final TokenType peekType() {
@@ -35,11 +33,13 @@ class TokenStreamProcessor {
   //////////////////////////////////////////////////////////////////////////////
 
   public final void bookmark() {
-    tokens.bookmark();
+    line = tokens.line();
+    col = tokens.column();
   }
 
   public final ParsingException failAtBookmark() {
-    throw tokens.failAtBookmark();
+    Miscellanea._assert(line != -1 & col != -1);
+    throw new ParsingException(line + 1, col + 1);
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -2,9 +2,9 @@ package net.cell_lang;
 
 
 class CharStreamProcessor {
-  ReaderCharStream src;
-  int currChar;
-  int offset = 0;
+  private ReaderCharStream src;
+  private int currChar;
+  private int offset = 0;
 
   final static int BUFFER_SIZE = 1024;
   byte[] buffer = new byte[BUFFER_SIZE]; // For reading symbols
@@ -16,7 +16,7 @@ class CharStreamProcessor {
   }
 
   protected final int read() {
-    failHereIf(currChar == CharStream.EOF);
+    check(currChar == CharStream.EOF);
     int result = currChar;
     currChar = src.read();
     offset++;
@@ -30,12 +30,12 @@ class CharStreamProcessor {
   }
 
   protected final int readHex() {
-    failHereIf(!nextIsHex());
+    check(!nextIsHex());
     return read();
   }
 
   protected final int peek() {
-    failHereIf(currChar == CharStream.EOF);
+    check(currChar == CharStream.EOF);
     return currChar;
   }
 
@@ -47,30 +47,30 @@ class CharStreamProcessor {
     return offset;
   }
 
-  protected final boolean eof() {
+  public final boolean eof() {
     return currChar == CharStream.EOF;
   }
 
-  protected final void consume(char ch) {
+  public final void consume(char ch) {
     while (isWhiteSpace(currChar))
       currChar = src.read();
-    failHereIf(currChar != ch);
+    check(currChar != ch);
     currChar = src.read();
     offset++;
   }
 
-  protected final void consume(char ch1, char ch2) {
+  public final void consume(char ch1, char ch2) {
     while (isWhiteSpace(currChar))
       currChar = src.read();
-    failHereIf(currChar != ch1);
+    check(currChar != ch1);
     currChar = src.read();
     offset++;
-    failHereIf(currChar != ch2);
+    check(currChar != ch2);
     currChar = src.read();
     offset++;
   }
 
-  protected final boolean tryConsuming(char ch) {
+  public final boolean tryConsuming(char ch) {
     while (isWhiteSpace(currChar))
       currChar = src.read();
     if (currChar == ch) {
@@ -82,7 +82,7 @@ class CharStreamProcessor {
       return false;
   }
 
-  protected final boolean tryConsuming(char ch1, char ch2) {
+  public final boolean tryConsuming(char ch1, char ch2) {
     while (isWhiteSpace(currChar))
       currChar = src.read();
     if (currChar == ch1 && src.peek(0) == ch2) {
@@ -106,7 +106,8 @@ class CharStreamProcessor {
       read();
   }
 
-  protected final boolean nextIs(char ch) {
+  public final boolean nextIs(char ch) {
+    consumeWhiteSpace();
     return currChar == ch;
   }
 
@@ -129,33 +130,43 @@ class CharStreamProcessor {
   //////////////////////////////////////////////////////////////////////////////
 
   protected final void checkNextIs(char ch) {
-    failHereIf(currChar != ch);
+    check(currChar != ch);
   }
 
   protected final void checkNextIsDigit() {
-    failHereIf(!isDigit(currChar));
+    check(!isDigit(currChar));
   }
 
   protected final void checkNextIsHex() {
-    failHereIf(!isHex(currChar));
+    check(!isHex(currChar));
   }
 
   protected final void checkNextIsAlphaNum() {
-    failHereIf(!isAlphaNum(currChar));
+    check(!isAlphaNum(currChar));
   }
 
   protected final void checkNextIsPrintable() {
-    failHereIf(!isPrintable(currChar));
+    check(!isPrintable(currChar));
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  protected final void failHereIf(boolean cond) {
-    if (cond)
-      failHere();
+  public int line() {
+    return src.line();
   }
 
-  protected final ParsingException failHere() {
+  public int column() {
+    return src.column();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  protected final void check(boolean cond) {
+    if (cond)
+      fail();
+  }
+
+  public final ParsingException fail() {
     return src.fail();
   }
 
@@ -195,7 +206,7 @@ class CharStreamProcessor {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class Tokenizer extends CharStreamProcessor {
+class Tokenizer extends CharStreamProcessor implements TokenStream {
   public Tokenizer(ReaderCharStream src) {
     super(src);
   }
@@ -204,12 +215,12 @@ class Tokenizer extends CharStreamProcessor {
     consumeWhiteSpace();
 
     if (nextIsDigit())
-      return numberType(0);
+      return numberType(1);
 
     if (nextIsLower())
       return TokenType.Symbol;
 
-    switch (currChar) {
+    switch (peek()) {
       case '"':     return TokenType.String;
       case ',':     return TokenType.Comma;
       case ':':     return TokenType.Colon;
@@ -218,10 +229,15 @@ class Tokenizer extends CharStreamProcessor {
       case ')':     return TokenType.ClosePar;
       case '[':     return TokenType.OpenBracket;
       case ']':     return TokenType.CloseBracket;
-      case '-':     return src.peek(0) == '>' ? TokenType.Arrow : numberType(1);
+      case '-':     int ch = peek(1);
+                    if (ch == '>')
+                      return TokenType.Arrow;
+                    if (isDigit(ch))
+                      return numberType(2);
+                    throw fail();
     }
 
-    throw failHere();
+    throw fail();
   }
 
   public long readLong() {
@@ -247,7 +263,7 @@ class Tokenizer extends CharStreamProcessor {
       value *= Math.pow(10, negExp ? -expValue : expValue);
     }
 
-    failHereIf(nextIsLower());
+    check(nextIsLower());
     return negate ? -value : value;
   }
 
@@ -264,7 +280,7 @@ class Tokenizer extends CharStreamProcessor {
         if (nextIsAlphaNum())
           buffer[i] = (byte) read();
         else
-          throw failHere();
+          throw fail();
       }
       else {
         return SymbTable.bytesToIdx(buffer, i);
@@ -272,7 +288,7 @@ class Tokenizer extends CharStreamProcessor {
     }
 
     // The symbol was too long, we give up
-    throw failHere();
+    throw fail();
   }
 
   public Obj readString() {
@@ -284,7 +300,7 @@ class Tokenizer extends CharStreamProcessor {
     read();
     for ( ; ; ) {
       int ch = read();
-      failHereIf(!Character.isBmpCodePoint(ch));
+      check(!Character.isBmpCodePoint(ch));
 
       if (ch == '\\') {
         ch = read();
@@ -298,7 +314,7 @@ class Tokenizer extends CharStreamProcessor {
           ch = '\t';
         }
         else {
-          failHereIf(!isHex(ch)); //## THIS ACTUALLY FAILS ONE CHARACTER AHEAD
+          check(!isHex(ch)); //## THIS ACTUALLY FAILS ONE CHARACTER AHEAD
           int d3 = hexDigitValue(ch);
           int d2 = hexDigitValue(readHex());
           int d1 = hexDigitValue(readHex());
@@ -333,7 +349,7 @@ class Tokenizer extends CharStreamProcessor {
         if (isAlphaNum(ch))
           buffer[i] = (byte) ch;
         else
-          throw failHere();
+          throw fail();
       }
       else if (ch == ':') {
         skip(i);
@@ -345,16 +361,16 @@ class Tokenizer extends CharStreamProcessor {
     }
 
     // The label was too long, we give up
-    throw failHere();
+    throw fail();
   }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
   private TokenType numberType(int idx) {
-    while (isDigit(src.peek(idx)))
+    while (isDigit(peek(idx)))
       idx++;
-    int ch = src.peek(idx);
+    int ch = peek(idx);
     return ch == '.' | ch == 'e' ? TokenType.Float : TokenType.Int;
   }
 
@@ -364,7 +380,7 @@ class Tokenizer extends CharStreamProcessor {
     while (nextIsDigit()) {
       int digit = read() - '0';
       if (++count == 19)
-        failHereIf(value > 922337203685477580L | (value == 922337203685477580L & digit > 7));
+        check(value > 922337203685477580L | (value == 922337203685477580L & digit > 7));
       value = 10 * value + digit;
     }
     return value;

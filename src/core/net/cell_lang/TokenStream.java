@@ -19,16 +19,10 @@ public interface TokenStream {
   boolean tryConsuming(char ch);
   boolean tryConsuming(char ch1, char ch2);
 
-  //////////////////////////////////////////////////////////////////////////////
-
   boolean eof();
+
+  int line();
+  int column();
+
   ParsingException fail();
-  void bookmark();
-  ParsingException failAtBookmark();
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  //## TODO: THESE ARE OBSOLETE, REMOVE WHEN POSSIBLE
-  Token read();
-  Token peek(int off);
 }

@@ -49,6 +49,14 @@ class TokenArray implements TokenStream {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  public int line() {
+    throw Miscellanea.internalFail();
+  }
+
+  public int column() {
+    throw Miscellanea.internalFail();
+  }
+
   public void bookmark() {
     throw Miscellanea.internalFail();
   }
