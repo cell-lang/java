@@ -23,14 +23,24 @@ class CharStreamProcessor {
     return result;
   }
 
+  protected final void skip(int count) {
+    for (int i=0 ; i < count ; i++)
+      currChar = src.read();
+    offset += count;
+  }
+
   protected final int readHex() {
     failHereIf(!nextIsHex());
     return read();
   }
 
-  protected final long peek() {
+  protected final int peek() {
     failHereIf(currChar == CharStream.EOF);
     return currChar;
+  }
+
+  protected final int peek(int idx) {
+    return idx == 0 ? currChar : src.peek(idx - 1);
   }
 
   protected final int offset() {
@@ -337,6 +347,37 @@ class Tokenizer extends CharStreamProcessor {
     }
 
     // The symbol was too long, we give up
+    throw failHere();
+  }
+
+  public int tryReadingLabel() {
+    Miscellanea._assert(nextIsAlphaNum());
+
+    buffer[0] = (byte) peek();
+    for (int i=1 ; i < BUFFER_SIZE ; i++) {
+      int ch = peek(i);
+
+      if (isAlphaNum(ch)) {
+        buffer[i] = (byte) ch;
+      }
+      else if (ch == '_') {
+        buffer[i++] = (byte) ch;
+        ch = peek(i);
+        if (isAlphaNum(ch))
+          buffer[i] = (byte) ch;
+        else
+          throw failHere();
+      }
+      else if (ch == ':') {
+        skip(i);
+        return SymbTable.bytesToIdx(buffer, i);
+      }
+      else {
+        return -1;
+      }
+    }
+
+    // The label was too long, we give up
     throw failHere();
   }
 
