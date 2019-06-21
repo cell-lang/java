@@ -7,7 +7,6 @@ final class JustInTimeTokenStream implements TokenStream {
   Tokenizer tokenizer;
   Token[] tokens = new Token[POOL_SIZE];
   int offset = 0;
-  int count = 0;
 
 
   public JustInTimeTokenStream(ReaderCharStream chars) {
@@ -18,29 +17,17 @@ final class JustInTimeTokenStream implements TokenStream {
 
   public Token read() {
     int idx = offset++ % POOL_SIZE;
-    if (count > 0) {
-      count--;
-      return tokens[idx];
-    }
-    else {
-      Token token = tokens[idx];
-      tokenizer.readToken(token);
-      return token;
-    }
+    Token token = tokens[idx];
+    tokenizer.readToken(token);
+    return token;
   }
 
   public Token peek(int idx) {
-    Miscellanea._assert(idx < POOL_SIZE);
-    while (count <= idx) {
-      Token token = tokens[(offset + count++) % POOL_SIZE];
-      if (!tokenizer.readToken(token))
-        fail();
-    }
-    return tokens[(offset + idx) % POOL_SIZE];
+    throw Miscellanea.internalFail();
   }
 
   public boolean eof() {
-    return count == 0 && tokenizer.eof();
+    return tokenizer.eof();
   }
 
   public ParsingException fail() {
@@ -62,176 +49,43 @@ final class JustInTimeTokenStream implements TokenStream {
   //////////////////////////////////////////////////////////////////////////////
 
   public final long readLong() {
-    if (count == 0) {
-      return tokenizer.readLong();
-    }
-    else {
-      Token token = read();
-      if (token.type != TokenType.Int)
-        fail();
-      return token.longValue;
-    }
+    return tokenizer.readLong();
   }
 
   public final double readDouble() {
-    if (count == 0) {
-      return tokenizer.readDouble();
-    }
-    else {
-      Token token = read();
-      if (token.type != TokenType.Float)
-        fail();
-      return token.doubleValue;
-    }
+    return tokenizer.readDouble();
   }
 
   public final int readSymbol() {
-    if (count == 0) {
-      return tokenizer.readSymbol();
-    }
-    else {
-      Token token = read();
-      if (token.type != TokenType.Symbol)
-        fail();
-      return token.objValue.getSymbId();
-    }
+    return tokenizer.readSymbol();
   }
 
   public final int tryReadingLabel() {
-    throw new RuntimeException();
+    return tokenizer.tryReadingLabel();
   }
 
   public final TokenType peekType() {
-    if (count == 0)
-      return tokenizer.peekType();
-    else
-      return peek(0).type;
+    return tokenizer.peekType();
   }
 
-  public final boolean nextIsCloseBracket() {
-    if (count == 0) {
-      tokenizer.consumeWhiteSpace();
-      return tokenizer.nextIs(']');
-    }
-    else
-      return peek(0).type == TokenType.CloseBracket;
+  public final boolean nextIs(char ch) {
+    tokenizer.consumeWhiteSpace();
+    return tokenizer.nextIs(ch);
   }
 
-  public final void consumeArrow() {
-    if (count == 0)
-      tokenizer.consume('-', '>');
-    else
-      consume(TokenType.Arrow);
+  public final void consume(char ch) {
+    tokenizer.consume(ch);
   }
 
-  public final void consumeCloseBracket() {
-    if (count == 0)
-      tokenizer.consume(']');
-    else
-      consume(TokenType.CloseBracket);
+  public final void consume(char ch1, char ch2) {
+    tokenizer.consume(ch1, ch2);
   }
 
-  public final void consumeClosePar() {
-    if (count == 0)
-      tokenizer.consume(')');
-    else
-      consume(TokenType.ClosePar);
+  public final boolean tryConsuming(char ch) {
+    return tokenizer.tryConsuming(ch);
   }
 
-  public final void consumeColon() {
-    if (count == 0)
-      tokenizer.consume(':');
-    else
-      consume(TokenType.Colon);
-  }
-
-  public final void consumeComma() {
-    if (count == 0)
-      tokenizer.consume(',');
-    else
-      consume(TokenType.Comma);
-  }
-
-  public final void consumeOpenBracket() {
-    if (count == 0)
-      tokenizer.consume('[');
-    else
-      consume(TokenType.OpenBracket);
-  }
-
-  public final void consumeOpenPar() {
-    if (count == 0)
-      tokenizer.consume('(');
-    else
-      consume(TokenType.OpenPar);
-  }
-
-  public final void consumeSemicolon() {
-    if (count == 0)
-      tokenizer.consume(';');
-    else
-      consume(TokenType.Semicolon);
-  }
-
-  public final boolean tryConsumingSemicolon() {
-    if (count == 0)
-      return tokenizer.tryConsuming(';');
-    else
-      return tryConsuming(TokenType.Semicolon);
-  }
-
-  public final boolean tryConsumingArrow() {
-    if (count == 0)
-      return tokenizer.tryConsuming('-', '>');
-    else
-      return tryConsuming(TokenType.Arrow);
-  }
-
-  public final boolean tryConsumingComma() {
-    if (count == 0)
-      return tokenizer.tryConsuming(',');
-    else
-      return tryConsuming(TokenType.Comma);
-  }
-
-  public final boolean tryConsumingOpenPar() {
-    if (count == 0)
-      return tokenizer.tryConsuming('(');
-    else
-      return tryConsuming(TokenType.OpenPar);
-  }
-
-  public final boolean tryConsumingClosePar() {
-    if (count == 0)
-      return tokenizer.tryConsuming(')');
-    else
-      return tryConsuming(TokenType.ClosePar);
-  }
-
-  public final boolean tryConsumingCloseBracket() {
-    if (count == 0)
-      return tokenizer.tryConsuming(']');
-    else
-      return tryConsuming(TokenType.CloseBracket);
-  }
-
-  private void consume(TokenType type) {
-    Token token = tokens[offset % POOL_SIZE];
-    if (token.type != type)
-      fail();
-    offset++;
-    count--;
-  }
-
-  private boolean tryConsuming(TokenType type) {
-    Miscellanea._assert(count > 0);
-    Token token = tokens[offset % POOL_SIZE];
-    if (token.type == type) {
-      offset++;
-      count--;
-      return true;
-    }
-    else
-      return false;
+  public final boolean tryConsuming(char ch1, char ch2) {
+    return tokenizer.tryConsuming(ch1, ch2);
   }
 }

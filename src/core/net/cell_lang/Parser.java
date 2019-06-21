@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 
 class TokenStreamProcessor {
-  TokenStream tokens;
+  private TokenStream tokens;
 
   protected TokenStreamProcessor(TokenStream tokens) {
     this.tokens = tokens;
@@ -12,10 +12,6 @@ class TokenStreamProcessor {
 
   protected void checkEof() {
     failHereIf(!tokens.eof());
-  }
-
-  public final boolean nextIsCloseBracket() {
-    return tokens.nextIsCloseBracket();
   }
 
   protected final Token read() {
@@ -65,60 +61,64 @@ class TokenStreamProcessor {
     return tokens.tryReadingLabel();
   }
 
+  public final boolean nextIsCloseBracket() {
+    return tokens.nextIs(']');
+  }
+
   public final void consumeArrow() {
-    tokens.consumeArrow();
+    tokens.consume('-', '>');
   }
 
   public final void consumeCloseBracket() {
-    tokens.consumeCloseBracket();
+    tokens.consume(']');
   }
 
   public final void consumeClosePar() {
-    tokens.consumeClosePar();
+    tokens.consume(')');
   }
 
   public final void consumeColon() {
-    tokens.consumeColon();
+    tokens.consume(':');
   }
 
   public final void consumeComma() {
-    tokens.consumeComma();
+    tokens.consume(',');
   }
 
   public final void consumeOpenBracket() {
-    tokens.consumeOpenBracket();
+    tokens.consume('[');
   }
 
   public final void consumeOpenPar() {
-    tokens.consumeOpenPar();
+    tokens.consume('(');
   }
 
   public final void consumeSemicolon() {
-    tokens.consumeSemicolon();
+    tokens.consume(';');
   }
 
   public final boolean tryConsumingSemicolon() {
-    return tokens.tryConsumingSemicolon();
+    return tokens.tryConsuming(';');
   }
 
   public final boolean tryConsumingArrow() {
-    return tokens.tryConsumingArrow();
+    return tokens.tryConsuming('-', '>');
   }
 
   public final boolean tryConsumingComma() {
-    return tokens.tryConsumingComma();
+    return tokens.tryConsuming(',');
   }
 
   protected final boolean tryConsumingOpenPar() {
-    return tokens.tryConsumingOpenPar();
+    return tokens.tryConsuming('(');
   }
 
   protected final boolean tryConsumingClosePar() {
-    return tokens.tryConsumingClosePar();
+    return tokens.tryConsuming(')');
   }
 
   protected final boolean tryConsumingCloseBracket() {
-    return tokens.tryConsumingCloseBracket();
+    return tokens.tryConsuming(']');
   }
 }
 

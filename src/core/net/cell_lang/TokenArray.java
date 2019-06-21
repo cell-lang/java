@@ -79,63 +79,23 @@ class TokenArray implements TokenStream {
     throw Miscellanea.internalFail();
   }
 
-  public boolean nextIsCloseBracket() {
+  public boolean nextIs(char ch) {
     throw Miscellanea.internalFail();
   }
 
-  public void consumeArrow() {
+  public void consume(char ch) {
     throw Miscellanea.internalFail();
   }
 
-  public void consumeCloseBracket() {
+  public void consume(char ch1, char ch2) {
     throw Miscellanea.internalFail();
   }
 
-  public void consumeClosePar() {
+  public boolean tryConsuming(char ch) {
     throw Miscellanea.internalFail();
   }
 
-  public void consumeColon() {
-    throw Miscellanea.internalFail();
-  }
-
-  public void consumeComma() {
-    throw Miscellanea.internalFail();
-  }
-
-  public void consumeOpenBracket() {
-    throw Miscellanea.internalFail();
-  }
-
-  public void consumeOpenPar() {
-    throw Miscellanea.internalFail();
-  }
-
-  public void consumeSemicolon() {
-    throw Miscellanea.internalFail();
-  }
-
-  public boolean tryConsumingSemicolon() {
-    throw Miscellanea.internalFail();
-  }
-
-  public boolean tryConsumingArrow() {
-    throw Miscellanea.internalFail();
-  }
-
-  public boolean tryConsumingComma() {
-    throw Miscellanea.internalFail();
-  }
-
-  public boolean tryConsumingOpenPar() {
-    throw Miscellanea.internalFail();
-  }
-
-  public boolean tryConsumingClosePar() {
-    throw Miscellanea.internalFail();
-  }
-
-  public boolean tryConsumingCloseBracket() {
+  public boolean tryConsuming(char ch1, char ch2) {
     throw Miscellanea.internalFail();
   }
 }

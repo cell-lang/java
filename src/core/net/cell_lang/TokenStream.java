@@ -3,7 +3,7 @@ package net.cell_lang;
 
 public interface TokenStream {
   Token read();
-  Token peek(int off);
+  Token peek(int off); //## TODO: THIS IS OBSOLETE, REMOVE WHEN POSSIBLE
   boolean eof();
   ParsingException fail();
 
@@ -22,21 +22,11 @@ public interface TokenStream {
 
   TokenType peekType();
 
-  boolean nextIsCloseBracket();
+  boolean nextIs(char ch);
 
-  void consumeArrow();
-  void consumeCloseBracket();
-  void consumeClosePar();
-  void consumeColon();
-  void consumeComma();
-  void consumeOpenBracket();
-  void consumeOpenPar();
-  void consumeSemicolon();
+  void consume(char ch);
+  void consume(char ch1, char ch2);
 
-  boolean tryConsumingSemicolon();
-  boolean tryConsumingArrow();
-  boolean tryConsumingComma();
-  boolean tryConsumingOpenPar();
-  boolean tryConsumingClosePar();
-  boolean tryConsumingCloseBracket();
+  boolean tryConsuming(char ch);
+  boolean tryConsuming(char ch1, char ch2);
 }
