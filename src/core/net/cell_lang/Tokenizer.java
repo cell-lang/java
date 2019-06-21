@@ -6,6 +6,10 @@ class CharStreamProcessor {
   int currChar;
   int offset = 0;
 
+  final static int BUFFER_SIZE = 1024;
+  byte[] buffer = new byte[BUFFER_SIZE]; // For reading symbols
+
+
   protected CharStreamProcessor(ReaderCharStream src) {
     this.src = src;
     currChar = src.read();
@@ -152,7 +156,7 @@ class CharStreamProcessor {
   }
 
   static boolean isHex(int ch) {
-    return (ch >= '0' & ch <= '9') | (ch >= 'a' & ch <= 'z');
+    return (ch >= '0' & ch <= '9') | (ch >= 'a' & ch <= 'f');
   }
 
   static boolean isLower(int ch) {
@@ -184,6 +188,30 @@ class CharStreamProcessor {
 class Tokenizer extends CharStreamProcessor {
   public Tokenizer(ReaderCharStream src) {
     super(src);
+  }
+
+  public TokenType peekType() {
+    consumeWhiteSpace();
+
+    if (nextIsDigit())
+      return numberType(0);
+
+    if (nextIsLower())
+      return TokenType.Symbol;
+
+    switch (currChar) {
+      case '"':     return TokenType.String;
+      case ',':     return TokenType.Comma;
+      case ':':     return TokenType.Colon;
+      case ';':     return TokenType.Semicolon;
+      case '(':     return TokenType.OpenPar;
+      case ')':     return TokenType.ClosePar;
+      case '[':     return TokenType.OpenBracket;
+      case ']':     return TokenType.CloseBracket;
+      case '-':     return src.peek(0) == '>' ? TokenType.Arrow : numberType(1);
+    }
+
+    throw failHere();
   }
 
   public boolean readToken(Token token) {
@@ -261,7 +289,68 @@ class Tokenizer extends CharStreamProcessor {
     return true;
   }
 
-  long readNat() {
+  public long readLong() {
+    boolean negate = consumeNextIfItIs('-');
+    long natVal = readNat();
+    return negate ? -natVal : natVal;
+  }
+
+  public double readDouble() {
+    boolean negate = consumeNextIfItIs('-');
+    double value = readNat();
+
+    if (consumeNextIfItIs('.')) {
+      int start = offset();
+      long decIntVal = readNat();
+      value += ((double) decIntVal) / Math.pow(10, offset() - start);
+    }
+
+    if (consumeNextIfItIs('e')) {
+      boolean negExp = consumeNextIfItIs('-');
+      checkNextIsDigit();
+      long expValue = readNat();
+      value *= Math.pow(10, negExp ? -expValue : expValue);
+    }
+
+    failHereIf(nextIsLower());
+    return negate ? -value : value;
+  }
+
+  public int readSymbol() {
+    Miscellanea._assert(nextIsAlphaNum());
+
+    buffer[0] = (byte) read();
+    for (int i=1 ; i < BUFFER_SIZE ; i++) {
+      if (nextIsAlphaNum()) {
+        buffer[i] = (byte) read();
+      }
+      else if (nextIs('_')) {
+        buffer[i++] = (byte) read();
+        if (nextIsAlphaNum())
+          buffer[i] = (byte) read();
+        else
+          throw failHere();
+      }
+      else {
+        return SymbTable.bytesToIdx(buffer, i);
+      }
+    }
+
+    // The symbol was too long, we give up
+    throw failHere();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  private TokenType numberType(int idx) {
+    while (isDigit(src.peek(idx)))
+      idx++;
+    int ch = src.peek(idx);
+    return ch == '.' | ch == 'e' ? TokenType.Float : TokenType.Int;
+  }
+
+  private long readNat() {
     int count = 0;
     long value = 0;
     while (nextIsDigit()) {
@@ -273,7 +362,7 @@ class Tokenizer extends CharStreamProcessor {
     return value;
   }
 
-  void readNumber(Token token, boolean negate) {
+  private void readNumber(Token token, boolean negate) {
     int startOffset = offset();
 
     long intValue = readNat();
@@ -305,7 +394,7 @@ class Tokenizer extends CharStreamProcessor {
     token.set(negate ? -floatValue : floatValue);
   }
 
-  void readSymbol(Token token) {
+  private void readSymbol(Token token) {
     Miscellanea._assert(nextIsLower());
 
     int offset = offset();
@@ -332,7 +421,7 @@ class Tokenizer extends CharStreamProcessor {
     token.set(obj);
   }
 
-  void readString(Token token) {
+  private void readString(Token token) {
     Miscellanea._assert(nextIs('"'));
 
     int offset = offset();

@@ -64,6 +64,19 @@ class Array {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
+  public static int[] take(int[] array, int count) {
+    Miscellanea._assert(count <= array.length);
+    return Arrays.copyOf(array, count);
+  }
+
+  public static Obj[] take(Obj[] array, int count) {
+    Miscellanea._assert(count <= array.length);
+    return Arrays.copyOf(array, count);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
   public static byte[] append(byte[] array, int count, long value) {
     // Miscellanea._assert(count <= array.length);
     // Miscellanea._assert(value >= -128 & value <= 127);

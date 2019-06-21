@@ -50,11 +50,6 @@ final class JustInTimeTokenStream implements TokenStream {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public final boolean nextIs(TokenType type, int off) {
-    Token token = peek(off);
-    return token != null && token.type == type;
-  }
-
   public final void bookmark() {
     //## IMPLEMENT IMPLEMENT IMPLEMENT
   }
@@ -66,13 +61,60 @@ final class JustInTimeTokenStream implements TokenStream {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
+  public final long readLong() {
+    if (count == 0) {
+      return tokenizer.readLong();
+    }
+    else {
+      Token token = read();
+      if (token.type != TokenType.Int)
+        fail();
+      return token.longValue;
+    }
+  }
+
+  public final double readDouble() {
+    if (count == 0) {
+      return tokenizer.readDouble();
+    }
+    else {
+      Token token = read();
+      if (token.type != TokenType.Float)
+        fail();
+      return token.doubleValue;
+    }
+  }
+
+  public final int readSymbol() {
+    if (count == 0) {
+      return tokenizer.readSymbol();
+    }
+    else {
+      Token token = read();
+      if (token.type != TokenType.Symbol)
+        fail();
+      return token.objValue.getSymbId();
+    }
+  }
+
+  public final int tryReadingLabel() {
+    throw new RuntimeException();
+  }
+
+  public final TokenType peekType() {
+    if (count == 0)
+      return tokenizer.peekType();
+    else
+      return peek(0).type;
+  }
+
   public final boolean nextIsCloseBracket() {
     if (count == 0) {
       tokenizer.consumeWhiteSpace();
       return tokenizer.nextIs(']');
     }
     else
-      return nextIs(TokenType.CloseBracket, 0);
+      return peek(0).type == TokenType.CloseBracket;
   }
 
   public final void consumeArrow() {
@@ -150,6 +192,27 @@ final class JustInTimeTokenStream implements TokenStream {
       return tokenizer.tryConsuming(',');
     else
       return tryConsuming(TokenType.Comma);
+  }
+
+  public final boolean tryConsumingOpenPar() {
+    if (count == 0)
+      return tokenizer.tryConsuming('(');
+    else
+      return tryConsuming(TokenType.OpenPar);
+  }
+
+  public final boolean tryConsumingClosePar() {
+    if (count == 0)
+      return tokenizer.tryConsuming(')');
+    else
+      return tryConsuming(TokenType.ClosePar);
+  }
+
+  public final boolean tryConsumingCloseBracket() {
+    if (count == 0)
+      return tokenizer.tryConsuming(']');
+    else
+      return tryConsuming(TokenType.CloseBracket);
   }
 
   private void consume(TokenType type) {

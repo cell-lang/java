@@ -49,10 +49,6 @@ class TokenArray implements TokenStream {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean nextIs(TokenType type, int off) {
-    throw Miscellanea.internalFail();
-  }
-
   public void bookmark() {
     throw Miscellanea.internalFail();
   }
@@ -62,6 +58,26 @@ class TokenArray implements TokenStream {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+
+  public long readLong() {
+    throw Miscellanea.internalFail();
+  }
+
+  public double readDouble() {
+    throw Miscellanea.internalFail();
+  }
+
+  public int readSymbol() {
+    throw Miscellanea.internalFail();
+  }
+
+  public int tryReadingLabel() {
+    throw Miscellanea.internalFail();
+  }
+
+  public TokenType peekType() {
+    throw Miscellanea.internalFail();
+  }
 
   public boolean nextIsCloseBracket() {
     throw Miscellanea.internalFail();
@@ -108,6 +124,18 @@ class TokenArray implements TokenStream {
   }
 
   public boolean tryConsumingComma() {
+    throw Miscellanea.internalFail();
+  }
+
+  public boolean tryConsumingOpenPar() {
+    throw Miscellanea.internalFail();
+  }
+
+  public boolean tryConsumingClosePar() {
+    throw Miscellanea.internalFail();
+  }
+
+  public boolean tryConsumingCloseBracket() {
     throw Miscellanea.internalFail();
   }
 }

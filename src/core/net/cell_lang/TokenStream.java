@@ -9,11 +9,18 @@ public interface TokenStream {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  boolean nextIs(TokenType type, int off);
   void bookmark();
   ParsingException failAtBookmark();
 
   //////////////////////////////////////////////////////////////////////////////
+
+  long readLong();
+  double readDouble();
+  int readSymbol();
+
+  int tryReadingLabel();
+
+  TokenType peekType();
 
   boolean nextIsCloseBracket();
 
@@ -29,4 +36,7 @@ public interface TokenStream {
   boolean tryConsumingSemicolon();
   boolean tryConsumingArrow();
   boolean tryConsumingComma();
+  boolean tryConsumingOpenPar();
+  boolean tryConsumingClosePar();
+  boolean tryConsumingCloseBracket();
 }
