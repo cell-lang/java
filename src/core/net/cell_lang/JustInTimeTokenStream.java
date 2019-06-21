@@ -2,12 +2,8 @@ package net.cell_lang;
 
 
 final class JustInTimeTokenStream implements TokenStream {
-  final static int POOL_SIZE = 16;
-
   ReaderCharStream charStream;
   Tokenizer tokenizer;
-  Token[] tokens = new Token[POOL_SIZE];
-  int offset = 0;
   int line = -1;
   int col = -1;
 
@@ -15,15 +11,10 @@ final class JustInTimeTokenStream implements TokenStream {
   public JustInTimeTokenStream(ReaderCharStream charStream) {
     this.charStream = charStream;
     tokenizer = new Tokenizer(charStream);
-    for (int i=0 ; i < tokens.length ; i++)
-      tokens[i] = new Token();
   }
 
   public Token read() {
-    int idx = offset++ % POOL_SIZE;
-    Token token = tokens[idx];
-    tokenizer.readToken(token);
-    return token;
+    throw Miscellanea.internalFail();
   }
 
   public Token peek(int idx) {
@@ -64,6 +55,10 @@ final class JustInTimeTokenStream implements TokenStream {
 
   public final int readSymbol() {
     return tokenizer.readSymbol();
+  }
+
+  public final Obj readString() {
+    return tokenizer.readString();
   }
 
   public final int tryReadingLabel() {

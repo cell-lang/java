@@ -71,6 +71,10 @@ class TokenArray implements TokenStream {
     throw Miscellanea.internalFail();
   }
 
+  public Obj readString() {
+    throw Miscellanea.internalFail();
+  }
+
   public int tryReadingLabel() {
     throw Miscellanea.internalFail();
   }
