@@ -503,7 +503,7 @@ String* custom_parser = (
   "",
   "public static Obj parse(Reader reader) {",
   "  try {",
-  "    TokenStream tokens = new Tokenizer(new ReaderCharStream(reader));",
+  "    TokenStream tokens = new Tokenizer(new CharStream(reader));",
   "    Parser parser = new Parser(tokens);",
   "    Obj obj = parser.parseObj();",
   "    parser.checkEof();",

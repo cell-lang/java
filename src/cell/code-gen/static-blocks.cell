@@ -173,7 +173,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "  Obj v0, v1, v2;",
       "  int i0, i1, i2;",
       "",
-      "  TokenStream tokens = new Tokenizer(new ReaderCharStream(reader));",
+      "  TokenStream tokens = new Tokenizer(new CharStream(reader));",
       "  Parser parser = new Parser(tokens);",
       "",
       "  parser.consumeOpenPar();",

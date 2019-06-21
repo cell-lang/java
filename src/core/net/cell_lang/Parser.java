@@ -5,27 +5,23 @@ import java.util.ArrayList;
 
 class TokenStreamProcessor {
   private TokenStream tokens;
-  int line = -1;
-  int col = -1;
+  private int line = -1;
+  private int col = -1;
 
   protected TokenStreamProcessor(TokenStream tokens) {
     this.tokens = tokens;
   }
 
   protected void checkEof() {
-    failHereIf(!tokens.eof());
+    if (!tokens.eof())
+      fail();
   }
 
   public final TokenType peekType() {
     return tokens.peekType();
   }
 
-  protected final void failHereIf(boolean cond) {
-    if (cond)
-      failHere();
-  }
-
-  protected final ParsingException failHere() {
+  protected final ParsingException fail() {
     return tokens.fail();
   }
 
@@ -153,7 +149,7 @@ abstract class Parser extends TokenStreamProcessor {
       case Arrow:
       case ClosePar:
       case CloseBracket:
-        throw failHere();
+        throw fail();
 
       case Int:
         return IntObj.get(readLong());
@@ -228,11 +224,11 @@ abstract class Parser extends TokenStreamProcessor {
       }
       int labelId = tryReadingLabel();
       if (labelId == -1)
-        failHere();
+        throw fail();
       //## BAD BAD BAD: WITH A HUGE RECORD...
       for (int j=0 ; j < i ; j++)
         if (labels[i] == labelId)
-          failHere();
+          throw fail();
       labels[i] = labelId;
       values[i++] = parseObj();
     }
@@ -359,6 +355,6 @@ abstract class Parser extends TokenStreamProcessor {
       return Builder.createTernRel(col1, col2, col3);
     }
 
-    throw failHere();
+    throw fail();
   }
 }

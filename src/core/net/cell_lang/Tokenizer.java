@@ -2,7 +2,7 @@ package net.cell_lang;
 
 
 class CharStreamProcessor {
-  private ReaderCharStream src;
+  private CharStream src;
   private int currChar;
   private int offset = 0;
 
@@ -10,7 +10,7 @@ class CharStreamProcessor {
   byte[] buffer = new byte[BUFFER_SIZE]; // For reading symbols
 
 
-  protected CharStreamProcessor(ReaderCharStream src) {
+  protected CharStreamProcessor(CharStream src) {
     this.src = src;
     currChar = src.read();
   }
@@ -207,7 +207,7 @@ class CharStreamProcessor {
 ////////////////////////////////////////////////////////////////////////////////
 
 class Tokenizer extends CharStreamProcessor implements TokenStream {
-  public Tokenizer(ReaderCharStream src) {
+  public Tokenizer(CharStream src) {
     super(src);
   }
 
