@@ -52,6 +52,10 @@ class SymbTable {
     return strToIdx(new String(bytes, 0, len));
   }
 
+  public static int bytesToIdx(byte[] bytes) {
+    return strToIdx(new String(bytes));
+  }
+
   public static int strToIdx(String str) {
     Integer idxObj = symbMap.get(str);
     if (idxObj != null)
