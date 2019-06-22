@@ -116,7 +116,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
       value *= Math.pow(10, negExp ? -expValue : expValue);
     }
 
-    check(nextIsLower());
+    check(!nextIsLower());
     return negate ? -value : value;
   }
 
@@ -153,7 +153,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
     read();
     for ( ; ; ) {
       int ch = read();
-      check(!Character.isBmpCodePoint(ch));
+      check(Character.isBmpCodePoint(ch));
 
       if (ch == '\\') {
         ch = read();
@@ -167,7 +167,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
           ch = '\t';
         }
         else {
-          check(!isHex(ch)); //## THIS ACTUALLY FAILS ONE CHARACTER AHEAD
+          check(isHex(ch)); //## THIS ACTUALLY FAILS ONE CHARACTER AHEAD
           int d3 = hexDigitValue(ch);
           int d2 = hexDigitValue(readHex());
           int d1 = hexDigitValue(readHex());
@@ -328,7 +328,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
   }
 
   private void check(boolean cond) {
-    if (cond)
+    if (!cond)
       fail();
   }
 
