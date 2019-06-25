@@ -69,6 +69,11 @@ class Array {
     return Arrays.copyOf(array, count);
   }
 
+  public static long[] take(long[] array, int count) {
+    Miscellanea._assert(count <= array.length);
+    return Arrays.copyOf(array, count);
+  }
+
   public static Obj[] take(Obj[] array, int count) {
     Miscellanea._assert(count <= array.length);
     return Arrays.copyOf(array, count);
@@ -386,5 +391,15 @@ class Array {
 
   public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int start, int end, int value) {
     return Arrays.binarySearch(array, start, end, value);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static boolean isPrefix(long[] prefixArray, long[] array) {
+    for (int i=0 ; i < prefixArray.length ; i++)
+      if (prefixArray[i] != array[i])
+        return false;
+    return true;
   }
 }

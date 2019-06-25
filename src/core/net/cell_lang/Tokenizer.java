@@ -125,100 +125,127 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
     return negate ? -value : value;
   }
 
-  // public int readSymbol() {
-  //   int idx = 0;
-  //   buffer[0] = (byte) peek(idx++);
-  //   for (int i=1 ; i < BUFFER_SIZE ; i++) {
-  //     if (isAlphaNum(peek(idx))) {
-  //       buffer[i] = (byte) peek(idx++);
-  //     }
-  //     else if (peek(idx) == '_') {
-  //       buffer[i++] = (byte) peek(idx++);
-  //       if (isAlphaNum(peek(idx)))
-  //         buffer[i] = (byte) peek(idx++);
-  //       else
-  //         throw fail();
-  //     }
-  //     else {
-  //       int legitIdx = SymbTable.bytesToIdx(buffer, i);
-  //       int tentativeIdx = _readSymbol();
-  //       if (legitIdx != tentativeIdx) {
-  //         System.out.printf("\n\n%s - %s\n", SymbTable.idxToStr(legitIdx), SymbTable.idxToStr(tentativeIdx));
-  //         System.exit(1);
-  //       }
-  //       return legitIdx;
-  //     }
-  //   }
-  //
-  //   // The symbol was too long, we give up
-  //   throw fail();
-  // }
-
   public int readSymbol() {
     Miscellanea._assert(nextIsLower());
 
-    long encWord1 = SymbTableFastCache.encodedLetter(read());
-    for (int i=0 ; i < 9 ; i++) {
-      if (nextIsLower()) {
-        int code =  SymbTableFastCache.encodedLetter(read());
-        encWord1 = (encWord1 << 6) + code;
-      }
-      else if (nextIs('_')) {
-        skip();
-        if (nextIsLower()) {
-          int code = SymbTableFastCache.encodedUnderscoredLetter(read());
-          encWord1 = (encWord1 << 6) + code;
-        }
-        else if (nextIsDigit()) {
-          encWord1 = (encWord1 << 6) + SymbTableFastCache.ENCODED_UNDERSCORE;
-        }
-        else
-          throw fail();
-      }
-      else if (nextIsDigit()) {
-        int code = SymbTableFastCache.encodedDigit(read());
-        encWord1 = (encWord1 << 6) + code;
-      }
-      else {
-        return SymbTableFastCache.encToIdx(encWord1);
-      }
-    }
+    // long encWord1 = SymbTableFastCache.encodedLetter(read());
+    // for (int i=0 ; i < 9 ; i++) {
+    //   if (nextIsLower()) {
+    //     int code =  SymbTableFastCache.encodedLetter(read());
+    //     encWord1 = (encWord1 << 6) + code;
+    //   }
+    //   else if (nextIs('_')) {
+    //     skip();
+    //     if (nextIsLower()) {
+    //       int code = SymbTableFastCache.encodedUnderscoredLetter(read());
+    //       encWord1 = (encWord1 << 6) + code;
+    //     }
+    //     else if (nextIsDigit()) {
+    //       encWord1 = (encWord1 << 6) + SymbTableFastCache.ENCODED_UNDERSCORE;
+    //     }
+    //     else
+    //       throw fail();
+    //   }
+    //   else if (nextIsDigit()) {
+    //     int code = SymbTableFastCache.encodedDigit(read());
+    //     encWord1 = (encWord1 << 6) + code;
+    //   }
+    //   else {
+    //     return SymbTableFastCache.encToIdx(encWord1);
+    //   }
+    // }
 
+    // if (!nextIsAlphaNum() & !nextIs('_'))
+    //   return SymbTableFastCache.encToIdx(encWord1);
+
+    // long encWord2 = 0;
+    // for (int i=0 ; i < 10 ; i++) {
+    //   if (nextIsLower()) {
+    //     int code =  SymbTableFastCache.encodedLetter(read());
+    //     encWord2 = (encWord2 << 6) + code;
+    //   }
+    //   else if (nextIs('_')) {
+    //     skip();
+    //     if (nextIsLower()) {
+    //       int code = SymbTableFastCache.encodedUnderscoredLetter(read());
+    //       encWord2 = (encWord2 << 6) + code;
+    //     }
+    //     else if (nextIsDigit()) {
+    //       encWord2 = (encWord2 << 6) + SymbTableFastCache.ENCODED_UNDERSCORE;
+    //     }
+    //     else
+    //       throw fail();
+    //   }
+    //   else if (nextIsDigit()) {
+    //     int code = SymbTableFastCache.encodedDigit(read());
+    //     encWord2 = (encWord2 << 6) + code;
+    //   }
+    //   else {
+    //     return SymbTableFastCache.encToIdx(encWord1, encWord2);
+    //   }
+    // }
+
+    // if (!nextIsAlphaNum() & !nextIs('_'))
+    //   return SymbTableFastCache.encToIdx(encWord1, encWord2);
+
+
+    long encWord1 = readEncSymbWord();
     if (!nextIsAlphaNum() & !nextIs('_'))
       return SymbTableFastCache.encToIdx(encWord1);
 
-    long encWord2 = 0;
+    long encWord2 = readEncSymbWord();
+    if (!nextIsAlphaNum() & !nextIs('_'))
+      return SymbTableFastCache.encToIdx(encWord1, encWord2);
+
+    long encWord3 = readEncSymbWord();
+    if (!nextIsAlphaNum() & !nextIs('_'))
+      return SymbTableFastCache.encToIdx(encWord1, encWord2, encWord3);
+
+    long[] encWords = new long[8];
+    encWords[0] = encWord1;
+    encWords[1] = encWord2;
+    encWords[2] = encWord3;
+
+    for (int i=3 ; i < 64 ; i++) {
+      if (i >= encWords.length)
+        encWords = Array.extend(encWords, 2 * encWords.length);
+      encWords[i] = readEncSymbWord();
+      if (!nextIsAlphaNum() & !nextIs('_'))
+        return SymbTableFastCache.encToIdx(encWords, i+1);
+    }
+
+    // The symbol was too long, we give up
+    throw fail();
+  }
+
+  private long readEncSymbWord() {
+    long encWord = 0;
     for (int i=0 ; i < 10 ; i++) {
       if (nextIsLower()) {
         int code =  SymbTableFastCache.encodedLetter(read());
-        encWord2 = (encWord2 << 6) + code;
+        encWord = (encWord << 6) + code;
       }
       else if (nextIs('_')) {
         skip();
         if (nextIsLower()) {
           int code = SymbTableFastCache.encodedUnderscoredLetter(read());
-          encWord2 = (encWord2 << 6) + code;
+          encWord = (encWord << 6) + code;
         }
         else if (nextIsDigit()) {
-          encWord2 = (encWord2 << 6) + SymbTableFastCache.ENCODED_UNDERSCORE;
+          encWord = (encWord << 6) + SymbTableFastCache.ENCODED_UNDERSCORE;
         }
         else
           throw fail();
       }
       else if (nextIsDigit()) {
         int code = SymbTableFastCache.encodedDigit(read());
-        encWord2 = (encWord2 << 6) + code;
+        encWord = (encWord << 6) + code;
       }
       else {
-        return SymbTableFastCache.encToIdx(encWord1, encWord2);
+        return encWord;
       }
     }
-
-    if (!nextIsAlphaNum() & !nextIs('_'))
-      return SymbTableFastCache.encToIdx(encWord1, encWord2);
-
-    // The symbol was too long, we give up
-    throw fail();
+    return encWord;
   }
 
   public Obj readString() {
@@ -438,144 +465,5 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
 
   private static int hexDigitValue(int ch) {
     return ch - (isDigit(ch) ? '0' : 'a');
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-class SymbTableFastCache {
-  private static final int SIZE = 4096;
-
-  private static long[] encSymbs1     = new long[SIZE];
-  private static int[]  encSymbsIdxs1 = new  int[SIZE];
-
-  private static long[] encSymbs2     = new long[2 * SIZE];
-  private static int[]  encSymbsIdxs2 = new  int[SIZE];
-
-
-  public static int encToIdx(long encWord) {
-    int hashcode = Hashing.hashcode64(encWord);
-    int idx = hashcode % SIZE;
-    if (idx < 0)
-      idx = -idx;
-
-    long storedEnc = encSymbs1[idx];
-    if (storedEnc == encWord)
-      return encSymbsIdxs1[idx];
-
-    byte[] bytes = decode(encWord);
-    int symbIdx = SymbTable.bytesToIdx(bytes);
-
-    if (storedEnc == 0) {
-      encSymbs1[idx] = encWord;
-      encSymbsIdxs1[idx] = symbIdx;
-    }
-
-    return symbIdx;
-  }
-
-  public static int encToIdx(long encWord1, long encWord2) {
-    int hashcode1 = Hashing.hashcode64(encWord1);
-    int hashcode2 = Hashing.hashcode64(encWord2);
-    int idx = (hashcode1 ^ hashcode2) % SIZE;
-    if (idx < 0)
-      idx = -idx;
-
-    long storedEnc1 = encSymbs2[2 * idx];
-    long storedEnc2 = encSymbs2[2 * idx + 1];
-
-    if (storedEnc1 == encWord1 & storedEnc2 == encWord2)
-      return encSymbsIdxs2[idx];
-
-    byte[] bytes = decode(encWord1, encWord2);
-    int symbIdx = SymbTable.bytesToIdx(bytes);
-
-    if (storedEnc1 == 0) {
-      encSymbs2[2 * idx] = encWord1;
-      encSymbs2[2 * idx + 1] = encWord2;
-      encSymbsIdxs2[idx] = symbIdx;
-    }
-
-    return symbIdx;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  //  0         Empty
-  //  1 - 26    Letter
-  // 27 - 36    Digit
-  // 37         Underscore (followed by a digit)
-  // 38 - 63    Underscore + letter
-
-  public static int ENCODED_UNDERSCORE = 37;
-
-  public static int encodedLetter(int ch) {
-    return ch - 'a' + 1;
-  }
-
-  public static int encodedDigit(int ch) {
-    return ch - '0' + 27;
-  }
-
-  public static int encodedUnderscoredLetter(int ch) {
-    return ch - 'a' + 38;
-  }
-
-  public static byte[] decode(long encWord) {
-    int size = size(encWord);
-    byte[] bytes = new byte[size];
-    int idx = decode(encWord, bytes, size-1);
-    Miscellanea._assert(idx == -1);
-    return bytes;
-  }
-
-
-  public static byte[] decode(long encWord1, long encWord2) {
-    int size = size(encWord1, encWord2);
-    byte[] bytes = new byte[size];
-    int idx = decode(encWord2, bytes, size-1);
-    idx = decode(encWord1, bytes, idx);
-    Miscellanea._assert(idx == -1);
-    return bytes;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  private static int size(long word) {
-    int size = 0;
-    while (word != 0) {
-      int code = (int) (word & 0x3F);
-      size += code >= 38 ? 2 : 1;
-      word = word >>> 6;
-    }
-    Miscellanea._assert(size > 0);
-    return size;
-  }
-
-  private static int size(long word1, long word2) {
-    return size(word1) + size(word2);
-  }
-
-  private static int decode(long word, byte[] bytes, int idx) {
-    while (word != 0) {
-      int code = (int) (word & 0x3F);
-      Miscellanea._assert(code != 0);
-      if (code <= 26) {
-        bytes[idx--] = (byte) (code - 1 + 'a');
-      }
-      else if (code <= 36) {
-        bytes[idx--] = (byte) (code - 27 + '0');
-      }
-      else if (code == 37) {
-        bytes[idx--] = '_';
-      }
-      else {
-        bytes[idx--] = (byte) (code - 38 + 'a');
-        bytes[idx--] = '_';
-      }
-      word = word >>> 6;
-    }
-    return idx;
   }
 }
