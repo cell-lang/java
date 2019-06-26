@@ -16,6 +16,8 @@ final class IntStore extends ValueStore {
   private int count = 0;
   private int firstFree = 0;
 
+  private LargeIntStore largeInts = new LargeIntStore();
+
   //////////////////////////////////////////////////////////////////////////////
 
   private int hashIdx(long value) {
@@ -28,16 +30,26 @@ final class IntStore extends ValueStore {
     return (((long) next) | (2L << 30)) << 32;
   }
 
-  private long filledSlot(long value, int next) {
-    if (value != ((int) value))
-      throw new RuntimeException();
-    Miscellanea._assert(!isEmpty(value | (((long) next) << 32)));
-    return value | (((long) next) << 32);
+  private long filledValueSlot(int value, int next) {
+    Miscellanea._assert(!isEmpty(((long) value) | (((long) next) << 32)));
+    return ((long) value) | (((long) next) << 32);
+  }
+
+  private long filledIdxSlot(int idx, int next) {
+    return ((long) idx) | (((long) next) << 32) | (1L << 62);
+  }
+
+  private long reindexedSlot(long slot, int next) {
+    int tag = (int) (slot >>> 62);
+    Miscellanea._assert(tag == 0 | tag == 1);
+    return tag == 0 ? filledValueSlot((int) slot, next) : filledIdxSlot((int) slot, next);
   }
 
   private long value(long slot) {
     Miscellanea._assert(!isEmpty(slot));
-    return (int) slot;
+    int tag = (int) (slot >>> 62);
+    Miscellanea._assert(tag == 0 | tag == 1);
+    return tag == 0 ? (int) slot : largeInts.get((int) slot);
   }
 
   private int next(long slot) {
@@ -52,7 +64,7 @@ final class IntStore extends ValueStore {
 
   private boolean isEmpty(long slot) {
     long tag = slot >>> 62;
-    Miscellanea._assert(tag == 0 | tag == 2);
+    Miscellanea._assert(tag == 0 | tag == 1 | tag == 2);
     return tag == 2;
     // return (slot >>> 62) == 2;
   }
@@ -79,8 +91,15 @@ final class IntStore extends ValueStore {
     firstFree = nextFree(slots[index]);
 
     int hashIdx = hashIdx(value);
-    slots[index] = filledSlot(value, hashtable[hashIdx]);
-    Miscellanea._assert(!isEmpty(slots[index]));
+    if (value == (int) value) {
+      slots[index] = filledValueSlot((int) value, hashtable[hashIdx]);
+      Miscellanea._assert(!isEmpty(slots[index]));
+    }
+    else {
+      int idx64 = largeInts.insert(value);
+      slots[index] = filledIdxSlot(idx64, index);
+      Miscellanea._assert(!isEmpty(slots[index]));
+    }
     hashtable[hashIdx] = index;
   }
 
@@ -118,10 +137,9 @@ final class IntStore extends ValueStore {
 
     for (int i=0 ; i < currCapacity ; i++) {
       long slot = currSlots[i];
-      long value = value(slot);
-      int hashIdx = hashIdx(value);
+      int hashIdx = hashIdx(value(slot));
 
-      slots[i] = filledSlot(value, hashtable[hashIdx]);
+      slots[i] = reindexedSlot(slot, hashtable[hashIdx]);
       hashtable[hashIdx] = i;
     }
 
@@ -186,7 +204,7 @@ final class IntStore extends ValueStore {
         slot = slots[idx];
         int next = next(slot);
         if (next == index) {
-          slots[idx] = filledSlot(value(slot), next(slots[next]));
+          slots[idx] = reindexedSlot(slot, next(slots[next]));
           break;
         }
         idx = next;
@@ -196,5 +214,45 @@ final class IntStore extends ValueStore {
     slots[index] = emptySlot(firstFree);
     firstFree = index;
     count--;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class LargeIntStore {
+  private long[] slots = new long[32];
+  private int firstFree = 0;
+
+  public LargeIntStore() {
+    for (int i=0 ; i < slots.length ; i++)
+      slots[i] = i + 1;
+  }
+
+  public long get(int idx) {
+    long slot = slots[idx];
+    Miscellanea._assert(slot < 0 | slot > Integer.MAX_VALUE);
+    return slot;
+  }
+
+  public int insert(long value) {
+    Miscellanea._assert(value < 0 | value > Integer.MAX_VALUE);
+    int len = slots.length;
+    if (firstFree >= len) {
+      slots = Array.extend(slots, 2 * len);
+      for (int i=len ; i < 2 * len ; i++)
+        slots[i] = i + 1;
+    }
+    int idx = firstFree;
+    long nextFree = slots[idx];
+    Miscellanea._assert(nextFree >= 0 & nextFree <= slots.length);
+    slots[idx] = value;
+    firstFree = (int) nextFree;
+    return idx;
+  }
+
+  public void delete(int idx) {
+    Miscellanea._assert(slots[idx] < 0 | slots[idx] > Integer.MAX_VALUE);
+    slots[idx] = firstFree;
+    firstFree = idx;
   }
 }
