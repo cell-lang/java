@@ -25,8 +25,8 @@ public class UnitTests {
 
     // Test_AssocTable.run();
     // System.out.println("AssocTable       OK");
-    Test_SlaveTernTable.run();
-    System.out.println("SlaveTernTable   OK");
+    // Test_SlaveTernTable.run();
+    // System.out.println("SlaveTernTable   OK");
 
     // Test_BinaryTable.run2();
     // Test_BinaryTable.run3();
@@ -75,5 +75,7 @@ public class UnitTests {
     // IntStoreUpdater intStoreUpdater = new IntStoreUpdater(intStore);
     // ObjStore objStore = new ObjStore();
     // ObjStoreUpdater objStoreUpdater = new ObjStoreUpdater(objStore);
+
+    Test_IntStore.run();
   }
 }
