@@ -148,6 +148,10 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     class_impl = (
       "package net.cell_lang;",
       "",
+      "import java.io.IOException;",
+      "import java.io.Reader;",
+      "import java.io.Writer;",
+      "",
       "",
       "public class " & class_name & " {",
       "  Generated.Env env;",
