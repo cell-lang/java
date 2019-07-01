@@ -19,7 +19,7 @@ abstract class ColumnBase {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static Obj copy(ColumnBase[] columns) {
+  public static Obj copy(ColumnBase[] columns, boolean flipCols) {
     int totalSize = 0;
     for (int i=0 ; i < columns.length ; i++)
       totalSize += columns[i].count;
@@ -66,6 +66,12 @@ abstract class ColumnBase {
       }
     }
     Miscellanea._assert(next == totalSize);
+
+    if (flipCols) {
+      Obj[] tmp = objs1;
+      objs1 = objs2;
+      objs2 = tmp;
+    }
 
     return Builder.createBinRel(objs1, objs2);
   }

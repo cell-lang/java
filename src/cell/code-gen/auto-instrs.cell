@@ -13,7 +13,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         column()  = true
       : unused_var, t <- tables
     ]);
-    assert not is_column or applied_perm == [0 -> 0, 1 -> 1];
 
     symmetric = only([
       match (t)
@@ -24,7 +23,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     assert not symmetric or (applied_perm == [0 -> 0, 1 -> 1] or applied_perm == [0 -> 0, 1 -> 1, 2 -> 2]);
 
     arity = |applied_perm|;
-    if arity == 1 or is_column:
+    if arity == 1:
       perm_args = ();
     elif arity == 2:
       assert applied_perm == [0 -> 0, 1 -> 1] or applied_perm == [0 -> 1, 1 -> 0];

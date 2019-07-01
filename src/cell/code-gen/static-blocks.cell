@@ -1,4 +1,4 @@
-implicit prg : CompiledPrg, debug_mode : Bool {
+implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], debug_mode : Bool {
   String* native_static_block_decl(StaticBlock block) {
     links_decls = (native_name(l) & " *linkedAuto" & printed(i) & ";" : l @ i <- block.links);
     state_vars_decls = ["public Obj " & native_var_decl_name(v) & ";" : v, unused_var <- block.state_vars];
@@ -141,8 +141,14 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       tables_type = only([native_table_base_type(block.tables(tv)) : tv <- tvs]);
       indent_first_line = _print_(not first);
       write_separator = _print_(i < |tables_by_relvar| - 1 or has_nested_autos);
+      perm = rel_vars_perm_map(block.name)(rv);
+      perm_args = match (|perm|)
+        1   = "",
+        2   = if perm == [0 -> 1, 1 -> 0] then ", true" else ", false",
+        3   = append((", " & _print_(perm(j)) : j < 3));
+
       instr = "  TextWriter.write(writer, " & symb & ", new " & tables_type & "[] {" & tables &
-              "}, 2, " & indent_first_line & ", " & write_separator & ");";
+              "}" & perm_args & ", 2, " & indent_first_line & ", " & write_separator & ");";
       code = (code | instr);
       first = false;
     ;
@@ -572,7 +578,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 }
 
 
-implicit prg : CompiledPrg, block : StaticBlock, debug_mode : Bool {
+implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], block : StaticBlock, debug_mode : Bool {
   String* native_update_code(DBSymbol block_name, UpdateId update_id, <StdVar, FnArg>* args, Instr* body) {
     args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- args));
     sgn = "public void " & update_name(block_name, update_id) & "(" & args_str & aux_struct_c_name(block_name) & " updater, Env env) {";
@@ -604,7 +610,7 @@ implicit prg : CompiledPrg, block : StaticBlock, debug_mode : Bool {
 }
 
 
-implicit prg : CompiledPrg, debug_mode : Bool {
+implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], debug_mode : Bool {
   String* updates_reset_code([MembVar] memb_vars, [ValueStoreId] value_stores, [TableVar] tables) {
     memb_vars_code = (
       native_var_ref_name(pending_state_var(bare_id(v))) & " = BlankObj.singleton;"

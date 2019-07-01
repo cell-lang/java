@@ -46,7 +46,7 @@ public class TextWriter {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public static void write(Writer writer, int field_symb_idx, BinaryTable[] tables, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
+  public static void write(Writer writer, int field_symb_idx, BinaryTable[] tables, boolean flipCols, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
     String baseWs = new String(Array.repeat(' ', indentation));
     String entryWs = new String(Array.repeat(' ', indentation + 2));
 
@@ -72,6 +72,11 @@ public class TextWriter {
           writer.write(entryWs);
           Obj obj1 = mapper1.surrToObj(it.get1());
           Obj obj2 = mapper2.surrToObj(it.get2());
+          if (flipCols) {
+            Obj tmp = obj1;
+            obj1 = obj2;
+            obj2 = tmp;
+          }
           obj1.print(writer, Integer.MAX_VALUE, true, 0);
           writer.write(", ");
           obj2.print(writer, Integer.MAX_VALUE, true, 0);
@@ -91,7 +96,7 @@ public class TextWriter {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public static void write(Writer writer, int field_symb_idx, ColumnBase[] columns, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
+  public static void write(Writer writer, int field_symb_idx, ColumnBase[] columns, boolean flipCols, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
     String baseWs = new String(Array.repeat(' ', indentation));
     String entryWs = new String(Array.repeat(' ', indentation + 2));
 
@@ -119,11 +124,20 @@ public class TextWriter {
             writer.write(entryWs);
             Obj key = mapper.surrToObj(it.getIdx());
             long value = it.getValue();
-            key.print(writer, Integer.MAX_VALUE, true, 0);
-            writer.write(" -> ");
-            writer.write(Long.toString(value));
-            written++;
-            writer.write(written < count ? ",\n" : "\n");
+            if (flipCols) {
+              writer.write(Long.toString(value));
+              writer.write(", ");
+              key.print(writer, Integer.MAX_VALUE, true, 0);
+              written++;
+              writer.write(written == 1 | written < count ? ";\n" : "\n");
+            }
+            else {
+              key.print(writer, Integer.MAX_VALUE, true, 0);
+              writer.write(" -> ");
+              writer.write(Long.toString(value));
+              written++;
+              writer.write(written < count ? ",\n" : "\n");
+            }
             it.next();
           }
         }
@@ -134,11 +148,20 @@ public class TextWriter {
             writer.write(entryWs);
             Obj key = mapper.surrToObj(it.getIdx());
             double value = it.getValue();
-            key.print(writer, Integer.MAX_VALUE, true, 0);
-            writer.write(" -> ");
-            writer.write(Double.toString(value));
-            written++;
-            writer.write(written < count ? ",\n" : "\n");
+            if (flipCols) {
+              writer.write(Double.toString(value));
+              writer.write(", ");
+              key.print(writer, Integer.MAX_VALUE, true, 0);
+              written++;
+              writer.write(written == 1 | written < count ? ";\n" : "\n");
+            }
+            else {
+              key.print(writer, Integer.MAX_VALUE, true, 0);
+              writer.write(" -> ");
+              writer.write(Double.toString(value));
+              written++;
+              writer.write(written < count ? ",\n" : "\n");
+            }
             it.next();
           }
         }
@@ -149,11 +172,20 @@ public class TextWriter {
             writer.write(entryWs);
             Obj key = mapper.surrToObj(it.getIdx());
             Obj value = it.getValue();
-            key.print(writer, Integer.MAX_VALUE, true, 0);
-            writer.write(" -> ");
-            value.print(writer, Integer.MAX_VALUE, true, 0);
-            written++;
-            writer.write(written < count ? ",\n" : "\n");
+            if (flipCols) {
+              value.print(writer, Integer.MAX_VALUE, true, 0);
+              writer.write(", ");
+              key.print(writer, Integer.MAX_VALUE, true, 0);
+              written++;
+              writer.write(written == 1 | written < count ? ";\n" : "\n");
+            }
+            else {
+              key.print(writer, Integer.MAX_VALUE, true, 0);
+              writer.write(" -> ");
+              value.print(writer, Integer.MAX_VALUE, true, 0);
+              written++;
+              writer.write(written < count ? ",\n" : "\n");
+            }
             it.next();
           }
         }
@@ -170,7 +202,7 @@ public class TextWriter {
   //////////////////////////////////////////////////////////////////////////////
 
 
-  public static void write(Writer writer, int field_symb_idx, TernaryTable[] tables, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
+  public static void write(Writer writer, int field_symb_idx, TernaryTable[] tables, int col1, int col2, int col3, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
     String baseWs = new String(Array.repeat(' ', indentation));
     String entryWs = new String(Array.repeat(' ', indentation + 2));
 
@@ -198,11 +230,32 @@ public class TextWriter {
           Obj obj1 = mapper1.surrToObj(it.get1());
           Obj obj2 = mapper2.surrToObj(it.get2());
           Obj obj3 = mapper3.surrToObj(it.get3());
-          obj1.print(writer, Integer.MAX_VALUE, true, 0);
+
+          if (col1 == 0)
+            obj1.print(writer, Integer.MAX_VALUE, true, 0);
+          else if (col1 == 1)
+            obj2.print(writer, Integer.MAX_VALUE, true, 0);
+          else
+            obj3.print(writer, Integer.MAX_VALUE, true, 0);
+
           writer.write(", ");
-          obj2.print(writer, Integer.MAX_VALUE, true, 0);
+
+          if (col2 == 0)
+            obj1.print(writer, Integer.MAX_VALUE, true, 0);
+          else if (col2 == 1)
+            obj2.print(writer, Integer.MAX_VALUE, true, 0);
+          else
+            obj3.print(writer, Integer.MAX_VALUE, true, 0);
+
           writer.write(", ");
-          obj3.print(writer, Integer.MAX_VALUE, true, 0);
+
+          if (col3 == 0)
+            obj1.print(writer, Integer.MAX_VALUE, true, 0);
+          else if (col3 == 1)
+            obj2.print(writer, Integer.MAX_VALUE, true, 0);
+          else
+            obj3.print(writer, Integer.MAX_VALUE, true, 0);
+
           written++;
           writer.write(written < count || count == 1 ? ";\n" : "\n");
           it.next();

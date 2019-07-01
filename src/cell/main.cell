@@ -241,6 +241,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
       t5 = _ticks_(:any_value_will_do);
 
       memb_test_accessors_ids = [];
+      perms = [];
+
       if not is_bad:
         options = options(
           debug_mode:                 cmd_line_opts.debug_mode,
@@ -251,7 +253,7 @@ type CmdLineOpts  = ( debug_mode:           Bool,
         if prg.data_bases != []:
           res = transform_analyze_and_compile(prg, options, cmd_line_opts.generate_accessors);
           if succeeded(res):
-            cmp_prg, memb_test_accessors_ids = get_result(res);
+            cmp_prg, memb_test_accessors_ids, perms = get_result(res);
             code = just(cmp_prg);
             if cmd_line_opts.developer_mode:
               Print("Code analysis OK\n");
@@ -345,7 +347,7 @@ type CmdLineOpts  = ( debug_mode:           Bool,
     ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
   ;
 
-  let prg = opt_code, debug_mode = cmd_line_opts.debug_mode:
+  let prg = opt_code, rel_vars_perm_map = perms, debug_mode = cmd_line_opts.debug_mode:
     files = generated_code(cmd_line_opts.include_runtime, memb_test_accessors_ids);
   ;
 
@@ -383,7 +385,13 @@ type CmdLineOpts  = ( debug_mode:           Bool,
 }
 
 
-Result[(CompiledPrg, [DBSymbol -> [MethodId]]), [+<Update, Handler> -> [+AnalysisError]]]
+Result[
+  ( CompiledPrg,
+    [DBSymbol -> [MethodId]],
+    [DBSymbol -> [RelVar -> [+Nat -> Nat]]]
+  ),
+  [+<Update, Handler> -> [+AnalysisError]]
+]
 transform_analyze_and_compile(Program prg, CompOptions options, Bool generate_accessors) {
   curr_prg = prg;
 
@@ -416,7 +424,7 @@ transform_analyze_and_compile(Program prg, CompOptions options, Bool generate_ac
     code = compiled_program(perms, typedefs = schema_and_typedefs, options = options);
   ;
 
-  return success((code, memb_test_accessors_ids));
+  return success((code, memb_test_accessors_ids, perms));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
