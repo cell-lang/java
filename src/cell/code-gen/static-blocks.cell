@@ -19,7 +19,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     copy_state_code = native_copy_state_code(block.name, block.copy_state_code);
     write_state_code = native_write_state_code(block);
     set_state_code = native_set_state_code(block.name, block.set_state_code);
-    load_state_code = native_load_state_code(block.name, block.rel_vars_load_code);
+    load_state_code = native_load_state_code(block.name, block.memb_var_check_exprs, block.rel_vars_load_code);
 
     reconstruct_methods_code = reconstruct_methods_code(block.name);
 
@@ -173,7 +173,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
   }
 
 
-  String* native_load_state_code(DBSymbol name, [RelVar -> (LocVar+, BoolExpr, Instr+)] rel_vars_load_code) {
+  String* native_load_state_code(DBSymbol name, [MembVar -> BoolExpr] memb_vars_check_exprs, [RelVar -> (LocVar+, BoolExpr, Instr+)] rel_vars_load_code) {
     header = (
       "public void " & load_state_proc_name(name) & "(Reader reader) throws IOException {",
       "  Obj v0, v1, v2;",
@@ -205,7 +205,11 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       "}"
     );
 
-    cases = ({
+    memb_vars_cases = (
+      indent_lines(native_load_state_case(v, e), 3) : v, e <- isort(memb_vars_check_exprs)
+    );
+
+    rel_vars_cases = ({
       vars, guard_expr, instrs = rel_vars_load_code(rv);
       case = match (vars)
         (v?)            = native_load_state_case(rv, v, guard_expr, instrs),
@@ -214,7 +218,23 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       return indent_lines(case, 3);
     } : rv <- isort(keys(rel_vars_load_code)));
 
-    return header & join(intermix(cases, (""))) & footer;
+    return header & join(intermix(memb_vars_cases & rel_vars_cases, (""))) & footer;
+
+
+    String* native_load_state_case(MembVar var, BoolExpr guard_expr) {
+      symb_str = symb_idx_name(bare_id(var));
+      var_str = native_var_ref_name(var);
+      guard_expr_str = native_expr(guard_expr);
+
+      return (
+        "case " & symb_str & ":",
+        "  parser.bookmark();",
+        "  " & var_str & " = parser.parseObj();",
+        "  if (!(" & guard_expr_str & "))",
+        "    parser.failAtBookmark();",
+        "  break;"
+      );
+    }
 
 
     String* native_load_state_case(RelVar rel_var, LocVar var, BoolExpr guard_expr, Instr+ code) {
@@ -545,6 +565,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     return (
       "if (!" & psv_str & ".isBlankObj()) {",
       "  " & mv_str & " = " & psv_str & ";",
+      "  " & psv_str & " = BlankObj.singleton;",
       "}"
     );
   }
@@ -591,7 +612,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       update_id()   = false;
 
     if add_apply_code:
-      memb_vars = []; ## IMPLEMENT IMPLEMENT IMPLEMENT
+      memb_vars = [v : v <- updated_memb_vars(update_id, ?)];
       value_stores = [v : v <- updated_value_stores(update_id, ?)];
       insertion_tables = [t : t <- table_vars_with_insertions(update_id, ?)];
       deletion_tables = [t : t <- table_vars_with_deletions(update_id, ?)];
