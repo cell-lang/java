@@ -66,7 +66,8 @@ compiler-test-loop:
 	mkdir tmp
 	mkdir tmp/gen/
 
-	bin/cellc-java projects/compiler.txt tmp/gen/
+	# bin/cellc-java projects/compiler.txt tmp/gen/
+	java -jar bin/cellc-java.jar projects/compiler.txt tmp/gen/
 	mv tmp/gen/Generated.java tmp/
 	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
 	javac -d tmp/ tmp/gen/*.java
