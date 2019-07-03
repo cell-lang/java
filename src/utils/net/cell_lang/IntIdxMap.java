@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-public class IntIdxMap {
+class IntIdxMap {
   private static final int INIT_SIZE = 32;
 
   int count = 0;

@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-public interface TokenStream {
+interface TokenStream {
   long readLong();
   double readDouble();
   int readSymbol();

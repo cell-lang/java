@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-public class IntObjMap extends IntIdxMap {
+class IntObjMap extends IntIdxMap {
   private static final int INIT_SIZE = 32;
 
   private Obj[] values = new Obj[INIT_SIZE];

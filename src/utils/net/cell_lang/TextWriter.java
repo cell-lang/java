@@ -4,7 +4,7 @@ import java.io.Writer;
 import java.io.IOException;
 
 
-public class TextWriter {
+class TextWriter {
   public static void write(Writer writer, int field_symb_idx, UnaryTable[] tables, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
     String baseWs = new String(Array.repeat(' ', indentation));
     String entryWs = new String(Array.repeat(' ', indentation + 2));

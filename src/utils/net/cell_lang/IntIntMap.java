@@ -1,7 +1,7 @@
- package net.cell_lang;
+package net.cell_lang;
 
 
- public final class IntIntMap extends IntIdxMap {
+final class IntIntMap extends IntIdxMap {
   private static final int INIT_SIZE = 32;
 
   private int[] values = new int[INIT_SIZE];

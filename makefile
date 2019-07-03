@@ -75,6 +75,15 @@ compiler-test-loop:
 	rm -rf tmp/*
 	mkdir tmp/gen/
 
+# 	java -jar cellc-java.jar projects/compiler.txt tmp/gen/
+# 	mv tmp/gen/Generated.java tmp/
+# 	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
+# 	javac -d tmp/ tmp/gen/*.java
+# 	rm cellc-java.jar
+# 	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
+# 	rm -rf tmp/*
+# 	mkdir tmp/gen/
+
 	java -jar cellc-java.jar projects/compiler.txt tmp/gen/
 	mv tmp/gen/Generated.java tmp/
 	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
