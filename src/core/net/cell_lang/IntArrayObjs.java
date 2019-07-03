@@ -46,7 +46,6 @@ class IntArrayObjs {
 
   static UnsignedByteArrayObj createUnsigned(byte[] data) {
     Miscellanea._assert(data.length > 0);
-    //## BUG BUG BUG: IMPLEMENT
     return new UnsignedByteArrayObj(data);
   }
 
