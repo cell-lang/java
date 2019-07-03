@@ -273,14 +273,92 @@ public class TextWriter {
   //////////////////////////////////////////////////////////////////////////////
 
   public static void write(Writer writer, int field_symb_idx, SymBinaryTable[] tables, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
-    throw new RuntimeException();
+    String baseWs = new String(Array.repeat(' ', indentation));
+    String entryWs = new String(Array.repeat(' ', indentation + 2));
+
+    int count = 0;
+    for (int i=0 ; i < tables.length ; i++)
+      count += tables[i].size();
+
+    if (indentFirstLine)
+      writer.write(baseWs);
+    writer.write(SymbTable.idxToStr(field_symb_idx));
+    writer.write(": [");
+
+    if (count > 0) {
+      writer.write("\n");
+
+      int written = 0;
+      for (int i=0 ; i < tables.length ; i++) {
+        SymBinaryTable table = tables[i];
+        SurrObjMapper mapper = table.mapper;
+        SymBinaryTable.Iter it = table.getIter();
+        while (!it.done()) {
+          writer.write(entryWs);
+          Obj obj1 = mapper.surrToObj(it.get1());
+          Obj obj2 = mapper.surrToObj(it.get2());
+          obj1.print(writer, Integer.MAX_VALUE, true, 0);
+          writer.write(", ");
+          obj2.print(writer, Integer.MAX_VALUE, true, 0);
+          written++;
+          writer.write(written < count || count == 1 ? ";\n" : "\n");
+          it.next();
+        }
+      }
+      Miscellanea._assert(written == count);
+
+      writer.write(baseWs);
+    }
+
+    writer.write(writeSeparator ? "],\n" : "]\n");
   }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
   public static void write(Writer writer, int field_symb_idx, Sym12TernaryTable[] tables, int indentation, boolean indentFirstLine, boolean writeSeparator) throws IOException {
-    throw new RuntimeException();
+    String baseWs = new String(Array.repeat(' ', indentation));
+    String entryWs = new String(Array.repeat(' ', indentation + 2));
+
+    int count = 0;
+    for (int i=0 ; i < tables.length ; i++)
+      count += tables[i].size();
+
+    if (indentFirstLine)
+      writer.write(baseWs);
+    writer.write(SymbTable.idxToStr(field_symb_idx));
+    writer.write(": [");
+
+    if (count > 0) {
+      writer.write("\n");
+
+      int written = 0;
+      for (int i=0 ; i < tables.length ; i++) {
+        Sym12TernaryTable table = tables[i];
+        SurrObjMapper mapper12 = table.mapper12;
+        SurrObjMapper mapper3 = table.mapper3;
+        Sym12TernaryTable.Iter it = table.getIter();
+        while (!it.done()) {
+          writer.write(entryWs);
+          Obj obj1 = mapper12.surrToObj(it.get1());
+          Obj obj2 = mapper12.surrToObj(it.get2());
+          Obj obj3 = mapper3.surrToObj(it.get3());
+          obj1.print(writer, Integer.MAX_VALUE, true, 0);
+          writer.write(", ");
+          obj2.print(writer, Integer.MAX_VALUE, true, 0);
+          writer.write(", ");
+          obj3.print(writer, Integer.MAX_VALUE, true, 0);
+          written++;
+          writer.write(written < count || count == 1 ? ";\n" : "\n");
+          it.next();
+        }
+      }
+      Miscellanea._assert(written == count);
+
+      writer.write(baseWs);
+    }
+
+    writer.write(writeSeparator ? "],\n" : "]\n");
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -142,10 +142,18 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       indent_first_line = _print_(not first);
       write_separator = _print_(i < |tables_by_relvar| - 1 or has_nested_autos);
       perm = rel_vars_perm_map(block.name)(rv);
-      perm_args = match (|perm|)
-        1   = "",
-        2   = if perm == [0 -> 1, 1 -> 0] then ", true" else ", false",
-        3   = append((", " & _print_(perm(j)) : j < 3));
+      symmetric = only([
+        match (block.tables(tv))
+          column()    = false,
+          table() t?  = t.symmetric
+        : tv <- tvs
+      ]);
+      perm_args = if symmetric
+        then ""
+        else match (|perm|)
+          1   = "",
+          2   = if perm == [0 -> 1, 1 -> 0] then ", true" else ", false",
+          3   = append((", " & _print_(perm(j)) : j < 3));
 
       instr = "  TextWriter.write(writer, " & symb & ", new " & tables_type & "[] {" & tables &
               "}" & perm_args & ", 2, " & indent_first_line & ", " & write_separator & ");";
