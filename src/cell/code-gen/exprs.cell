@@ -178,6 +178,12 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   int_obj(upcast_int32(e?)), int_obj(<*..*> n?) = native_nary_op(" == ", (e, n), parenthesized),
 
   int_obj(e1?),       int_obj(e2?)      = native_nary_op(" == ", (e1, e2), parenthesized),
+  int_obj(e1?),       column_lookup()   = if expr2.repr == :int
+                                            then native_column_lookup_eq(expr2.var, expr2.key, e1)
+                                            else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
+  column_lookup(),    int_obj(e2?)      = if expr1.repr == :int
+                                            then native_column_lookup_eq(expr1.var, expr1.key, e2)
+                                            else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
   int_obj(e1?),       _                 = native_expr(expr2) & ".isInt(" & native_expr(e1) & ")",
   _,                  int_obj(e2?)      = native_expr(expr1) & ".isInt(" & native_expr(e2) & ")",
 
@@ -198,6 +204,10 @@ String native_eq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
   _,                  empty_rel         = native_expr(expr1) & ".isEmptyRel()",
 
   _,                  _                 = native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")";
+
+
+String native_column_lookup_eq(AnyTableVar var, Int32Expr key, IntExpr value) =
+  native_var_ref_name(var) & ".lookup(" & native_expr(key) & ") == " & native_expr(value, true);
 
 
 String native_neq_expr(ObjExpr expr1, ObjExpr expr2, Bool parenthesized) =
