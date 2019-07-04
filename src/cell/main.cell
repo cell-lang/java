@@ -154,6 +154,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
 
   if cmd_line_opts.developer_mode:
     Print("Source files parsed\n");
+  else
+    Print(".");
   ;
 
   if cmd_line_opts.wait_for_key:
@@ -171,6 +173,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
   if errs == ():
     if cmd_line_opts.developer_mode:
       Print("Program is well-formed\n");
+    else
+      Print(".");
     ;
     if cmd_line_opts.wait_for_key:
       unused_var = GetChar();
@@ -185,6 +189,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
   t3 = _ticks_(:any_value_will_do);
   if cmd_line_opts.developer_mode:
     Print("Syntax removed\n");
+  else
+    Print(".");
   ;
   if cmd_line_opts.wait_for_key:
     unused_var = GetChar();
@@ -203,6 +209,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
   t4 = _ticks_(:any_value_will_do);
   if cmd_line_opts.developer_mode:
     Print("Additional checks passed\n");
+  else
+    Print(".");
   ;
   if cmd_line_opts.wait_for_key:
     unused_var = GetChar();
@@ -216,6 +224,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
         if errs == []:
           if cmd_line_opts.developer_mode:
             Print("The program typechecks\n");
+          else
+            Print(".");
           ;
           if cmd_line_opts.wait_for_key:
             unused_var = GetChar();
@@ -257,6 +267,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
             code = just(cmp_prg);
             if cmd_line_opts.developer_mode:
               Print("Code analysis OK\n");
+            else
+              Print(".");
             ;
             if cmd_line_opts.wait_for_key:
               unused_var = GetChar();
@@ -291,6 +303,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
   t6 = _ticks_(:any_value_will_do);
   if cmd_line_opts.developer_mode:
     Print("Code generated\n");
+  else
+    Print(".");
   ;
   if cmd_line_opts.wait_for_key:
     unused_var = GetChar();
@@ -335,7 +349,9 @@ type CmdLineOpts  = ( debug_mode:           Bool,
 
   t7 = _ticks_(:any_value_will_do);
   if cmd_line_opts.developer_mode:
-    Print("Dead code removed\n");
+    Print("Low-level code optimized\n");
+  else
+    Print(".");
   ;
   if cmd_line_opts.wait_for_key:
     unused_var = GetChar();
@@ -354,6 +370,8 @@ type CmdLineOpts  = ( debug_mode:           Bool,
   t8 = _ticks_(:any_value_will_do);
   if cmd_line_opts.developer_mode:
     Print("Java code generated\n");
+  else
+    Print(".\n");
   ;
   if cmd_line_opts.wait_for_key:
     unused_var = GetChar();
