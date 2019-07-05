@@ -571,10 +571,8 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     psv_str = native_var_ref_name(pending_state_var(var_id));
     mv_str = native_var_ref_name(memb_var(var_id));
     return (
-      "if (!" & psv_str & ".isBlankObj()) {",
-      "  " & mv_str & " = " & psv_str & ";",
-      "  " & psv_str & " = BlankObj.singleton;",
-      "}"
+      "if (!" & psv_str & ".isBlankObj())",
+      "  " & mv_str & " = " & psv_str & ";"
     );
   }
 
