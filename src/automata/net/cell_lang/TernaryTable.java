@@ -441,10 +441,9 @@ class TernaryTable {
 
     for (int i=0 ; i < hashtable.length ; i++) {
       int count = 0;
-
       int idx = hashtable[i];
       while (idx != Empty) {
-        bucket = Array.append(bucket, count++, flatTuples[3 * i]);
+        bucket = Array.append(bucket, count++, flatTuples[3 * idx + 2]);
         idx = index3.next(idx);
       }
 
@@ -452,7 +451,7 @@ class TernaryTable {
         if (count > 2)
           Arrays.sort(bucket, 0, count);
         int last = bucket[0];
-        for (int j=1 ; j < count ; i++) {
+        for (int j=1 ; j < count ; j++) {
           int val = bucket[j];
           if (val == last)
             return false;
