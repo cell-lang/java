@@ -30,7 +30,11 @@ final class IntColumnUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public void clear() {
-    throw Miscellanea.internalFail();
+    IntColumn.Iter it = column.getIter();
+    while (!it.done()) {
+      delete(it.getIdx());
+      it.next();
+    }
   }
 
   public void delete1(int index) {

@@ -30,7 +30,11 @@ final class ObjColumnUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public void clear() {
-    throw Miscellanea.internalFail();
+    ObjColumn.Iter it = column.getIter();
+    while (!it.done()) {
+      delete(it.getIdx());
+      it.next();
+    }
   }
 
   public void delete1(int index) {
