@@ -634,6 +634,12 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       body_text = body_text & check_code & apply_code & finish_code & reset_code;
     ;
 
+    if update_id == :main_handler:
+      nested_autos = isort(keys(block.nested_blocks));
+      code = (native_var_ref_name(nested_db_spent(v)) & " = false;" : v <- nested_autos);
+      body_text = body_text & code;
+    ;
+
     return (sgn) & indent_lines(body_text) & ("}");
   }
 }
