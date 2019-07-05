@@ -95,7 +95,7 @@ final class ObjColumn extends ColumnBase {
   public void update(int idx, Obj value) {
     if (idx >= column.length)
       column = Array.extend(column, Array.capacity(column.length, idx+1));
-    if (column[idx] != null)
+    if (column[idx] == null)
       count++;
     column[idx] = value;
   }
