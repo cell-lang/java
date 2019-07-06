@@ -1,6 +1,33 @@
 package net.cell_lang;
 
 
+// interface TokenStream {
+//   long readLong();
+//   double readDouble();
+//   int readSymbol();
+//   Obj readString();
+
+//   int tryReadingLabel();
+
+//   TokenType peekType();
+
+//   boolean nextIs(char ch);
+
+//   void consume(char ch);
+//   void consume(char ch1, char ch2);
+
+//   boolean tryConsuming(char ch);
+//   boolean tryConsuming(char ch1, char ch2);
+
+//   boolean eof();
+
+//   int line();
+//   int column();
+
+//   ParsingException fail();
+// }
+
+
 class CharStreamProcessor {
   private CharStream src;
   private int currChar;
@@ -291,7 +318,10 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
   }
 
   public int tryReadingLabel() {
-    Miscellanea._assert(nextIsAlphaNum());
+    consumeWhiteSpace();
+
+    if (!nextIsAlphaNum())
+      return -1;
 
     buffer[0] = (byte) peek();
     for (int i=1 ; i < BUFFER_SIZE ; i++) {
@@ -309,7 +339,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
           throw fail();
       }
       else if (ch == ':') {
-        skip(i);
+        skip(i+1);
         return SymbTable.bytesToIdx(buffer, i);
       }
       else {
@@ -360,6 +390,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
   }
 
   public boolean eof() {
+    consumeWhiteSpace();
     return peek() == CharStream.EOF;
   }
 

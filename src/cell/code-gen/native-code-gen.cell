@@ -510,7 +510,7 @@ String* custom_parser = (
   "    return Builder.createTaggedObj(SymbTable.SuccessSymbId, obj);",
   "  }",
   "  catch (ParsingException e) {",
-  "    return Builder.createTaggedObj(SymbTable.FailureSymbId, IntObj.get(e.errorOffset));",
+  "    return Builder.createTaggedObj(SymbTable.FailureSymbId, Builder.createSeq(new int[] {e.line, e.col}));",
   "  }",
   "}"
 );

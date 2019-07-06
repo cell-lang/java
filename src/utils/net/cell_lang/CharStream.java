@@ -60,7 +60,7 @@ final class CharStream {
   }
 
   public ParsingException fail() {
-    throw new ParsingException(line + 1, col + 1);
+    throw new ParsingException(line + 1, col);
   }
 
   //////////////////////////////////////////////////////////////////////////////

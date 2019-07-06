@@ -172,13 +172,14 @@ abstract class Parser extends TokenStreamProcessor {
   ////////////////////////////////////////////////////////////////////////////////
 
   // The opening parenthesis must have already been consumed
-  Obj parseSeqOrRecord(TokenType firsTokenType) {
-    if (firsTokenType == TokenType.Symbol) {
+  Obj parseSeqOrRecord(TokenType firstTokenType) {
+    if (firstTokenType == TokenType.Symbol) {
       int labelId = tryReadingLabel();
       if (labelId != -1)
         return parseRec(labelId);
     }
-    else if (firsTokenType == TokenType.ClosePar) {
+    else if (firstTokenType == TokenType.ClosePar) {
+      consumeClosePar();
       return EmptySeqObj.singleton;
     }
 
@@ -213,26 +214,27 @@ abstract class Parser extends TokenStreamProcessor {
     int i = 1;
     while (tryConsumingComma()) {
       if (i >= labels.length) {
-        Array.extend(labels, 2 * labels.length);
-        Array.extend(values, 2 * values.length);
+        labels = Array.extend(labels, 2 * labels.length);
+        values = Array.extend(values, 2 * values.length);
       }
       int labelId = tryReadingLabel();
       if (labelId == -1)
         throw fail();
-      //## BAD BAD BAD: WITH A HUGE RECORD...
+      //## BAD BAD BAD: WITH A LARGE RECORD...
       for (int j=0 ; j < i ; j++)
-        if (labels[i] == labelId)
+        if (labels[j] == labelId)
           throw fail();
       labels[i] = labelId;
       values[i++] = parseObj();
     }
     consumeClosePar();
 
-    if (i < labels.length) {
-      labels = Array.take(labels, i);
-      values = Array.take(values, i);
-    }
-    return new RecordObj(labels, values);
+    Obj[] labelObjs = new Obj[i];
+    for (int j=0 ; j < i ; j++)
+      labelObjs[j] = SymbTable.get(labels[j]);
+
+    //## IT WOULD BE BETTER TO CREATE A RecordObj, BUT THE LABELS WOULD NEED TO BE SORTED FIRST
+    return Builder.createMap(labelObjs, values, i);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +262,7 @@ abstract class Parser extends TokenStreamProcessor {
     else if (type == TokenType.Symbol) {
       int labelId = tryReadingLabel();
       if (labelId != -1)
-        return Builder.createTaggedObj(symbId, parseRec(labelId));
+        return createTaggedObj(symbId, parseRec(labelId));
       firstValue = parseObj();
     }
     else {
@@ -268,7 +270,7 @@ abstract class Parser extends TokenStreamProcessor {
     }
 
     if (tryConsumingClosePar())
-      return Builder.createTaggedObj(symbId, firstValue);
+      return createTaggedObj(symbId, firstValue);
 
     Obj[] elts = new Obj[16];
     elts[0] = firstValue;
@@ -281,7 +283,7 @@ abstract class Parser extends TokenStreamProcessor {
     }
     consumeClosePar();
 
-    return Builder.createTaggedObj(symbId, Builder.createSeq(elts, i));
+    return createTaggedObj(symbId, Builder.createSeq(elts, i));
   }
 
   abstract Obj createTaggedObj(int tagId, Obj obj);
