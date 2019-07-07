@@ -333,9 +333,54 @@ type CmdLineOpts  = ( debug_mode:           Bool,
   ;
 
   let program = prg:
-    let typedefs = schema_and_typedefs:
-      opt_code_4 = optimize_array_init(opt_code_3);
-  ; ;
+    res = optimize_array_init(opt_code_3, typedefs = schema_and_typedefs);
+  ;
+  if failed(res):
+    fn_ids, method_ids = error(res);
+
+    fns = [f : f <- prg.fndefs, fn_ids(f.id)];
+    methods = [
+      (a, m)  : a <- prg.data_bases,
+                method_ids(a.name, *),
+                ids = method_ids(a.name),
+                m <- a.methods,
+                ids(m.id)
+    ];
+
+    Print("\nThe following functions or methods contain imperative sequence updates that were rejected because they could not be implemented efficiently:\n");
+    for fn <- isort(fns):
+      fname, sl, el = source_code_location(fn);
+      Print("  ");
+      Print(user_repr(fn.id));
+      Print(" (file ");
+      Print(fname);
+      Print(" lines ");
+      Print(printed(sl));
+      Print("-");
+      Print(printed(el));
+      Print(")\n");
+    ;
+    for a, m <- isort(methods):
+      fname, sl, el = source_code_location(m);
+      Print("  ");
+      Print(user_repr(a.name));
+      Print(".");
+      Print(user_repr(m.id.symbol));
+      Print(" (");
+      Print(" (file ");
+      Print(fname);
+      Print(" lines ");
+      Print(printed(sl));
+      Print("-");
+      Print(printed(el));
+      Print(")\n");
+    ;
+    Print("Please remember that the implementation of imperative sequence updates is a work in progress.\n");
+    Print("It's entirely possible that your code is just fine, but the compiler is at the moment too dumb to see that.\n");
+
+    return [];
+  ;
+  opt_code_4 = result(res);
 
   if cmd_line_opts.print_intermediate:
     ok = FileWrite("dump-opt-code-4.txt", chars(_print_(opt_code_4)));
