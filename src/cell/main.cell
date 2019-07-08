@@ -22,6 +22,7 @@ Int Main(String* args) {
   debug_mode = false;
   generate_accessors = false;
 
+  allow_nested_rel_autos = false;
   developer_mode = false;
   print_intermediate = false;
   print_times = false;
@@ -37,6 +38,8 @@ Int Main(String* args) {
       ignore_assertions = true;
     elif o == "-dev":
       developer_mode = true;
+    elif o == "-anra":
+      allow_nested_rel_autos = true;
     elif o == "-nrt":
       include_runtime = false;
     elif o == "-ntc":
@@ -91,15 +94,16 @@ Int Main(String* args) {
   ;
 
   options = (
-    debug_mode:           debug_mode,
-    generate_accessors:   generate_accessors,
-    ignore_assertions:    ignore_assertions,
-    include_runtime:      include_runtime,
-    run_typechecking:     run_typechecking,
-    developer_mode:       developer_mode,
-    print_intermediate:   print_intermediate,
-    print_times:          print_times,
-    wait_for_key:         wait_for_key_at_every_step
+    debug_mode:             debug_mode,
+    generate_accessors:     generate_accessors,
+    ignore_assertions:      ignore_assertions,
+    allow_nested_rel_autos: allow_nested_rel_autos,
+    include_runtime:        include_runtime,
+    run_typechecking:       run_typechecking,
+    developer_mode:         developer_mode,
+    print_intermediate:     print_intermediate,
+    print_times:            print_times,
+    wait_for_key:           wait_for_key_at_every_step
   );
 
   files = Compile(src_files, options);
@@ -122,16 +126,18 @@ Int Main(String* args) {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-type CmdLineOpts  = ( debug_mode:           Bool,
-                      generate_accessors:   Bool,
-                      ignore_assertions:    Bool,
-                      include_runtime:      Bool,
-                      run_typechecking:     Bool,
-                      developer_mode:       Bool,
-                      print_intermediate:   Bool,
-                      print_times:          Bool,
-                      wait_for_key:         Bool
-                    );
+type CmdLineOpts = (
+  debug_mode:             Bool,
+  generate_accessors:     Bool,
+  ignore_assertions:      Bool,
+  allow_nested_rel_autos: Bool,
+  include_runtime:        Bool,
+  run_typechecking:       Bool,
+  developer_mode:         Bool,
+  print_intermediate:     Bool,
+  print_times:            Bool,
+  wait_for_key:           Bool
+);
 
 
 [String -> String*] Compile([String -> Byte*] src_files, CmdLineOpts cmd_line_opts) {
@@ -166,7 +172,7 @@ type CmdLineOpts  = ( debug_mode:           Bool,
     ok = FileWrite("dump-syn-prg.txt", chars(_print_(syn_prg)));
   ;
 
-  errs = prg_wf_errors(syn_prg=syn_prg);
+  errs = prg_wf_errors(cmd_line_opts.allow_nested_rel_autos, syn_prg=syn_prg);
 
   t2 = _ticks_(:any_value_will_do);
 
