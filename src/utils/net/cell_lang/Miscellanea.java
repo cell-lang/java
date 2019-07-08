@@ -235,20 +235,30 @@ class Miscellanea {
   static void printCallStack() {
     if (stackDepth == 0)
       return;
-    System.err.println("Call stack:\n");
+    System.err.println("\nCall stack:\n");
     int size = stackDepth <= fnNamesStack.length ? stackDepth : fnNamesStack.length;
     for (int i=0 ; i < size ; i++)
       System.err.println("  " + fnNamesStack[i]);
     String outFnName = "debug" + File.separator + "stack-trace.txt";
+    String outJavaFnName = "debug" + File.separator + "java-stack-trace.txt";
     System.err.println("\nNow trying to write a full dump of the stack to " + outFnName);
     System.err.flush();
     try {
       FileOutputStream file = new FileOutputStream(outFnName);
-      OutputStreamWriter writer = new OutputStreamWriter(file);
+      OutputStreamWriter streamWriter = new OutputStreamWriter(file);
       for (int i=0 ; i < size ; i++)
-        printStackFrame(i, writer);
-      writer.write("\n");
-      writer.flush();
+        printStackFrame(i, streamWriter);
+      streamWriter.write("\n");
+      streamWriter.flush();
+      file.close();
+
+      file = new FileOutputStream(outJavaFnName);
+      PrintWriter printWriter = new PrintWriter(file);
+      Exception e = new Exception();
+      e.printStackTrace(printWriter);
+      printWriter.write("\n");
+      printWriter.flush();
+      file.close();
     }
     catch (Exception e) {
       System.err.printf("Could not write a dump of the stack to %s. Did you create the \"debug\" directory?\n", outFnName);
