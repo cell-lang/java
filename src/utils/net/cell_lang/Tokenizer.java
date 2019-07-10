@@ -409,8 +409,10 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
     long value = 0;
     while (nextIsDigit()) {
       int digit = read() - '0';
-      if (++count == 19)
-        check(value > 922337203685477580L | (value == 922337203685477580L & digit > 7));
+      if (++count == 19) {
+        check(value < 922337203685477580L | (value == 922337203685477580L & digit <= 7));
+        check(!nextIsDigit());
+      }
       value = 10 * value + digit;
     }
     return value;
