@@ -2,7 +2,7 @@ package net.cell_lang;
 
 import java.nio.file.Paths;
 import java.nio.file.Files;
-
+import java.nio.file.StandardOpenOption;
 
 class Procs {
   public static Obj FileRead_P(Obj fname, Object env) {
@@ -29,6 +29,18 @@ class Procs {
     }
   }
 
+  public static Obj FileAppend_P(Obj fname, Obj data, Object env) {
+    String fnameStr = fname.getString();
+    byte[] bytes = data.getByteArray();
+    try {
+      Files.write(Paths.get(fnameStr), bytes, StandardOpenOption.APPEND);
+      return SymbObj.get(SymbTable.TrueSymbId);
+    }
+    catch (Exception e) {
+      return SymbObj.get(SymbTable.FalseSymbId);
+    }
+  }
+
   public static void Print_P(Obj str, Object env) {
     System.out.print(str.getString());
     System.out.flush();
@@ -46,5 +58,17 @@ class Procs {
       return Builder.createTaggedObj(SymbTable.JustSymbId, IntObj.get(ch));
     else
       return SymbObj.get(SymbTable.NothingSymbId);
+  }
+
+  private static long startTicks = -1;
+  public static Obj Ticks_P(Object env) {
+    long ticks = System.currentTimeMillis();
+    if (startTicks == -1)
+      startTicks = ticks;
+    return IntObj.get(ticks - startTicks);
+  }
+
+  public static void Exit_P(Obj code, Object env) {
+    System.exit((int) code.getLong());
   }
 }

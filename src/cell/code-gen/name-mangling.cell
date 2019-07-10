@@ -539,7 +539,7 @@ String native_fn_name(SubAggrFnId) =
 String native_fn_name(ProcSymbol proc_symb) {
   bare_symb = match (proc_symb) proc_symbol(s?) = s;
   name = upper_camel_case(bare_symb) & "_P";
-  name = "Procs." & name if bare_symb :: <file_read, file_write, print, get_char>;
+  name = "Procs." & name if builtin_procs_map(proc_symb, *);
   return name;
 }
 
