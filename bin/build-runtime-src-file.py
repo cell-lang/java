@@ -98,7 +98,6 @@ src_ValueStore                = 'automata/net/cell_lang/ValueStore.java'
 src_ValueStoreUpdater         = 'automata/net/cell_lang/ValueStoreUpdater.java'
 
 src_Conversions               = 'misc/net/cell_lang/Conversions.java'
-src_WrappingUtils             = 'misc/net/cell_lang/WrappingUtils.java'
 
 src_EmptyRelValue             = 'misc/net/cell_lang/EmptyRelValue.java'
 src_FloatValue                = 'misc/net/cell_lang/FloatValue.java'
@@ -230,7 +229,6 @@ table_sources = [
 
 interface_sources = [
   src_Conversions,
-  src_WrappingUtils
 ]
 
 ################################################################################

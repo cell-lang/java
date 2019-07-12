@@ -265,6 +265,5 @@ Bool is_reserved(String id) {
   "ValueBase",
   "ValueStore",
   "ValueStoreBase",
-  "ValueStoreUpdater",
-  "WrappingUtils"
+  "ValueStoreUpdater"
 ];
