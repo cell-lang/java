@@ -4,12 +4,13 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 
+
 class Procs {
   public static Obj FileRead_P(Obj fname, Object env) {
     String fnameStr = fname.getString();
     try {
       byte[] content = Files.readAllBytes(Paths.get(fnameStr));
-      Obj bytesObj = IntArrayObjs.createUnsigned(content);
+      Obj bytesObj = Builder.createSeqUnsigned(content);
       return Builder.createTaggedObj(SymbTable.JustSymbId, bytesObj);
     }
     catch (Exception e) {
