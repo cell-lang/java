@@ -78,8 +78,8 @@ class AssocTableUpdater {
       int field1 = deleteList[2 * i];
       if (field1 != 0xFFFFFFFF) {
         int field2 = deleteList[2 * i + 1];
-        Miscellanea._assert(table.store1.surrToObjValue(field1) != null);
-        Miscellanea._assert(table.store2.surrToObjValue(field2) != null);
+        Miscellanea._assert(table.mapper1.surrToObj(field1) != null);
+        Miscellanea._assert(table.mapper2.surrToObj(field2) != null);
         store1.release(field1);
         store2.release(field2);
       }

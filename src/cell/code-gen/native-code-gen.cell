@@ -104,6 +104,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
         "import java.util.ArrayList;",
         "import java.util.Arrays;",
         "import java.util.function.IntPredicate;",
+        "import java.util.HashSet;",
         "import java.util.HashMap;",
         "import java.util.IdentityHashMap;",
         "import java.util.NoSuchElementException;",
