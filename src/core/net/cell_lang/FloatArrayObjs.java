@@ -94,6 +94,20 @@ abstract class FloatArrayObjBase extends NeFloatSeqObj {
       return super.internalOrder(other);
   }
 
+  @Override
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      int len = getSize();
+      for (int i=0 ; i < len ; i++)
+        hcode = 31 * hcode + FloatObj.hashcode(elts[offset+i]);
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   public void copy(int first, int count, double[] array, int destOffset) {
@@ -114,14 +128,7 @@ abstract class FloatArrayObjBase extends NeFloatSeqObj {
 
 final class FloatArrayObj extends FloatArrayObjBase {
   public FloatArrayObj(double[] elts) {
-    int len = elts.length;
-    long hashcode = floatObjData(elts[offset]);
-    if (len > 1) {
-      hashcode += floatObjData(elts[offset+len-1]);
-      if (len > 2)
-        hashcode += floatObjData(elts[offset+len/2]);
-    }
-    data = seqObjData(len, hashcode);
+    data = seqObjData(elts.length);
     extraData = neSeqObjExtraData();
     this.elts = elts;
   }
@@ -139,13 +146,7 @@ final class FloatArraySliceObj extends FloatArrayObjBase {
 
 
   public FloatArraySliceObj(PaddedFloatArray source, double[] elts, int offset, int len) {
-    long hashcode = floatObjData(elts[offset]);
-    if (len > 1) {
-      hashcode += floatObjData(elts[offset+len-1]);
-      if (len > 2)
-        hashcode += floatObjData(elts[offset+len/2]);
-    }
-    data = seqObjData(len, hashcode);
+    data = seqObjData(len);
     extraData = neSeqObjExtraData();
     this.elts = elts;
     this.offset = offset;

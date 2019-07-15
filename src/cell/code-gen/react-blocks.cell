@@ -11,13 +11,13 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     vars_decls = memb_vars_decl & auto_vars_decl & db_vars_decl & aux_db_vars_decls;
 
-    if block.time_rules_count != 0:
+    if block.time_rules_count != 0 {
       size_str = printed(block.time_rules_count);
       vars_decls = vars_decls & (
         "public long[] trigger_times_heap = new long[" & size_str & "];",
         "public int[] time_varying_cond_ids_heap = new int[" & size_str & "];"
       );
-    ;
+    }
     vars_decls = (vars_decls | "") if vars_decls != ();
 
     ## THERE MIGHT BE A BUG HERE
@@ -105,7 +105,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String* gen_queue_update_method(AutoSymbol block_name, BlockNodeId node_id, Instr* body, IntVar* args) {
-    method_name = queue_update_method_name(block_name, node_id);
+    method_name = queue_node_update_method_name(block_name, node_id);
     args_str = append((native_var_type(v) & " " & native_var_decl_name(v) : v <- args), ", ");
     sgn = "void " & method_name & "(" & args_str & ") {";
     vars_decl_text = gen_vars_decls(body, []);

@@ -2,31 +2,26 @@ package net.cell_lang;
 
 
 class Index {
-  final int Empty = 0xFFFFFFFF;
+  final static int Empty = 0xFFFFFFFF;
 
   public int[] hashtable;
   public int[] buckets;
 
   public Index(int size) {
-    hashtable = new int[size];
+    hashtable = new int[size/2];
     buckets   = new int[size];
-    for (int i=0 ; i < size ; i++) {
-      hashtable[i] = Empty;
-      buckets[i] = Empty;
-    }
+    Array.fill(hashtable, Empty);
+    Array.fill(buckets, Empty); //## IS THIS NECESSARY?
   }
 
   public void clear() {
-    int size = hashtable.length;
-    for (int i=0 ; i < size ; i++) {
-      hashtable[i] = Empty;
-      buckets[i] = Empty;
-    }
+    Array.fill(hashtable, Empty);
+    Array.fill(buckets, Empty); //## IS THIS NECESSARY?
   }
 
   public void insert(int index, int hashcode) {
     Miscellanea._assert(buckets[index] == Empty);
-    Miscellanea._assert(index < hashtable.length);
+    Miscellanea._assert(index < buckets.length);
 
     int hashIdx = Integer.remainderUnsigned(hashcode, hashtable.length);
     int head = hashtable[hashIdx];

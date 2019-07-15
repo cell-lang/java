@@ -4,6 +4,8 @@ import java.io.Writer;
 
 
 abstract class NeSeqObj extends SeqObj {
+  protected int hashcode = Integer.MIN_VALUE;
+
   private int minPrintedSize = -1;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -102,6 +104,20 @@ abstract class NeSeqObj extends SeqObj {
         return ord;
     }
     return 0;
+  }
+
+  @Override
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      int len = getSize();
+      for (int i=0 ; i < len ; i++)
+        hcode = 31 * hcode + getObjAt(i).hashcode();
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
   }
 
   public TypeCode getTypeCode() {

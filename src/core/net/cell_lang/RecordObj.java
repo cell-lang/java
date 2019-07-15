@@ -13,16 +13,26 @@ class RecordObj extends NeBinRelObj {
     for (int i=1 ; i < labels.length ; i++)
       Miscellanea._assert(SymbTable.compSymbs(labels[i-1], labels[i]) == 1);
 
-    int size = labels.length;
-    long hashcode = 0;
-    for (int i=0 ; i < size ; i++)
-      hashcode += symbObjData(labels[i]) + values[i].data;
-    data = binRelObjData(size, hashcode);
+    data = binRelObjData(labels.length);
     extraData = neBinRelObjExtraData();
 
     this.labels = labels;
     col2 = values;
     isMap = true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public Obj setKeyValue(Obj key, Obj value) {
+    buildCol1();
+    return super.setKeyValue(key, value);
+  }
+
+  public Obj dropKey(Obj key) {
+    if (!hasKey(key))
+      return this;
+    buildCol1();
+    return super.dropKey(key);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -37,20 +47,27 @@ class RecordObj extends NeBinRelObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean hasKey(Obj obj) {
+  public boolean contains1(Obj obj) {
     return obj.isSymb() && hasField(obj.getSymbId());
   }
 
-  public boolean hasField(int symbId) {
-    return getFieldIdx(symbId) != -1;
+  public boolean contains2(Obj obj) {
+    for (int i=0 ; i < col2.length ; i++)
+      if (col2[i].isEq(obj))
+        return true;
+    return false;
   }
 
-  public boolean hasPair(Obj obj1, Obj obj2) {
+  public boolean contains(Obj obj1, Obj obj2) {
     if (!obj1.isSymb())
       return false;
     int keyId = obj1.getSymbId();
     int idx = getFieldIdx(obj1.getSymbId());
     return idx != -1 && col2[idx].isEq(obj2);
+  }
+
+  public boolean hasField(int symbId) {
+    return getFieldIdx(symbId) != -1;
   }
 
   public BinRelIter getBinRelIter() {
@@ -124,6 +141,18 @@ class RecordObj extends NeBinRelObj {
     return 0;
   }
 
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      for (int i=0 ; i < labels.length ; i++)
+        hcode += Hashing.hashcode(SymbObj.hashcode(labels[i]), col2[i].hashcode());
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
@@ -162,8 +191,12 @@ class RecordObj extends NeBinRelObj {
     if (col1 == null) {
       int len = labels.length;
       col1 = new Obj[len];
-      for (int i=0 ; i < len ; i++)
-        col1[i] = SymbTable.get(labels[i]);
+      hashcodes1 = new int[len];
+      for (int i=0 ; i < len ; i++) {
+        Obj symbObj = SymbTable.get(labels[i]);
+        col1[i] = symbObj;
+        hashcodes1[i] = symbObj.hashcode();
+      }
     }
   }
 }

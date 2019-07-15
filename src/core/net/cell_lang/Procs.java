@@ -2,6 +2,7 @@ package net.cell_lang;
 
 import java.nio.file.Paths;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 
 
 class Procs {
@@ -9,7 +10,7 @@ class Procs {
     String fnameStr = fname.getString();
     try {
       byte[] content = Files.readAllBytes(Paths.get(fnameStr));
-      Obj bytesObj = IntArrayObjs.createUnsigned(content);
+      Obj bytesObj = Builder.createSeqUnsigned(content);
       return Builder.createTaggedObj(SymbTable.JustSymbId, bytesObj);
     }
     catch (Exception e) {
@@ -22,6 +23,18 @@ class Procs {
     byte[] bytes = data.getByteArray();
     try {
       Files.write(Paths.get(fnameStr), bytes);
+      return SymbObj.get(SymbTable.TrueSymbId);
+    }
+    catch (Exception e) {
+      return SymbObj.get(SymbTable.FalseSymbId);
+    }
+  }
+
+  public static Obj FileAppend_P(Obj fname, Obj data, Object env) {
+    String fnameStr = fname.getString();
+    byte[] bytes = data.getByteArray();
+    try {
+      Files.write(Paths.get(fnameStr), bytes, StandardOpenOption.APPEND);
       return SymbObj.get(SymbTable.TrueSymbId);
     }
     catch (Exception e) {
@@ -46,5 +59,17 @@ class Procs {
       return Builder.createTaggedObj(SymbTable.JustSymbId, IntObj.get(ch));
     else
       return SymbObj.get(SymbTable.NothingSymbId);
+  }
+
+  private static long startTicks = -1;
+  public static Obj Ticks_P(Object env) {
+    long ticks = System.currentTimeMillis();
+    if (startTicks == -1)
+      startTicks = ticks;
+    return IntObj.get(ticks - startTicks);
+  }
+
+  public static void Exit_P(Obj code, Object env) {
+    System.exit((int) code.getLong());
   }
 }

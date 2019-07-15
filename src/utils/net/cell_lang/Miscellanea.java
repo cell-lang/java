@@ -158,6 +158,35 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
+  public static int castLongToInt(long x) {
+    if (x == (int) x)
+      return (int) x;
+    else
+      throw softFail();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  // public static void sort(long[] array) {
+  //   Arrays.sort(array);
+  // }
+
+  // public static void sort(long[] array, int start, int end) {
+  //   Arrays.sort(array, start, end);
+  // }
+
+  // public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int value) {
+  //   return Arrays.binarySearch(array, value);
+  // }
+
+  // public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int start, int end, int value) {
+  //   return Arrays.binarySearch(array, start, end, value);
+  // }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
   public static void _assert(boolean cond) {
     _assert(cond, null);
   }
@@ -206,20 +235,30 @@ class Miscellanea {
   static void printCallStack() {
     if (stackDepth == 0)
       return;
-    System.err.println("Call stack:\n");
+    System.err.println("\nCall stack:\n");
     int size = stackDepth <= fnNamesStack.length ? stackDepth : fnNamesStack.length;
     for (int i=0 ; i < size ; i++)
       System.err.println("  " + fnNamesStack[i]);
     String outFnName = "debug" + File.separator + "stack-trace.txt";
+    String outJavaFnName = "debug" + File.separator + "java-stack-trace.txt";
     System.err.println("\nNow trying to write a full dump of the stack to " + outFnName);
     System.err.flush();
     try {
       FileOutputStream file = new FileOutputStream(outFnName);
-      OutputStreamWriter writer = new OutputStreamWriter(file);
+      OutputStreamWriter streamWriter = new OutputStreamWriter(file);
       for (int i=0 ; i < size ; i++)
-        printStackFrame(i, writer);
-      writer.write("\n");
-      writer.flush();
+        printStackFrame(i, streamWriter);
+      streamWriter.write("\n");
+      streamWriter.flush();
+      file.close();
+
+      file = new FileOutputStream(outJavaFnName);
+      PrintWriter printWriter = new PrintWriter(file);
+      Exception e = new Exception();
+      e.printStackTrace(printWriter);
+      printWriter.write("\n");
+      printWriter.flush();
+      file.close();
     }
     catch (Exception e) {
       System.err.printf("Could not write a dump of the stack to %s. Did you create the \"debug\" directory?\n", outFnName);
@@ -285,93 +324,10 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static <T> void arrayCopy(T[] src, T[] dest, int count) {
-    for (int i=0 ; i < count ; i++)
-      dest[i] = src[i];
-  }
-
-  public static void arrayCopy(int[] src, int[] dest, int count) {
-    for (int i=0 ; i < count ; i++)
-      dest[i] = src[i];
-  }
-
-  public static void arrayCopy(long[] src, long[] dest, int count) {
-    for (int i=0 ; i < count ; i++)
-      dest[i] = src[i];
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
-
-  public static int[] arrayAppend(int[] array, int count, int newValue) {
-    Miscellanea._assert(count <= array.length);
-
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      int[] newArray = new int[newLen];
-      arrayCopy(array, newArray, count);
-      array = newArray;
-    }
-
-    array[count] = newValue;
-    return array;
-  }
-
-  public static long[] arrayAppend(long[] array, int count, long newValue) {
-    Miscellanea._assert(count <= array.length);
-
-    if (count == array.length) {
-      int newLen = Math.max(32, (3 * count) / 2);
-      long[] newArray = new long[newLen];
-      arrayCopy(array, newArray, count);
-      array = newArray;
-    }
-
-    array[count] = newValue;
-    return array;
-  }
-
-  public static int[] array2Append(int[] array, int count, int val1, int val2) {
-    Miscellanea._assert(2 * count <= array.length);
-
-    if (array.length < 2 * (count + 1)) {
-      int newLen = Math.max(64, 2 * ((3 * count) / 2));
-      int[] newArray = new int[newLen];
-      arrayCopy(array, newArray, 2 * count);
-      array = newArray;
-    }
-
-    array[2 * count] = val1;
-    array[2 * count + 1] = val2;
-
-    return array;
-  }
-
-  public static int[] array3Append(int[] array, int count, int val1, int val2, int val3) {
-    Miscellanea._assert(3 * count <= array.length);
-
-    if (array.length < 3 * (count + 1)) {
-      int newLen = Math.max(96, 3 * ((3 * count) / 2));
-      int[] newArray = new int[newLen];
-      arrayCopy(array, newArray, 3 * count);
-      array = newArray;
-    }
-
-    int offset = 3 * count;
-    array[offset] = val1;
-    array[offset + 1] = val2;
-    array[offset + 2] = val3;
-
-    return array;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
-
-  public static void arrayReset(long[] array) {
-    int len = array.length;
-    for (int i=0 ; i < len ; i++)
-      array[i] = 0;
+  public static int extend(int size, int minSize) {
+    while (size < minSize)
+      size *= 2;
+    return size;
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -385,18 +341,6 @@ class Miscellanea {
   public static int hexDigitValue(byte b) {
     char ch = (char) b;
     return ch - (ch >= '0' & ch <= '9' ? '0' : (ch >= 'a' & ch <= 'f' ? 'a' : 'A'));
-  }
-
-  public static int hashcode(int n) {
-    return n;
-  }
-
-  public static int hashcode(int n1, int n2) {
-    return n1 ^ n2;
-  }
-
-  public static int hashcode(int n1, int n2, int n3) {
-    return n1 ^ n2 ^ n3;
   }
 
   public static int[] codePoints(String str) {

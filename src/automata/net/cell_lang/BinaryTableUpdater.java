@@ -4,13 +4,14 @@ import java.util.function.IntPredicate;
 
 
 class BinaryTableUpdater {
-  static int[] emptyArray = new int[0];
-
   int deleteCount = 0;
-  int[] deleteList = emptyArray;
+  int[] deleteList = Array.emptyIntArray;
 
   int insertCount = 0;
-  int[] insertList = emptyArray;
+  int[] insertList = Array.emptyIntArray;
+
+  int updateCount = 0;
+  int[] updateList = Array.emptyIntArray;
 
   enum Ord {ORD_NONE, ORD_12, ORD_21};
   Ord currOrd = Ord.ORD_NONE;
@@ -30,57 +31,91 @@ class BinaryTableUpdater {
     deleteCount = deleteList.length / 2;
   }
 
-  public void delete(int value1, int value2) {
-    if (table.contains(value1, value2))
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, value1, value2);
+  public void delete(int arg1, int arg2) {
+    if (table.contains(arg1, arg2))
+      deleteList = Array.append2(deleteList, deleteCount++, arg1, arg2);
   }
 
   public void delete1(int value) {
-    int[] assocs = table.lookupByCol1((int) value);
+    int[] assocs = table.restrict1((int) value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, value, assocs[i]);
+      deleteList = Array.append2(deleteList, deleteCount++, value, assocs[i]);
   }
 
   public void delete2(int value) {
-    int[] assocs = table.lookupByCol2((int) value);
+    int[] assocs = table.restrict2((int) value);
     for (int i=0 ; i < assocs.length ; i++)
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, assocs[i], value);
+      deleteList = Array.append2(deleteList, deleteCount++, assocs[i], value);
   }
 
-  public void insert(int value1, int value2) {
-    insertList = Miscellanea.array2Append(insertList, insertCount++, value1, value2);
+  public void insert(int arg1, int arg2) {
+    insertList = Array.append2(insertList, insertCount++, arg1, arg2);
+  }
+
+  public void update(int arg1, int arg2) {
+    updateList = Array.append2(updateList, updateCount++, arg1, arg2);
   }
 
   public void apply() {
     for (int i=0 ; i < deleteCount ; i++) {
-      int field1 = deleteList[2 * i];
-      int field2 = deleteList[2 * i + 1];
-      if (table.contains(field1, field2))
-        table.delete(field1, field2);
+      int arg1 = deleteList[2 * i];
+      int arg2 = deleteList[2 * i + 1];
+      if (table.contains(arg1, arg2))
+        table.delete(arg1, arg2);
       else
         deleteList[2 * i] = 0xFFFFFFFF;
     }
 
+    int releaseCount = 0;
+    for (int i=0 ; i < updateCount ; i++) {
+      int arg1 = updateList[2 * i];
+      int arg2 = updateList[2 * i + 1];
+
+      int oldArg2 = table.update1(arg1, arg2);
+
+      if (oldArg2 == -1) {
+        store1.addRef(arg1);
+        store2.addRef(arg2);
+      }
+      else if (arg2 != oldArg2) {
+        store2.addRef(arg2);
+        // Storing the value of the old surrogate so that it can be released later
+        updateList[releaseCount++] = oldArg2;
+      }
+    }
+    if (updateList.length != 0)
+      updateList[releaseCount] = -1;
+
     for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[2 * i];
-      int field2 = insertList[2 * i + 1];
-      if (!table.contains(field1, field2)) {
-        table.insert(field1, field2);
-        table.store1.addRef(field1);
-        table.store2.addRef(field2);
+      int arg1 = insertList[2 * i];
+      int arg2 = insertList[2 * i + 1];
+      if (!table.contains(arg1, arg2)) {
+        table.insert(arg1, arg2);
+        store1.addRef(arg1);
+        store2.addRef(arg2);
       }
     }
   }
 
   public void finish() {
     for (int i=0 ; i < deleteCount ; i++) {
-      int field1 = deleteList[2 * i];
-      if (field1 != 0xFFFFFFFF) {
-        int field2 = deleteList[2 * i + 1];
-        Miscellanea._assert(table.store1.lookupSurrogate(field1) != null);
-        Miscellanea._assert(table.store2.lookupSurrogate(field2) != null);
-        table.store1.release(field1);
-        table.store2.release(field2);
+      int arg1 = deleteList[2 * i];
+      if (arg1 != 0xFFFFFFFF) {
+        int arg2 = deleteList[2 * i + 1];
+        // Miscellanea._assert(table.store1.surrToObjValue(arg1) != null);
+        // Miscellanea._assert(table.store2.surrToObjValue(arg2) != null);
+        store1.release(arg1);
+        store2.release(arg2);
+      }
+    }
+
+    if (updateCount != 0) {
+      for (int i=0 ; ; i++) {
+        int arg2 = updateList[i];
+        if (arg2 == -1)
+          break;
+        // Miscellanea._assert(table.store2.surrToObjValue(arg2) != null);
+        store2.release(arg2);
       }
     }
   }
@@ -90,11 +125,14 @@ class BinaryTableUpdater {
   public void reset() {
     deleteCount = 0;
     insertCount = 0;
+    updateCount = 0;
 
     if (deleteList.length > 2 * 1024)
-      deleteList = emptyArray;
+      deleteList = Array.emptyIntArray;
     if (insertList.length > 2 * 1024)
-      insertList = emptyArray;
+      insertList = Array.emptyIntArray;
+    if (updateList.length > 2 * 1024)
+      updateList = Array.emptyIntArray;
 
     currOrd = Ord.ORD_NONE;
   }
@@ -145,7 +183,7 @@ class BinaryTableUpdater {
     int count = Ints12.count1(deleteList, deleteCount, surr1, idx);
 
     //## BAD: THIS IS VERY INEFFICIENT IF THERE'S A LOT OF ENTRIES WHOSE FIRST ARGUMENT IS surr1
-    int[] vals2 = table.lookupByCol1(surr1);
+    int[] vals2 = table.restrict1(surr1);
 
     for (int i=0 ; i < vals2.length ; i++)
       // Elements in range [idx, idx+count) are sorted in both orders,
@@ -171,7 +209,7 @@ class BinaryTableUpdater {
     int count = Ints21.count2(deleteList, deleteCount, surr2, idx);
 
     //## BAD: THIS IS VERY INEFFICIENT IF THERE'S A LOT OF ENTRIES WHOSE SECOND ARGUMENT IS surr2
-    int[] vals1 = table.lookupByCol2(surr2);
+    int[] vals1 = table.restrict2(surr2);
 
     for (int i=0 ; i < vals1.length ; i++)
       // Elements in range [idx, idx+count) are sorted in both orders,
@@ -370,10 +408,10 @@ class BinaryTableUpdater {
 
     System.out.print("deleteList =");
     for (int i=0 ; i < deleteCount ; i++) {
-      int field1 = deleteList[2 * i];
-      int field2 = deleteList[2 * i + 1];
-      Obj obj1 = store1.lookupSurrogateEx(field1);
-      Obj obj2 = store2.lookupSurrogateEx(field2);
+      int arg1 = deleteList[2 * i];
+      int arg2 = deleteList[2 * i + 1];
+      Obj obj1 = store1.surrToValue(arg1);
+      Obj obj2 = store2.surrToValue(arg2);
       if (flipped) {
         Obj tmp = obj1;
         obj1 = obj2;
@@ -385,10 +423,10 @@ class BinaryTableUpdater {
 
     System.out.print("insertList =");
     for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[2 * i];
-      int field2 = insertList[2 * i + 1];
-      Obj obj1 = store1.lookupSurrogateEx(field1);
-      Obj obj2 = store2.lookupSurrogateEx(field2);
+      int arg1 = insertList[2 * i];
+      int arg2 = insertList[2 * i + 1];
+      Obj obj1 = store1.surrToValue(arg1);
+      Obj obj2 = store2.surrToValue(arg2);
       if (flipped) {
         Obj tmp = obj1;
         obj1 = obj2;

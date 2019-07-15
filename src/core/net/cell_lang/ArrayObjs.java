@@ -69,12 +69,6 @@ abstract class ArrayObjBase extends NeSeqObj {
     for (int i=0 ; i < count ; i++)
       array[destOffset+i] = objs[srcOffset+i];
   }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  protected static long hashcode(Obj[] objs, int offset, int len) {
-    return objs[offset].data + (len > 2 ? objs[offset+len/2].data : 0) + (len > 1 ? objs[offset+len-1].data : 0);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,8 +77,7 @@ abstract class ArrayObjBase extends NeSeqObj {
 final class ArrayObj extends ArrayObjBase {
   public ArrayObj(Obj[] objs) {
     int len = objs.length;
-    long hashcode = hashcode(objs, 0, len);
-    data = seqObjData(len, hashcode);
+    data = seqObjData(len);
     extraData = neSeqObjExtraData();
     this.objs = objs;
   }
@@ -101,8 +94,7 @@ final class ArraySliceObj extends ArrayObjBase {
   PaddedArray source;
 
   public ArraySliceObj(PaddedArray source, Obj[] objs, int offset, int len) {
-    long hashcode = hashcode(objs, offset, len);
-    data = seqObjData(len, hashcode);
+    data = seqObjData(len);
     extraData = neSeqObjExtraData();
     this.objs = objs;
     this.offset = offset;
@@ -148,7 +140,7 @@ final class PaddedArray {
     return new ArraySliceObj(this, buffer, offset, length);
   }
 
-  public synchronized ArraySliceObj append(int idx, Obj obj) {
+  public /* synchronized */ ArraySliceObj append(int idx, Obj obj) {
     if (idx == buffer.length) {
       // We run out of space, expanding the array buffer
       int size = buffer.length;
@@ -184,7 +176,7 @@ final class PaddedArray {
     }
   }
 
-  public synchronized ArraySliceObj concat(int idx, NeSeqObj seq) {
+  public /* synchronized */ ArraySliceObj concat(int idx, NeSeqObj seq) {
     int seqLen = seq.getSize();
     int newLen = idx + seqLen;
 

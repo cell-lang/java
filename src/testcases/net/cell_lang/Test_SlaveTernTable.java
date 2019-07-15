@@ -1,0 +1,478 @@
+package net.cell_lang;
+
+import java.util.Random;
+import java.util.Arrays;
+
+
+class Test_SlaveTernTable {
+  static Random random = new Random(0);
+
+  public static void run() {
+    for (int i=1 ; i < 50 ; i++) {
+      for (int j=0 ; j < 100 ; j++) {
+        run(i, false);
+      }
+      System.out.printf("%d ", i);
+    }
+
+    for (int i=1 ; i < 27 ; i++) {
+      run(i, false);
+    }
+  }
+
+  public static void run(int range, boolean trace) {
+    AssocTable master = new AssocTable(null, null);
+    SlaveTernTable table = new SlaveTernTable(master, null, null, null);
+
+    boolean[][][] bitMap = new boolean[range][][];
+    for (int i=0 ; i < range ; i++) {
+      bitMap[i] = new boolean[range][];
+      for (int j=0 ; j < range ; j++)
+        bitMap[i][j] = new boolean[range];
+    }
+    checkTable(table, bitMap, range);
+
+    // Inserting until the table is full
+    for (int i=0 ; i < range * range * range ; i++) {
+      int s1 = random.nextInt(range);
+      int s2 = random.nextInt(range);
+      int s3 = random.nextInt(range);
+
+      while (bitMap[s1][s2][s3]) {
+        s3 = (s3 + 1) % range;
+        if (s3 == 0) {
+          s2 = (s2 + 1) % range;
+          if (s2 == 0)
+            s1 = (s1 + 1) % range;
+        }
+      }
+
+      if (trace)
+        System.out.printf("Inserting: (%d, %d, %d)\n", s1, s2, s3);
+
+      master.insert(s1, s2);
+      table.insert(s1, s2, s3);
+      bitMap[s1][s2][s3] = true;
+
+      checkTable(table, bitMap, range);
+    }
+
+    if (trace)
+      printDiffs(table, bitMap, range);
+
+    // Deleting until the table is empty
+    for (int i=0 ; i < range * range * range ; i++) {
+      int s1 = random.nextInt(range);
+      int s2 = random.nextInt(range);
+      int s3 = random.nextInt(range);
+
+      while (!bitMap[s1][s2][s3]) {
+        s3 = (s3 + 1) % range;
+        if (s3 == 0) {
+          s2 = (s2 + 1) % range;
+          if (s2 == 0)
+            s1 = (s1 + 1) % range;
+        }
+      }
+
+      if (trace)
+        System.out.printf("Deleting: (%d, %d, %d)\n", s1, s2, s3);
+
+      table.delete(s1, s2, s3);
+      // master.delete(s1, s2);
+      bitMap[s1][s2][s3] = false;
+
+      if (trace)
+        System.out.println("Checking");
+
+      checkTable(table, bitMap, range);
+    }
+  }
+
+  static void checkTable(SlaveTernTable table, boolean[][][] bitMap, int range) {
+    // table.check();
+
+    for (int s1=0 ; s1 < range ; s1++)
+      for (int s2=0 ; s2 < range ; s2++)
+        for (int s3=0 ; s3 < range ; s3++)
+          if (table.contains(s1, s2, s3) != bitMap[s1][s2][s3]) {
+            System.out.println("Error (_, _, _)!\n");
+            printDiffs(table, bitMap, range);
+            throw new RuntimeException();
+            // System.exit(1);
+          }
+
+    { int expectedCount = 0;
+      for (int i=0 ; i < range ; i++)
+        for (int j=0 ; j < range ; j++)
+          for (int k=0 ; k < range ; k++)
+            if (bitMap[i][j][k])
+              expectedCount++;
+
+      if (table.size() != expectedCount) {
+        System.out.println("Error (?, ?, ?) - A\n");
+        System.exit(1);
+      }
+
+      int actualCount = 0;
+
+      SlaveTernTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int arg1 = it.get1();
+        int arg2 = it.get2();
+        int arg3 = it.get3();
+        if (!bitMap[arg1][arg2][arg3]) {
+          System.out.println("ERROR (?, ?, ?) - A\n");
+          System.exit(1);
+        }
+        actualCount++;
+        it.next();
+      }
+
+      if (actualCount != expectedCount) {
+        System.out.println("ERROR (?, ?, ?) - B\n");
+        System.out.printf("Actual count = %d, expected = %d\n\n", actualCount, expectedCount);
+        printDiffs(table, bitMap, range);
+        System.exit(1);
+      }
+
+      if (table.size() != expectedCount) {
+        System.out.println("ERROR (?, ?, ?) - B\n");
+        System.exit(1);
+      }
+    }
+
+    for (int s1=0 ; s1 < range ; s1++)
+      for (int s2=0 ; s2 < range ; s2++) {
+        int[] expected = match12(bitMap, s1, s2, range);
+        int[] actual = match12(table, s1, s2, range);
+
+        if (table.count12(s1, s2) != expected.length) {
+          System.out.println("Error (_, _, ?) - A\n");
+          System.exit(1);
+        }
+
+        if (table.contains12(s1, s2) != (expected.length > 0)) {
+          System.out.println("Error (_, _, ?) - A\n");
+          System.exit(1);
+        }
+
+        if (!Arrays.equals(actual, expected)) {
+          System.out.println("Error (_, _, ?) - B\n");
+          System.exit(1);
+        }
+      }
+
+    // for (int s1=0 ; s1 < range ; s1++)
+    //   for (int s3=0 ; s3 < range ; s3++) {
+    //     int[] expected = match13(bitMap, s1, s3, range);
+    //     int[] actual = match13(table, s1, s3, range);
+
+    //     if (table.count13(s1, s3) != expected.length) {
+    //       System.out.println("Error (_, ?, _) - A\n");
+    //       System.exit(1);
+    //     }
+
+    //     if (table.contains13(s1, s3) != (expected.length > 0)) {
+    //       System.out.println("Error (_, ?, _) - A\n");
+    //       System.exit(1);
+    //     }
+
+    //     if (!Arrays.equals(actual, expected)) {
+    //       System.out.println("Error (_, ?, _) - B\n");
+    //       System.exit(1);
+    //     }
+    //   }
+
+    // for (int s2=0 ; s2 < range ; s2++)
+    //   for (int s3=0 ; s3 < range ; s3++) {
+    //     int[] expected = match23(bitMap, s2, s3, range);
+    //     int[] actual = match23(table, s2, s3, range);
+
+    //     if (table.count23(s2, s3) != expected.length) {
+    //       System.out.printf("Error (?, %d, %d) - A\n", s2, s3);
+    //       System.out.printf("Actual count: %s, expected: %s\n", table.count23(s2, s3), expected.length);
+    //       printDiffs(table, bitMap, range);
+    //       System.exit(1);
+    //     }
+
+    //     if (table.contains23(s2, s3) != (expected.length > 0)) {
+    //       System.out.println("Error (?, _, _) - B\n");
+    //       System.exit(1);
+    //     }
+
+    //     if (!Arrays.equals(actual, expected)) {
+    //       System.out.println("Error (?, _, _) - C\n");
+    //       System.exit(1);
+    //     }
+    //   }
+
+    // for (int s1=0 ; s1 < range ; s1++) {
+    //   int[] expected = match1(bitMap, s1, range);
+    //   int[] actual = match1(table, s1, range);
+
+    //   if (2 * table.count1(s1) != expected.length) {
+    //     System.out.println("Error (_, ?, ?) - A\n");
+    //     System.exit(1);
+    //   }
+
+    //   if (table.contains1(s1) != (expected.length > 0)) {
+    //     System.out.println("Error (_, ?, ?) - A\n");
+    //     System.exit(1);
+    //   }
+
+    //   if (!Arrays.equals(actual, expected)) {
+    //     System.out.println("Error (_, ?, ?) - B\n");
+    //     printDiffs(table, bitMap, range);
+
+    //     System.out.printf("range = %d, s1 = %d\n", range, s1);
+    //     System.out.printf("expected: %s\n", Arrays.toString(expected));
+    //     System.out.printf("actual: %s\n", Arrays.toString(actual));
+    //     System.exit(1);
+    //   }
+    // }
+
+    // for (int s2=0 ; s2 < range ; s2++) {
+    //   int[] expected = match2(bitMap, s2, range);
+    //   int[] actual = match2(table, s2, range);
+
+    //   if (2 * table.count2(s2) != expected.length) {
+    //     System.out.println("Error (?, _, ?) - A\n");
+    //     System.exit(1);
+    //   }
+
+    //   if (table.contains2(s2) != (expected.length > 0)) {
+    //     System.out.println("Error (?, _, ?) - A\n");
+    //     System.exit(1);
+    //   }
+
+    //   if (!Arrays.equals(actual, expected)) {
+    //     System.out.println("Error (?, _, ?) - B\n");
+    //     System.exit(1);
+    //   }
+    // }
+
+    for (int s3=0 ; s3 < range ; s3++) {
+      int[] expected = match3(bitMap, s3, range);
+      int[] actual = match3(table, s3, range);
+
+      if (2 * table.count3(s3) != expected.length) {
+        System.out.println("Error (?, ?, _) - A\n");
+        System.exit(1);
+      }
+
+      if (table.contains3(s3) != (expected.length > 0)) {
+        System.out.println("Error (?, ?, _) - A\n");
+        System.exit(1);
+      }
+
+      if (!Arrays.equals(actual, expected)) {
+        System.out.println("Error (?, ?, _) - B\n");
+        System.exit(1);
+      }
+    }
+  }
+
+  static int[] match12(boolean[][][] bitMap, int s1, int s2, int range) {
+    int count = 0;
+    int[] buffer = new int[range];
+    for (int s3=0 ; s3 < range ; s3++)
+      if (bitMap[s1][s2][s3])
+        buffer[count++] = s3;
+    return Arrays.copyOf(buffer, count);
+  }
+
+  static int[] match12(SlaveTernTable table, int s1, int s2, int range) {
+    int count = 0;
+    int[] buffer = new int[range];
+    ArrayIter it = table.getIter12(s1, s2);
+    while (!it.done()) {
+      buffer[count++] = it.get();
+      it.next();
+    }
+    buffer = Arrays.copyOf(buffer, count);
+    Arrays.sort(buffer);
+    return buffer;
+  }
+
+  static int[] match13(boolean[][][] bitMap, int s1, int s3, int range) {
+    int count = 0;
+    int[] buffer = new int[range];
+    for (int s2=0 ; s2 < range ; s2++)
+      if (bitMap[s1][s2][s3])
+        buffer[count++] = s2;
+    return Arrays.copyOf(buffer, count);
+  }
+
+  // static int[] match13(SlaveTernTable table, int s1, int s3, int range) {
+  //   int count = 0;
+  //   int[] buffer = new int[range];
+  //   SlaveTernTable.Iter it = table.getIter13(s1, s3);
+  //   while (!it.done()) {
+  //     buffer[count++] = it.get1();
+  //     it.next();
+  //   }
+  //   buffer = Arrays.copyOf(buffer, count);
+  //   Arrays.sort(buffer);
+  //   return buffer;
+  // }
+
+  static int[] match23(boolean[][][] bitMap, int s2, int s3, int range) {
+    int count = 0;
+    int[] buffer = new int[range];
+    for (int s1=0 ; s1 < range ; s1++)
+      if (bitMap[s1][s2][s3])
+        buffer[count++] = s1;
+    return Arrays.copyOf(buffer, count);
+  }
+
+  // static int[] match23(SlaveTernTable table, int s2, int s3, int range) {
+  //   int count = 0;
+  //   int[] buffer = new int[range];
+  //   SlaveTernTable.Iter it = table.getIter23(s2, s3);
+  //   while (!it.done()) {
+  //     buffer[count++] = it.get1();
+  //     it.next();
+  //   }
+  //   buffer = Arrays.copyOf(buffer, count);
+  //   Arrays.sort(buffer);
+  //   return buffer;
+  // }
+
+  static int[] match1(boolean[][][] bitMap, int s1, int range) {
+    int count = 0;
+    int[] buffer = new int[2 * range * range];
+    for (int s2=0 ; s2 < range ; s2++)
+      for (int s3=0 ; s3 < range ; s3++)
+        if (bitMap[s1][s2][s3]) {
+          buffer[count++] = s2;
+          buffer[count++] = s3;
+        }
+    return Arrays.copyOf(buffer, count);
+  }
+
+  // static int[] match1(SlaveTernTable table, int s1, int range) {
+  //   int count = 0;
+  //   int[] buffer = new int[2 * range * range];
+  //   SlaveTernTable.Iter it = table.getIter1(s1);
+  //   while (!it.done()) {
+  //     buffer[count++] = it.get1();
+  //     buffer[count++] = it.get2();
+  //     it.next();
+  //   }
+  //   return sort2(Arrays.copyOf(buffer, count));
+  // }
+
+  static int[] match2(boolean[][][] bitMap, int s2, int range) {
+    int count = 0;
+    int[] buffer = new int[2 * range * range];
+    for (int s1=0 ; s1 < range ; s1++)
+      for (int s3=0 ; s3 < range ; s3++)
+        if (bitMap[s1][s2][s3]) {
+          buffer[count++] = s1;
+          buffer[count++] = s3;
+        }
+    return Arrays.copyOf(buffer, count);
+  }
+
+  // static int[] match2(SlaveTernTable table, int s2, int range) {
+  //   int count = 0;
+  //   int[] buffer = new int[2 * range * range];
+  //   SlaveTernTable.Iter it = table.getIter2(s2);
+  //   while (!it.done()) {
+  //     buffer[count++] = it.get1();
+  //     buffer[count++] = it.get2();
+  //     it.next();
+  //   }
+  //   return sort2(Arrays.copyOf(buffer, count));
+  // }
+
+  static int[] match3(boolean[][][] bitMap, int s3, int range) {
+    int count = 0;
+    int[] buffer = new int[2 * range * range];
+    for (int s1=0 ; s1 < range ; s1++)
+      for (int s2=0 ; s2 < range ; s2++)
+        if (bitMap[s1][s2][s3]) {
+          buffer[count++] = s1;
+          buffer[count++] = s2;
+        }
+    return Arrays.copyOf(buffer, count);
+  }
+
+  static int[] match3(SlaveTernTable table, int s3, int range) {
+    int count = 0;
+    int[] buffer = new int[2 * range * range];
+    SlaveTernTable.Iter3 it = table.getIter3(s3);
+    while (!it.done()) {
+      buffer[count++] = it.get1();
+      buffer[count++] = it.get2();
+      it.next();
+    }
+    return sort2(Arrays.copyOf(buffer, count));
+  }
+
+  static int[] sort2(int[] pairsArray) {
+    long[] packed = pack2(pairsArray);
+    Arrays.sort(packed);
+    return unpack2(packed);
+  }
+
+  static long[] pack2(int[] pairsArray) {
+    Miscellanea._assert(pairsArray.length % 2 == 0);
+    int len = pairsArray.length / 2;
+    long[] packed = new long[len];
+    for (int i=0 ; i < len ; i++) {
+      long mostSign = pairsArray[2 * i];
+      long leastSign = pairsArray[2 * i + 1];
+      packed[i] = (mostSign << 32) + leastSign;
+    }
+    Miscellanea._assert(Arrays.equals(unpack2(packed), pairsArray));
+    return packed;
+  }
+
+  static int[] unpack2(long[] array) {
+    int len = array.length;
+    int[] unpacked = new int[2 * len];
+    for (int i=0 ; i < len ; i++) {
+      long pair = array[i];
+      unpacked[2 * i] = (int) (pair >>> 32);
+      unpacked[2 * i + 1] = (int) pair;
+    }
+    return unpacked;
+  }
+
+  static void printDiffs(SlaveTernTable table, boolean[][][] bitMap, int range) {
+    for (int s1=0 ; s1 < range ; s1++) {
+      for (int s2=0 ; s2 < range ; s2++) {
+        for (int s3=0 ; s3 < range ; s3++) {
+          int actual = table.contains(s1, s2, s3) ? 1 : 0;
+          int expected = bitMap[s1][s2][s3] ? 1 : 0;
+          System.out.printf("%d/%d ", actual, expected);
+        }
+        System.out.println();
+      }
+      System.out.println();
+    }
+
+    System.out.println();
+    System.out.println();
+
+    for (int s1=0 ; s1 < range ; s1++) {
+      for (int s2=0 ; s2 < range ; s2++) {
+        for (int s3=0 ; s3 < range ; s3++) {
+          boolean actual = table.contains(s1, s2, s3);
+          boolean expected = bitMap[s1][s2][s3];
+          if (expected)
+            System.out.printf("%2d, %2d, %2d  %s\n", s1, s2, s3, actual ? "" : "ERROR");
+        }
+      }
+    }
+
+    System.out.println();
+  }
+}
+
+// for (int k=0 ; k < expValues.length ; k++)
+// System.out.printf("%d ", expValues[k]);
+// System.out.println();
+// System.out.println(table.containsField1(i) ? "true" : "false");

@@ -24,17 +24,17 @@ implicit prg : CompiledPrg {
 
     // Test variables declarations
     set_test_labels = isort([l : l, f <- fields, f.optional, not is_nullable(f.repr)]);
-    if set_test_labels != ():
+    if set_test_labels != () {
       test_vars_decls = ("boolean " & opt_rec_field_nonempty_test_var(l) & ";" : l <- set_test_labels);
       body = (body | "") & test_vars_decls;
-    ;
+    }
 
     // Actual labels array declaration
     body = (body | "", "int[] labels;") if has_opt_fields;
 
     // Methods
     reprs = [l -> fields(l, !!).repr : l <- labels];
-    let tag = tag, ord_labels = ord_labels, opt_labels = opt_labels, reprs = reprs:
+    let tag = tag, ord_labels = ord_labels, opt_labels = opt_labels, reprs = reprs {
       methods_defs = (
         finish_init_def(ord_mand_labels, ord_opt_labels, idx),
         has_field_def,
@@ -43,7 +43,7 @@ implicit prg : CompiledPrg {
         count_fields_def,
         get_labels_def(index)
       );
-    ;
+    }
     body = body & ("", "") & join(intermix(methods_defs, ("")));
 
     // Class definition
@@ -57,32 +57,34 @@ implicit prg : CompiledPrg {
 
 implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Symbol -> LowLevelRepr] {
   String* finish_init_def(Symbol* ord_mand_labels, Symbol* ord_opt_labels, Nat idx) {
-    if ord_mand_labels != ():
+    if ord_mand_labels != () {
       hashcodes = (obj_data_expr(reprs(l, !!), opt_rec_field_name(l)) : l <- ord_mand_labels);
       hashcodes_sum = append(hashcodes, " + ");
-    else
+    }
+    else {
       hashcodes_sum = "0";
-    ;
+    }
 
     code = (
       "public void finishInit() {",
       "  long hashcode = " & hashcodes_sum & ";"
     );
 
-    if ord_opt_labels != ():
+    if ord_opt_labels != () {
       code = (code | "  int mask = 0;");
-      for l @ i <- ord_opt_labels:
+      for l @ i <- ord_opt_labels {
         code = code & (
           " if (" & set_check_expr(reprs(l, !!), l, "", false) & ") {",
           "   hashcode += " & obj_data_expr(reprs(l, !!), opt_rec_field_name(l)) & ";",
           "   mask |= 1 << " & printed(i) & ";",
           "}"
         );
-      ;
+      }
       mask = "mask";
-    else
+    }
+    else {
       mask = "0";
-    ;
+    }
 
     set_data_instr = "  data = optTagRecObjData(" & symb_idx_name(tag) & ", hashcode, " & mask & ");";
     set_extra_data_instr = "  extraData = optTagRecObjExtraData(" & printed(idx) & ");";
@@ -133,22 +135,23 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
   String* internal_order_def(String class_name, Symbol* ord_mand_labels, Symbol* ord_opt_labels) {
     body = (class_name & " otherOpt = (" & class_name & ") other;");
 
-    if ord_opt_labels != ():
+    if ord_opt_labels != () {
       body = (body | "");
-      for l <- ord_opt_labels:
+      for l <- ord_opt_labels {
         repr = reprs(l, !!);
         test_expr = set_check_expr(repr, l, "", true);
         other_test_expr = set_check_expr(repr, l, "otherOpt.", true);
         body = (body | "Miscellanea._assert(" & test_expr & " == " & other_test_expr & ");");
-      ;
-    ;
+      }
+    }
 
-    for l @ i <- ord_mand_labels:
+    for l @ i <- ord_mand_labels {
       field_name = opt_rec_field_name(l);
       comp_expr = comparison_expr(reprs(l, !!), field_name, "otherOpt." & field_name);
-      if i == |ord_labels| - 1:
+      if i == |ord_labels| - 1 {
         body = (body | "return " & comp_expr & ";");
-      else
+      }
+      else {
         maybe_var_type = if i == 0 then "int " else "";
         body = (body |
           "",
@@ -156,10 +159,10 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
           "if (res != 0)",
           "  return res;"
         );
-      ;
-    ;
+      }
+    }
 
-    for l <- ord_opt_labels:
+    for l <- ord_opt_labels {
       repr = reprs(l, !!);
       field_name = opt_rec_field_name(l);
       comp_expr = comparison_expr(repr, field_name, "otherOpt." & field_name);
@@ -173,7 +176,7 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
         "    return res;",
         "}"
       );
-    ;
+    }
 
     body = (body | "", "return 0;") if ord_opt_labels != ();
 
@@ -196,7 +199,7 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
   //////////////////////////////////////////////////////////////////////////////
 
   String* get_labels_def(Nat symb_seq_index) {
-    if opt_labels != []:
+    if opt_labels != [] {
       body = (
         "if (labels == null) {",
         "  int count = countFields();",
@@ -204,20 +207,20 @@ implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Sym
         "  int idx = 0;"
       );
 
-      for l <- ord_labels:
+      for l <- ord_labels {
         label_code = ("  labels[idx++] = " & symb_idx_name(l) & ";");
-        if opt_labels(l):
+        if opt_labels(l) {
           if_line = "  if (" & set_check_expr(reprs(l, !!), l, "", false) & ")";
           label_code = (if_line) & indent_lines(label_code);
-        ;
+        }
         body = body & label_code;
-      ;
+      }
 
       body = (body | "}", "return labels;");
-
-    else
+    }
+    else {
       body = ("return " & const_symb_seq_name(symb_seq_index) & ";");
-    ;
+    }
 
     return ("protected int[] getLabels() {") & indent_lines(body) & ("}");
   }

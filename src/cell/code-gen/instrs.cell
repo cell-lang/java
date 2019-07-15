@@ -6,9 +6,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String* native_code(Instr instr, Maybe[Nat] block_id) =
     init_stream(v?)       = (native_new_call(v, "java.util.ArrayList<Obj>", ())),
     append()              = (native_method_call(instr.stream, "add", (instr.obj))),
-    set_at()              = (native_method_call(instr.var, "initAt", (instr.idx, instr.value))),
-    alloc_array()         = alloc_array_native_code(instr.var, instr.size),
-    write_array()         = write_array_native_code(instr.var, instr.idx, instr.value),
+    array_alloc()         = array_alloc_native_code(instr.var, instr.size),
+    array_write()         = array_write_native_code(instr.var, instr.idx, instr.value),
+    array_append()        = array_append_native_code(instr.array_var, instr.size_var, instr.value),
+    array_set_var()       = (native_assignment_code(instr.target, instr.source)),
     write_rec_field()     = write_rec_field_native_code(instr.var, instr.label, instr.value, instr.optional),
     finish_init()         = (native_expr(instr.var) & ".finishInit();"),
     get_seq_iter()        = (native_method_call(instr.var, instr.src, "getSeqIter", ())),
@@ -46,7 +47,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     exit_block            = ("break " & block_label(value_unsafe(block_id)) & ";"),
     switch_on_nat()       = native_nat_switch_code(instr.value, instr.cases, block_id),
     symb_switch()         = native_symb_switch_code(instr.value, instr.cases, instr.else, block_id),
-    call_proc()           = native_call_proc_code(if instr.var? then just(instr.var) else nothing, instr.name, instr.args, instr.cls_args, block_id),
+    call_proc()           = native_call_proc_code(if instr.var? then just(instr.var) else nothing, instr.name, instr.args, instr.cls_args, instr.rel_auto_args, instr.react_auto_args, block_id),
     call_cls()            = (native_cls_call_code(instr.cls_var, instr.var, instr.args)),
     push_call_info()      = (native_push_call_info_code(instr.fn_name, instr.args) if debug_mode),
     pop_call_info         = (native_static_call("Miscellanea.popCallInfo", ()) if debug_mode),
@@ -66,16 +67,30 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* alloc_array_native_code(ArrayVar var, IntExpr size) {
+  String* array_alloc_native_code(ArrayVar var, Int32Expr size) {
     elt_type = native_elt_type(var);
     var_name = native_var_name(var);
     return (var_name & " = new " & elt_type & "[" & native_expr(size) & "];");
   }
 
 
-  String* write_array_native_code(ArrayVar var, IntExpr idx, AnyTypeExpr value) {
-    return (native_var_name(var) & "[" & native_expr(idx, true) & "] = " & native_expr(value) & ";");
+  String* array_write_native_code(ArrayVar var, Int32Expr idx, AnyTypeExpr value) {
+    idx_str = native_expr(idx, false);
+    value_str = native_expr(value);
+    value_str = match (var.repr)
+      int8    |
+      nat8    = "Array.asByte(" & value_str & ")",
+      int16   = "Array.asShort(" & value_str & ")",
+      int32   = "Array.asInt(" & value_str & ")",
+      _       = value_str;
+    return (native_var_name(var) & "[" & idx_str & "] = " & value_str & ";");
+
+
   }
+
+
+  String* array_append_native_code(ArrayVar array_var, Int32Var size_var, AnyTypeExpr value) =
+    (native_static_call(array_var, "Array.append", (array_var, native_var_ref_name(size_var) & "++", value)));
 
 
   String native_cls_call_code(AnyClsVar cls_var, WriteObjVar var, AtomicExpr+ args) =
@@ -83,7 +98,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     cls_var(<+> symb?) | capt_cls_var(symb?) = native_method_call(var, cls_var, "invoke", (args | "env"));
 
 
-  String native_push_call_info_code(<FnId, ProcSymbol> fn_name, ObjExpr* args) {
+  String native_push_call_info_code(<FnId, ProcSymbol, MethodSymbol> fn_name, ObjExpr* args) {
     fn_name_str = printed(user_repr(fn_name));
     args_strs = (native_expr(a) : a <- args);
     argv_str = if args != () then "new Obj[] {" & append(args_strs, ", ") & "}" else "null";
@@ -111,14 +126,15 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   String* native_repeat_code(Instr+ body, Maybe[Nat] block_id) {
     head = body(0);
-    if head :: <branch(cond: BoolExpr, when_true: (<break_loop>), when_false: ())>:
+    if head :: <branch(cond: BoolExpr, when_true: (<break_loop>), when_false: ())> {
       cond_str = native_expr(neg(head.cond));
       body_text = indent_lines(native_code(tail(body), block_id)) & ("}");
       return ("while (" & cond_str & ") {",) & body_text;
-    else
+    }
+    else {
       body_text = indent_lines(native_code(body, block_id)) & ("}");
       return ("for ( ; ; ) {") & body_text;
-    ;
+    }
   }
 
 
@@ -150,10 +166,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   String* gen_cache_clearing_code(ImplArg arg) {
     code = ();
-    for fn_id <- isort(lookup(cached_semi_consts_by_impl_arg, arg, [])):
+    for fn_id <- isort(lookup(cached_semi_consts_by_impl_arg, arg, [])) {
       cache_var_name = memo_var_name(fn_id);
       code = (code | "env." & cache_var_name & " = null;");
-    ;
+    }
     return code;
   }
 
@@ -204,7 +220,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     mk_set_from_array()         = native_static_call(var, "Builder.createSet",        (expr.array, value(expr.size) if expr.size != nothing)),
     mk_seq_from_stream()        = native_static_call(var, "Builder.createSeq",        (expr.stream)),
     mk_seq()                    = native_static_call(var, "Builder.createSeq",        (expr.elems, expr.size)),
-    mk_seq_from_array()         = native_static_call(var, "Builder.createSeq",        (expr.array, value(expr.size) if expr.size != nothing)),
+    mk_seq_from_array()         = native_mk_seq_from_array_code(expr.array, expr.size, var),
     build_const_int_seq()       = native_build_const_int_seq_code(expr.seq_id, var),
     mk_map_from_streams()       = native_static_call(var, "Builder.createMap",        (expr.key_stream, expr.value_stream)),
     mk_map()                    = native_static_call(var, "Builder.createMap",        (expr.keys, expr.values, expr.size)),
@@ -222,9 +238,21 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     join_seqs()                 = native_method_call(var, expr.left, "concat",        (expr.right)),
     rev_seq()                   = native_method_call(var, expr.seq,  "reverse",       ()),
     internal_sort()             = native_method_call(var, expr.set,  "internalSort",  ()),
+    insert_elt()                = native_method_call(var, expr.set,  "insert",        (expr.elt)),
+    remove_elt()                = native_method_call(var, expr.set,  "remove",        (expr.elt)),
+    set_key_value()             = native_method_call(var, expr.map,  "setKeyValue",   (expr.key, expr.value)),
+    drop_key()                  = native_method_call(var, expr.map,  "dropKey",       (expr.key)),
     parse_value()               = native_static_call(var, "parse",                    (expr.value)),
     print_value()               = native_method_call(var, expr.value,"printed",       ()),
     _                           = auto_expr_native_code(expr, var);
+
+
+  String native_mk_seq_from_array_code(ArrayVar array, Int32Expr size, WriteObjVar var) {
+    fn_name = match (array.repr)
+      nat8  = "Builder.createSeqUnsigned",
+      _     = "Builder.createSeq";
+    return native_static_call(var, fn_name, (array, size));
+  }
 
 
   String native_mk_bin_rel(WriteObjVar var, ArrayVar col1, ArrayVar col2, Maybe[IntExpr] size, Bool is_map) {
@@ -264,9 +292,11 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, AnyTypeExpr* args, AnyLambdaExpr* cls_args, Maybe[Nat] block_id) {
+  String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, AnyTypeExpr* args, AnyLambdaExpr* cls_args, LocDBVar* rel_auto_args, LocAutoVar* react_auto_args, Maybe[Nat] block_id) {
     cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
-    args_list = args & cls_args_refs;
+    rel_args = join(((native_var_ref_name(v), aux_struct_var_ref_name(v)) : v <- rel_auto_args));
+    react_args = (native_var_ref_name(v) : v <- react_auto_args);
+    args_list = args & cls_args_refs & rel_args & react_args;
     args_list = (args_list | "env") if not name :: ConvFnId;
     name_str = native_fn_name(name);
     call_code = if var != nothing
@@ -286,17 +316,14 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       type = "Lambda" & printed(index_first(lambda, sorted_lambda_exprs));
       code = (type & " " & name & " = new " & type & "();");
 
-      if lambda.capt_auto != nothing:
+      if lambda.capt_auto != nothing
         code = (code | name & ".capt_auto = this;");
-      ;
 
-      for v @ i <- lambda.capt_vars:
+      for v @ i <- lambda.capt_vars
         code = (code | name & "." & native_var_ref_name(capt_var(i)) & " = " & native_expr(v) & ";");
-      ;
 
-      for v @ i <- lambda.capt_cls_vars:
+      for v @ i <- lambda.capt_cls_vars
         code = (code | name & "." & native_var_ref_name(capt_cls_var(i)) & " = " & native_expr(v) & ";");
-      ;
 
       return (code, var);
     }
@@ -307,7 +334,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     conds = (cond);
     bodies = (when_true);
     else_code = when_false;
-    loop
+    loop {
       break if |else_code| != 1;
       else_instr = only(else_code);
       maybe_branch = match (else_instr)
@@ -318,19 +345,19 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       conds = (conds | branch.cond);
       bodies = (bodies | branch.when_true);
       else_code = branch.when_false;
-    ;
+    }
 
     code = ();
-    for c @ i <- conds:
+    for c @ i <- conds {
       opt_else = if i > 0 then "else " else "";
       if_line = opt_else & "if (" & native_expr(c) & ") {";
       body = indent_lines(native_code(bodies(i), block_id));
       code = code & (if_line) & body & ("}");
-    ;
+    }
 
-    if else_code != ():
+    if else_code != ()
       code = code & ("else {") & indent_lines(native_code(else_code, block_id)) & ("}");
-    ;
+
     return code;
   }
 
@@ -341,16 +368,16 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       : v, e <- vars
     );
     filename_str = _print_(file); ## WHAT HAPPENS WHEN WE HAVE NON-ASCII CHARACTERS?
-    if is_assert:
+    if is_assert {
       text_arg = if text != nothing then _print_(value(text)) else "null";
       msg_print_instr = native_static_call("Miscellanea.printAssertionFailedMsg", (filename_str, line, text_arg));
       return (msg_print_instr) & vars_dump;
-
-    else
+    }
+    else {
       msg_print_instr = native_static_call("Miscellanea.printFailReachedMsg", (filename_str, line));
       return ("if (Miscellanea.exitOnSoftFail) {", "  " & msg_print_instr) &
              indent_lines(vars_dump) &
              ("}");
-    ;
+    }
   }
 }

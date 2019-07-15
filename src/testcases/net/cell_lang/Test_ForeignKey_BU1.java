@@ -132,7 +132,7 @@ class Test_ForeignKey_BU1 {
                 }
               if (!found)
                 System.out.printf("%03d: %4d -> %3d\n", i, values1[i],
-                  storeUpdater1.lookupValueEx(IntObj.get(values1[i]))
+                  storeUpdater1.valueToSurrEx(IntObj.get(values1[i]))
                 );
             }
 
@@ -141,8 +141,8 @@ class Test_ForeignKey_BU1 {
             for (int j=0 ; j < r2 ; j++)
               if (newSourceBitmap[i][j] & !newTargetBitmap[i])
                 System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i, j, values1[i], values2[j],
-                  storeUpdater1.lookupValueEx(IntObj.get(values1[i])),
-                  storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[j]))
+                  storeUpdater1.valueToSurrEx(IntObj.get(values1[i])),
+                  storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[j]))
                 );
 
           System.out.println("\nBoth:");
@@ -150,8 +150,8 @@ class Test_ForeignKey_BU1 {
             for (int j=0 ; j < r2 ; j++)
               if (newSourceBitmap[i][j] & newTargetBitmap[i])
                 System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i, j, values1[i], values2[j],
-                  storeUpdater1.lookupValueEx(IntObj.get(values1[i])),
-                  storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[j]))
+                  storeUpdater1.valueToSurrEx(IntObj.get(values1[i])),
+                  storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[j]))
                 );
 
           System.out.println("\nDeleted from source:");
@@ -159,8 +159,8 @@ class Test_ForeignKey_BU1 {
             for (int j=0 ; j < r2 ; j++)
               if (sourceBitmap[i][j] & !newSourceBitmap[i][j])
                 System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i, j, values1[i], values2[j],
-                  storeUpdater1.lookupValueEx(IntObj.get(values1[i])),
-                  storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[j]))
+                  storeUpdater1.valueToSurrEx(IntObj.get(values1[i])),
+                  storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[j]))
                 );
 
           System.out.println("\nInserted into source:");
@@ -168,22 +168,22 @@ class Test_ForeignKey_BU1 {
             for (int j=0 ; j < r2 ; j++)
               if (!sourceBitmap[i][j] & newSourceBitmap[i][j])
                 System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i, j, values1[i], values2[j],
-                  storeUpdater1.lookupValueEx(IntObj.get(values1[i])),
-                  storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[j]))
+                  storeUpdater1.valueToSurrEx(IntObj.get(values1[i])),
+                  storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[j]))
                 );
 
           System.out.println("\nDeleted from target:");
           for (int i=0 ; i < 1000 ; i++)
             if (targetBitmap[i] & !newTargetBitmap[i])
               System.out.printf("%03d: %4d -> %3d\n", i, values1[i],
-                storeUpdater1.lookupValueEx(IntObj.get(values1[i]))
+                storeUpdater1.valueToSurrEx(IntObj.get(values1[i]))
               );
 
           System.out.println("\nInserted into target:");
           for (int i=0 ; i < 1000 ; i++)
             if (!targetBitmap[i] & newTargetBitmap[i])
               System.out.printf("%03d: %4d -> %3d\n", i, values1[i],
-                storeUpdater1.lookupValueEx(IntObj.get(values1[i]))
+                storeUpdater1.valueToSurrEx(IntObj.get(values1[i]))
               );
 
           System.out.println("\n--------------------------------------\n");
@@ -234,8 +234,8 @@ class Test_ForeignKey_BU1 {
               boolean inSource = sourceBitmap[i1][i2];
               boolean inTarget = targetBitmap[i1];
 
-              int surr1 = store1.lookupValue(IntObj.get(values1[i1]));
-              int surr2 = store2.lookupValue(Conversions.stringToObj(values2[i2]));
+              int surr1 = store1.valueToSurr(IntObj.get(values1[i1]));
+              int surr2 = store2.valueToSurr(Conversions.stringToObj(values2[i2]));
 
               if (surr1 == -1) {
                 check(!inSource & !inTarget);
@@ -253,8 +253,8 @@ class Test_ForeignKey_BU1 {
                 System.out.printf("_t = %d, r2 = %d, inSource = %s\n", _t, r2, inSource ? "true" : "false");
 
                 System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i1, i2, values1[i1], values2[i2],
-                  storeUpdater1.lookupValueEx(IntObj.get(values1[i1])),
-                  storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[i2]))
+                  storeUpdater1.valueToSurrEx(IntObj.get(values1[i1])),
+                  storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[i2]))
                 );
 
               }

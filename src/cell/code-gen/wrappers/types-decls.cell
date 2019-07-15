@@ -10,19 +10,19 @@ implicit prg : CompiledPrg {
 
   // Types with a user-defined name that need to be declared
   [TypeSymbol] named_interface_types {
-    let typedefs = prg.typedefs:
+    let typedefs = prg.typedefs {
       // Retrieving all type symbols that are referenced either directly or indirectly
       type_symbs = reachable_type_symbols(boundary_types);
       // Filtering out the type symbols that do not correspond to a nameable type
       type_symbs = [ts : ts <- type_symbs, is_nameable(cast_ne_type(expand_type_ref(ts, typedefs)))];
-    ;
+    }
     return type_symbs;
   }
 
 
   // Types with a user-defined name that need to be declared, and their corresponding definitions
   [NamedInterType -> DeclInterType] named_interface_types_defs {
-    let typedefs = prg.typedefs:
+    let typedefs = prg.typedefs {
       // Mapping each type name to its corresponding interface type
       inter_type_defs = [
         :named(ts) -> {
@@ -33,23 +33,22 @@ implicit prg : CompiledPrg {
           return inter_type;
         } : ts <- named_interface_types
       ];
-    ;
+    }
     return inter_type_defs;
   }
 
 
   // Types that need to be declared
   [DeclInterType] declared_types {
-    let typedefs = prg.typedefs:
+    let typedefs = prg.typedefs
       inter_types = [interface_type(t) : t <- boundary_types];
-    ;
     named_types = [n : t <- inter_types, n <- nested_named_types(t)];
-    loop
+    loop {
       new_inter_types = [named_interface_types_defs(t, !!) : t <- named_types];
       new_named_types = [n : t <- new_inter_types, n <- nested_named_types(t)] - named_types;
       break if new_named_types == [];
       named_types = named_types & new_named_types;
-    ;
+    }
     direct_decl_types = [d : t <- inter_types, d <- declarable_types(t)];
     indirect_decl_types  = [
       d : n <- named_types,
@@ -121,7 +120,7 @@ implicit prg : CompiledPrg {
     names = interface_type_names(declared_types, direction = :out, taken_names = taken_names);
     decls = [t -> type_decl(t, names, :out) : t, unused_var <- names];
 
-    loop
+    loop {
       conflicts = union([{
           in_name  = input_types_names(t, !!);
           out_name = names(t, !!);
@@ -135,7 +134,7 @@ implicit prg : CompiledPrg {
 
       taken_names = taken_names & [input_types_names(t, !!) : t <- conflicts];
       names = interface_type_names(declared_types, direction = :out, taken_names = taken_names);
-    ;
+    }
   }
 
 
@@ -208,16 +207,15 @@ implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
 
     // If there are conflicts, the first option is to use the "try harder" flag
     conflicts = non_injective_keys_by_value(type_names);
-    if conflicts != []:
-      for type_group <- isort(conflicts):
+    if conflicts != [] {
+      for type_group <- isort(conflicts) {
         renamed_types = [t -> safe_class_name(t, true, nothing) : t <- type_group];
-        if non_injective_keys(renamed_types) == []:
+        if non_injective_keys(renamed_types) == []
           type_names = [t -> lookup(renamed_types, t, type_names(t, !!)) : t <- decl_types];
-        ;
-      ;
-    ;
+      }
+    }
 
-    loop
+    loop {
       conflicts = non_injective_keys_by_value(type_names);
       break if conflicts == [];
       renamed_types = [t -> safe_class_name(t, false, just(i)) : ts <- conflicts, t @ i <~ isort(ts)];
@@ -226,13 +224,13 @@ implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
       ## THIS IS JUST A CHECK THAT HAS TO BE REMOVED
       assert {
         rem_conflicts = non_injective_keys_by_value(type_names);
-        if rem_conflicts != []:
+        if rem_conflicts != [] {
           print "Found conflict after first iteraction of renaming:";
           print rem_conflicts;
-        ;
+        }
         return true;
       };
-    ;
+    }
     return type_names;
   }
 }
@@ -287,14 +285,15 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
   String* type_decl_or_doc(TaggedInterType type) {
     untagged = untagged_type(type);
-    if untagged :: <NamedInterType, UnionInterType> and in(untagged, declared_types):
+    if untagged :: <NamedInterType, UnionInterType> and in(untagged, declared_types) {
       body = ({if doc_only then "" else "public "} & types_names(untagged, !!) & " value;");
       body = body & to_string_method if not doc_only;
       first_line = {if doc_only then "" else "public "} & "class " & name_and_parents_decl(false) & " {";
       return (first_line) & indent_lines(body) & ("}");
-    else
+    }
+    else {
       return untagged_type_decl_or_doc(untagged);
-    ;
+    }
 
 
     String* untagged_type_decl_or_doc(DeclInterType inter_type) = type_decl_or_doc(inter_type);
@@ -321,13 +320,14 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
   String* type_decl_or_doc(SymbolInterType type) {
     type_name = types_names(root_type, !!);
-    if doc_only:
+    if doc_only {
       return (
         "class " & name_and_parents_decl(false) & " {",
         "  final static " & type_name & " singleton;",
         "}"
       );
-    else
+    }
+    else {
       return (
         "public class " & name_and_parents_decl(false) & " {",
         "  private " & type_name & "() {}",
@@ -339,7 +339,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
         "  }",
         "}"
       );
-    ;
+    }
   }
 
 
@@ -373,12 +373,12 @@ implicit prg : CompiledPrg {
     sign_line = "static Obj " & decl_type_import_funct_name(type_name) & "(" & type_name & " obj) {";
     code = (sign_line) & indent_lines(body) & ("}");
     out_type_name = output_types_names(inter_type, !!);
-    if out_type_name != type_name:
+    if out_type_name != type_name {
       out_body = decl_type_import_code(type_def, "obj", "return ", treat_generic_as_value = true);
       out_fn_name = decl_type_import_funct_name(out_type_name);
       out_sign_line = "static Obj " & out_fn_name & "(" & out_type_name & " obj) {";
       code = code & ("", out_sign_line) & indent_lines(out_body) & ("}");
-    ;
+    }
     return code;
   }
 

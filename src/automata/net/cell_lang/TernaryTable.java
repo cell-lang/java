@@ -14,7 +14,7 @@ class TernaryTable {
 
   public Index index123, index12, index13, index23, index1, index2, index3;
 
-  public ValueStore store1, store2, store3;
+  public SurrObjMapper mapper1, mapper2, mapper3;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -49,7 +49,7 @@ class TernaryTable {
     int len = flatTuples.length;
     Miscellanea._assert(3 * count == len);
     int[] newFlatTuples = new int[2 * len];
-    Miscellanea.arrayCopy(flatTuples, newFlatTuples, len);
+    Array.copy(flatTuples, newFlatTuples, len);
     flatTuples = newFlatTuples;
     int size = len / 3;
     for (int i=size ; i < 2 * size ; i++)
@@ -58,16 +58,16 @@ class TernaryTable {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public TernaryTable(ValueStore store1, ValueStore store2, ValueStore store3) {
+  public TernaryTable(SurrObjMapper mapper1, SurrObjMapper mapper2, SurrObjMapper mapper3) {
     for (int i=0 ; i < MinSize ; i++)
       setEntry(i, i+1, Empty, 0);
 
     index123 = new Index(MinSize);
     index12  = new Index(MinSize);
 
-    this.store1 = store1;
-    this.store2 = store2;
-    this.store3 = store3;
+    this.mapper1 = mapper1;
+    this.mapper2 = mapper2;
+    this.mapper3 = mapper3;
   }
 
   public int size() {
@@ -99,18 +99,18 @@ class TernaryTable {
     count++;
 
     // Updating the indexes
-    index123.insert(index, Miscellanea.hashcode(field1, field2, field3));
-    index12.insert(index, Miscellanea.hashcode(field1, field2));
+    index123.insert(index, Hashing.hashcode(field1, field2, field3));
+    index12.insert(index, Hashing.hashcode(field1, field2));
     if (index13 != null)
-      index13.insert(index, Miscellanea.hashcode(field1, field3));
+      index13.insert(index, Hashing.hashcode(field1, field3));
     if (index23 != null)
-      index23.insert(index, Miscellanea.hashcode(field2, field3));
+      index23.insert(index, Hashing.hashcode(field2, field3));
     if (index1 != null)
-      index1.insert(index, Miscellanea.hashcode(field1));
+      index1.insert(index, Hashing.hashcode(field1));
     if (index2 != null)
-      index2.insert(index, Miscellanea.hashcode(field2));
+      index2.insert(index, Hashing.hashcode(field2));
     if (index3 != null)
-      index3.insert(index, Miscellanea.hashcode(field3));
+      index3.insert(index, Hashing.hashcode(field3));
   }
 
   public void clear() {
@@ -131,7 +131,7 @@ class TernaryTable {
   }
 
   public void delete(int field1, int field2, int field3) {
-    int hashcode = Miscellanea.hashcode(field1, field2, field3);
+    int hashcode = Hashing.hashcode(field1, field2, field3);
     for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx)) {
       if (field1OrNext(idx) == field1 & field2OrEmptyMarker(idx) == field2 & field3(idx) == field3) {
         deleteAt(idx, hashcode);
@@ -140,8 +140,17 @@ class TernaryTable {
     }
   }
 
+  public int containsAt(int field1, int field2, int field3) {
+    int hashcode = Hashing.hashcode(field1, field2, field3);
+    for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx)) {
+      if (field1OrNext(idx) == field1 & field2OrEmptyMarker(idx) == field2 & field3(idx) == field3)
+        return idx;
+    }
+    return -1;
+  }
+
   public boolean contains(int field1, int field2, int field3) {
-    int hashcode = Miscellanea.hashcode(field1, field2, field3);
+    int hashcode = Hashing.hashcode(field1, field2, field3);
     for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx)) {
       if (field1OrNext(idx) == field1 & field2OrEmptyMarker(idx) == field2 & field3(idx) == field3)
         return true;
@@ -150,7 +159,7 @@ class TernaryTable {
   }
 
   public boolean contains12(int field1, int field2) {
-    int hashcode = Miscellanea.hashcode(field1, field2);
+    int hashcode = Hashing.hashcode(field1, field2);
     for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx)) {
       if (field1OrNext(idx) == field1 & field2OrEmptyMarker(idx) == field2)
         return true;
@@ -161,7 +170,7 @@ class TernaryTable {
   public boolean contains13(int field1, int field3) {
     if (index13 == null)
       buildIndex13();
-    int hashcode = Miscellanea.hashcode(field1, field3);
+    int hashcode = Hashing.hashcode(field1, field3);
     for (int idx = index13.head(hashcode) ; idx != Empty ; idx = index13.next(idx)) {
       if (field1OrNext(idx) == field1 & field3(idx) == field3)
         return true;
@@ -172,7 +181,7 @@ class TernaryTable {
   public boolean contains23(int field2, int field3) {
     if (index23 == null)
       buildIndex23();
-    int hashcode = Miscellanea.hashcode(field2, field3);
+    int hashcode = Hashing.hashcode(field2, field3);
     for (int idx = index23.head(hashcode) ; idx != Empty ; idx = index23.next(idx)) {
       if (field2OrEmptyMarker(idx) == field2 & field3(idx) == field3)
         return true;
@@ -183,7 +192,7 @@ class TernaryTable {
   public boolean contains1(int field1) {
     if (index1 == null)
       buildIndex1();
-    int hashcode = Miscellanea.hashcode(field1);
+    int hashcode = Hashing.hashcode(field1);
     for (int idx = index1.head(hashcode) ; idx != Empty ; idx = index1.next(idx)) {
       if (field1OrNext(idx) == field1)
         return true;
@@ -194,7 +203,7 @@ class TernaryTable {
   public boolean contains2(int field2) {
     if (index2 == null)
       buildIndex2();
-    int hashcode = Miscellanea.hashcode(field2);
+    int hashcode = Hashing.hashcode(field2);
     for (int idx = index2.head(hashcode) ; idx != Empty ; idx = index2.next(idx)) {
       if (field2OrEmptyMarker(idx) == field2)
         return true;
@@ -205,7 +214,7 @@ class TernaryTable {
   public boolean contains3(int field3) {
     if (index3 == null)
       buildIndex3();
-    int hashcode = Miscellanea.hashcode(field3);
+    int hashcode = Hashing.hashcode(field3);
     for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx)) {
       if (field3(idx) == field3)
         return true;
@@ -213,9 +222,51 @@ class TernaryTable {
     return false;
   }
 
+
+  public int lookup12(int arg1, int arg2) {
+    int hashcode = Hashing.hashcode(arg1, arg2);
+    int value = -1;
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx)) {
+      if (field1OrNext(idx) == arg1 && field2OrEmptyMarker(idx) == arg2)
+        if (value == -1)
+          value = field3(idx);
+        else
+          throw Miscellanea.softFail();
+    }
+    return value;
+  }
+
+  public int lookup13(int arg1, int arg3) {
+    if (index13 == null)
+      buildIndex13();
+    int hashcode = Hashing.hashcode(arg1, arg3);
+    int value = -1;
+    for (int idx = index13.head(hashcode) ; idx != Empty ; idx = index13.next(idx))
+      if (field1OrNext(idx) == arg1 && field3(idx) == arg3)
+        if (value == -1)
+          value = field2OrEmptyMarker(idx);
+        else
+          throw Miscellanea.softFail();
+    return value;
+  }
+
+  public int lookup23(int arg2, int arg3) {
+    if (index23 == null)
+      buildIndex23();
+    int hashcode = Hashing.hashcode(arg2, arg3);
+    int value = -1;
+    for (int idx = index23.head(hashcode) ; idx != Empty ; idx = index23.next(idx))
+      if (field2OrEmptyMarker(idx) == arg2 && field3(idx) == arg3)
+        if (value == -1)
+          value = field1OrNext(idx);
+        else
+          throw Miscellanea.softFail();
+    return value;
+  }
+
   public int count12(int arg1, int arg2) {
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int hashcode = Hashing.hashcode(arg1, arg2);
     for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
       if (field1OrNext(idx) == arg1 & field2OrEmptyMarker(idx) == arg2)
         count++;
@@ -226,7 +277,7 @@ class TernaryTable {
     if (index13 == null)
       buildIndex13();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg1, arg3);
+    int hashcode = Hashing.hashcode(arg1, arg3);
     for (int idx = index13.head(hashcode) ; idx != Empty ; idx = index13.next(idx))
       if (field1OrNext(idx) == arg1 & field3(idx) == arg3)
         count++;
@@ -237,7 +288,7 @@ class TernaryTable {
     if (index23 == null)
       buildIndex23();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg2, arg3);
+    int hashcode = Hashing.hashcode(arg2, arg3);
     for (int idx = index23.head(hashcode) ; idx != Empty ; idx = index23.next(idx))
       if (field2OrEmptyMarker(idx) == arg2 & field3(idx) == arg3)
         count++;
@@ -248,7 +299,7 @@ class TernaryTable {
     if (index1 == null)
       buildIndex1();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg1);
+    int hashcode = Hashing.hashcode(arg1);
     for (int idx = index1.head(hashcode) ; idx != Empty ; idx = index1.next(idx))
       if (field1OrNext(idx) == arg1)
         count++;
@@ -259,7 +310,7 @@ class TernaryTable {
     if (index2 == null)
       buildIndex2();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg2);
+    int hashcode = Hashing.hashcode(arg2);
     for (int idx = index2.head(hashcode) ; idx != Empty ; idx = index2.next(idx))
       if (field2OrEmptyMarker(idx) == arg2)
         count++;
@@ -270,7 +321,7 @@ class TernaryTable {
     if (index3 == null)
       buildIndex3();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg3);
+    int hashcode = Hashing.hashcode(arg3);
     for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
       if (field3(idx) == arg3)
         count++;
@@ -279,7 +330,7 @@ class TernaryTable {
 
   public boolean count12Eq(int arg1, int arg2, int expCount) {
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int hashcode = Hashing.hashcode(arg1, arg2);
     for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
       if (field1OrNext(idx) == arg1 & field2OrEmptyMarker(idx) == arg2) {
         count++;
@@ -293,7 +344,7 @@ class TernaryTable {
     if (index1 == null)
       buildIndex1();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg1);
+    int hashcode = Hashing.hashcode(arg1);
     for (int idx = index1.head(hashcode) ; idx != Empty ; idx = index1.next(idx))
       if (field1OrNext(idx) == arg1) {
         count++;
@@ -307,7 +358,7 @@ class TernaryTable {
     if (index2 == null)
       buildIndex2();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg2);
+    int hashcode = Hashing.hashcode(arg2);
     for (int idx = index2.head(hashcode) ; idx != Empty ; idx = index2.next(idx))
       if (field2OrEmptyMarker(idx) == arg2) {
         count++;
@@ -321,7 +372,7 @@ class TernaryTable {
     if (index3 == null)
       buildIndex3();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg3);
+    int hashcode = Hashing.hashcode(arg3);
     for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
       if (field3(idx) == arg3) {
         count++;
@@ -336,42 +387,42 @@ class TernaryTable {
   }
 
   public Iter12 getIter12(int field1, int field2) {
-    int hashcode = Miscellanea.hashcode(field1, field2);
+    int hashcode = Hashing.hashcode(field1, field2);
     return new Iter12(field1, field2, index12.head(hashcode));
   }
 
   public Iter13 getIter13(int field1, int field3) {
     if (index13 == null)
       buildIndex13();
-    int hashcode = Miscellanea.hashcode(field1, field3);
+    int hashcode = Hashing.hashcode(field1, field3);
     return new Iter13(field1, field3, index13.head(hashcode));
   }
 
   public Iter23 getIter23(int field2, int field3) {
     if (index23 == null)
       buildIndex23();
-    int hashcode = Miscellanea.hashcode(field2, field3);
+    int hashcode = Hashing.hashcode(field2, field3);
     return new Iter23(field2, field3, index23.head(hashcode));
   }
 
   public Iter1 getIter1(int field1) {
     if (index1 == null)
       buildIndex1();
-    int hashcode = Miscellanea.hashcode(field1);
+    int hashcode = Hashing.hashcode(field1);
     return new Iter1(field1, index1.head(hashcode));
   }
 
   public Iter2 getIter2(int field2) {
     if (index2 == null)
       buildIndex2();
-    int hashcode = Miscellanea.hashcode(field2);
+    int hashcode = Hashing.hashcode(field2);
     return new Iter2(field2, index2.head(hashcode));
   }
 
   public Iter3 getIter3(int field3) {
     if (index3 == null)
       buildIndex3();
-    int hashcode = Miscellanea.hashcode(field3);
+    int hashcode = Hashing.hashcode(field3);
     return new Iter3(field3, index3.head(hashcode));
   }
 
@@ -390,10 +441,9 @@ class TernaryTable {
 
     for (int i=0 ; i < hashtable.length ; i++) {
       int count = 0;
-
       int idx = hashtable[i];
       while (idx != Empty) {
-        bucket = Miscellanea.arrayAppend(bucket, count++, flatTuples[3 * i]);
+        bucket = Array.append(bucket, count++, flatTuples[3 * idx + 2]);
         idx = index3.next(idx);
       }
 
@@ -401,7 +451,7 @@ class TernaryTable {
         if (count > 2)
           Arrays.sort(bucket, 0, count);
         int last = bucket[0];
-        for (int j=1 ; j < count ; i++) {
+        for (int j=1 ; j < count ; j++) {
           int val = bucket[j];
           if (val == last)
             return false;
@@ -446,7 +496,7 @@ class TernaryTable {
         long packedArgs = arg1 | (arg2 << 32);
         Miscellanea._assert(arg1 == (packedArgs & 0xFFFFFFFFL));
         Miscellanea._assert(arg2 == (packedArgs >>> 32));
-        bucket = Miscellanea.arrayAppend(bucket, count++, packedArgs);
+        bucket = Array.append(bucket, count++, packedArgs);
         idx = index.next(idx);
       }
 
@@ -466,6 +516,82 @@ class TernaryTable {
     return true;
   }
 
+  public boolean deleteAt(int index) {
+    int field2 = field2OrEmptyMarker(index);
+    if (field2 == Empty)
+      return false;
+
+    int field1 = field1OrNext(index);
+    int field3 = field3(index);
+
+    // Removing the tuple
+    setEntry(index, firstFree, Empty, 0);
+    firstFree = index;
+    count--;
+
+    // Updating the indexes
+    index123.delete(index, Hashing.hashcode(field1, field2, field3));
+    index12.delete(index, Hashing.hashcode(field1, field2));
+    if (index13 != null)
+      index13.delete(index, Hashing.hashcode(field1, field3));
+    if (index23 != null)
+      index23.delete(index, Hashing.hashcode(field2, field3));
+    if (index1 != null)
+      index1.delete(index, Hashing.hashcode(field1));
+    if (index2 != null)
+      index2.delete(index, Hashing.hashcode(field2));
+    if (index3 != null)
+      index3.delete(index, Hashing.hashcode(field3));
+
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  Index getIndex123() {
+    if (index123 == null)
+      buildIndex123();
+    return index123;
+  }
+
+  Index getIndex12() {
+    if (index12 == null)
+      buildIndex12();
+    return index12;
+  }
+
+  Index getIndex13() {
+    if (index13 == null)
+      buildIndex13();
+    return index13;
+  }
+
+  Index getIndex23() {
+    if (index23 == null)
+      buildIndex23();
+    return index23;
+  }
+
+  Index getIndex1() {
+    if (index1 == null)
+      buildIndex1();
+    return index1;
+  }
+
+  Index getIndex2() {
+    if (index2 == null)
+      buildIndex2();
+    return index2;
+  }
+
+  Index getIndex3() {
+    if (index3 == null)
+      buildIndex3();
+    return index3;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   void deleteAt(int index, int hashcode) {
     int field1 = field1OrNext(index);
     int field2 = field2OrEmptyMarker(index);
@@ -479,17 +605,17 @@ class TernaryTable {
 
     // Updating the indexes
     index123.delete(index, hashcode);
-    index12.delete(index, Miscellanea.hashcode(field1, field2));
+    index12.delete(index, Hashing.hashcode(field1, field2));
     if (index13 != null)
-      index13.delete(index, Miscellanea.hashcode(field1, field3));
+      index13.delete(index, Hashing.hashcode(field1, field3));
     if (index23 != null)
-      index23.delete(index, Miscellanea.hashcode(field2, field3));
+      index23.delete(index, Hashing.hashcode(field2, field3));
     if (index1 != null)
-      index1.delete(index, Miscellanea.hashcode(field1));
+      index1.delete(index, Hashing.hashcode(field1));
     if (index2 != null)
-      index2.delete(index, Miscellanea.hashcode(field2));
+      index2.delete(index, Hashing.hashcode(field2));
     if (index3 != null)
-      index3.delete(index, Miscellanea.hashcode(field3));
+      index3.delete(index, Hashing.hashcode(field3));
   }
 
   void buildIndex123() {
@@ -498,7 +624,7 @@ class TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int field2 = field2OrEmptyMarker(i);
       if (field2 != Empty)
-        index123.insert(i, Miscellanea.hashcode(field1OrNext(i), field2, field3(i)));
+        index123.insert(i, Hashing.hashcode(field1OrNext(i), field2, field3(i)));
     }
   }
 
@@ -508,7 +634,7 @@ class TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int field2 = field2OrEmptyMarker(i);
       if (field2 != Empty)
-        index12.insert(i, Miscellanea.hashcode(field1OrNext(i), field2));
+        index12.insert(i, Hashing.hashcode(field1OrNext(i), field2));
     }
   }
 
@@ -518,7 +644,7 @@ class TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int field2 = field2OrEmptyMarker(i);
       if (field2 != Empty)
-        index13.insert(i, Miscellanea.hashcode(field1OrNext(i), field3(i)));
+        index13.insert(i, Hashing.hashcode(field1OrNext(i), field3(i)));
     }
   }
 
@@ -528,7 +654,7 @@ class TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int field2 = field2OrEmptyMarker(i);
       if (field2 != Empty)
-        index23.insert(i, Miscellanea.hashcode(field2, field3(i)));
+        index23.insert(i, Hashing.hashcode(field2, field3(i)));
     }
   }
 
@@ -538,7 +664,7 @@ class TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int field2 = field2OrEmptyMarker(i);
       if (field2 != Empty)
-        index1.insert(i, Miscellanea.hashcode(field1OrNext(i)));
+        index1.insert(i, Hashing.hashcode(field1OrNext(i)));
     }
   }
 
@@ -548,7 +674,7 @@ class TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int field2 = field2OrEmptyMarker(i);
       if (field2 != Empty)
-        index2.insert(i, Miscellanea.hashcode(field2));
+        index2.insert(i, Hashing.hashcode(field2));
     }
   }
 
@@ -558,7 +684,7 @@ class TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int field2 = field2OrEmptyMarker(i);
       if (field2 != Empty)
-        index3.insert(i, Miscellanea.hashcode(field3(i)));
+        index3.insert(i, Hashing.hashcode(field3(i)));
     }
   }
 
@@ -580,16 +706,16 @@ class TernaryTable {
     int next = 0;
     for (int iT=0 ; iT < tables.length ; iT++) {
       TernaryTable table = tables[iT];
-      ValueStore store1 = table.store1;
-      ValueStore store2 = table.store2;
-      ValueStore store3 = table.store3;
+      SurrObjMapper mapper1 = table.mapper1;
+      SurrObjMapper mapper2 = table.mapper2;
+      SurrObjMapper mapper3 = table.mapper3;
       int size = table.capacity();
       for (int iS=0 ; iS < size ; iS++) {
         int field2 = table.field2OrEmptyMarker(iS);
         if (field2 != Empty) {
-          objs1[next] = store1.getValue(table.field1OrNext(iS));
-          objs2[next] = store2.getValue(field2);
-          objs3[next] = store3.getValue(table.field3(iS));
+          objs1[next] = mapper1.surrToObj(table.field1OrNext(iS));
+          objs2[next] = mapper2.surrToObj(field2);
+          objs3[next] = mapper3.surrToObj(table.field3(iS));
           next++;
         }
       }
@@ -612,6 +738,10 @@ class TernaryTable {
 
     public boolean done() {
       return index == Empty;
+    }
+
+    public int index() {
+      return index;
     }
 
     public int get1() {

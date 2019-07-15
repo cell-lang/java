@@ -190,24 +190,24 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
 
     methods = block.methods;
-    let block = block:
+    let block = block {
       input_setters, input_setters_docs = (join(ls) : ls <- unzip((input_setter(i) : i <- ord_inputs)));
       output_getters, output_getters_docs = (join(ls) : ls <- unzip((output_getter(o) : o <- ord_outputs)));
       methods_wrappers, methods_wrappers_docs = (
         join(ls) : ls <- unzip(isort([auto_method_wrapper(id, m) : id, m <- methods]))
       );
-    ;
+    }
 
     input_enum_docs = if inputs == ()
         then ()
-      elif sum((length(i) : i <- inputs)) <= 80
+      else if sum((length(i) : i <- inputs)) <= 80
         then ("enum Input {" & append(inputs, ", ") & "};")
       else
         ("enum Input {") & ("    " & i & "," : i <- inputs) & ("  };");
 
     output_enum_docs = if outputs == ()
         then ()
-      elif sum((length(o) : o <- inputs)) <= 80
+      else if sum((length(o) : o <- inputs)) <= 80
         then ("enum Output {" & append(outputs, ", ") & "};")
       else
         ("enum Output {") & ("    " & o & "," : o <- outputs) & ("  };");
@@ -273,7 +273,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "}"
     );
 
-    if is_time_sensitive:
+    if is_time_sensitive {
       code = code & (
         "",
         "public void setElapsedMillisecs(int time) {",
@@ -288,15 +288,15 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "  setElapsedMillisecs(1000 * time);",
         "}"
       );
-    ;
+    }
 
-    if inputs != ():
+    if inputs != () {
       code = code & (
         "",
         "void internalSetInput(Input input, Obj obj) {",
         "  switch (input) {"
       );
-      for input @ j <- inputs:
+      for input @ j <- inputs {
         code = code & (
           "" if j > 0,
           "    case " & input & ":",
@@ -306,7 +306,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
           "      }",
           "      break;"
         );
-      ;
+      }
       code = (code |
         "  }",
         "  System.exit(1); // Internal error",
@@ -316,9 +316,9 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "  internalSetInput(input, Conversions.convertText(value));",
         "}"
       );
-    ;
+    }
 
-    if outputs != ():
+    if outputs != () {
       code = code & (
         "",
         "public Output[] changedOutputs() {",
@@ -334,20 +334,20 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "  Obj obj = null;",
         "  switch (output) {"
       );
-      for output @ i <- outputs:
+      for output @ i <- outputs {
         code = code & (
           "" if i > 0,
           "    case " & output & ":",
           "      obj = automaton." & output_vars_names(i) & ";",
           "      break;"
         );
-      ;
+      }
       code = code & (
         "  }",
         "  return Conversions.exportAsValue(obj);",
         "}"
       );
-    ;
+    }
 
     code = code & input_setters & output_getters & methods_wrappers;
     code = (
@@ -358,85 +358,5 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       ) & indent_lines(code) & ("}");
 
     return (auto_class_name, code, docs);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/////////////// Code shared between static and reactive automata ///////////////
-////////////////////////////////////////////////////////////////////////////////
-
-implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
-  (String*, String*) method_wrapper(MethodId method_id, CompiledMethod method,
-    <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name,
-    String method_path, Bool is_gen_memb_tester) {
-    args_inter_types = (interface_type(t) : t <- method.args_types);
-    inter_ret_type = interface_type(method.ret_type);
-
-    input_args_types = (input_arg_type(it) : it <- args_inter_types);
-    args_types_str = append(input_args_types, ", ");
-    args_decls = append((it & " arg" & printed(i) : it @ i <- input_args_types), ", ");
-
-    ret_val_str = return_value_type(inter_ret_type);
-
-    arity = |method.args_types|;
-    memb_preds = method.args_memb_preds;
-    args_types_by_pos = ([ps(i) : ps <- memb_preds] : i < arity);
-    mono_args = ((i, only(ts)) : ts @ i <- args_types_by_pos, |ts| == 1);
-    poly_args = isort([i : ts @ i <~ args_types_by_pos, |ts| != 1]);
-
-    code = (
-      "",
-      "public " & ret_val_str & " " & ext_name & "(" & args_decls & ") {"
-    );
-
-    code = code & join((
-      indent_lines(import_code(it, "arg" & printed(i), "Obj objArg" & printed(i) & " = "))
-      : it @ i <- args_inter_types
-    ));
-
-    conds = ("Generated." & native_fn_name(p) & "(objArg" & printed(i) & ")" : i, p <- mono_args);
-    if poly_args != ():
-      poly_conds = ((
-        "Generated." & native_fn_name(ps(i)) & "(objArg" & printed(i) & ")" : i <- poly_args
-        ) : ps <- isort(memb_preds)
-      );
-      anded_conds = ({
-          c = append(cs, " && ");
-          c = "(" & c & ")" if |cs| > 1;
-          return c;
-        } : cs <- poly_conds
-      );
-      poly_cond = append(anded_conds, " || ");
-      poly_cond = "(" & poly_cond & ")" if |anded_conds| > 1;
-      conds = (conds | poly_cond);
-    ;
-    cond = append(conds, " && ");
-    cond = "(" & cond & ")" if |conds| > 1;
-
-    code = code & (
-      "  if (!" & cond & ")",
-      if is_gen_memb_tester
-        then "    return false;"
-        else "    throw new RuntimeException(\"Invalid argument type\");"
-    ) if cond != "";
-
-    code = code & (
-      "  try {",
-      "    Obj resObj = " & method_path & user_def_method_name(block_name, method_id) &
-        "(" & append((("objArg" & printed(i) : i < arity) | "env"), ", ") & ");"
-      ) & indent_lines(indent_lines(
-        export_code(inter_ret_type, "resObj", "return ")
-      )) & (
-      "  }",
-      "  catch (Exception e) {",
-      "    env = new Generated.Env();",
-      "    throw e;",
-      "  }",
-      "}"
-    );
-
-    docs = ret_val_str & " " & ext_name & "(" & args_types_str & ");";
-
-    return (code, (docs));
   }
 }

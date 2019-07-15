@@ -39,6 +39,41 @@ class Algs {
     return -1;
   }
 
+  // If the element exists, return its index
+  // Otherwise, return the -(I + 1) where I is the index of
+  // the first element that is greater than the searched one
+  public static int binSearchEx(Obj[] objs, int first, int count, Obj obj) {
+    int idx = _binSearchEx(objs, first, count, obj);
+    if (idx >= 0) {
+      Miscellanea._assert(objs[idx].isEq(obj));
+    }
+    else {
+      int insIdx = -idx - 1;
+      Miscellanea._assert(insIdx >= first & insIdx <= first + count);
+      Miscellanea._assert(insIdx == first || objs[insIdx-1].quickOrder(obj) < 0);
+      Miscellanea._assert(insIdx == first + count || obj.quickOrder(objs[insIdx]) <= 0);
+    }
+    return idx;
+  }
+
+  public static int _binSearchEx(Obj[] objs, int first, int count, Obj obj) {
+    int low = first;
+    int high = first + count - 1;
+
+    while (low <= high) {
+      int mid = (int) (((long) low + (long) high) / 2);
+      int res = obj.quickOrder(objs[mid]);
+      if (res == -1)
+        high = mid - 1; // objs[mid] > obj
+      else if (res == 1)
+        low = mid + 1;  // objs[mid] < obj
+      else
+        return mid;
+    }
+
+    return -low - 1;
+  }
+
   public static int[] binSearchRange(Obj[] objs, int offset, int length, Obj obj) {
     int first;
 
@@ -290,50 +325,159 @@ class Algs {
     return new int[] {0, 0};
   }
 
+  // public static Obj[] sortUnique(Obj[] objs, int count) {
+  //   Miscellanea._assert(count > 0);
 
-  public static Obj[] sortUnique(Obj[] objs, int count) {
+  //   int extraData0 = objs[0].extraData;
+  //   for (int i=1 ; i < count ; i++)
+  //     if (objs[i].extraData != extraData0)
+  //       return _sortUnique(objs, count);
+
+
+  //   int[] keysIdxs = new int[3*count];
+  //   for (int i=0 ; i < count ; i++) {
+  //     long data = objs[i].data;
+  //     int idx = 3 * i;
+  //     keysIdxs[idx]   = (int) (data >>> 32);
+  //     keysIdxs[idx+1] = (int) data;
+  //     keysIdxs[idx+2] = i;
+  //   }
+  //   Ints123.sort(keysIdxs, count);
+
+  //   Obj[] objs2 = new Obj[count];
+  //   int groupKey1 = keysIdxs[0];
+  //   int groupKey2 = keysIdxs[1];
+  //   int groupStartIdx = 0;
+  //   int nextIdx = 0;
+  //   for (int i=0 ; i < count ; i++) {
+  //     int i3 = 3 * i;
+  //     int key1 = keysIdxs[i3];
+  //     int key2 = keysIdxs[i3+1];
+  //     int idx  = keysIdxs[i3+2];
+
+  //     if (key1 != groupKey1 | key2 != groupKey2) {
+  //       if (nextIdx - groupStartIdx > 1)
+  //         nextIdx = sortUnique(objs2, groupStartIdx, nextIdx);
+  //       groupKey1 = key1;
+  //       groupKey2 = key2;
+  //       groupStartIdx = nextIdx;
+  //     }
+
+  //     objs2[nextIdx++] = objs[idx];
+  //   }
+  //   if (nextIdx - groupStartIdx > 1)
+  //     nextIdx = sortUnique(objs2, groupStartIdx, nextIdx);
+
+  //   if (nextIdx == count)
+  //     return objs2;
+  //   else
+  //     return Arrays.copyOf(objs2, nextIdx);
+  // }
+
+  public static Object[] _sortUnique(Obj[] objs, int count) {
     Miscellanea._assert(count > 0);
-    Arrays.sort(objs, 0, count);
-    int prev = 0;
-    for (int i=1 ; i < count ; i++)
+
+    long[] keysIdxs = indexesSortedByHashcode(objs, count);
+
+    Obj[] sortedObjs = new Obj[count];
+    int[] hashcodes = new int[count];
+    int groupKey = (int) (keysIdxs[0] >>> 32);
+    int groupStartIdx = 0;
+    int nextIdx = 0;
+    for (int i=0 ; i < count ; i++) {
+      long keyIdx = keysIdxs[i];
+      int key = (int) (keyIdx >> 32);
+      int idx = (int) keyIdx;
+
+      if (key != groupKey) {
+        if (nextIdx - groupStartIdx > 1)
+          nextIdx = sortUnique(sortedObjs, groupStartIdx, nextIdx);
+        for (int j=groupStartIdx ; j < nextIdx ; j++)
+          hashcodes[j] = groupKey;
+        groupKey = key;
+        groupStartIdx = nextIdx;
+      }
+
+      sortedObjs[nextIdx++] = objs[idx];
+    }
+    if (nextIdx - groupStartIdx > 1)
+      nextIdx = sortUnique(sortedObjs, groupStartIdx, nextIdx);
+    for (int j=groupStartIdx ; j < nextIdx ; j++)
+      hashcodes[j] = groupKey;
+
+    if (nextIdx == count)
+      return new Object[] {sortedObjs, hashcodes};
+    else
+      return new Object[] {Arrays.copyOf(sortedObjs, nextIdx), Arrays.copyOf(hashcodes, nextIdx)};
+  }
+
+  private static long[] indexesSortedByHashcode(Obj[] objs, int count) {
+    long[] keysIdxs = new long[count];
+    for (int i=0 ; i < count ; i++) {
+      keysIdxs[i] = (((long) objs[i].hashcode()) << 32) | i;
+    }
+    Arrays.sort(keysIdxs);
+    return keysIdxs;
+  }
+
+  private static int sortUnique(Obj[] objs, int first, int end) {
+    Arrays.sort(objs, first, end);
+    int prev = first;
+    for (int i=first+1 ; i < end ; i++)
       if (!objs[prev].isEq(objs[i]))
         if (i != ++prev)
           objs[prev] = objs[i];
-    int len = prev + 1;
-    return Arrays.copyOf(objs, len);
+    return prev + 1;
   }
 
+  // public static Obj[] sortUnique(Obj[] objs, int count) {
+  //   Miscellanea._assert(count > 0);
+  //   Arrays.sort(objs, 0, count);
+  //   int prev = 0;
+  //   for (int i=1 ; i < count ; i++)
+  //     if (!objs[prev].isEq(objs[i]))
+  //       if (i != ++prev)
+  //         objs[prev] = objs[i];
+  //   int len = prev + 1;
+  //   return Arrays.copyOf(objs, len);
+  // }
 
-  public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, int count) {
-    Miscellanea._assert(count > 0);
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
-    int[] idxs = new int[count];
-    for (int i=0 ; i < count ; i++)
-      idxs[i] = i;
+  // public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, int count) {
+  //   Miscellanea._assert(count > 0);
 
-    sortIdxs(idxs, 0, count-1, col1, col2);
+  //   int[] idxs = new int[count];
+  //   for (int i=0 ; i < count ; i++)
+  //     idxs[i] = i;
 
-    int prev = 0;
-    for (int i=1 ; i < count ; i++) {
-      int j = idxs[i];
-      int k = idxs[i-1];
-      if (!col1[j].isEq(col1[k]) || !col2[j].isEq(col2[k]))
-        if (i != ++prev)
-          idxs[prev] = idxs[i];
-    }
+  //   sortIdxs(idxs, 0, count-1, col1, col2);
 
-    int size = prev + 1;
-    Obj[] normCol1 = new Obj[size];
-    Obj[] normCol2 = new Obj[size];
+  //   int prev = 0;
+  //   for (int i=1 ; i < count ; i++) {
+  //     int j = idxs[i];
+  //     int k = idxs[i-1];
+  //     if (!col1[j].isEq(col1[k]) || !col2[j].isEq(col2[k]))
+  //       if (i != ++prev)
+  //         idxs[prev] = idxs[i];
+  //   }
 
-    for (int i=0 ; i < size ; i++) {
-      int j = idxs[i];
-      normCol1[i] = col1[j];
-      normCol2[i] = col2[j];
-    }
+  //   int size = prev + 1;
+  //   Obj[] normCol1 = new Obj[size];
+  //   Obj[] normCol2 = new Obj[size];
 
-    return new Obj[][] {normCol1, normCol2};
-  }
+  //   for (int i=0 ; i < size ; i++) {
+  //     int j = idxs[i];
+  //     normCol1[i] = col1[j];
+  //     normCol2[i] = col2[j];
+  //   }
+
+  //   return new Obj[][] {normCol1, normCol2};
+  // }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
   public static Obj[][] sortUnique(Obj[] col1, Obj[] col2, Obj[] col3, int count) {
     Miscellanea._assert(count > 0);

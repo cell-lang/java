@@ -80,7 +80,11 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final boolean isTagged() {
-    return extraData >= refTagObjId;
+    return extraData == tagIntObjId | extraData >= refTagObjId;
+  }
+
+  public final boolean isTaggedInt() {
+    return (extraData == tagIntObjId || (extraData == refTagObjId && getInnerObj().isInt()));
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -95,6 +99,14 @@ abstract class Obj implements Comparable<Obj> {
 
   public final boolean isFloat(double x) {
     return isFloat() && getDouble() == x;
+  }
+
+  public final boolean isTaggedInt(int tagId) {
+    return isTaggedInt() && getTagId() == tagId;
+  }
+
+  public final boolean isTaggedInt(int tagId, long value) {
+    return isTaggedInt() && (getTagId() == tagId & getInnerLong() == value);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -164,12 +176,12 @@ abstract class Obj implements Comparable<Obj> {
     return internalOrder(other);
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   // Called only when data == other.data and extraData == other.extraData
   public abstract int internalOrder(Obj other);
 
-  public int hashcode() {
-    return Utils.jenkinsHash((int) (data >>> 32), (int) data, extraData);
-  }
+  public abstract int hashcode();
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -185,39 +197,40 @@ abstract class Obj implements Comparable<Obj> {
     return Double.doubleToRawLongBits(value);
   }
 
-  // 32 bit hash code - 32 bit size/length
-  private static long collObjData(int size, long hashcode) {
-    return packedHashcode(hashcode) | size;
+  // 32 bit 0 padding - 32 bit size/length
+  private static long collObjData(int size) {
+    return size;
   }
 
-  protected static long seqObjData(int length, long hashcode) {
-    return collObjData(length, hashcode);
+  protected static long seqObjData(int length) {
+    return collObjData(length);
   }
 
-  protected static long setObjData(int size, long hashcode) {
-    return collObjData(size, hashcode);
+  protected static long setObjData(int size) {
+    return collObjData(size);
   }
 
-  protected static long binRelObjData(int size, long hashcode) {
-    return collObjData(size, hashcode);
+  protected static long binRelObjData(int size) {
+    return collObjData(size);
   }
 
-  protected static long ternRelObjData(int size, long hashcode) {
-    return collObjData(size, hashcode);
+  protected static long ternRelObjData(int size) {
+    return collObjData(size);
   }
 
-  // 32 bit hash code - 16 bit 0 padding - 16 bit tag id
-  protected static long tagObjData(int tag, long hashcode) {
-    return packedHashcode(hashcode) | (tag & 0xFFFF);
+  // 48 bit 0 padding - 16 bit tag id
+  protected static long tagObjData(int tag) {
+    return tag & 0xFFFF;
   }
 
-  // 32 bit hash code - 16 bit optional field mask - 16 bit tag id
-  public static long optTagRecObjData(int tag, long hashcode, int optFieldsMask) {
-    return packedHashcode(hashcode) | (((long) optFieldsMask) << 16) | (tag & 0xFFFF);
+  // 48 bit value - 16 bit tag id
+  protected static long tagIntObjData(int tag, long value) {
+    return value << 16 | (long) (tag & 0xFFFF);
   }
 
-  private static long packedHashcode(long hashcode) {
-    return (hashcode ^ (hashcode << 32)) & ~0xFFFFFFFFL;
+  // 32 bit 0 padding - 16 bit optional field mask - 16 bit tag id
+  public static long optTagRecObjData(int tag, long _UNUSED_HASHCODE_REMOVE, int optFieldsMask) {
+    return (((long) optFieldsMask) << 16) | (tag & 0xFFFF);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -229,6 +242,7 @@ abstract class Obj implements Comparable<Obj> {
   private static final int floatObjId           = 4;
   private static final int emptySeqObjId        = 5;
   private static final int emptyRelObjId        = 6;
+  private static final int tagIntObjId          = 7;
 
   private static final int neSeqObjId           = 16;
   private static final int neSetObjId           = 17;
@@ -249,6 +263,7 @@ abstract class Obj implements Comparable<Obj> {
   protected static int floatObjExtraData()          {return floatObjId;         }
   protected static int emptySeqObjExtraData()       {return emptySeqObjId;      }
   protected static int emptyRelObjExtraData()       {return emptyRelObjId;      }
+  protected static int tagIntObjExtraData()         {return tagIntObjId;        }
 
   protected static int neSeqObjExtraData()          {return neSeqObjId;         }
   protected static int neSetObjExtraData()          {return neSetObjId;         }
@@ -301,10 +316,14 @@ abstract class Obj implements Comparable<Obj> {
   //////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Set operations ///////////////////////////////
 
-  public boolean hasElem(Obj obj)   {throw Miscellanea.internalFail(this);}
+  public boolean contains(Obj obj)  {throw Miscellanea.internalFail(this);}
+
   public SetIter getSetIter()       {throw Miscellanea.internalFail(this);}
   public SeqObj  internalSort()     {throw Miscellanea.internalFail(this);}
   public Obj     randElem()         {throw Miscellanea.internalFail(this);}
+
+  public Obj     insert(Obj obj)    {throw Miscellanea.internalFail(this);}
+  public Obj     remove(Obj obj)    {throw Miscellanea.internalFail(this);}
 
   //////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Binary relation operations /////////////////////////
@@ -312,9 +331,11 @@ abstract class Obj implements Comparable<Obj> {
   public boolean isNeMap()                              {return false;}
   public boolean isNeRecord()                           {return false;}
 
-  public boolean hasKey(Obj o)                          {throw Miscellanea.internalFail(this);}
+  public boolean contains1(Obj val)                     {throw Miscellanea.internalFail(this);}
+  public boolean contains2(Obj val)                     {throw Miscellanea.internalFail(this);}
+  public boolean contains(Obj val1, Obj val2)           {throw Miscellanea.internalFail(this);}
+
   public boolean hasField(int id)                       {throw Miscellanea.internalFail(this);}
-  public boolean hasPair(Obj o1, Obj o2)                {throw Miscellanea.internalFail(this);}
 
   public Obj lookup(Obj key)                            {throw Miscellanea.internalFail(this);}
   public Obj lookupField(int id)                        {throw Miscellanea.internalFail(this);}
@@ -324,10 +345,19 @@ abstract class Obj implements Comparable<Obj> {
   public BinRelIter getBinRelIterByCol1(Obj obj)        {throw Miscellanea.internalFail(this);}
   public BinRelIter getBinRelIterByCol2(Obj obj)        {throw Miscellanea.internalFail(this);}
 
+  public Obj setKeyValue(Obj key, Obj value)            {throw Miscellanea.internalFail(this);}
+  public Obj dropKey(Obj key)                           {throw Miscellanea.internalFail(this);}
+
   //////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Ternary relation operations ////////////////////////
 
-  public boolean hasTriple(Obj o1, Obj o2, Obj o3)              {throw Miscellanea.internalFail(this);}
+  // public boolean contains1(Obj val)                             {throw Miscellanea.internalFail(this);}
+  // public boolean contains2(Obj val)                             {throw Miscellanea.internalFail(this);}
+  public boolean contains3(Obj val)                             {throw Miscellanea.internalFail(this);}
+  public boolean contains12(Obj val1, Obj val2)                 {throw Miscellanea.internalFail(this);}
+  public boolean contains13(Obj val1, Obj val3)                 {throw Miscellanea.internalFail(this);}
+  public boolean contains23(Obj val2, Obj val3)                 {throw Miscellanea.internalFail(this);}
+  public boolean contains(Obj val1, Obj val2, Obj val3)         {throw Miscellanea.internalFail(this);}
 
   public TernRelIter getTernRelIter()                           {throw Miscellanea.internalFail(this);}
 
@@ -347,6 +377,13 @@ abstract class Obj implements Comparable<Obj> {
 
   public boolean isSyntacticSugaredString() {return false;}
   public String getString() {throw Miscellanea.internalFail(this);}
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  public Obj packForString() {
+    return this;
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
@@ -394,6 +431,22 @@ abstract class Obj implements Comparable<Obj> {
   //////////////////////////////////////////////////////////////////////////////
   ////////////////////////// OBSOLETE STUFF TO REMOVE //////////////////////////
 
+  public boolean hasElem(Obj obj) {
+    return contains(obj);
+  }
+
+  public boolean hasKey(Obj obj) {
+    return contains1(obj);
+  }
+
+  public boolean hasPair(Obj obj1, Obj obj2) {
+    return contains(obj1, obj2);
+  }
+
+  public boolean hasTriple(Obj obj1, Obj obj2, Obj obj3) {
+    return contains(obj1, obj2, obj3);
+  }
+
   public long[] getLongArray() {
     return getArray((long[]) null);
   }
@@ -401,8 +454,6 @@ abstract class Obj implements Comparable<Obj> {
   public byte[] getByteArray() {
     return getUnsignedByteArray();
   }
-
-  public void initAt(long i, Obj v) {throw Miscellanea.internalFail(this);}
 
   public long mantissa() {throw Miscellanea.internalFail(this);}
   public long decExp()   {throw Miscellanea.internalFail(this);}

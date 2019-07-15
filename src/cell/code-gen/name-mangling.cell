@@ -22,7 +22,7 @@
 //  V     StdVar, env. + ImplArg, internal var + description
 //  W
 //  X     update_source_var()
-//  Y
+//  Y     shadow_array_var()
 //  Z
 
 
@@ -76,13 +76,16 @@ String native_var_decl_name(MembIntVectVar v) =
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-String native_var_name(VecVar v)          = "vec" & printed(v.id);
-String native_var_name(ArrayVar var)      = "y" & printed(var.id) & "_" & native_type(var.repr);
-String native_var_name(SeqItVar v)        = "seqIt" & printed(bare_id_2(v));
-String native_var_name(SetItVar v)        = "setIt" & printed(bare_id_2(v));
-String native_var_name(BinRelItVar v)     = "binRelIt" & printed(bare_id_2(v));
-String native_var_name(TernRelItVar v)    = "ternRelIt" & printed(bare_id_2(v));
-String native_var_name(StreamVar v)       = "stream" & printed(bare_id_2(v));
+String native_var_name(VecVar v)        = "vec" & printed(v.id);
+String native_var_name(SeqItVar v)      = "seqIt" & printed(bare_id_2(v));
+String native_var_name(SetItVar v)      = "setIt" & printed(bare_id_2(v));
+String native_var_name(BinRelItVar v)   = "binRelIt" & printed(bare_id_2(v));
+String native_var_name(TernRelItVar v)  = "ternRelIt" & printed(bare_id_2(v));
+String native_var_name(StreamVar v)     = "stream" & printed(bare_id_2(v));
+
+String native_var_name(ArrayVar var) =
+  avar()              = "y" & printed(var.id) & "_" & native_type(var.repr),
+  shadow_array_var()  = printed(var.id) & "_Y_" & native_type(var.repr);
 
 String native_var_name(TableItVar v) {
   prefix = match (v.arity, v.symmetric)
@@ -93,6 +96,14 @@ String native_var_name(TableItVar v) {
     3,  true    = "symTern";
 
   return prefix & "TableIt" & printed(v.id);
+}
+
+String native_var_name(ColumnItVar var) {
+  prefix = match (var.repr)
+    object  = "obj",
+    int     = "int",
+    float   = "float";
+  return prefix & "ColIt" & printed(var.id);
 }
 
 String native_var_name(AnyClsVar v) =
@@ -117,7 +128,9 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
     else "";
 
   return match (var)
-    var(<+> a?)                   = _print_(a) & "_V",
+    var(<+> a?)                   = if a == hidden_var_0_id then "h0"               else
+                                    if a == hidden_var_1_id then "h1"               else
+                                                                 _print_(a) & "_V",
     fn_arg(<*..*> n?)             = "a" & printed(n),
     impl_arg(<+> a?)              = prefix & _print_(a) & "_V",
     capt_var(<*..*> n?)           = "capt_var_"  & printed(n),
@@ -196,8 +209,10 @@ String native_var_name(IntVar v, Bool add_prefix) {
 }
 
 
-String native_var_name(Int32Var v, Bool add_prefix) =
-  ivar32(n?)  = "i" & printed(n);
+String native_var_name(Int32Var, Bool add_prefix) =
+  ivar32(n?)                = "i" & printed(n),
+  shadow_surr_var(v?)       = _print_(bare_id(v)) & "_Vs",
+  shadow_array_size_var(s?) = _print_(s) & "_Yc";
 
 
 String native_var_name(FloatVar v, Bool add_prefix) =
@@ -240,6 +255,10 @@ String native_var_name(AnyValueStoreId v, Bool add_prefix) =
                                 return "this.capt_auto." & native_var_name(id, false);
                               };
 
+///////////////////////////////////////////////////////////////////////////////
+
+String native_surr_obj_mapper_name(ValueStoreId v) =
+  value_store_id(n?)  = "surrToObj" & printed(n);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -310,6 +329,7 @@ String native_var_type(StreamVar v)    = "java.util.ArrayList<Obj>";
 
 String native_var_type(VecVar v)       = undefined;
 String native_var_type(TableItVar v)   = table_it_var_type(v);
+String native_var_type(ColumnItVar v)  = column_it_var_type(v);
 String native_var_type(ArrayVar v)     = native_elt_type(v) & "[]";
 
 String native_elt_type(ArrayVar var) = native_type(var.repr);
@@ -317,6 +337,7 @@ String native_elt_type(ArrayVar var) = native_type(var.repr);
 String native_type(LowLevelEltRepr) =
   bool      = "boolean",
   int8      = "byte",
+  nat8      = "byte",
   int16     = "short",
   int32     = "int",
   int       = "long",
@@ -332,6 +353,7 @@ String native_type(OptTagRecRepr repr) = opt_tag_rec_name(repr.tag, repr.index);
 Bool is_nullable(LowLevelEltRepr) =
   bool      |
   int8      |
+  nat8      |
   int16     |
   int32     |
   int       |
@@ -351,6 +373,16 @@ String native_table_type(Table table) =
     3,  false   = "TernaryTable",
     3,  true    = "Sym12TernaryTable";
 
+String native_table_type(Column column) =
+  match (column.repr)
+    object    = "ObjColumn",
+    int       = "IntColumn",
+    float     = "FloatColumn";
+
+
+String native_table_base_type(Table table)    = native_table_type(table);
+String native_table_base_type(Column column)  = "ColumnBase";
+
 
 String table_it_var_type(TableItVar var) =
   match (var.arity, var.symmetric)
@@ -360,6 +392,11 @@ String table_it_var_type(TableItVar var) =
     3,  false   = "TernaryTable.Iter",
     3,  true    = "Sym12TernaryTable.Iter";
 
+String column_it_var_type(ColumnItVar var) =
+  match (var.repr)
+    object    = "ObjColumn.Iter",
+    int       = "IntColumn.Iter",
+    float     = "FloatColumn.Iter";
 
 String pending_updates_var_type(Table table) =
   match (arity(table), table.symmetric)
@@ -368,6 +405,20 @@ String pending_updates_var_type(Table table) =
     2,  true    = "SymBinaryTableUpdater",
     3,  false   = "TernaryTableUpdater",
     3,  true    = "Sym12TernaryTableUpdater";
+
+String pending_updates_var_type(Column column) =
+  match (column.repr)
+    object    = "ObjColumnUpdater",
+    int       = "IntColumnUpdater",
+    float     = "FloatColumnUpdater";
+
+
+String native_name(ValueStoreType) =
+  integer               |
+  mono_tagged_integer() = "IntStore",
+  object                = "ObjStore";
+
+String native_updater_type(ValueStoreType vs) = native_name(vs) & "Updater";
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -401,7 +452,9 @@ String native_name(UpdateId id) =
 ## THE PARAMETER SHOULD BE REMOVED...
 
 String copy_state_proc_name         (DBSymbol db_type) = "copyState";
+String write_state_proc_name        (DBSymbol db_type) = "writeState";
 String set_state_proc_name          (DBSymbol db_type) = "setState";
+String load_state_proc_name         (DBSymbol db_type) = "loadState";
 String reconstruct_proc_name        (DBSymbol db_type) = "reconstruct";
 String updater_creation_proc_name   (DBSymbol db_type) = "newUpdater";
 String updater_reset_proc_name      (DBSymbol db_type) = "resetUpdater";
@@ -431,7 +484,7 @@ String user_def_method_name(<AutoSymbol, DBSymbol> type, MethodId method) = nati
 String input_set_method_name(AutoSymbol auto, Atom input) = _print_(input) & "_S_set";
 
 String node_update_method_name(AutoSymbol auto_type,  BlockNodeId node_id) = node_specific_method_name_prefix(node_id, auto_type) & "_update";
-String queue_update_method_name(AutoSymbol auto_type, BlockNodeId node_id) = node_specific_method_name_prefix(node_id, auto_type) & "_invalidate";
+String queue_node_update_method_name(AutoSymbol auto_type, BlockNodeId node_id) = node_specific_method_name_prefix(node_id, auto_type) & "_invalidate";
 
 String node_specific_method_name_prefix(BlockNodeId id, AutoSymbol auto) =
   std_block_node_id(a?)   = _print_(a) & "_N",
@@ -486,7 +539,7 @@ String native_fn_name(SubAggrFnId) =
 String native_fn_name(ProcSymbol proc_symb) {
   bare_symb = match (proc_symb) proc_symbol(s?) = s;
   name = upper_camel_case(bare_symb) & "_P";
-  name = "Procs." & name if bare_symb :: <file_read, file_write, print, get_char>;
+  name = "Procs." & name if builtin_procs_map(proc_symb, *);
   return name;
 }
 
@@ -503,15 +556,16 @@ String lower_camel_case(Atom a) = lower_camel_case(_print_(a), false);
 String lower_camel_case(String s, Bool keep_underscores) {
   first = false;
   res = ();
-  for ch @ i <- chars(s):
+  for ch @ i <- chars(s) {
     tr_ch = ch;
-    if ch == ascii_underscore:
+    if ch == ascii_underscore {
       first = true;
-    else
+    }
+    else {
       tr_ch = nat(ch - ascii_lower_a + ascii_upper_a) if ch >= ascii_lower_a and ch <= ascii_lower_z and first; ## CREATE PRELUDE FUNCTION is_lower()/is_upper() AND to_lower()/to_upper()
       first = false;
-    ;
+    }
     res = res & (tr_ch if tr_ch != ascii_underscore or keep_underscores);
-  ;
+  }
   return string(res);
 }

@@ -35,13 +35,13 @@ class SymBinaryTable {
 
 
   OneWayBinTable table = new OneWayBinTable();
-  public ValueStore store;
+  public SurrObjMapper mapper;
 
   int eqCount = 0;
 
 
-  public SymBinaryTable(ValueStore store) {
-    this.store = store;
+  public SymBinaryTable(SurrObjMapper mapper) {
+    this.mapper = mapper;
     check();
   }
 
@@ -65,7 +65,11 @@ class SymBinaryTable {
     return table.count(surr12);
   }
 
-  public int[] lookup(int surr) {
+  public int[] restrict(int surr) {
+    return table.restrict(surr);
+  }
+
+  public int lookup(int surr) {
     return table.lookup(surr);
   }
 
@@ -74,7 +78,7 @@ class SymBinaryTable {
   }
 
   public Iter getIter(int surr) {
-    return new Iter(table.lookup(surr), true);
+    return new Iter(table.restrict(surr), true);
   }
 
   public void insert(int surr1, int surr2) {
@@ -126,14 +130,14 @@ class SymBinaryTable {
     for (int iT=0 ; iT < tables.length ; iT++) {
       SymBinaryTable table = tables[iT];
       int[] column = table.table.column;
-      ValueStore store = table.store;
+      SurrObjMapper mapper = table.mapper;
       for (int iS=0 ; iS < column.length ; iS++) {
         int code = table.table.column[iS];
         if (code != OverflowTable.EmptyMarker) {
           if (code >> 29 == 0) {
             if (iS <= code) {
-              objs1[next] = store.getValue(iS);
-              objs2[next++] = store.getValue(code);
+              objs1[next] = mapper.surrToObj(iS);
+              objs2[next++] = mapper.surrToObj(code);
             }
           }
           else {
@@ -143,9 +147,9 @@ class SymBinaryTable {
               int arg2 = it.get();
               if (iS <= arg2) {
                 if (val1 == null)
-                  val1 = store.getValue(iS);
+                  val1 = mapper.surrToObj(iS);
                 objs1[next] = val1;
-                objs2[next++] = store.getValue(arg2);
+                objs2[next++] = mapper.surrToObj(arg2);
               }
               it.next();
             }

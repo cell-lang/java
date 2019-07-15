@@ -242,9 +242,9 @@ class Test_ForeignKey_TB12 {
               boolean inSource = sourceBitmap[i1][i2][i3];
               boolean inTarget = targetBitmap[i1][i2];
 
-              int surr1 = store1.lookupValue(IntObj.get(values1[i1]));
-              int surr2 = store2.lookupValue(Conversions.stringToObj(values2[i2]));
-              int surr3 = store3.lookupValue(Conversions.convertText(values3[i3]));
+              int surr1 = store1.valueToSurr(IntObj.get(values1[i1]));
+              int surr2 = store2.valueToSurr(Conversions.stringToObj(values2[i2]));
+              int surr3 = store3.valueToSurr(Conversions.convertText(values3[i3]));
 
               if (surr1 == -1 | surr2 == -1) {
                 // If either the first or the second argument is not in the

@@ -16,9 +16,8 @@ implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
     name = default_name(inter_type, retry);
     name = take(name, 60);
     name = name & "_" & printed(value(unique_id)) if unique_id != nothing;
-    while taken_names(name) or is_reserved(name) or safe_block_class_names(*, name):
+    while taken_names(name) or is_reserved(name) or safe_block_class_names(*, name)
       name = name & "_";
-    ;
     return name;
   }
 
@@ -76,16 +75,16 @@ String safe_lower_camel_case_chain(Symbol+ symbs) {
 
 
 Bool is_reserved(String id) {
-  for p <- isort(standard_generated_class_prefixes):
+  for p <- isort(standard_generated_class_prefixes) {
     len = length(p);
-    if length(id) > length(p):
+    if length(id) > length(p) {
       prefix = take(p, len);
-      if prefix == p:
+      if prefix == p {
         rest = drop(p, len);
         return false if (ch <~ chars(rest) : not is_digit(ch));
-      ;
-    ;
-  ;
+      }
+    }
+  }
 
   return in(id, keywords_and_literals) or
          in(id, runtime_classes) or
@@ -265,6 +264,5 @@ Bool is_reserved(String id) {
   "ValueBase",
   "ValueStore",
   "ValueStoreBase",
-  "ValueStoreUpdater",
-  "WrappingUtils"
+  "ValueStoreUpdater"
 ];

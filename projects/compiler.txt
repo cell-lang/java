@@ -44,6 +44,7 @@
 ../compiler/src/stage-2/rewriting.cell
 ../compiler/src/stage-2/methods.cell
 ../compiler/src/stage-2/accessors.cell
+../compiler/src/stage-2/searching.cell
 
 
 // Stage 2 - relational layer
@@ -64,6 +65,13 @@
 
 ../compiler/src/stage-3/utils.cell
 ../compiler/src/stage-3/methods.cell
+../compiler/src/stage-3/search.cell
+../compiler/src/stage-3/rewriting.cell
+
+../compiler/src/stage-3-flow-graph/code-graph.cell
+../compiler/src/stage-3-flow-graph/flow-map.cell
+../compiler/src/stage-3-flow-graph/live-vars.cell
+../compiler/src/stage-3-flow-graph/utils.cell
 
 
 // Compiler steps
@@ -138,23 +146,28 @@
 ../compiler/src/H-code-generation/stmt-code-gen.cell
 ../compiler/src/H-code-generation/pattern-matching.cell
 ../compiler/src/H-code-generation/yield-actions.cell
+../compiler/src/H-code-generation/relvars-usage.cell
 
+../compiler/src/I-code-optimization/instr-merging.cell
 ../compiler/src/I-code-optimization/dead-code-removal.cell
+../compiler/src/I-code-optimization/code-optimization.cell
+../compiler/src/I-code-optimization/array-optimization.cell
 
-src/cell/code-gen/auto-instrs.cell
-src/cell/code-gen/exprs.cell
-src/cell/code-gen/instrs.cell
-src/cell/code-gen/inter-lang-utils.cell
-src/cell/code-gen/name-mangling.cell
-src/cell/code-gen/native-code-gen.cell
-src/cell/code-gen/opt-types.cell
-src/cell/code-gen/react-blocks.cell
-src/cell/code-gen/static-blocks.cell
-src/cell/code-gen/wrappers/interface-types.cell
-src/cell/code-gen/wrappers/naming.cell
-src/cell/code-gen/wrappers/reactive.cell
-src/cell/code-gen/wrappers/static.cell
-src/cell/code-gen/wrappers/types-decls.cell
+../java/src/cell/code-gen/auto-instrs.cell
+../java/src/cell/code-gen/exprs.cell
+../java/src/cell/code-gen/instrs.cell
+../java/src/cell/code-gen/inter-lang-utils.cell
+../java/src/cell/code-gen/name-mangling.cell
+../java/src/cell/code-gen/native-code-gen.cell
+../java/src/cell/code-gen/opt-types.cell
+../java/src/cell/code-gen/react-blocks.cell
+../java/src/cell/code-gen/static-blocks.cell
+../java/src/cell/code-gen/wrappers/interface-types.cell
+../java/src/cell/code-gen/wrappers/naming.cell
+../java/src/cell/code-gen/wrappers/reactive.cell
+../java/src/cell/code-gen/wrappers/static.cell
+../java/src/cell/code-gen/wrappers/types-decls.cell
+../java/src/cell/code-gen/wrappers/methods.cell
 
 
 // Main file

@@ -45,8 +45,8 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*,
       "wait",             2;
 
       // Always present methods
-      "readState",        0;
-      "setState",         1;
+      "load",             1;
+      "save",             1;
       "execute",          1
     ];
   }
@@ -61,13 +61,15 @@ implicit
   root_block_name : DBSymbol,
   duplicate_names : [String, Nat] {
 
-  (String*, String*) db_method_wrapper(MethodId method_id, CompiledMethod method, Bool is_gen_memb_tester) {
-    if not method_id.id?:
+  ## WHAT'S THAT is_gen_memb_tester? WHY IS IT false WITH ACCESSORS?
+  (String*, String*) db_method_wrapper(MethodId method_id, <CompiledMethod, OptCompMethod> method, Bool is_gen_memb_tester) {
+    if not method_id.id? {
       ext_name = call_method_name(method_id);
       return method_wrapper(method_id, method, block_name, ext_name, db_class_name, path_prefix, is_gen_memb_tester);
-    else
+    }
+    else {
       return ((), ());
-    ;
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -128,13 +130,13 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, 
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   (String, String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks, [MethodId] gen_memb_testers_ids) {
-    let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name:
+    let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name {
       dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];
-      let duplicate_names = dup_names:
+      let duplicate_names = dup_names {
         accessors_code, accessors_docs = static_auto_accessors(root_block, blocks, gen_memb_testers_ids);
         class_name = db_class_name;
-      ;
-    ;
+      }
+    }
 
     db_name = native_name(root_block.name);
     updater_name = aux_struct_c_name(root_block.name);
@@ -146,6 +148,11 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 
     class_impl = (
       "package net.cell_lang;",
+      "",
+      "import java.io.IOException;",
+      "import java.io.Reader;",
+      "import java.io.Writer;",
+      "import java.io.BufferedWriter;",
       "",
       "",
       "public class " & class_name & " {",
@@ -159,22 +166,29 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "    updater = automaton.newUpdater();",
       "  }",
       "",
-      "  public net.cell_lang.Value readState() {",
-      "    Obj " & native_method_call("obj", "automaton", copy_state_proc_name(root_block.name), ()),
-      "    return Conversions.exportAsValue(obj);",
+      "  public void save(Writer writer) {",
+      "    if (!(writer instanceof BufferedWriter))",
+      "      writer = new BufferedWriter(writer);",
+      "    try {",
+      "      " & native_method_call("automaton", write_state_proc_name(root_block.name), ("writer")),
+      "    }",
+      "    catch(IOException e) {",
+      "      throw new RuntimeException(e);",
+      "    }",
       "  }",
       "",
-      "  public void setState(String text) {",
-      "    Obj obj = Conversions.convertText(text);",
-      "    Generated." & db_name & " instance = Generated." & db_name & ".reconstruct(obj, env);",
-      "    if (instance == null)",
-      "      throw new RuntimeException(\"Invalid state\");",
-      "    automaton = instance;",
-      "    updater = automaton.newUpdater();",
+      "  public void load(Reader reader) {",
+      "    try {",
+      "      automaton = Generated." & db_name & ".reconstruct(reader, env);",
+      "      updater = automaton.newUpdater();",
+      "    }",
+      "    catch(IOException e) {",
+      "      throw new RuntimeException(e);",
+      "    }",
       "  }"
     );
 
-    if has_any_updates:
+    if has_any_updates {
       class_impl = class_impl & (
         "",
         "  public void execute(String text) {",
@@ -188,7 +202,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "    }",
         "  }"
       );
-    ;
+    }
 
     class_impl = class_impl & indent_lines(accessors_code) & ("}") ;
 
@@ -196,10 +210,10 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "class " & class_name & " {",
       "  " & class_name & "(" & append(ctor_impl_args, ", ") & ");",
       "",
-      "  Value readState();",
-      "  void setState(String);",
-      "  void execute(String);" if has_any_updates
+      "  void load(Reader);",
+      "  void save(Writer);"
     );
+    class_docs = (class_docs | "", "  void execute(String);") if has_any_updates;
     class_docs = class_docs & accessors_docs if accessors_docs != ();
     class_docs = (class_docs | "}");
 

@@ -10,26 +10,27 @@ implicit typedefs : [TypeName -> NeType] {
 
 
 Main(String* args) {
-  if |args| == 1:
+  if |args| == 1 {
     input_file = args(0);
     debug_mode = false;
-  elif |args| == 2 and args(0) == "-d":
+  }
+  else if |args| == 2 and args(0) == "-d" {
     input_file = args(1);
     debug_mode = true;
-  else
+  }
+  else {
     Print("Usage: codegen-dbg [-d] <input file>\n");
     return;
-  ;
-
+  }
 
   res = ReadValueFromFile(input_file);
   return if res == nothing;
   prg = value(res);
 
-  if not prg :: CompiledPrg:
+  if not prg :: CompiledPrg {
     Print("Invalid input!\n");
     return;
-  ;
+  }
 
   cs_code, docs = native_code(prg, false, debug_mode);
 
@@ -37,28 +38,28 @@ Main(String* args) {
   ok = FileWrite("Generated.java", chars(text));
   fail if not ok;
 
-  if docs != ():
+  if docs != () {
     text = append(docs, "\n");
     ok = FileWrite("interfaces.txt", chars(text));
     fail if not ok;
-  ;
+  }
 }
 
 
 Maybe[Any] ReadValueFromFile(String fname) {
   read_res = FileRead(fname);
-  if read_res == nothing:
+  if read_res == nothing {
     Print("Cannot read file " & fname & "\n");
     return nothing;
-  ;
+  }
 
   parse_res = _parse_(string(value(read_res)));
-  if failed(parse_res):
+  if failed(parse_res) {
     Print("File " & fname & " does not contain a valid Cell value\n");
     print string(value(read_res));
     print parse_res;
     return nothing;
-  ;
+  }
 
   return just(result(parse_res));
 }

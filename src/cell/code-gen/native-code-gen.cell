@@ -1,18 +1,18 @@
-implicit prg : CompiledPrg, debug_mode : Bool {
+implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], debug_mode : Bool {
   [String -> String*] generated_code(Bool include_runtime, [DBSymbol -> [MethodId]] gen_memb_testers_ids) {
     symbs = program_symbols;
     assert |symbs| <= 64 * 1024; ## IMPLEMENT PROPERLY
 
     code = ("static final int " & symb_idx_name(s) & " = " & printed(i) & ";" : s @ i <- symbs) & 4 * ("");
 
-    for s @ i <- symbs:
+    for s @ i <- symbs {
       is_first = mod(i, 100) == 0;
       is_last  = mod(i, 100) == 99 or i == |symbs| - 1;
 
       code = (code | "static void populateEmbeddedSymbols" & printed(i / 100) & "() {") if is_first;
       code = (code | "  embeddedSymbols[" & printed(i) & "] = \"" & _print_(bare_obj(s)) & "\";");
       code = (code | "}", "", "") if is_last;
-    ;
+    }
 
     code = (code |
       "",
@@ -23,9 +23,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "static {"
     );
 
-    for i < (|symbs| + 99) / 100:
+    for i < (|symbs| + 99) / 100
       code = (code | "  populateEmbeddedSymbols" & printed(i) & "();");
-    ;
     code = (code | "};", "", "");
 
     env_decl = gen_env_decl(prg) & 4 * ("");
@@ -66,7 +65,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     );
 
     static_blocks_map = [b.name -> b : b <- prg.static_blocks];
-    let prg = prg, typedefs = prg.typedefs:
+    let prg = prg, typedefs = prg.typedefs {
       react_auto_wrappers = (react_auto_wrapper(b) : b <- ord_react_blocks);
       rel_auto_wrappers = (
         static_auto_wrapper(b, static_blocks_map, lookup(gen_memb_testers_ids, b.name, [])) : b <- ord_static_blocks
@@ -78,7 +77,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         ("") & decl_type_import_functions(t) & ("") & decl_type_export_function(t)
         : t <- declared_types
       ];
-    ;
+    }
 
     decl_types_conv_functs = join((("", "") & t : t <- isort(decl_types_conv_functs)));
 
@@ -101,6 +100,14 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     gen_code = join((
       ( "package net.cell_lang;",
         "",
+        "import java.util.ArrayList;",
+        "import java.util.Arrays;",
+        "import java.util.function.IntPredicate;",
+        "import java.util.HashSet;",
+        "import java.util.HashMap;",
+        "import java.util.IdentityHashMap;",
+        "import java.util.NoSuchElementException;",
+        "import java.util.Random;",
         "import java.io.File;",
         "import java.io.FileOutputStream;",
         "import java.io.IOException;",
@@ -108,16 +115,13 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         "import java.io.PrintWriter;",
         "import java.io.StringWriter;",
         "import java.io.Writer;",
+        "import java.io.BufferedWriter;",
+        "import java.io.Reader;",
+        "import java.io.StringReader;",
         "import java.nio.file.Files;",
         // "import java.nio.file.Path;",
         "import java.nio.file.Paths;",
-        "import java.util.ArrayList;",
-        "import java.util.Arrays;",
-        "import java.util.function.IntPredicate;",
-        "import java.util.HashMap;",
-        "import java.util.IdentityHashMap;",
-        "import java.util.NoSuchElementException;",
-        "import java.util.Random;",
+        "import java.nio.file.StandardOpenOption;",
         "",
         "",
         "class Generated {" if has_main,
@@ -148,16 +152,15 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     gen_code = gen_code & int_seqs_code;
 
-    if has_main:
+    if has_main {
       unused_wrappers = [private_class_def(wrapper_code) : unused_var, wrapper_code <- wrappers];
       wrappers = [];
       gen_code = gen_code & join(isort(unused_wrappers));
-    ;
+    }
 
     files = ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs if wrappers_docs != ()] & wrappers;
-    if include_runtime and not has_main:
+    if include_runtime and not has_main
       files = files & ["Value.java" -> value_class_def];
-    ;
     return files;
 
 
@@ -177,9 +180,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 String* private_class_def(String* class_def) = (
     if take(l, 8) == "package " or take(l, 7) == "import "
       then ""
-    elif take(l, 16) == "public interface"
+    else if take(l, 16) == "public interface"
       then drop(l, 7)
-    elif take(l, 12) == "public class"
+    else if take(l, 12) == "public class"
       then drop(l, 7)
     else l
   : l <- class_def
@@ -203,9 +206,8 @@ String* gen_env_decl(CompiledPrg prg) {
 
 
 String native_int_type(Int min_val, Int max_val) {
-  for lb, up, type_name <- type_bounds:
+  for lb, up, type_name <- type_bounds
     return type_name if min_val >= lb and max_val < up;
-  ;
   return "long";
 
 
@@ -236,15 +238,16 @@ String* gen_int_seq_code(Int+ int_seq, Nat seq_id) {
 
   code = ("class " & const_int_seq_holder_class_name(seq_id) & " {");
 
-  if total_len < 60:
+  if total_len < 60 {
     code = (code | sgn & append(strs, ", ") & "};");
-  else
+  }
+  else {
     max_len = nat(max((length(printed(n)) : n <- (min_elem, max_elem))));
     last_idx = |int_seq| - 1;
     strs = (align_text(s, max_len, ascii_space) & if i != last_idx then ", " else "" : s @ i <- strs);
     cont_lines = ("    " & append(ss) : ss <- split_into_groups(strs, nz_nat(100 / (max_len + 2))));
     code = code & (sgn) & cont_lines & ("  };");
-  ;
+  }
   code = (code | "}");
 
   return code;
@@ -309,7 +312,7 @@ String* gen_vars_decls(Instr* body, [ObjProcArg] args) {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit prg : CompiledPrg, debug_mode : Bool {
+implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], debug_mode : Bool {
   String* native_code(ObjProcDef* obj_proc_defs, BoolProcDef* bool_proc_defs, LambdaExpr* lambda_exprs, ReactBlock* react_blocks, StaticBlock* static_blocks, Int+* int_seqs) {
     type_checking_fns = join((native_code(d) & ("", "") : d <- bool_proc_defs)) & 4 * ("");
     closures = join((gen_lambda(d, i) & ("", "") : d @ i <- lambda_exprs)) & 4 * ("");
@@ -359,7 +362,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
            indent_lines(db_vars_decls) & indent_lines(aux_db_vars_decls) &
            ("" if has_var_decls) & indent_lines(comp_body) & ("}");
 
-    if cached:
+    if cached {
       is_real_const = pd.cached? and pd.impl_args == [];
       cache_var_name = if is_real_const then fn_name & "__CV" else "env." & memo_var_name(pd.name);
       needs_set_flag = is_real_const and pd.ret_val_repr? and not is_nullable(pd.ret_val_repr);
@@ -383,7 +386,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         "}"
       );
       code = code & wrapper_code;
-    ;
+    }
 
     return code;
 
@@ -399,7 +402,13 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     String* gen_args_list(ObjProcDef pd) {
       args = (native_var_type(v) & " " & native_var_decl_name(v) : v <- pd.args);
       cls_args = ("Lambda " & native_var_decl_name(a.var) : a <- pd.cls_args);
-      args_list = args & cls_args;
+      rel_auto_args = join((
+        ( native_name(a.type) & " " & native_var_decl_name(a.var),
+          aux_struct_c_name(a.type) & " " & aux_struct_var_decl_name(a.var)
+        ) : a <- pd.rel_auto_args
+      ));
+      react_auto_args = (native_name(a.type) & " " & native_var_decl_name(a.var) : a <- pd.react_auto_args);
+      args_list = args & cls_args & rel_auto_args & react_auto_args;
       args_list = (args_list | "Env env") if not pd.name :: ConvFnId;
       return args_list;
     }
@@ -418,12 +427,10 @@ implicit prg : CompiledPrg, debug_mode : Bool {
       "static class Lambda" & printed(id) & " extends Lambda {",
       "  public " & native_name(value(lambda.capt_auto)) & " capt_auto;" if lambda.capt_auto != nothing
     );
-    for i < |lambda.capt_vars|:
+    for i < |lambda.capt_vars|
       code = (code | "  public Obj " & native_var_decl_name(capt_var(i)) & ";");
-    ;
-    for i < |lambda.capt_cls_vars|:
+    for i < |lambda.capt_cls_vars|
       code = (code | "  public Lambda " & native_var_name(capt_cls_var(i)) & ";");
-    ;
 
     return (code |
       "",
@@ -478,7 +485,7 @@ String* custom_parser = (
   "",
   "",
   "final static class Parser extends net.cell_lang.Parser {",
-  "  Parser(Token[] tokens) {",
+  "  Parser(TokenStream tokens) {",
   "    super(tokens);",
   "  }",
   "",
@@ -489,21 +496,20 @@ String* custom_parser = (
   "",
   "",
   "public static Obj parse(Obj text) {",
-  "  Obj chars = text.getInnerObj();",
-  "  return parse(chars::getLongAt, chars.getSize());",
+  "  return parse(new StringReader(text.getString()));",
   "}",
   "",
   "",
-  "public static Obj parse(Lexer.Source src, int len) {",
+  "public static Obj parse(Reader reader) {",
   "  try {",
-  "    Token[] tokens = Lexer.lex(src, len);",
+  "    TokenStream tokens = new Tokenizer(new CharStream(reader));",
   "    Parser parser = new Parser(tokens);",
   "    Obj obj = parser.parseObj();",
   "    parser.checkEof();",
   "    return Builder.createTaggedObj(SymbTable.SuccessSymbId, obj);",
   "  }",
   "  catch (ParsingException e) {",
-  "    return Builder.createTaggedObj(SymbTable.FailureSymbId, IntObj.get(e.errorOffset));",
+  "    return Builder.createTaggedObj(SymbTable.FailureSymbId, Builder.createSeq(new int[] {e.line, e.col}));",
   "  }",
   "}"
 );

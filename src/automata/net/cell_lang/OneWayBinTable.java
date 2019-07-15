@@ -61,7 +61,7 @@ class OneWayBinTable {
     return surr1 < column.length && column[surr1] != OverflowTable.EmptyMarker;
   }
 
-  public int[] lookup(int surr) {
+  public int[] restrict(int surr) {
     if (surr >= column.length)
       return emptyArray;
     int code = column[surr];
@@ -82,6 +82,40 @@ class OneWayBinTable {
     return surrs;
   }
 
+  public int restrict(int surr, int[] output) {
+    if (surr >= column.length)
+      return 0;
+    int code = column[surr];
+    if (code == OverflowTable.EmptyMarker)
+      return 0;
+
+    if (code >> 29 == 0) {
+      output[0] = code;
+      return 1;
+    }
+
+    int count = overflowTable.count(code);
+    OverflowTable.Iter it = overflowTable.getIter(code);
+    int next = 0;
+    while (!it.done()) {
+      output[next++] = it.get();
+      it.next();
+    }
+    Miscellanea._assert(next == count);
+    return count;
+  }
+
+  public int lookup(int surr) {
+    if (surr >= column.length)
+      return -1;
+    int code = column[surr];
+    if (code == OverflowTable.EmptyMarker)
+      return -1;
+    if (code >> 29 == 0)
+      return code;
+    throw Miscellanea.internalFail();
+  }
+
   public int count(int surr) {
     if (surr >= column.length)
       return 0;
@@ -91,6 +125,17 @@ class OneWayBinTable {
     return overflowTable.count(code);
   }
 
+  // public int zeroOneMany(int surr) {
+  //   if (surr >= column.length)
+  //     return 0;
+  //   int code = column[surr];
+  //   if (code == OverflowTable.EmptyMarker)
+  //     return 0;
+  //   if (code >> 29 == 0)
+  //     return 1;
+  //   return Integer.MAX_VALUE;
+  // }
+
   public void insert(int surr1, int surr2) {
     int size = column.length;
     if (surr1 >= size) {
@@ -98,7 +143,7 @@ class OneWayBinTable {
       while (surr1 >= newSize)
         newSize *= 2;
       int[] newColumn = new int[newSize];
-      Miscellanea.arrayCopy(column, newColumn, size);
+      Array.copy(column, newColumn, size);
       for (int i=size ; i < newSize ; i++)
         newColumn[i] = OverflowTable.EmptyMarker;
       column = newColumn;
@@ -117,7 +162,41 @@ class OneWayBinTable {
     }
   }
 
+  // Assuming there's at most one entry whose first argument is surr1
+  public int update(int surr1, int surr2) {
+    int size = column.length;
+    if (surr1 >= size) {
+      int newSize = size == 0 ? MinCapacity : 2 * size;
+      while (surr1 >= newSize)
+        newSize *= 2;
+      int[] newColumn = new int[newSize];
+      Array.copy(column, newColumn, size);
+      for (int i=size ; i < newSize ; i++)
+        newColumn[i] = OverflowTable.EmptyMarker;
+      column = newColumn;
+    }
+
+    int code = column[surr1];
+
+    if (code == OverflowTable.EmptyMarker) {
+      column[surr1] = surr2;
+      count++;
+      return -1;
+    }
+    else if (code >> 29 == 0) {
+      column[surr1] = surr2;
+      return code;
+    }
+    else {
+      throw Miscellanea.internalFail();
+    }
+  }
+
+  private boolean[] deleted = new boolean[1];
+
   public void delete(int surr1, int surr2) {
+    //## BUG BUG BUG: WHAT IF surr1 >= column.length?
+    //## THIS KIND OF BUG MAY BE PRESENT ELSEWHERE IN THIS CLASS
     int code = column[surr1];
     if (code == OverflowTable.EmptyMarker)
       return;
@@ -126,7 +205,7 @@ class OneWayBinTable {
       count--;
     }
     else if (code >> 29 != 0) {
-      boolean[] deleted = new boolean[1];
+      deleted[0] = false;
       column[surr1] = overflowTable.delete(code, surr2, deleted);
       if (deleted[0])
         count--;

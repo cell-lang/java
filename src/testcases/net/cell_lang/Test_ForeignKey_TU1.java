@@ -228,9 +228,9 @@ class Test_ForeignKey_TU1 {
               boolean inSource = sourceBitmap[i1][i2][i3];
               boolean inTarget = targetBitmap[i1];
 
-              int surr1 = store1.lookupValue(IntObj.get(values1[i1]));
-              int surr2 = store2.lookupValue(Conversions.stringToObj(values2[i2]));
-              int surr3 = store3.lookupValue(Conversions.convertText(values3[i3]));
+              int surr1 = store1.valueToSurr(IntObj.get(values1[i1]));
+              int surr2 = store2.valueToSurr(Conversions.stringToObj(values2[i2]));
+              int surr3 = store3.valueToSurr(Conversions.convertText(values3[i3]));
 
               if (surr1 == -1) {
                 // If the first argument is not in the corresponding value store,
@@ -293,15 +293,15 @@ class Test_ForeignKey_TU1 {
 
   //   System.out.print("\n\n     ");
   //   for (int j=0 ; j < r2 ; j++)
-  //     System.out.printf(" %3d", store2.lookupValue(Conversions.stringToObj(values2[j])));
+  //     System.out.printf(" %3d", store2.valueToSurr(Conversions.stringToObj(values2[j])));
   //   System.out.println();
 
   //   for (int j1=0 ; j1 < r1 ; j1++) {
-  //     System.out.printf("%3d  ", store1.lookupValue(IntObj.get(values1[j1])));
+  //     System.out.printf("%3d  ", store1.valueToSurr(IntObj.get(values1[j1])));
   //     for (int j2=0 ; j2 < r2 ; j2++) {
   //       boolean refIn = sourceBitmap[j1][j2];
-  //       int surrJ1 = store1.lookupValue(IntObj.get(values1[j1]));
-  //       int surrJ2 = store2.lookupValue(Conversions.stringToObj(values2[j2]));
+  //       int surrJ1 = store1.valueToSurr(IntObj.get(values1[j1]));
+  //       int surrJ2 = store2.valueToSurr(Conversions.stringToObj(values2[j2]));
   //       boolean in = source.contains(surrJ1, surrJ2);
   //       System.out.printf("  %s%s", in != refIn ? "*" : " ", in ? "1" : "0");
   //     }
@@ -315,14 +315,14 @@ class Test_ForeignKey_TU1 {
 
   //   // System.out.print("     ");
   //   // for (int j=0 ; j < r2 ; j++)
-  //   //   System.out.printf(" %3d", store2.lookupValue(Conversions.stringToObj(values2[j])));
+  //   //   System.out.printf(" %3d", store2.valueToSurr(Conversions.stringToObj(values2[j])));
   //   // System.out.println();
 
   //   // for (int j1=0 ; j1 < r1 ; j1++) {
-  //   //   System.out.printf("%3d  ", store1.lookupValue(IntObj.get(values1[j1])));
+  //   //   System.out.printf("%3d  ", store1.valueToSurr(IntObj.get(values1[j1])));
   //   //   for (int j2=0 ; j2 < r2 ; j2++) {
-  //   //     int surrJ1 = store1.lookupValue(IntObj.get(values1[j1]));
-  //   //     int surrJ2 = store2.lookupValue(Conversions.stringToObj(values2[j2]));
+  //   //     int surrJ1 = store1.valueToSurr(IntObj.get(values1[j1]));
+  //   //     int surrJ2 = store2.valueToSurr(Conversions.stringToObj(values2[j2]));
   //   //     System.out.print(source.contains(surrJ1, surrJ2) ? "   1" : "   0");
   //   //   }
   //   //   System.out.println();
@@ -330,23 +330,23 @@ class Test_ForeignKey_TU1 {
   //   // System.out.println();
   //   // System.out.print("     ");
   //   // for (int j2=0 ; j2 < r2 ; j2++) {
-  //   //   int surrJ2 = store2.lookupValue(Conversions.stringToObj(values2[j2]));
+  //   //   int surrJ2 = store2.valueToSurr(Conversions.stringToObj(values2[j2]));
   //   //   System.out.print(target.contains(surrJ2) ? "   1" : "   0");
   //   // }
   //   // System.out.println("\n\n---------------------------------\n");
 
   //   for (int j=0 ; j < r1 ; j++)
-  //     System.out.printf(" %3d", store1.lookupValue(IntObj.get(values1[j])));
+  //     System.out.printf(" %3d", store1.valueToSurr(IntObj.get(values1[j])));
   //   System.out.println();
   //   for (int j=0 ; j < r1 ; j++)
-  //     System.out.printf(" %3d", store2.lookupValue(IntObj.get(values1[j])));
+  //     System.out.printf(" %3d", store2.valueToSurr(IntObj.get(values1[j])));
   //   System.out.println("\n\n---------------------------------\n");
 
   //   for (int j=0 ; j < r2 ; j++)
-  //     System.out.printf(" %3d", store1.lookupValue(Conversions.stringToObj(values2[j])));
+  //     System.out.printf(" %3d", store1.valueToSurr(Conversions.stringToObj(values2[j])));
   //   System.out.println();
   //   for (int j=0 ; j < r2 ; j++)
-  //     System.out.printf(" %3d", store2.lookupValue(Conversions.stringToObj(values2[j])));
+  //     System.out.printf(" %3d", store2.valueToSurr(Conversions.stringToObj(values2[j])));
   //   System.out.println("\n\n==================================================\n");
   // }
 
@@ -356,8 +356,8 @@ class Test_ForeignKey_TU1 {
   //     for (int j=0 ; j < r2 ; j++)
   //       if (sourceBitmap[i][j] & !newSourceBitmap[i][j])
   //         System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i, j, values1[i], values2[j],
-  //           storeUpdater1.lookupValueEx(IntObj.get(values1[i])),
-  //           storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[j]))
+  //           storeUpdater1.valueToSurrEx(IntObj.get(values1[i])),
+  //           storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[j]))
   //         );
 
   //   System.out.println("\nInserted into source:");
@@ -365,22 +365,22 @@ class Test_ForeignKey_TU1 {
   //     for (int j=0 ; j < r2 ; j++)
   //       if (!sourceBitmap[i][j] & newSourceBitmap[i][j])
   //         System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i, j, values1[i], values2[j],
-  //           storeUpdater1.lookupValueEx(IntObj.get(values1[i])),
-  //           storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[j]))
+  //           storeUpdater1.valueToSurrEx(IntObj.get(values1[i])),
+  //           storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[j]))
   //         );
 
   //   // System.out.println("\nDeleted from target:");
   //   // for (int i=0 ; i < r2 ; i++)
   //   //   if (targetBitmap[i] & !newTargetBitmap[i])
   //   //     System.out.printf("%03d: %4d -> %3d\n", i, values1[i],
-  //   //       storeUpdater1.lookupValueEx(IntObj.get(values1[i]))
+  //   //       storeUpdater1.valueToSurrEx(IntObj.get(values1[i]))
   //   //     );
 
   //   // System.out.println("\nInserted into target:");
   //   // for (int i=0 ; i < r2 ; i++)
   //   //   if (!targetBitmap[i] & newTargetBitmap[i])
   //   //     System.out.printf("%03d: %4d -> %3d\n", i, values1[i],
-  //   //       storeUpdater1.lookupValueEx(IntObj.get(values1[i]))
+  //   //       storeUpdater1.valueToSurrEx(IntObj.get(values1[i]))
   //   //     );
 
   //   System.out.println("\n\n**************************************************\n");
@@ -398,7 +398,7 @@ class Test_ForeignKey_TU1 {
 //       }
 //     if (!found)
 //       System.out.printf("%03d: %4d -> %3d\n", i, values1[i],
-//         storeUpdater1.lookupValueEx(IntObj.get(values1[i]))
+//         storeUpdater1.valueToSurrEx(IntObj.get(values1[i]))
 //       );
 //   }
 
@@ -407,8 +407,8 @@ class Test_ForeignKey_TU1 {
 //   for (int j=0 ; j < r2 ; j++)
 //     if (newSourceBitmap[i][j] & !newTargetBitmap[i])
 //       System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i, j, values1[i], values2[j],
-//         storeUpdater1.lookupValueEx(IntObj.get(values1[i])),
-//         storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[j]))
+//         storeUpdater1.valueToSurrEx(IntObj.get(values1[i])),
+//         storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[j]))
 //       );
 
 // System.out.println("\nBoth:");
@@ -416,8 +416,8 @@ class Test_ForeignKey_TU1 {
 //   for (int j=0 ; j < r2 ; j++)
 //     if (newSourceBitmap[i][j] & newTargetBitmap[i])
 //       System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i, j, values1[i], values2[j],
-//         storeUpdater1.lookupValueEx(IntObj.get(values1[i])),
-//         storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[j]))
+//         storeUpdater1.valueToSurrEx(IntObj.get(values1[i])),
+//         storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[j]))
 //       );
 
 
@@ -437,8 +437,8 @@ class Test_ForeignKey_TU1 {
 //   System.out.printf("_t = %d, r2 = %d, inSource = %s\n", _t, r2, inSource ? "true" : "false");
 
 //   System.out.printf("%03d %03d: (%4d, %10s) -> (%3d, %2d)\n", i1, i2, values1[i1], values2[i2],
-//     storeUpdater1.lookupValueEx(IntObj.get(values1[i1])),
-//     storeUpdater2.lookupValueEx(Conversions.stringToObj(values2[i2]))
+//     storeUpdater1.valueToSurrEx(IntObj.get(values1[i1])),
+//     storeUpdater2.valueToSurrEx(Conversions.stringToObj(values2[i2]))
 //   );
 
 // }

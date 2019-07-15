@@ -23,8 +23,18 @@ public class UnitTests {
     // Test_Sym12TernaryTable.run();
     // System.out.println("Sym12TernaryTable OK");
 
+    // Test_AssocTable.run();
+    // System.out.println("AssocTable       OK");
+    // Test_SlaveTernTable.run();
+    // System.out.println("SlaveTernTable   OK");
+
     // Test_BinaryTable.run2();
     // Test_BinaryTable.run3();
+    // System.out.println("WTF?");
+
+    //## TODO: RUN THESE!!!!!!!!!!!!
+    // Test_AssocTable.run2();
+    // Test_AssocTable.run3();
     // System.out.println("WTF?");
 
     // Test_ForeignKey_UU.run();
@@ -58,5 +68,14 @@ public class UnitTests {
     // System.out.println("ternary(a | b, _) -> binary(a | b)  OK");
     // Test_ForeignKey_BT12S.run();
     // System.out.println("binary(a | b) -> ternary(a | b, _)  OK");
+
+    // Test_ValueStore.run();
+
+    // IntStore intStore = new IntStore();
+    // IntStoreUpdater intStoreUpdater = new IntStoreUpdater(intStore);
+    // ObjStore objStore = new ObjStore();
+    // ObjStoreUpdater objStoreUpdater = new ObjStoreUpdater(objStore);
+
+    Test_IntStore.run();
   }
 }

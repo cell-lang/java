@@ -34,18 +34,18 @@ class SymBinaryTableUpdater {
       boolean swap = value1 > value2;
       int minorVal = swap ? value2 : value1;
       int majorVal = swap ? value1 : value2;
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, minorVal, majorVal);
+      deleteList = Array.append2(deleteList, deleteCount++, minorVal, majorVal);
     }
   }
 
   public void delete(int value) {
-    int[] assocs = table.lookup(value);
+    int[] assocs = table.restrict(value);
     for (int i=0 ; i < assocs.length ; i++) {
       int otherVal = assocs[i];
       boolean swap = value > otherVal;
       int minorVal = swap ? otherVal : value;
       int majorVal = swap ? value : otherVal;
-      deleteList = Miscellanea.array2Append(deleteList, deleteCount++, minorVal, majorVal);
+      deleteList = Array.append2(deleteList, deleteCount++, minorVal, majorVal);
     }
   }
 
@@ -53,7 +53,7 @@ class SymBinaryTableUpdater {
     boolean swap = value1 > value2;
     int minorVal = swap ? value2 : value1;
     int majorVal = swap ? value1 : value2;
-    insertList = Miscellanea.array2Append(insertList, insertCount++, minorVal, majorVal);
+    insertList = Array.append2(insertList, insertCount++, minorVal, majorVal);
   }
 
   public void apply() {
@@ -71,8 +71,8 @@ class SymBinaryTableUpdater {
       int field2 = insertList[2 * i + 1];
       if (!table.contains(field1, field2)) {
         table.insert(field1, field2);
-        table.store.addRef(field1);
-        table.store.addRef(field2);
+        store.addRef(field1);
+        store.addRef(field2);
       }
     }
   }
@@ -82,10 +82,10 @@ class SymBinaryTableUpdater {
       int field1 = deleteList[2 * i];
       if (field1 != 0xFFFFFFFF) {
         int field2 = deleteList[2 * i + 1];
-        Miscellanea._assert(table.store.lookupSurrogate(field1) != null);
-        Miscellanea._assert(table.store.lookupSurrogate(field2) != null);
-        table.store.release(field1);
-        table.store.release(field2);
+        // Miscellanea._assert(table.store.surrToObjValue(field1) != null);
+        // Miscellanea._assert(table.store.surrToObjValue(field2) != null);
+        store.release(field1);
+        store.release(field2);
       }
     }
   }
@@ -156,7 +156,7 @@ class SymBinaryTableUpdater {
     prepare();
 
     //## BAD: THIS IS VERY INEFFICIENT IF THERE'S A LOT OF ENTRIES WHOSE FIRST ARGUMENT IS surr
-    int[] surrs = table.lookup(surr);
+    int[] surrs = table.restrict(surr);
     for (int i=0 ; i < surrs.length ; i++) {
       int surr1 = surr;
       int surr2 = surrs[i];

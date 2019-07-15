@@ -8,7 +8,7 @@ final class TaggedObj extends Obj {
   int minPrintedSize = -1;
 
   public TaggedObj(int tag, Obj obj) {
-    data = tagObjData(tag, obj.data);
+    data = tagObjData(tag);
     extraData = refTagObjExtraData();
     this.obj = obj;
   }
@@ -34,6 +34,11 @@ final class TaggedObj extends Obj {
   public int internalOrder(Obj other) {
     Miscellanea._assert(getTagId() == other.getTagId());
     return obj.quickOrder(((TaggedObj) other).obj);
+  }
+
+  @Override
+  public int hashcode() {
+    return Hashing.hashcode(getTagId(), obj.hashcode());
   }
 
   public TypeCode getTypeCode() {
@@ -93,7 +98,7 @@ final class TaggedObj extends Obj {
           writer.write('\\');
           for (int j=0 ; j < 4 ; j++) {
             int hexDigit = (code >> (12 - 4 * j)) % 16;
-            char ch = (char) ((hexDigit < 10 ? '0' : 'A') + hexDigit);
+            char ch = (char) (hexDigit < 10 ? '0' + hexDigit : 'a' - 10 + hexDigit);
             writer.write(ch);
           }
         }

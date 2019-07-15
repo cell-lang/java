@@ -1,20 +1,12 @@
 package net.cell_lang;
 
 import java.util.Arrays;
+import java.io.StringReader;
 
 
 class Conversions {
   public static Obj convertText(String text) {
-    int len = text.length();
-    int count = text.codePointCount(0, len);
-    Token[] tokens;
-    if (count == len) {
-      tokens = Lexer.lex(text::charAt, len);
-    }
-    else {
-      int[] codePoints = text.codePoints().toArray();
-      tokens = Lexer.lex(i -> codePoints[i], count);
-    }
+    TokenStream tokens = new Tokenizer(new CharStream(new StringReader(text)));
     Parser parser = new Generated.Parser(tokens);
     Obj obj = parser.parseObj();
     parser.checkEof();

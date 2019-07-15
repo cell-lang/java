@@ -47,7 +47,7 @@ cellcd-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 	rm -rf tmp/*
 	mkdir tmp/gen/
 	# bin/cellc-java -d projects/compiler-no-runtime.txt tmp/gen/
-	java -jar bin/cellc-java.jar projects/compiler-no-runtime.txt tmp/gen/
+	java -jar bin/cellc-java.jar -d -nrt projects/compiler.txt tmp/gen/
 	mv tmp/gen/Generated.java tmp/
 	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
 	javac -g -d tmp/ tmp/gen/*.java
@@ -66,13 +66,23 @@ compiler-test-loop:
 	mkdir tmp
 	mkdir tmp/gen/
 
-	bin/cellc-java projects/compiler.txt tmp/gen/
+	# bin/cellc-java projects/compiler.txt tmp/gen/
+	java -jar bin/cellc-java.jar projects/compiler.txt tmp/gen/
 	mv tmp/gen/Generated.java tmp/
 	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
 	javac -d tmp/ tmp/gen/*.java
 	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
 	rm -rf tmp/*
 	mkdir tmp/gen/
+
+# 	java -jar cellc-java.jar projects/compiler.txt tmp/gen/
+# 	mv tmp/gen/Generated.java tmp/
+# 	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
+# 	javac -d tmp/ tmp/gen/*.java
+# 	rm cellc-java.jar
+# 	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
+# 	rm -rf tmp/*
+# 	mkdir tmp/gen/
 
 	java -jar cellc-java.jar projects/compiler.txt tmp/gen/
 	mv tmp/gen/Generated.java tmp/
@@ -84,6 +94,11 @@ compiler-test-loop:
 
 	java -jar cellc-java.jar projects/compiler.txt tmp/gen/
 	cmp tmp/gen/Generated.java tmp/Generated.java
+
+update-cellc-java.jar:
+	rm -rf cellc-java.jar tmp/net/
+	javac -d tmp/ tmp/gen/*.java
+	jar cfe cellc-java.jar net.cell_lang.Generated -C tmp net/
 
 ################################################################################
 ################################################################################

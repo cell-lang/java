@@ -13,11 +13,14 @@ final class EmptySeqObj extends SeqObj {
   //////////////////////////////////////////////////////////////////////////////
 
   public Obj getObjAt(long idx) {
-    throw new IndexOutOfBoundsException();
+    throw Miscellanea.softFail();
   }
 
   public SeqObj getSlice(long first, long len) {
-    throw new IndexOutOfBoundsException();
+    if (first == 0 & len == 0)
+      return this;
+    else
+      throw Miscellanea.softFail();
   }
 
   public boolean[] getArray(boolean[] buffer) {
@@ -73,6 +76,11 @@ final class EmptySeqObj extends SeqObj {
 
   public int internalOrder(Obj other) {
     throw Miscellanea.internalFail(this);
+  }
+
+  @Override
+  public int hashcode() {
+    return 0;
   }
 
   public TypeCode getTypeCode() {

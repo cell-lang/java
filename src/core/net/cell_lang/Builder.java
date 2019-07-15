@@ -16,8 +16,8 @@ class Builder {
   public static Obj createSet(Obj[] objs, long count) {
     Miscellanea._assert(objs.length >= count);
     if (count != 0) {
-      Obj[] normObjs = Algs.sortUnique(objs, (int) count);
-      return new NeSetObj(normObjs);
+      Object[] res = Algs._sortUnique(objs, (int) count);
+      return new NeSetObj((Obj[]) res[0], (int[]) res[1]);
     }
     else
       return EmptyRelObj.singleton;
@@ -48,24 +48,13 @@ class Builder {
     return createBinRel(col1, col2, col1.length);
   }
 
-  public static Obj createBinRel(Obj[] col1, Obj[] col2, long count) {
-    Miscellanea._assert(count <= col1.length & count <= col2.length);
-    if (count != 0) {
-      Obj[][] normCols = Algs.sortUnique(col1, col2, (int) count);
-      Obj[] normCol1 = normCols[0];
-      boolean isMap = !Algs.sortedArrayHasDuplicates(normCol1);
-      return new NeBinRelObj(normCol1, normCols[1], isMap);
-    }
-    else
-      return EmptyRelObj.singleton;
+  public static Obj createBinRel(Obj obj1, Obj obj2) {
+    return createBinRel(new Obj[] {obj1}, new Obj[] {obj2}, 1);
   }
 
-  public static Obj createBinRel(Obj obj1, Obj obj2) {
-    Obj[] col1 = new Obj[1];
-    Obj[] col2 = new Obj[1];
-    col1[0] = obj1;
-    col2[0] = obj2;
-    return new NeBinRelObj(col1, col2, true);
+  public static Obj createBinRel(Obj[] col1, Obj[] col2, long count) {
+    Miscellanea._assert(count <= col1.length & count <= col2.length);
+    return count != 0 ? NeBinRelObj.create(col1, col2, (int) count) : EmptyRelObj.singleton;
   }
 
   public static Obj createTernRel(ArrayList<Obj> col1, ArrayList<Obj> col2, ArrayList<Obj> col3) {
@@ -99,11 +88,58 @@ class Builder {
   }
 
   public static Obj createTaggedObj(int tag, Obj obj) {
+    if (obj.isInt())
+      return createTaggedIntObj(tag, obj.getLong());
+
+    if (tag == SymbTable.StringSymbId)
+      obj = obj.packForString();
+
     return new TaggedObj(tag, obj);
   }
 
   public static Obj createTaggedIntObj(int tag, long value) {
-    return new TaggedObj(tag, IntObj.get(value));
+    return TaggedIntObj.fits(value) ? new TaggedIntObj(tag, value) : new TaggedObj(tag, IntObj.get(value));
+  }
+
+  public static TaggedObj createString(char[] chars, int len) {
+    if (len == 0)
+      return new TaggedObj(SymbTable.StringSymbId, EmptySeqObj.singleton);
+
+    int max = 0;
+    for (int i=0 ; i < len ; i++) {
+      char ch = chars[i];
+      if (ch > max)
+        max = ch;
+    }
+
+    Obj charArray;
+
+    if (max <= 127) {
+      byte[] bytes = new byte[len];
+      for (int i=0 ; i < len ; i++)
+        bytes[i] = (byte) chars[i];
+      charArray = IntArrayObjs.create(bytes);
+    }
+    else if (max <= 255) {
+      byte[] bytes = new byte[len];
+      for (int i=0 ; i < len ; i++)
+        bytes[i] = (byte) chars[i];
+      charArray = IntArrayObjs.createUnsigned(bytes);
+    }
+    else if (max <= 32767) {
+      short[] shorts = new short[len];
+      for (int i=0 ; i < len ; i++)
+        shorts[i] = (short) chars[i];
+      charArray = IntArrayObjs.create(shorts);
+    }
+    else {
+      int[] ints = new int[len];
+      for (int i=0 ; i < len ; i++)
+        ints[i] = (int) chars[i];
+      charArray = IntArrayObjs.create(ints);
+    }
+
+    return new TaggedObj(SymbTable.StringSymbId, charArray);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -128,6 +164,10 @@ class Builder {
 
   public static Obj createSeq(byte[] vals) {
     return vals.length != 0 ? IntArrayObjs.create(vals) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeqUnsigned(byte[] vals) {
+    return vals.length != 0 ? IntArrayObjs.createUnsigned(vals) : EmptySeqObj.singleton;
   }
 
   public static Obj createSeq(short[] vals) {
@@ -190,6 +230,10 @@ class Builder {
 
   public static Obj createSeq(byte[] vals, int len) {
     return len != 0 ? IntArrayObjs.create(vals, len) : EmptySeqObj.singleton;
+  }
+
+  public static Obj createSeqUnsigned(byte[] vals, int len) {
+    return len != 0 ? IntArrayObjs.createUnsigned(vals, len) : EmptySeqObj.singleton;
   }
 
   public static Obj createSeq(short[] vals, int len) {

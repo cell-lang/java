@@ -14,7 +14,7 @@ class Sym12TernaryTable {
 
   public Index index123, index12, index13, index23, index1, index2, index3;
 
-  public ValueStore store12, store3;
+  public SurrObjMapper mapper12, mapper3;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -49,7 +49,7 @@ class Sym12TernaryTable {
     int len = flatTuples.length;
     Miscellanea._assert(3 * count == len);
     int[] newFlatTuples = new int[2 * len];
-    Miscellanea.arrayCopy(flatTuples, newFlatTuples, len);
+    Array.copy(flatTuples, newFlatTuples, len);
     flatTuples = newFlatTuples;
     int size = len / 3;
     for (int i=size ; i < 2 * size ; i++)
@@ -58,15 +58,15 @@ class Sym12TernaryTable {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public Sym12TernaryTable(ValueStore store12, ValueStore store3) {
+  public Sym12TernaryTable(SurrObjMapper mapper12, SurrObjMapper mapper3) {
     for (int i=0 ; i < MinSize ; i++)
       setEntry(i, i+1, Empty, 0);
 
     index123 = new Index(MinSize);
     index12  = new Index(MinSize);
 
-    this.store12 = store12;
-    this.store3 = store3;
+    this.mapper12 = mapper12;
+    this.mapper3 = mapper3;
   }
 
   public int size() {
@@ -104,18 +104,18 @@ class Sym12TernaryTable {
     count++;
 
     // Updating the indexes
-    index123.insert(index, Miscellanea.hashcode(arg1, arg2, arg3));
-    index12.insert(index, Miscellanea.hashcode(arg1, arg2));
+    index123.insert(index, Hashing.hashcode(arg1, arg2, arg3));
+    index12.insert(index, Hashing.hashcode(arg1, arg2));
     if (index13 != null)
-      index13.insert(index, Miscellanea.hashcode(arg1, arg3));
+      index13.insert(index, Hashing.hashcode(arg1, arg3));
     if (index23 != null)
-      index23.insert(index, Miscellanea.hashcode(arg2, arg3));
+      index23.insert(index, Hashing.hashcode(arg2, arg3));
     if (index1 != null)
-      index1.insert(index, Miscellanea.hashcode(arg1));
+      index1.insert(index, Hashing.hashcode(arg1));
     if (index2 != null)
-      index2.insert(index, Miscellanea.hashcode(arg2));
+      index2.insert(index, Hashing.hashcode(arg2));
     if (index3 != null)
-      index3.insert(index, Miscellanea.hashcode(arg3));
+      index3.insert(index, Hashing.hashcode(arg3));
   }
 
   public void clear() {
@@ -141,7 +141,7 @@ class Sym12TernaryTable {
       arg1 = arg2;
       arg2 = tmp;
     }
-    int hashcode = Miscellanea.hashcode(arg1, arg2, arg3);
+    int hashcode = Hashing.hashcode(arg1, arg2, arg3);
     for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2 & arg3(idx) == arg3) {
         deleteAt(idx, hashcode);
@@ -155,7 +155,7 @@ class Sym12TernaryTable {
       arg1 = arg2;
       arg2 = tmp;
     }
-    int hashcode = Miscellanea.hashcode(arg1, arg2, arg3);
+    int hashcode = Hashing.hashcode(arg1, arg2, arg3);
     for (int idx = index123.head(hashcode) ; idx != Empty ; idx = index123.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2 & arg3(idx) == arg3)
         return true;
@@ -168,7 +168,7 @@ class Sym12TernaryTable {
       arg1 = arg2;
       arg2 = tmp;
     }
-    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int hashcode = Hashing.hashcode(arg1, arg2);
     for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2)
         return true;
@@ -176,7 +176,7 @@ class Sym12TernaryTable {
   }
 
   public boolean contains_13_23(int arg12, int arg3) {
-    int hashcode = Miscellanea.hashcode(arg12, arg3);
+    int hashcode = Hashing.hashcode(arg12, arg3);
     if (index13 == null)
       buildIndex13();
     for (int idx = index13.head(hashcode) ; idx != Empty ; idx = index13.next(idx))
@@ -191,7 +191,7 @@ class Sym12TernaryTable {
   }
 
   public boolean contains_1_2(int arg12) {
-    int hashcode = Miscellanea.hashcode(arg12);
+    int hashcode = Hashing.hashcode(arg12);
     if (index1 == null)
       buildIndex1();
     for (int idx = index1.head(hashcode) ; idx != Empty ; idx = index1.next(idx))
@@ -208,7 +208,7 @@ class Sym12TernaryTable {
   public boolean contains3(int arg3) {
     if (index3 == null)
       buildIndex3();
-    int hashcode = Miscellanea.hashcode(arg3);
+    int hashcode = Hashing.hashcode(arg3);
     for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
       if (arg3(idx) == arg3)
         return true;
@@ -222,15 +222,79 @@ class Sym12TernaryTable {
       arg2 = tmp;
     }
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int hashcode = Hashing.hashcode(arg1, arg2);
     for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2)
         count++;
     return count;
   }
 
+  public int lookup12(int arg1, int arg2) {
+    if (arg1 > arg2) {
+      int tmp = arg1;
+      arg1 = arg2;
+      arg2 = tmp;
+    }
+    int hashcode = Hashing.hashcode(arg1, arg2);
+    int value = -1;
+    for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
+      if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2)
+        if (value == -1)
+          value = arg3(idx);
+        else
+          throw Miscellanea.softFail();
+    return value;
+  }
+
+  public int lookup_13_23(int arg12, int arg3) {
+    int hashcode = Hashing.hashcode(arg12, arg3);
+    int value = -1;
+
+    if (index13 == null)
+      buildIndex13();
+
+    for (int idx = index13.head(hashcode) ; idx != Empty ; idx = index13.next(idx))
+      if (arg3(idx) == arg3) {
+        if (arg1OrNext(idx) == arg12) {
+          if (value == -1)
+            value = arg2OrEmptyMarker(idx);
+          else
+            throw Miscellanea.softFail();
+        }
+        else if (arg2OrEmptyMarker(idx) == arg12) {
+          if (value == -1)
+            value = arg1OrNext(idx);
+          else
+            throw Miscellanea.softFail();
+        }
+      }
+
+    if (index23 == null)
+      buildIndex23();
+
+    for (int idx = index23.head(hashcode) ; idx != Empty ; idx = index23.next(idx))
+      if (arg3(idx) == arg3) {
+        if (arg1OrNext(idx) == arg12) {
+          int arg2 = arg2OrEmptyMarker(idx);
+          if (value == -1)
+            value = arg2;
+          else if (value != arg2)
+            throw Miscellanea.softFail();
+        }
+        else if (arg2OrEmptyMarker(idx) == arg12) {
+          int arg1 = arg1OrNext(idx);
+          if (value == -1)
+            value = arg1;
+          else if (value != arg1)
+            throw Miscellanea.softFail();
+        }
+      }
+
+    return value;
+  }
+
   public int count_13_23(int arg12, int arg3) {
-    int hashcode = Miscellanea.hashcode(arg12, arg3);
+    int hashcode = Hashing.hashcode(arg12, arg3);
     int count = 0;
     if (index13 == null)
       buildIndex13();
@@ -246,7 +310,7 @@ class Sym12TernaryTable {
   }
 
   public int count_1_2(int arg12) {
-    int hashcode = Miscellanea.hashcode(arg12);
+    int hashcode = Hashing.hashcode(arg12);
     int count = 0;
     if (index1 == null)
       buildIndex1();
@@ -265,7 +329,7 @@ class Sym12TernaryTable {
     if (index3 == null)
       buildIndex3();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg3);
+    int hashcode = Hashing.hashcode(arg3);
     for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
       if (arg3(idx) == arg3)
         count++;
@@ -279,7 +343,7 @@ class Sym12TernaryTable {
       arg2 = tmp;
     }
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int hashcode = Hashing.hashcode(arg1, arg2);
     for (int idx = index12.head(hashcode) ; idx != Empty ; idx = index12.next(idx))
       if (arg1OrNext(idx) == arg1 & arg2OrEmptyMarker(idx) == arg2) {
         count++;
@@ -293,7 +357,7 @@ class Sym12TernaryTable {
     if (index3 == null)
       buildIndex3();
     int count = 0;
-    int hashcode = Miscellanea.hashcode(arg3);
+    int hashcode = Hashing.hashcode(arg3);
     for (int idx = index3.head(hashcode) ; idx != Empty ; idx = index3.next(idx))
       if (arg3(idx) == arg3) {
         count++;
@@ -314,12 +378,12 @@ class Sym12TernaryTable {
       arg2 = tmp;
     }
     Miscellanea._assert(arg1 <= arg2);
-    int hashcode = Miscellanea.hashcode(arg1, arg2);
+    int hashcode = Hashing.hashcode(arg1, arg2);
     return new Iter12(arg1, arg2, index12.head(hashcode));
   }
 
   public Iter getIter_13_23(int arg12, int arg3) {
-    int hashcode = Miscellanea.hashcode(arg12, arg3);
+    int hashcode = Hashing.hashcode(arg12, arg3);
     if (index13 == null)
       buildIndex13();
     Iter iter1 = new Iter13(arg12, arg3, index13.head(hashcode));
@@ -334,7 +398,7 @@ class Sym12TernaryTable {
   }
 
   public Iter getIter_1_2(int arg12) {
-    int hashcode = Miscellanea.hashcode(arg12);
+    int hashcode = Hashing.hashcode(arg12);
     if (index1 == null)
       buildIndex1();
     Iter iter1 = new Iter1(arg12, index1.head(hashcode));
@@ -351,7 +415,7 @@ class Sym12TernaryTable {
   public Iter3 getIter3(int arg3) {
     if (index3 == null)
       buildIndex3();
-    int hashcode = Miscellanea.hashcode(arg3);
+    int hashcode = Hashing.hashcode(arg3);
     return new Iter3(arg3, index3.head(hashcode));
   }
 
@@ -373,7 +437,7 @@ class Sym12TernaryTable {
 
       int idx = hashtable[i];
       while (idx != Empty) {
-        bucket = Miscellanea.arrayAppend(bucket, count++, flatTuples[3 * i]);
+        bucket = Array.append(bucket, count++, flatTuples[3 * i]);
         idx = index3.next(idx);
       }
 
@@ -414,7 +478,7 @@ class Sym12TernaryTable {
         long packedArgs = arg1 | (arg2 << 32);
         Miscellanea._assert(arg1 == (packedArgs & 0xFFFFFFFF));
         Miscellanea._assert(arg2 == (packedArgs >>> 32));
-        bucket = Miscellanea.arrayAppend(bucket, count++, packedArgs);
+        bucket = Array.append(bucket, count++, packedArgs);
         idx = index.next(idx);
       }
 
@@ -447,17 +511,17 @@ class Sym12TernaryTable {
 
     // Updating the indexes
     index123.delete(index, hashcode);
-    index12.delete(index, Miscellanea.hashcode(arg1, arg2));
+    index12.delete(index, Hashing.hashcode(arg1, arg2));
     if (index13 != null)
-      index13.delete(index, Miscellanea.hashcode(arg1, arg3));
+      index13.delete(index, Hashing.hashcode(arg1, arg3));
     if (index23 != null)
-      index23.delete(index, Miscellanea.hashcode(arg2, arg3));
+      index23.delete(index, Hashing.hashcode(arg2, arg3));
     if (index1 != null)
-      index1.delete(index, Miscellanea.hashcode(arg1));
+      index1.delete(index, Hashing.hashcode(arg1));
     if (index2 != null)
-      index2.delete(index, Miscellanea.hashcode(arg2));
+      index2.delete(index, Hashing.hashcode(arg2));
     if (index3 != null)
-      index3.delete(index, Miscellanea.hashcode(arg3));
+      index3.delete(index, Hashing.hashcode(arg3));
   }
 
   void buildIndex123() {
@@ -466,7 +530,7 @@ class Sym12TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int arg2 = arg2OrEmptyMarker(i);
       if (arg2 != Empty)
-        index123.insert(i, Miscellanea.hashcode(arg1OrNext(i), arg2, arg3(i)));
+        index123.insert(i, Hashing.hashcode(arg1OrNext(i), arg2, arg3(i)));
     }
   }
 
@@ -476,7 +540,7 @@ class Sym12TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int arg2 = arg2OrEmptyMarker(i);
       if (arg2 != Empty)
-        index12.insert(i, Miscellanea.hashcode(arg1OrNext(i), arg2));
+        index12.insert(i, Hashing.hashcode(arg1OrNext(i), arg2));
     }
   }
 
@@ -485,7 +549,7 @@ class Sym12TernaryTable {
     index13 = new Index(size);
     for (int i=0 ; i < size ; i++)
       if (arg2OrEmptyMarker(i) != Empty)
-        index13.insert(i, Miscellanea.hashcode(arg1OrNext(i), arg3(i)));
+        index13.insert(i, Hashing.hashcode(arg1OrNext(i), arg3(i)));
   }
 
   void buildIndex23() {
@@ -494,7 +558,7 @@ class Sym12TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int arg2 = arg2OrEmptyMarker(i);
       if (arg2 != Empty)
-        index23.insert(i, Miscellanea.hashcode(arg2, arg3(i)));
+        index23.insert(i, Hashing.hashcode(arg2, arg3(i)));
     }
   }
 
@@ -503,7 +567,7 @@ class Sym12TernaryTable {
     index1 = new Index(size);
     for (int i=0 ; i < size ; i++)
       if (arg2OrEmptyMarker(i) != Empty)
-        index1.insert(i, Miscellanea.hashcode(arg1OrNext(i)));
+        index1.insert(i, Hashing.hashcode(arg1OrNext(i)));
   }
 
   void buildIndex2() {
@@ -512,7 +576,7 @@ class Sym12TernaryTable {
     for (int i=0 ; i < size ; i++) {
       int arg2 = arg2OrEmptyMarker(i);
       if (arg2 != Empty)
-        index2.insert(i, Miscellanea.hashcode(arg2));
+        index2.insert(i, Hashing.hashcode(arg2));
     }
   }
 
@@ -521,7 +585,7 @@ class Sym12TernaryTable {
     index3 = new Index(size);
     for (int i=0 ; i < size ; i++)
       if (arg2OrEmptyMarker(i) != Empty)
-        index3.insert(i, Miscellanea.hashcode(arg3(i)));
+        index3.insert(i, Hashing.hashcode(arg3(i)));
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -542,15 +606,15 @@ class Sym12TernaryTable {
     int next = 0;
     for (int iT=0 ; iT < tables.length ; iT++) {
       Sym12TernaryTable table = tables[iT];
-      ValueStore store12 = table.store12;
-      ValueStore store3 = table.store3;
+      SurrObjMapper mapper12 = table.mapper12;
+      SurrObjMapper mapper3 = table.mapper3;
       int size = table.capacity();
       for (int iS=0 ; iS < size ; iS++) {
         int arg2 = table.arg2OrEmptyMarker(iS);
         if (arg2 != Empty) {
-          col1[next] = store12.getValue(table.arg1OrNext(iS));
-          col2[next] = store12.getValue(arg2);
-          col3[next] = store3.getValue(table.arg3(iS));
+          col1[next] = mapper12.surrToObj(table.arg1OrNext(iS));
+          col2[next] = mapper12.surrToObj(arg2);
+          col3[next] = mapper3.surrToObj(table.arg3(iS));
           next++;
         }
       }

@@ -932,7 +932,7 @@ class OverflowTable {
     if (head16 == EmptyMarker) {
       int len = slots.length;
       int[] newSlots = new int[2*len];
-      Miscellanea.arrayCopy(slots, newSlots, len);
+      Array.copy(slots, newSlots, len);
       for (int i=len ; i < 2 * len ; i += 16) {
         newSlots[i]   = (i - 16) | AvailableTag << 29;
         newSlots[i+1] = (i + 16) | Block16Tag << 29;

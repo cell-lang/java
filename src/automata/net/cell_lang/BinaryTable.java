@@ -37,12 +37,12 @@ class BinaryTable {
   OneWayBinTable table1 = new OneWayBinTable();
   OneWayBinTable table2 = new OneWayBinTable();
 
-  public ValueStore store1;
-  public ValueStore store2;
+  public SurrObjMapper mapper1, mapper2;
 
-  public BinaryTable(ValueStore store1, ValueStore store2) {
-    this.store1 = store1;
-    this.store2 = store2;
+
+  public BinaryTable(SurrObjMapper mapper1, SurrObjMapper mapper2) {
+    this.mapper1 = mapper1;
+    this.mapper2 = mapper2;
     check();
   }
 
@@ -79,11 +79,21 @@ class BinaryTable {
     return table2.count(surr2);
   }
 
-  public int[] lookupByCol1(int surr) {
+  public int[] restrict1(int surr) {
+    return table1.restrict(surr);
+  }
+
+  public int[] restrict2(int surr) {
+    if (table2.count == 0 & table1.count > 0)
+      table2.initReverse(table1);
+    return table2.restrict(surr);
+  }
+
+  public int lookup1(int surr) {
     return table1.lookup(surr);
   }
 
-  public int[] lookupByCol2(int surr) {
+  public int lookup2(int surr) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(table1);
     return table2.lookup(surr);
@@ -94,18 +104,29 @@ class BinaryTable {
   }
 
   public Iter getIter1(int surr1) {
-    return new Iter(lookupByCol1(surr1), true);
+    return new Iter(restrict1(surr1), true);
   }
 
   public Iter getIter2(int surr2) {
-    return new Iter(lookupByCol2(surr2), true);
+    return new Iter(restrict2(surr2), true);
   }
 
   public void insert(int surr1, int surr2) {
     table1.insert(surr1, surr2);
-    if (table2.count > 0)
+    if (table2.count > 0) //## BUG?
       table2.insert(surr2, surr1);
     check();
+  }
+
+  // Assuming there's at most one tuple that whose first argument is surr1
+  public int update1(int surr1, int surr2) {
+    int oldSurr2 = table1.update(surr1, surr2);
+    if (oldSurr2 != -1 && oldSurr2 != surr2 && table2.count > 0) { //## BUG?
+      table2.delete(oldSurr2, surr1);
+      table2.insert(surr2, surr1);
+    }
+    check();
+    return oldSurr2;
   }
 
   public void clear() {
@@ -116,7 +137,7 @@ class BinaryTable {
 
   public void delete(int surr1, int surr2) {
     table1.delete(surr1, surr2);
-    if (table2.count > 0)
+    if (table2.count > 0) //## BUG?
       table2.delete(surr2, surr1);
     check();
   }
@@ -158,22 +179,22 @@ class BinaryTable {
     for (int iT=0 ; iT < tables.length ; iT++) {
       BinaryTable table = tables[iT];
       int[] column = table.table1.column;
-      ValueStore store1 = table.store1;
-      ValueStore store2 = table.store2;
+      SurrObjMapper mapper1 = table.mapper1;
+      SurrObjMapper mapper2 = table.mapper2;
       for (int iS=0 ; iS < column.length ; iS++) {
         int code = column[iS];
         if (code != OverflowTable.EmptyMarker) {
-          Obj val1 = store1.getValue(iS);
+          Obj val1 = mapper1.surrToObj(iS);
           if (code >> 29 == 0) {
             objs1[next] = val1;
-            objs2[next++] = store2.getValue(code);
+            objs2[next++] = mapper2.surrToObj(code);
           }
           else {
             OverflowTable.Iter it = table.table1.overflowTable.getIter(code);
             while (!it.done()) {
               int arg2 = it.get();
               objs1[next] = val1;
-              objs2[next++] = store2.getValue(arg2);
+              objs2[next++] = mapper2.surrToObj(arg2);
               it.next();
             }
           }

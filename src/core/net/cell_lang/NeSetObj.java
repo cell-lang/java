@@ -6,22 +6,49 @@ import java.io.Writer;
 
 final class NeSetObj extends Obj {
   Obj[] elts;
+  int[] hashcodes;
+  int hashcode = Integer.MIN_VALUE;
   int minPrintedSize = -1;
 
-  public NeSetObj(Obj[] elts) {
+  public NeSetObj(Obj[] elts, int[] hashcodes) {
     Miscellanea._assert(elts.length > 0);
 
-    int size = elts.length;
-    long hashcode = 0;
-    for (int i=0 ; i < elts.length ; i++)
-      hashcode += elts[i].data;
-    data = setObjData(size, hashcode);
+    data = setObjData(elts.length);
     extraData = neSetObjExtraData();
     this.elts = elts;
+    this.hashcodes = hashcodes;
   }
 
-  public boolean hasElem(Obj obj) {
-    return Algs.binSearch(elts, obj) != -1;
+  public Obj insert(Obj obj) {
+    if (!contains(obj))
+      return this;
+
+    NeTreeSetObj treeSet = new NeTreeSetObj(elts, hashcodes, 0, elts.length);
+    return treeSet.insert(obj);
+  }
+
+  public Obj remove(Obj obj) {
+    if (!contains(obj))
+      return this;
+
+    NeTreeSetObj treeSet = new NeTreeSetObj(elts, hashcodes, 0, elts.length);
+    return treeSet.remove(obj);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean contains(Obj obj) {
+    int hashcode = obj.hashcode();
+    int idx = Arrays.binarySearch(hashcodes, hashcode);
+    if (idx >= 0) {
+      for (int i=idx ; i < elts.length && hashcodes[i] == hashcode ; i++)
+        if (elts[i].isEq(obj))
+          return true;
+      for (int i=idx-1 ; i >= 0 && hashcodes[i] == hashcode ; i--)
+        if (elts[i].isEq(obj))
+          return true;
+    }
+    return false;
   }
 
   public SetIter getSetIter() {
@@ -47,6 +74,9 @@ final class NeSetObj extends Obj {
   public int internalOrder(Obj other) {
     Miscellanea._assert(getSize() == other.getSize());
 
+    if (other instanceof NeTreeSetObj)
+      return -other.internalOrder(this);
+
     NeSetObj otherSet = (NeSetObj) other;
     int size = getSize();
     Obj[] otherElts = otherSet.elts;
@@ -56,6 +86,19 @@ final class NeSetObj extends Obj {
         return ord;
     }
     return 0;
+  }
+
+  @Override
+  public int hashcode() {
+    if (hashcode == Integer.MIN_VALUE) {
+      long hcode = 0;
+      for (int i=0 ; i < hashcodes.length ; i++)
+        hcode += hashcodes[i];
+      hashcode = Hashing.hashcode64(hcode);
+      if (hashcode == Integer.MIN_VALUE)
+        hashcode++;
+    }
+    return hashcode;
   }
 
   public TypeCode getTypeCode() {
