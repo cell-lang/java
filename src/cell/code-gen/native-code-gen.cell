@@ -353,7 +353,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     auto_var_decls = (native_name(auto_vars_types[v]) & " " & native_var_decl_name(v) & ";" : v <- auto_vars);
 
     db_vars_decls = (native_name(t) & " " & native_var_decl_name(v) & ";" : v, t <- isort(db_vars_types));
-    aux_db_vars_decls = (aux_struct_c_name(t) & " " & aux_struct_var_decl_name(v) & ";" : v, t <- isort(db_vars_types));
+    aux_db_vars_decls = (native_updater_name(t) & " " & updater_var_decl_name(v) & ";" : v, t <- isort(db_vars_types));
 
     comp_body = native_code(body, nothing);
 
@@ -404,7 +404,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       cls_args = ("Lambda " & native_var_decl_name(a.var) : a <- pd.cls_args);
       rel_auto_args = join((
         ( native_name(a.type) & " " & native_var_decl_name(a.var),
-          aux_struct_c_name(a.type) & " " & aux_struct_var_decl_name(a.var)
+          native_updater_name(a.type) & " " & updater_var_decl_name(a.var)
         ) : a <- pd.rel_auto_args
       ));
       react_auto_args = (native_name(a.type) & " " & native_var_decl_name(a.var) : a <- pd.react_auto_args);

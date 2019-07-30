@@ -294,7 +294,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   String* native_call_proc_code(Maybe[AnyWriteVar] var, ObjFnName name, AnyTypeExpr* args, AnyLambdaExpr* cls_args, LocDBVar* rel_auto_args, LocAutoVar* react_auto_args, Maybe[Nat] block_id) {
     cls_setup_code, cls_args_refs = unzip((gen_cls_info(c) : c <- cls_args));
-    rel_args = join(((native_var_ref_name(v), aux_struct_var_ref_name(v)) : v <- rel_auto_args));
+    rel_args = join(((native_var_ref_name(v), updater_var_ref_name(v)) : v <- rel_auto_args));
     react_args = (native_var_ref_name(v) : v <- react_auto_args);
     args_list = args & cls_args_refs & rel_args & react_args;
     args_list = (args_list | "env") if not name :: ConvFnId;

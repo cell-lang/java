@@ -154,17 +154,11 @@ String native_var_name(<ObjVar, PendingInputVar> var, Bool add_prefix) {
 
 
 String native_var_name(BoolVar var, Bool add_prefix) {
-  prefix = if add_prefix
-    then match (var)
-      nested_db_spent() = "updater.",
-      _                 = "this."
-    else "";
-
+  prefix = if add_prefix then "this." else "";
   return match (var)
     bvar(<+> s?)                                  = printed(s) & "_Vb",
     bvar(<*..*> n?)                               = "b" & printed(n),
     bool_arg(n?)                                  = "a" & printed(n),
-    nested_db_spent(v?)                           = prefix & native_var_decl_name(v) & "s",
     cond_value_var(n?)                            = prefix & "cond_" & printed(n),
     cond_is_def_var(n?)                           = prefix & "cond_def_" & printed(n),
     watched_signal_up_to_date_var(a?)             = prefix & _print_(a) & "_Uw",
@@ -229,7 +223,7 @@ String native_var_name(AnyAutoVar v, Bool add_prefix) =
 String native_var_name(AnyDBVar v, Bool add_prefix) =
   loc_db_var(a?)    = _print_(a) & "_T",
   nested_db_var(a?) = {if add_prefix then "this." else ""} & _print_(a) & "_T",
-  linked_db_var(n?) = "(*" & {if add_prefix then "this." else ""} & "linkedAuto" & printed(n) & ")",
+  linked_db_var(n?) = {if add_prefix then "this." else ""} & "linkedAuto" & printed(n),
   qual_db_var()     = native_var_name(v.outer, add_prefix) & "." & native_var_name(v.inner, false);
 
 
@@ -280,16 +274,29 @@ String pending_updates_var_decl_name(TableVar var) {
 
 String pending_updates_var_ref_name(TableVar table_var) = "updater." & pending_updates_var_decl_name(table_var);
 
-String aux_struct_var_decl_name(<LocDBVar, NestedDBVar> db_var) = native_var_decl_name(db_var) & "x";
+String dependee_msg_var_decl_name(LinkedDBVar) =
+  linked_db_var(i?)   = "linkedAutoMsg" & _print_(i);
 
-String aux_struct_var_ref_name(LocDBVar db_var) = aux_struct_var_decl_name(db_var);
+String dependee_msg_var_ref_name(LinkedDBVar var) = "updater." & dependee_msg_var_decl_name(var);
 
-String aux_struct_var_ref_name(NestedDBVar db_var) = "updater." & aux_struct_var_decl_name(db_var);
+String dependee_apply_code_var_decl_name(LinkedDBVar) =
+  linked_db_var(i?) = "linkedAutoApplyCode" & _print_(i);
 
-String aux_struct_var_decl_name(ValueStoreId vs) =
+String dependee_apply_code_var_ref_name(LinkedDBVar var) = "updater." & dependee_apply_code_var_decl_name(var);
+
+String updater_var_decl_name(<LocDBVar, NestedDBVar> db_var) = native_var_decl_name(db_var) & "x";
+
+String updater_var_decl_name(LinkedDBVar db_var) =
+  linked_db_var(i?)   = "linkedUpdater" & _print_(i);
+
+String updater_var_ref_name(LocDBVar db_var) = updater_var_decl_name(db_var);
+
+String updater_var_ref_name(<NestedDBVar, LinkedDBVar> db_var) = "updater." & updater_var_decl_name(db_var);
+
+String updater_var_decl_name(ValueStoreId vs) =
   value_store_id(n?)  = "valueStoreUpdater" & printed(n);
 
-String aux_struct_var_ref_name(ValueStoreId vs) = "updater." & aux_struct_var_decl_name(vs);
+String updater_var_ref_name(ValueStoreId vs) = "updater." & updater_var_decl_name(vs);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -432,7 +439,7 @@ String native_name(AutoSymbol) = auto_symbol(a?) = upper_camel_case(a) & "_R";
 
 String native_name(DBSymbol) = db_symbol(a?) = upper_camel_case(a) & "_T";
 
-String aux_struct_c_name(<AutoSymbol, DBSymbol> symb) = native_name(symb) & "x";
+String native_updater_name(<AutoSymbol, DBSymbol> symb) = native_name(symb) & "x";
 
 String native_name(MethodId meth_id) {
   id_str = if meth_id.id? then uppercase_encoding(meth_id.id) else "";
@@ -446,6 +453,10 @@ String native_name(UpdateId id) =
                       return _print_(bare_id(id.symbol)) & "_U" & printed(id.arity) & id_str;
                     };
 
+String native_apply_method_name(<main_handler>) = "msgHandlerApply";
+
+String native_apply_method_name(<handler_id(Nat)> id) = "msgHandlerApply_" & uppercase_encoding(_untag_(id));
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -455,7 +466,6 @@ String copy_state_proc_name         (DBSymbol db_type) = "copyState";
 String write_state_proc_name        (DBSymbol db_type) = "writeState";
 String set_state_proc_name          (DBSymbol db_type) = "setState";
 String load_state_proc_name         (DBSymbol db_type) = "loadState";
-String reconstruct_proc_name        (DBSymbol db_type) = "reconstruct";
 String updater_creation_proc_name   (DBSymbol db_type) = "newUpdater";
 String updater_reset_proc_name      (DBSymbol db_type) = "resetUpdater";
 String updates_copy_proc_name       (DBSymbol db_type) = "copy";

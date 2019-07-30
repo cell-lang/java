@@ -74,9 +74,9 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     init_db()             = native_init_db_code(instr.db_var, instr.links, instr.type),
     cleanup_db()          = (), //(native_method_call(instr.db_var, cleanup_method_name(instr.type), ())),
 
-    send_msg()            = (native_send_msg_code(instr.db_var, instr.type, instr.msg, instr.is_root, if instr.res_var? then just(instr.res_var) else nothing)),
+    send_msg()            = native_send_msg_code(instr.db_var, instr.type, instr.msg, instr.is_root, if instr.res_var? then just(instr.res_var) else nothing),
     try_update()          = (native_method_call("this", update_name(instr.type, instr.update_id), (instr.args | "updater", "env"))),
-    set_state()           = native_set_state_code(instr.state, instr.db_var, instr.type, instr.res_var),
+    set_state()           = native_set_state_code(instr.state, instr.db_var, instr.dependees, instr.type, instr.res_var),
     invoke_auto_method()  = (native_method_call(instr.res_var, if instr.auto_var? then instr.auto_var else "this", user_def_method_name(instr.type, instr.method_id), (instr.args | "env"))),
     invoke_db_method()    = (native_method_call(instr.res_var, if instr.db_var? then instr.db_var else "this", user_def_method_name(instr.type, instr.method_id), (instr.args | "env"))),
 
@@ -89,7 +89,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     get_column_iter()     = (native_method_call(instr.it_var, instr.column, "getIter", ())),
 
     queue_deletes()       = (native_queue_deletes_code(instr.table_var, instr.args, instr.symmetric)),
-    lookup_or_queue_insert_value()  = (native_method_call(instr.res_var, aux_struct_var_ref_name(instr.store), "lookupOrInsertValue", (instr.value))),
+    lookup_or_queue_insert_value()  = (native_method_call(instr.res_var, updater_var_ref_name(instr.store), "lookupOrInsertValue", (instr.value))),
     queue_insert_tuple()  = (native_queue_insert_tuple_code(instr.table_var, instr.tuple)),
 
     column_insert_deferred()  = native_column_insert_deferred_code(instr.table_var, instr.key_surr, instr.value, instr.forced),
@@ -129,8 +129,12 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
   String* native_init_db_code(AnyDBVar db_var, LocDBVar* links, DBSymbol type) = (
     native_new_call(db_var, native_name(type), (links | "env")),
-    native_method_call(aux_struct_var_ref_name(db_var), db_var, updater_creation_proc_name(type), ())
-      if db_var :: LocDBVar
+    native_method_call(
+      updater_var_ref_name(db_var),
+      db_var,
+      updater_creation_proc_name(type),
+      (updater_var_ref_name(d) : d <- links)
+    ) if db_var :: LocDBVar
   );
 
 
@@ -151,7 +155,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   //     (1, 0)    = (true),
   //     (_, _, _) = perm;
   //   // args = (pending_updates_var_ref_name(relvar)) & table.value_stores &
-  //   //        (aux_struct_var_ref_name(vs) : vs <- table.value_stores) & perm_args;
+  //   //        (updater_var_ref_name(vs) : vs <- table.value_stores) & perm_args;
   //   return native_method_call(pending_updates_var_ref_name(table_var(relvar)), "set", (state) & perm_args);
   // }
 
@@ -231,60 +235,60 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   }
 
 
-  String native_send_msg_code(AnyDBVar db_var, DBSymbol type, AtomicExpr msg, Bool is_root, Maybe[BoolVar] maybe_res_var) {
+  String* native_send_msg_code(AnyDBVar db_var, DBSymbol type, AtomicExpr msg, Bool is_root, Maybe[BoolVar] maybe_res_var) {
     if is_root {
       method_name = update_entry_point_name(type);
-      // updater_name = if db_var :: LocDBVar then aux_struct_var_ref_name(db_var) else "updater";
+      // updater_name = if db_var :: LocDBVar then updater_var_ref_name(db_var) else "updater";
       fail if not db_var :: <LocDBVar, NestedDBVar>;
 
       //## IF db_var IS A LocDBVar THEN NO PREFIX IS NEDEED
       //## IF IT'S A NestedDBVar THEN IT'S NESTED INSIDE A REACTIVE AUTOMATON AND THE "this." PREFIX CAN BE USED
       //## THIS IS A REALLY BAD WAY TO DO IT TOUGHT
-      aux_struct_name = aux_struct_var_decl_name(db_var);
-      aux_struct_name = "this." & aux_struct_name if db_var :: NestedDBVar;
+      updater_name = updater_var_decl_name(db_var);
+      updater_name = "this." & updater_name if db_var :: NestedDBVar;
 
-      args = (msg, aux_struct_name, "env");
-      return if maybe_res_var == nothing
+      args = (msg, updater_name, "env");
+      line = if maybe_res_var == nothing
         then native_method_call(db_var, method_name, args)
         else native_method_call(value(maybe_res_var), db_var, method_name, args);
+      return (line);
     }
+
     else {
-      assert db_var :: NestedDBVar;
-      fail if not db_var :: NestedDBVar;
+      assert db_var :: LinkedDBVar;
+      fail if not db_var :: LinkedDBVar;
       method_name = update_name(type, main_handler);
-      aux_db_var_name = aux_struct_var_ref_name(db_var);
-      return native_method_call(db_var, update_name(type, main_handler), (msg, aux_db_var_name, "env"));
+      aux_db_var_name = updater_var_ref_name(db_var);
+      msg_var_name = dependee_msg_var_ref_name(db_var);
+      return (
+        "if (" & msg_var_name & " != null)",
+        "  Miscellanea.softFail();",
+        msg_var_name & " = " & native_expr(msg) & ";"
+      );
+
+      // native_method_call(db_var, update_name(type, main_handler), (msg, aux_db_var_name, "env"));
     }
   }
 
 
-  String* native_set_state_code(AtomicExpr state, LocDBVar db_var, DBSymbol type, BoolVar res_var) {
+  String* native_set_state_code(AtomicExpr state, LocDBVar db_var, LocDBVar* dependees, DBSymbol type, BoolVar res_var) {
     // If it's a local automaton variable we are trying to set the state of,
-    // then we need to create a new automaton by calling recontruct() and replacing
-    // the old automaton with the new if the reconstruction process is successful
+    // then we need to create a new automaton and replacing the old automaton
+    // with the new one if the reconstruction process is successful
     class_name = native_name(type);
     updater_class_name = updater_creation_proc_name(type);
-    reconstr_call = native_method_call(db_var, reconstruct_proc_name(type), (state, "env"));
+    deps_args_list = append((native_var_ref_name(d) & ", " : d <- dependees));
+    deps_updaters_args_list = (updater_var_ref_name(d) : d <- dependees);
     return (
-      "{ " & class_name & " instance = " & reconstr_call,
-      "  " & native_var_ref_name(res_var) & " = instance != null;",
-      "  if (instance != null) {",
-      "    " & native_var_ref_name(db_var) & " = instance;",
-      "    " & native_method_call(aux_struct_var_ref_name(db_var), db_var, updater_class_name, ()),
-      "  }",
+      "try {",
+      "  " & class_name & " instance = new " & class_name & "(" & deps_args_list & native_expr(state) & ", env);",
+      "  " & native_var_ref_name(db_var) & " = instance;",
+      "  " & native_method_call(updater_var_ref_name(db_var), db_var, updater_class_name, deps_updaters_args_list),
+      "  " & native_var_ref_name(res_var) & " = true;",
+      "}",
+      "catch (Exception e) {",
+      "  " & native_var_ref_name(res_var) & " = false;",
       "}"
     );
-  }
-
-  String* native_set_state_code(AtomicExpr state, NestedDBVar db_var, DBSymbol type, BoolVar res_var) =
-    (native_method_call(res_var, db_var, set_state_proc_name(type), (state)));
-
-
-  String* native_set_state_code(AtomicExpr state, LinkedDBVar db_var, DBSymbol type, BoolVar res_var) {
-    fail; // Cannot happen
-  }
-
-  String* native_set_state_code(AtomicExpr state, QualDBVar db_var, DBSymbol type, BoolVar res_var) {
-    fail; // Cannot happen
   }
 }

@@ -7,7 +7,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     memb_vars_decl = (memb_var_decl(v) : v <- isort(block.memb_vars));
     auto_vars_decl = (native_name(t) & " " & native_var_decl_name(v) & ";" : v, t <- isort(block.nested_auto_vars));
     db_vars_decl = ("public " & native_name(t) & " " & native_var_decl_name(v) & ";" : v, t <- isort(block.nested_static_blocks));
-    aux_db_vars_decls = ("public " & aux_struct_c_name(t) & " " & aux_struct_var_decl_name(v) & ";" : v, t <- isort(block.nested_static_blocks));
+    aux_db_vars_decls = ("public " & native_updater_name(t) & " " & updater_var_decl_name(v) & ";" : v, t <- isort(block.nested_static_blocks));
 
     vars_decls = memb_vars_decl & auto_vars_decl & db_vars_decl & aux_db_vars_decls;
 
@@ -27,7 +27,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
     aux_vars_decls = (var_decl(v) : v <- isort(aux_vars));
     aux_vars_decls = (aux_vars_decls | "") if aux_vars != ();
 
-    // aux_name_str = aux_struct_c_name(block.name);
+    // aux_name_str = native_updater_name(block.name);
     // aux_decls = ("struct " & aux_name_str & " {",) & indent_lines((var_decl(v) : v <- isort(aux_vars))) & ("};");
 
     ctor_vars_decl = gen_vars_decls(block.pre_init_code, []);
@@ -36,7 +36,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
     //## BAD BAD BAD: THIS IS JUST A HACK. IT SHOULD BE DEALT WITH IN THE CODE GENERATION PHASE
     ctor_body = ctor_body & (
-      native_method_call("this." & aux_struct_var_decl_name(v), v, updater_creation_proc_name(t), ())
+      native_method_call("this." & updater_var_decl_name(v), v, updater_creation_proc_name(t), ())
       : v, t <- isort(block.nested_static_blocks)
     );
 

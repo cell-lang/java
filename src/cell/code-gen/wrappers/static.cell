@@ -139,12 +139,18 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     }
 
     db_name = native_name(root_block.name);
-    updater_name = aux_struct_c_name(root_block.name);
+    updater_name = native_updater_name(root_block.name);
     has_any_updates = root_block.msg_memb_pred != nothing;
 
     links_types = (upper_camel_case(bare_id(l)) : l <- root_block.links);
 
-    ctor_impl_args = (t & " l" & printed(i) : t @ i <- links_types);
+    ctor_impl_args = (t & " d" & printed(i) : t @ i <- links_types);
+
+    dep_autos_args_list = append(("d" & printed(i) & ".automaton, " : i < |links_types|));
+    dep_updaters_args_list = append(("d" & printed(i) & ".updater" : i < |links_types|), ", ");
+
+    dep_autos_list = append(("dependee" & printed(i) & ".automaton, " : i < |links_types|));
+    dep_updaters_list = append(("dependee" & printed(i) & ".updater" : i < |links_types|), ", ");
 
     class_impl = (
       "package net.cell_lang;",
@@ -158,12 +164,28 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "public class " & class_name & " {",
       "  Generated.Env env;",
       "  Generated." & db_name & " automaton;",
-      "  Generated." & updater_name & " updater;",
+      "  Generated." & updater_name & " updater;"
+    );
+
+    for rel_auto_id @ i <- root_block.links {
+      dep_decl = "  " & safe_class_name(rel_auto_id) & " dependee" & _print_(i) & ";";
+      class_impl = (class_impl | dep_decl);
+    }
+
+    class_impl = (class_impl |
       "",
       "  public " & class_name & "(" & append(ctor_impl_args, ", ") & ") {",
       "    env = new Generated.Env();",
-      "    automaton = new Generated." & db_name & "(env);",
-      "    updater = automaton.newUpdater();",
+      "    automaton = new Generated." & db_name & "(" & dep_autos_args_list & "env);",
+      "    updater = automaton.newUpdater(" & dep_updaters_args_list & ");"
+    );
+
+    for rel_auto_id @ i <- root_block.links {
+      idx_str = _print_(i);
+      class_impl = (class_impl | "    dependee" & idx_str & " = d" & idx_str & ";");
+    }
+
+    class_impl = (class_impl |
       "  }",
       "",
       "  public void save(Writer writer) {",
@@ -179,8 +201,11 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "",
       "  public void load(Reader reader) {",
       "    try {",
-      "      automaton = Generated." & db_name & ".reconstruct(reader, env);",
-      "      updater = automaton.newUpdater();",
+      "      Generated." & db_name & " newAutomaton = new Generated." & db_name & "(" & dep_autos_list & "reader, env);",
+      "      Generated." & updater_name & " newUpdater = newAutomaton.newUpdater(" & dep_updaters_list & ");",
+      "",
+      "      automaton = newAutomaton;",
+      "      updater = newUpdater;",
       "    }",
       "    catch(IOException e) {",
       "      throw new RuntimeException(e);",
