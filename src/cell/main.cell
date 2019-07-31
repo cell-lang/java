@@ -22,7 +22,6 @@ Int Main(String* args) {
   debug_mode = false;
   generate_accessors = false;
 
-  allow_nested_rel_autos = false;
   developer_mode = false;
   print_intermediate = false;
   print_times = false;
@@ -41,9 +40,6 @@ Int Main(String* args) {
     }
     else if o == "-dev" {
       developer_mode = true;
-    }
-    else if o == "-anra" {
-      allow_nested_rel_autos = true;
     }
     else if o == "-nrt" {
       include_runtime = false;
@@ -77,7 +73,7 @@ Int Main(String* args) {
   }
 
   Print(
-    "Cell to Java compiler version 0.4.1\n"     &
+    "Cell to Java compiler version 0.4.2\n"     &
     "Warning: this is a beta version\n"       &
     // "Use -q option to suppress this output\n" &
     "Compiling project " & fname & "\n"
@@ -108,7 +104,6 @@ Int Main(String* args) {
     debug_mode:             debug_mode,
     generate_accessors:     generate_accessors,
     ignore_assertions:      ignore_assertions,
-    allow_nested_rel_autos: allow_nested_rel_autos,
     include_runtime:        include_runtime,
     run_typechecking:       run_typechecking,
     developer_mode:         developer_mode,
@@ -140,7 +135,6 @@ type CmdLineOpts = (
   debug_mode:             Bool,
   generate_accessors:     Bool,
   ignore_assertions:      Bool,
-  allow_nested_rel_autos: Bool,
   include_runtime:        Bool,
   run_typechecking:       Bool,
   developer_mode:         Bool,
@@ -181,7 +175,7 @@ type CmdLineOpts = (
   if cmd_line_opts.print_intermediate
     ok = FileWrite("dump-syn-prg.txt", chars(_print_(syn_prg)));
 
-  errs = prg_wf_errors(cmd_line_opts.allow_nested_rel_autos, syn_prg=syn_prg);
+  errs = prg_wf_errors(syn_prg=syn_prg);
 
   t2 = _ticks_(:any_value_will_do);
 

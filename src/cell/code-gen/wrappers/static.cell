@@ -1,18 +1,15 @@
-implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol {
-  String external_name(MethodSymbol member) =
-    append((sentence_case(bare_id(x)) : x <- (db_var_chain | member)), "_");
+implicit prg : CompiledPrg, block_name : DBSymbol, root_block_name : DBSymbol {
+  String external_name(MethodSymbol member) = sentence_case(bare_id(member));
 
-  String pretty_name(MethodSymbol member) =
-    safe_lower_camel_case_chain((bare_id(x) : x <- (db_var_chain | member)));
+  String pretty_name(MethodSymbol member) = safe_lower_camel_case(bare_id(member));
 
-  String path_prefix = "automaton." & append((native_var_decl_name(v) & "." : v <- db_var_chain));
+  String path_prefix = "automaton.";
 
   String db_class_name = safe_class_name(root_block_name);
 }
 
 
-implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*,
-         root_block_name : DBSymbol, duplicate_names : [String, Nat] {
+implicit prg : CompiledPrg, block_name : DBSymbol, root_block_name : DBSymbol, duplicate_names : [String, Nat] {
 
   String call_method_name(MethodId method_id) =
     if pretty_name_has_conflicts(method_id.symbol, method_id.arity)
@@ -57,7 +54,6 @@ implicit
   prg             : CompiledPrg,
   typedefs        : [TypeName -> NeType], ## REMOVE IT IF POSSIBLE. IT'S REDUNDANT
   block_name      : DBSymbol,
-  db_var_chain    : NestedDBVar*,
   root_block_name : DBSymbol,
   duplicate_names : [String, Nat] {
 
@@ -84,16 +80,10 @@ implicit
     accessors_wrappers_code, accessors_wrappers_docs = (join(ls) : ls <- unzip(accessors_wrappers));
     accessors_wrappers_docs = ("") & accessors_wrappers_docs if accessors_wrappers_docs != ();
 
-    nested_autos_accessors = isort([
-        static_auto_accessors(blocks[t], blocks, [], block_name = blocks[t].name, db_var_chain = (db_var_chain | v))
-      : v, t <- block.nested_blocks
-    ]);
-    nested_autos_code, nested_autos_docs = (join(ls) : ls <- unzip(nested_autos_accessors));
-
-    code = methods_wrappers_code & accessors_wrappers_code & nested_autos_code;
+    code = methods_wrappers_code & accessors_wrappers_code;
 
     docs_by_type = (methods_wrappers_docs, accessors_wrappers_docs);
-    docs = join((indent_lines(d) : d <- docs_by_type)) & nested_autos_docs;
+    docs = join((indent_lines(d) : d <- docs_by_type));
 
     return (code, docs);
   }
@@ -101,17 +91,13 @@ implicit
 
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, root_block_name : DBSymbol {
+implicit prg : CompiledPrg, block_name : DBSymbol, root_block_name : DBSymbol {
   (String, Nat)* pretty_names(StaticBlock block, [DBSymbol -> StaticBlock] blocks) {
     methods_names = (
       (pretty_name(id.symbol), id.arity) : id, unused_var <- isort(block.methods), not id.id?
     );
     accessors_names = ((pretty_name(id.symbol), id.arity) : id, unused_var <- isort(block.accessors));
-    nested_names = join((
-      pretty_names(blocks(b, !!), blocks, block_name = b, db_var_chain = (db_var_chain | v))
-      : v, b <- isort(block.nested_blocks))
-    );
-    return methods_names & accessors_names & nested_names;
+    return methods_names & accessors_names;
   }
 }
 
@@ -121,8 +107,7 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, 
 [NeType] interface_types(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
   methods_types = union([set(m.args_types) & [m.ret_type] : unused_var, m <- root_block.methods]);
   accessors_types = union([set(a.args_types) & [a.ret_type] : unused_var, a <- root_block.accessors]);
-  nested_autos_types = union([interface_types(blocks(b, !!), blocks) : v, b <- root_block.nested_blocks]);
-  return methods_types & accessors_types & nested_autos_types;
+  return methods_types & accessors_types;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +115,7 @@ implicit prg : CompiledPrg, block_name : DBSymbol, db_var_chain : NestedDBVar*, 
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   (String, String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks, [MethodId] gen_memb_testers_ids) {
-    let block_name = root_block.name, db_var_chain = (), root_block_name = root_block.name {
+    let block_name = root_block.name, root_block_name = root_block.name {
       dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];
       let duplicate_names = dup_names {
         accessors_code, accessors_docs = static_auto_accessors(root_block, blocks, gen_memb_testers_ids);
@@ -139,12 +124,18 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     }
 
     db_name = native_name(root_block.name);
-    updater_name = aux_struct_c_name(root_block.name);
+    updater_name = native_updater_name(root_block.name);
     has_any_updates = root_block.msg_memb_pred != nothing;
 
     links_types = (upper_camel_case(bare_id(l)) : l <- root_block.links);
 
-    ctor_impl_args = (t & " l" & printed(i) : t @ i <- links_types);
+    ctor_impl_args = (t & " d" & printed(i) : t @ i <- links_types);
+
+    dep_autos_args_list = append(("d" & printed(i) & ".automaton, " : i < |links_types|));
+    dep_updaters_args_list = append(("d" & printed(i) & ".updater" : i < |links_types|), ", ");
+
+    dep_autos_list = append(("dependee" & printed(i) & ".automaton, " : i < |links_types|));
+    dep_updaters_list = append(("dependee" & printed(i) & ".updater" : i < |links_types|), ", ");
 
     class_impl = (
       "package net.cell_lang;",
@@ -158,12 +149,28 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "public class " & class_name & " {",
       "  Generated.Env env;",
       "  Generated." & db_name & " automaton;",
-      "  Generated." & updater_name & " updater;",
+      "  Generated." & updater_name & " updater;"
+    );
+
+    for rel_auto_id @ i <- root_block.links {
+      dep_decl = "  " & safe_class_name(rel_auto_id) & " dependee" & _print_(i) & ";";
+      class_impl = (class_impl | dep_decl);
+    }
+
+    class_impl = (class_impl |
       "",
       "  public " & class_name & "(" & append(ctor_impl_args, ", ") & ") {",
       "    env = new Generated.Env();",
-      "    automaton = new Generated." & db_name & "(env);",
-      "    updater = automaton.newUpdater();",
+      "    automaton = new Generated." & db_name & "(" & dep_autos_args_list & "env);",
+      "    updater = automaton.newUpdater(" & dep_updaters_args_list & ");"
+    );
+
+    for rel_auto_id @ i <- root_block.links {
+      idx_str = _print_(i);
+      class_impl = (class_impl | "    dependee" & idx_str & " = d" & idx_str & ";");
+    }
+
+    class_impl = (class_impl |
       "  }",
       "",
       "  public void save(Writer writer) {",
@@ -179,8 +186,11 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "",
       "  public void load(Reader reader) {",
       "    try {",
-      "      automaton = Generated." & db_name & ".reconstruct(reader, env);",
-      "      updater = automaton.newUpdater();",
+      "      Generated." & db_name & " newAutomaton = new Generated." & db_name & "(" & dep_autos_list & "reader, env);",
+      "      Generated." & updater_name & " newUpdater = newAutomaton.newUpdater(" & dep_updaters_list & ");",
+      "",
+      "      automaton = newAutomaton;",
+      "      updater = newUpdater;",
       "    }",
       "    catch(IOException e) {",
       "      throw new RuntimeException(e);",
