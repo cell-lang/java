@@ -65,12 +65,6 @@ String safe_lower_camel_case(Symbol symb, Bool keep_underscore) {
   return name;
 }
 
-String safe_lower_camel_case_chain(Symbol+ symbs) {
-  name = append((lower_camel_case(s) : s <- symbs), "_");
-  name = name & "_" if is_reserved(name);
-  return name;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 

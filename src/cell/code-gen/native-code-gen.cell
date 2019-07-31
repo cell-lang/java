@@ -44,7 +44,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     symbs_seqs_code = symbols_arrays_decls(values(symbols_sets_info));
 
     // Sorting static blocks in topological order
-    static_blocks_dep_map = [b.name -> values(b.nested_blocks) & set(b.links) : b <- prg.static_blocks];
+    static_blocks_dep_map = [b.name -> set(b.links) : b <- prg.static_blocks];
     ord_static_block_names = join((isort(bs) : bs <- topological_sort(static_blocks_dep_map)));
     static_blocks_by_name = [b.name -> b : b <- prg.static_blocks];
     ord_static_blocks = (static_blocks_by_name(b, !!) : b <- ord_static_block_names);

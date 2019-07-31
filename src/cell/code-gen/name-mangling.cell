@@ -222,7 +222,6 @@ String native_var_name(AnyAutoVar v, Bool add_prefix) =
 
 String native_var_name(AnyDBVar v, Bool add_prefix) =
   loc_db_var(a?)    = _print_(a) & "_T",
-  nested_db_var(a?) = {if add_prefix then "this." else ""} & _print_(a) & "_T",
   linked_db_var(n?) = {if add_prefix then "this." else ""} & "linkedAuto" & printed(n),
   qual_db_var()     = native_var_name(v.outer, add_prefix) & "." & native_var_name(v.inner, false);
 
@@ -284,14 +283,14 @@ String dependee_apply_code_var_decl_name(LinkedDBVar) =
 
 String dependee_apply_code_var_ref_name(LinkedDBVar var) = "updater." & dependee_apply_code_var_decl_name(var);
 
-String updater_var_decl_name(<LocDBVar, NestedDBVar> db_var) = native_var_decl_name(db_var) & "x";
+String updater_var_decl_name(LocDBVar db_var) = native_var_decl_name(db_var) & "x";
 
 String updater_var_decl_name(LinkedDBVar db_var) =
   linked_db_var(i?)   = "linkedUpdater" & _print_(i);
 
 String updater_var_ref_name(LocDBVar db_var) = updater_var_decl_name(db_var);
 
-String updater_var_ref_name(<NestedDBVar, LinkedDBVar> db_var) = "updater." & updater_var_decl_name(db_var);
+String updater_var_ref_name(LinkedDBVar db_var) = "updater." & updater_var_decl_name(db_var);
 
 String updater_var_decl_name(ValueStoreId vs) =
   value_store_id(n?)  = "valueStoreUpdater" & printed(n);

@@ -238,15 +238,8 @@ implicit prg : CompiledPrg, debug_mode : Bool {
   String* native_send_msg_code(AnyDBVar db_var, DBSymbol type, AtomicExpr msg, Bool is_root, Maybe[BoolVar] maybe_res_var) {
     if is_root {
       method_name = update_entry_point_name(type);
-      // updater_name = if db_var :: LocDBVar then updater_var_ref_name(db_var) else "updater";
-      fail if not db_var :: <LocDBVar, NestedDBVar>;
-
-      //## IF db_var IS A LocDBVar THEN NO PREFIX IS NEDEED
-      //## IF IT'S A NestedDBVar THEN IT'S NESTED INSIDE A REACTIVE AUTOMATON AND THE "this." PREFIX CAN BE USED
-      //## THIS IS A REALLY BAD WAY TO DO IT TOUGHT
+      fail if not db_var :: LocDBVar;
       updater_name = updater_var_decl_name(db_var);
-      updater_name = "this." & updater_name if db_var :: NestedDBVar;
-
       args = (msg, updater_name, "env");
       line = if maybe_res_var == nothing
         then native_method_call(db_var, method_name, args)
@@ -265,8 +258,6 @@ implicit prg : CompiledPrg, debug_mode : Bool {
         "  Miscellanea.softFail();",
         msg_var_name & " = " & native_expr(msg) & ";"
       );
-
-      // native_method_call(db_var, update_name(type, main_handler), (msg, aux_db_var_name, "env"));
     }
   }
 

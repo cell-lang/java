@@ -7,9 +7,8 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       return "public " & type & " " & native_var_decl_name(v) & " = new " & type & "();";
     } : v, t <- block.value_stores];
     table_decls = ["public " & native_table_type(t) & " " & native_var_decl_name(v) & ";" : v, t <- block.tables];
-    nested_blocks_decls = ["public " & native_name(t) & " " & native_var_decl_name(v) & ";" : v, t <- block.nested_blocks];
 
-    memb_decls = links_decls & isort(state_vars_decls) & isort(value_store_decls) & isort(table_decls) & isort(nested_blocks_decls);
+    memb_decls = links_decls & isort(state_vars_decls) & isort(value_store_decls) & isort(table_decls);
 
     ctor_code = native_ctor_code(block.name, block.links, block.tables, block.init_code);
     rec_ctors_code = native_rec_ctors_code(block.name, block.links);
@@ -133,7 +132,6 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
   String* native_write_state_code(StaticBlock block) {
     has_rel_vars = block.tables != [];
-    has_nested_autos = block.nested_blocks != [];
 
     code = (
       "public void writeState(Writer writer) throws IOException {",
@@ -149,7 +147,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
         "  writer.write(SymbTable.idxToStr(" & symb_idx_name(bare_id(v)) & "));",
         "  writer.write(\": \");",
         "  writer.write(" & native_var_ref_name(v) & ".toString());",
-        if i < |state_vars| - 1 or has_rel_vars or has_nested_autos
+        if i < |state_vars| - 1 or has_rel_vars
           then "  writer.write(\",\\n\");"
           else "  writer.write(\"\\n\");"
       );
@@ -162,7 +160,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       tables = append((native_var_ref_name(tv) : tv <- isort(tvs)), ", ");
       tables_type = only([native_table_base_type(block.tables(tv)) : tv <- tvs]);
       indent_first_line = _print_(not first);
-      write_separator = _print_(i < |tables_by_relvar| - 1 or has_nested_autos);
+      write_separator = _print_(i < |tables_by_relvar| - 1);
       perm = rel_vars_perm_map(block.name)(rv);
       symmetric = only([
         match (block.tables(tv))
@@ -417,11 +415,6 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
 
   String* full_check_method_code(StaticBlock block) {
-    nested_blocks_check_code = join(((
-      "if (!" & native_var_ref_name(v) & "." & full_check_proc_name(block.nested_blocks(v)) & "())",
-      "  return false;"
-    ) : v <- isort(keys(block.nested_blocks))));
-
     keys = [(v, arity(t), k) : v, t <- block.tables, needs_keys_check(t), k <- keys(t)];
     ord_keys = sort_by_key(keys, $(1));
     keys_check_code = join(({
@@ -435,8 +428,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     foreign_keys_check_code = native_code(block.foreign_keys_check_code, nothing);
     vars_decls = gen_vars_decls(block.foreign_keys_check_code, []);
 
-    sections = (vars_decls, keys_check_code, foreign_keys_check_code,
-      nested_blocks_check_code, ("return true;"));
+    sections = (vars_decls, keys_check_code, foreign_keys_check_code, ("return true;"));
     sections = (s : s <- sections, s != ());
     body = join(intermix(sections, ("")));
 
@@ -488,13 +480,8 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       : v, t <- isort(block.tables)
     );
 
-    nested_blocks_decls = (
-      "public " & native_updater_name(t) & " " & updater_var_decl_name(v) & ";"
-      : v, t <- isort(block.nested_blocks)
-    );
-
     memb_decls = linked_updaters_decls & dep_msg_vars_decls & dep_apply_code_vars_decls &
-                 vars_decls & stores_decls & tables_decls & nested_blocks_decls;
+                 vars_decls & stores_decls & tables_decls;
 
     return join((
       ("static class " & native_updater_name(block.name) & " {"),
@@ -532,13 +519,8 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       );
     } : v, t <- isort(block.tables));
 
-    nested_blocks_init_code = (
-      native_method_call(updater_var_ref_name(v), v, updater_creation_proc_name(t), ())
-      : v, t <- isort(block.nested_blocks)
-    );
-
     body = linked_updaters_init_code & dep_msg_vars_init_code & dep_apply_code_vars_init_code &
-           init_vars_code & value_stores_init_code & tables_init_code & nested_blocks_init_code;
+           init_vars_code & value_stores_init_code & tables_init_code;
 
     class_name = native_updater_name(block.name);
     args = append((native_updater_name(l) & " l" & _print_(i) : l @ i <- block.links), ", ");
@@ -565,13 +547,8 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       : v, t <- isort(block.tables)
     );
 
-    nested_blocks_reset_code = (
-      native_method_call(v, updater_reset_proc_name(block.name), (updater_var_ref_name(v)))
-      : v, t <- isort(block.nested_blocks)
-    );
-
     body = vars_reset_code & dep_msg_vars_reset_code & dep_apply_code_vars_reset_code &
-           value_stores_reset_code & tables_reset_code & nested_blocks_reset_code;
+           value_stores_reset_code & tables_reset_code;
 
     sgn = "public void " & updater_reset_proc_name(block.name) & "(" & native_updater_name(block.name) & " updater) {";
     return (sgn) & indent_lines(body) & ("}");
