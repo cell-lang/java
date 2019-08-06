@@ -114,6 +114,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
       case ')':     return TokenType.ClosePar;
       case '[':     return TokenType.OpenBracket;
       case ']':     return TokenType.CloseBracket;
+      case '`':     return TokenType.Literal;
       case '-':     int ch = peek(1);
                     if (ch == '>')
                       return TokenType.Arrow;
@@ -317,6 +318,71 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
     return Builder.createString(chars, len);
   }
 
+  public Obj readLiteral() {
+    Miscellanea._assert(nextIs('`'));
+
+    read();
+    int ch1 = read();
+    int ch2 = read();
+    if (ch1 == '\\') {
+      read('`');
+      if (ch2 == 'n')
+        return IntObj.get('\n');
+      else if (ch2 == '`')
+        return IntObj.get('`');
+      else if (ch2 == 't')
+        return IntObj.get('\t');
+      else if (ch2 == '\\')
+        return IntObj.get('\\');
+      else
+        throw fail();
+    }
+    else if (ch2 == '`') {
+      return IntObj.get(ch1);
+    }
+    else {
+      int year = 1000 * readDigit() + 100 * readDigit() + 10 * readDigit() + readDigit();
+      read('-');
+      int month = 10 * readDigit() + readDigit();
+      read('-');
+      int day = 100 * readDigit() + 10 * readDigit() + readDigit();
+
+      check(DateTime.isValidDate(year, month, day));
+
+      int daysSinceEpoc = DateTime.daysSinceEpoc(year, month, day);
+
+      if (tryReading('`'))
+        return Builder.createTaggedIntObj(SymbTable.DateSymbId, daysSinceEpoc);
+
+      read(' ');
+      int hours = 10 * readDigit() + readDigit();
+      check(hours >= 0 & hours < 24);
+      read(':');
+      int minutes = 10 * readDigit() + readDigit();
+      check(minutes >= 0 & minutes < 60);
+      read(':');
+      int seconds = 10 * readDigit() + readDigit();
+      check(seconds >= 0 & minutes < 60);
+
+      int nanosecs = 0;
+      if (tryReading('.')) {
+        int pow10 = 100000000;
+        for (int i=0 ; i < 10 && nextIsDigit() ; i++) {
+          nanosecs = nanosecs + pow10 * readDigit();
+          pow10 /= 10;
+        }
+      }
+
+      read('`');
+
+      long dayTimeNs = 1000000000L * (60L * (60L * hours + minutes) + seconds) + nanosecs;
+      check(DateTime.isWithinRange(daysSinceEpoc, dayTimeNs));
+
+      long epocTimeNs = DateTime.epocTimeNs(daysSinceEpoc, dayTimeNs);
+      return Builder.createTaggedIntObj(SymbTable.TimeSymbId, epocTimeNs);
+    }
+  }
+
   public int tryReadingLabel() {
     consumeWhiteSpace();
 
@@ -423,9 +489,28 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
       skip(1);
   }
 
+  private void read(char ch) {
+    check(read() == ch);
+  }
+
   private int readHex() {
     check(nextIsHex());
     return read();
+  }
+
+  private int readDigit() {
+    int ch = read();
+    check(isDigit(ch));
+    return ch;
+  }
+
+  private boolean tryReading(char ch) {
+    if (peek() == ch) {
+      read();
+      return true;
+    }
+    else
+      return false;
   }
 
   private boolean nextIsDigit() {
