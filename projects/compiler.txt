@@ -3,7 +3,8 @@
 ../compiler/src/stdlib/printing.cell
 ../compiler/src/stdlib/algorithms.cell
 ../compiler/src/stdlib/trie.cell
-../compiler/src/stdlib/text.cell
+../compiler/src/stdlib/time.cell
+../compiler/src/stdlib/utf-8.cell
 
 
 // Type definitions

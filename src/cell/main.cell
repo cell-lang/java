@@ -73,7 +73,7 @@ Int Main(String* args) {
   }
 
   Print(
-    "Cell to Java compiler version 0.4.2\n"     &
+    "Cell to Java compiler version 0.4.3\n"     &
     "Warning: this is a beta version\n"       &
     // "Use -q option to suppress this output\n" &
     "Compiling project " & fname & "\n"
