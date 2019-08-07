@@ -82,7 +82,7 @@ class DateTime {
       daysSinceYearStart = 59;
     }
     else {
-      daysSinceYearStart = monthsOffsets[month-1];
+      daysSinceYearStart = monthsOffsets[month-1] + day;
       if (month > 2 & isLeapYear)
         daysSinceYearStart++;
     }

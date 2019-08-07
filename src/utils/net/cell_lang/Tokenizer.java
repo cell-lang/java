@@ -341,11 +341,13 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
       return IntObj.get(ch1);
     }
     else {
-      int year = 1000 * readDigit() + 100 * readDigit() + 10 * readDigit() + readDigit();
+      check(isDigit(ch1) & isDigit(ch2));
+
+      int year = 1000 * (ch1 - '0') + 100 * (ch2 - '0') + 10 * readDigit() + readDigit();
       read('-');
       int month = 10 * readDigit() + readDigit();
       read('-');
-      int day = 100 * readDigit() + 10 * readDigit() + readDigit();
+      int day = 10 * readDigit() + readDigit();
 
       check(DateTime.isValidDate(year, month, day));
 
@@ -501,7 +503,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
   private int readDigit() {
     int ch = read();
     check(isDigit(ch));
-    return ch;
+    return ch - '0';
   }
 
   private boolean tryReading(char ch) {
