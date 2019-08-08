@@ -472,11 +472,11 @@ class Sym12TernaryTable {
 
       int idx = hashtable[i];
       while (idx != Empty) {
-        int offset = 3 * i;
-        int arg1 = flatTuples[offset + col1];
-        int arg2 = flatTuples[offset + col2];
+        int offset = 3 * idx;
+        long arg1 = flatTuples[offset + col1];
+        long arg2 = flatTuples[offset + col2];
         long packedArgs = arg1 | (arg2 << 32);
-        Miscellanea._assert(arg1 == (packedArgs & 0xFFFFFFFF));
+        Miscellanea._assert(arg1 == (packedArgs & 0xFFFFFFFFL));
         Miscellanea._assert(arg2 == (packedArgs >>> 32));
         bucket = Array.append(bucket, count++, packedArgs);
         idx = index.next(idx);

@@ -369,7 +369,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
       int nanosecs = 0;
       if (tryReading('.')) {
         int pow10 = 100000000;
-        for (int i=0 ; i < 10 && nextIsDigit() ; i++) {
+        for (int i=0 ; i < 9 && nextIsDigit() ; i++) {
           nanosecs = nanosecs + pow10 * readDigit();
           pow10 /= 10;
         }
