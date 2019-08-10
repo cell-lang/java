@@ -115,7 +115,7 @@ Int Main(String* args) {
   files = Compile(src_files, options);
 
   for name, lines <- isort(files) {
-    ok = FileWrite(out_dir & "/" & name, chars(append(lines, "\n")));
+    ok = FileWrite(out_dir & "/" & name, value_unsafe(utf8_encode(_untag_(append(lines, "\n")))));
     if not ok {
       Print("Error: cannot write file " & name & " to " & out_dir & "\n");
       return 1;
@@ -173,7 +173,7 @@ type CmdLineOpts = (
     unused_var = GetChar();
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-syn-prg.txt", chars(_print_(syn_prg)));
+    ok = FileWrite("dump-syn-prg.txt", _untag_(_print_(syn_prg)));
 
   errs = prg_wf_errors(syn_prg=syn_prg);
 
@@ -205,7 +205,7 @@ type CmdLineOpts = (
     unused_var = GetChar();
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-prg.txt", chars(_print_(prg)));
+    ok = FileWrite("dump-prg.txt", _untag_(_print_(prg)));
 
   errs = core_wf_errors(prg);
   if errs != [] {
@@ -314,22 +314,22 @@ type CmdLineOpts = (
     unused_var = GetChar();
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-code.txt", chars(_print_(code)));
+    ok = FileWrite("dump-code.txt", _untag_(_print_(code)));
 
   opt_code_1 = remove_dead_code(code);
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-opt-code-1.txt", chars(_print_(opt_code_1)));
+    ok = FileWrite("dump-opt-code-1.txt", _untag_(_print_(opt_code_1)));
 
   opt_code_2 = merge_instrs(opt_code_1);
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-opt-code-2.txt", chars(_print_(opt_code_2)));
+    ok = FileWrite("dump-opt-code-2.txt", _untag_(_print_(opt_code_2)));
 
   opt_code_3 = remove_dead_code(opt_code_2);
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-opt-code-3.txt", chars(_print_(opt_code_3)));
+    ok = FileWrite("dump-opt-code-3.txt", _untag_(_print_(opt_code_3)));
 
   let program = prg
     res = optimize_array_init(opt_code_3, typedefs = schema_and_typedefs);
@@ -381,12 +381,12 @@ type CmdLineOpts = (
   opt_code_4 = result(res);
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-opt-code-4.txt", chars(_print_(opt_code_4)));
+    ok = FileWrite("dump-opt-code-4.txt", _untag_(_print_(opt_code_4)));
 
   opt_code_5 = remove_dead_code(opt_code_4);
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-opt-code-5.txt", chars(_print_(opt_code_5)));
+    ok = FileWrite("dump-opt-code-5.txt", _untag_(_print_(opt_code_5)));
 
   t7 = _ticks_(:any_value_will_do);
   if cmd_line_opts.developer_mode
@@ -400,7 +400,7 @@ type CmdLineOpts = (
   opt_code = optimize_compiled_code(opt_code_5);
 
   if cmd_line_opts.print_intermediate
-    ok = FileWrite("dump-opt-code.txt", chars(_print_(opt_code)));
+    ok = FileWrite("dump-opt-code.txt", _untag_(_print_(opt_code)));
 
   let prg = opt_code, rel_vars_perm_map = perms, debug_mode = cmd_line_opts.debug_mode
     files = generated_code(cmd_line_opts.include_runtime, memb_test_accessors_ids);
