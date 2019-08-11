@@ -57,6 +57,10 @@ class TokenStreamProcessor {
     return tokens.readString();
   }
 
+  public final Obj readLiteral() {
+    return tokens.readLiteral();
+  }
+
   public final int tryReadingLabel() {
     return tokens.tryReadingLabel();
   }
@@ -167,6 +171,9 @@ abstract class Parser extends TokenStreamProcessor {
 
       case String:
         return readString();
+
+      case Literal:
+        return readLiteral();
 
       default:
         throw new RuntimeException("Internal error"); // Unreachable code

@@ -14,5 +14,6 @@ enum TokenType {
   Float,
   Symbol,
   String,
+  Literal,
   Whatever
 };

@@ -108,7 +108,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       sign = "private Obj " & name & "(int surr) {";
       body = "  return " & match (type)
         object | integer        = vs_name & ".surrToObjValue(surr);",
-        mono_tagged_integer(s?) = "new TaggedIntObj(" & symb_idx_name(s) & ", " & vs_name & ".surrToValue(surr));";
+        mono_tagged_integer(s?) = "Builder.createTaggedIntObj(" & symb_idx_name(s) & ", " & vs_name & ".surrToValue(surr));";
       return (sign, body, "}");
     }
   }

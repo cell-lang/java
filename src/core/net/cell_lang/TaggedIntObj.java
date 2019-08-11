@@ -42,15 +42,8 @@ final class TaggedIntObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
-    try {
-      writer.write(SymbTable.idxToStr(getTagId()));
-      writer.write('(');
-      writer.write(Long.toString(getInnerLong()));
-      writer.write(')');
-    }
-    catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    ObjVisitor printer = new ObjPrinter(writer, maxLineLen);
+    printer.taggedIntObj(getTagId(), getInnerLong());
   }
 
   public int minPrintedSize() {

@@ -131,6 +131,12 @@ final class TaggedObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
+    if (obj.isInt()) {
+      ObjVisitor printer = new ObjPrinter(writer, maxLineLen);
+      printer.taggedIntObj(getTagId(), getInnerLong());
+      return;
+    }
+
     try {
       if (!isSyntacticSugaredString()) {
         String tagStr = SymbTable.idxToStr(getTagId());

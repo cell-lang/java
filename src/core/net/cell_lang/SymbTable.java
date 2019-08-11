@@ -10,6 +10,8 @@ class SymbTable {
     "true",
     "void",
     "string",
+    "date",
+    "time",
     "nothing",
     "just",
     "success",
@@ -20,10 +22,12 @@ class SymbTable {
   public static int TrueSymbId    = 1;
   public static int VoidSymbId    = 2;
   public static int StringSymbId  = 3;
-  public static int NothingSymbId = 4;
-  public static int JustSymbId    = 5;
-  public static int SuccessSymbId = 6;
-  public static int FailureSymbId = 7;
+  public static int DateSymbId    = 4;
+  public static int TimeSymbId    = 5;
+  public static int NothingSymbId = 6;
+  public static int JustSymbId    = 7;
+  public static int SuccessSymbId = 8;
+  public static int FailureSymbId = 9;
 
   static ArrayList<String> symbTable = new ArrayList<String>();
   static HashMap<String, Integer> symbMap = new HashMap<String, Integer>();

@@ -6,6 +6,7 @@ interface TokenStream {
   double readDouble();
   int readSymbol();
   Obj readString();
+  Obj readLiteral();
 
   int tryReadingLabel();
 

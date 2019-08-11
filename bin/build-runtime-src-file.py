@@ -63,6 +63,9 @@ src_TextWriter                = 'utils/net/cell_lang/TextWriter.java'
 src_Tokenizer                 = 'utils/net/cell_lang/Tokenizer.java'
 src_TokenStream               = 'utils/net/cell_lang/TokenStream.java'
 src_TokenType                 = 'utils/net/cell_lang/TokenType.java'
+src_DateTime                  = 'utils/net/cell_lang/DateTime.java'
+src_ObjVisitor                = 'utils/net/cell_lang/ObjVisitor.java'
+src_ObjPrinter                = 'utils/net/cell_lang/ObjPrinter.java'
 
 src_ArrayIter                 = 'automata/net/cell_lang/ArrayIter.java'
 src_AssocTable                = 'automata/net/cell_lang/AssocTable.java'
@@ -177,6 +180,9 @@ std_sources = [
   src_Tokenizer,
   src_TokenStream,
   src_TokenType,
+  src_DateTime,
+  src_ObjVisitor,
+  src_ObjPrinter,
 
   src_EmptyRelValue,
   src_FloatValue,
