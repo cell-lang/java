@@ -1,4 +1,4 @@
-type AtomicInterType    = bool, integer, float, string;
+type AtomicInterType    = bool, integer, float, string, date, time;
 type BasicInterType     = AtomicInterType, generic;
 
 type TupleInterType     = tuple(InterType+);
@@ -71,7 +71,9 @@ NeType internal_type(AtomicInterType) =
   bool        = type_bool,
   integer     = integer,
   float       = float_type,
-  string      = type_string;
+  string      = type_string,
+  date        = type_date,
+  time        = type_time;
 
 
 implicit prg : CompiledPrg {
@@ -85,6 +87,8 @@ implicit prg : CompiledPrg {
       bool            = "boolean",
       integer         = "long",
       float           = "double",
+      date            = "java.time.LocalDate",
+      time            = "java.time.LocalDateTime",
       symbol()        |
       tuple()         |
       record()        |
@@ -112,6 +116,8 @@ implicit prg : CompiledPrg {
       integer         = "long",
       float           = "double",
       string          = "String",
+      date            = "java.time.LocalDate",
+      time            = "java.time.LocalDateTime",
       symbol()        |
       tuple()         |
       record()        |
@@ -200,6 +206,8 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       integer       = (action_prefix & "IntObj.get(" & expr & ");"),
       float         = (action_prefix & "new FloatObj(" & expr & ");"),
       string        = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
+      date          = (action_prefix & "Conversions.dateToObj(" & expr & ");"),
+      time          = (action_prefix & "Conversions.dateTimeToObj(" & expr & ");"),
       symbol(s?)    = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
       tuple()       |
       record()      |
@@ -399,6 +407,8 @@ implicit prg : CompiledPrg {
       integer             = (action_prefix & expr & ".getLong();"),
       float               = (action_prefix & expr & ".getDouble();"),
       string              = (action_prefix & expr & ".getString();"),
+      date                = (action_prefix & "Conversions.objToDate(" & expr & ");"),
+      time                = (action_prefix & "Conversions.objToDateTime(" & expr & ");"),
       symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton;"),
       tuple()             |
       record()            |
@@ -535,6 +545,8 @@ if action_prefix != "return " {
       string              = (action_prefix & "Conversions.toStringArray(" & expr & ");"),
       generic             = (action_prefix & "Conversions.toValueArray(" & expr & ");"),
       tagged(_, generic)  = array_export_code(:generic, expr, action_prefix),
+      date                |
+      time                |
       tuple()             |
       record()            |
       seq()               |
@@ -618,8 +630,11 @@ implicit typedefs : [TypeName -> NeType] {
 
 
   Bool is_nameable(NeType type) {
-    return false if is_subset(type, type_bool) or is_subset(type, type_string);
+    return false if (t <- special_cases : is_subset(type, t));
     return is_symb_singl_type(type) or is_tuple(type) or is_record(type) or is_union(type) or is_tagged(type);
+
+
+    [+NeType] special_cases = [type_bool, type_string, type_date, type_time];
 
 
     Bool is_tuple(NeType type) {
@@ -673,7 +688,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       }
 
       // Atomic or standard types
-      for it <- (:bool, :integer, :float, :string)
+      for it <- (:bool, :integer, :float, :string, :date, :time)
         return it if is_subset(type, internal_type(it));
 
       // Giving up if we're too deep in the call stack
@@ -848,6 +863,8 @@ implicit typedefs : [TypeName -> NeType] {
   integer         |
   float           |
   string          |
+  date            |
+  time            |
   generic         |
   symbol()        |
   named()         = [],

@@ -77,6 +77,8 @@ implicit prg : CompiledPrg {
         integer   |
         float     |
         string    |
+        date      |
+        time      |
         seq()     |
         set()     |
         generic   = true,
@@ -186,6 +188,8 @@ String decl_type_export_funct_name(String name) = "export_" & name;
   integer         |
   float           |
   string          |
+  date            |
+  time            |
   generic         = [],
   symbol()        = [inter_type],
   tuple(ts?)      = [inter_type] & union([declarable_types(t) : t <~ ts]),
