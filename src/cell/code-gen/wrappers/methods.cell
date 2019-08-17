@@ -26,8 +26,10 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "public " & ret_val_str & " " & ext_name & "(" & args_decls & ") {"
     );
 
+    code = (code | "  Obj " & append(("objArg" & printed(i) : i < arity), ", ") & ";", "") if arity > 0;
+
     code = code & join((
-      indent_lines(import_code(it, "arg" & printed(i), "Obj objArg" & printed(i) & " = "))
+      indent_lines(import_code(it, "arg" & printed(i), "objArg" & printed(i) & " = "))
       : it @ i <- args_inter_types
     ));
 

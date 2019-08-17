@@ -7,6 +7,8 @@ type RecordInterType    = record([+Symbol -> InterType]);
 type TaggedInterType[T] = tagged(Symbol, T);
 type TaggedInterType    = TaggedInterType[InterType];
 
+type OptionalInterType  = optional(InterType);
+
 type NamedInterType     = named(TypeSymbol);
 
 type CollInterType      = seq(InterType),
@@ -23,6 +25,7 @@ type InterType          = BasicInterType,
                           RecordInterType,
                           CollInterType,
                           TaggedInterType,
+                          OptionalInterType,
                           NamedInterType,
                           UnionInterType;
 
@@ -84,21 +87,25 @@ implicit prg : CompiledPrg {
     }
 
     return match (it)
-      bool            = "boolean",
-      integer         = "long",
-      float           = "double",
-      date            = "java.time.LocalDate",
-      time            = "java.time.LocalDateTime",
-      symbol()        |
-      tuple()         |
-      record()        |
-      union()         = undefined,
-      named(n?)       = input_arg_type(named_interface_types_defs(it, !!)),
-      seq(t?)         |
-      set(t?)         = input_arg_type(t) & "[]",
-      tagged(_, t?)   = input_arg_type(t),
-      string          |
-      generic         = "String";
+      bool              = "boolean",
+      integer           = "long",
+      float             = "double",
+      date              = "java.time.LocalDate",
+      time              = "java.time.LocalDateTime",
+      optional(bool)    = "Boolean",
+      optional(integer) = "Long",
+      optional(float)   = "Double",
+      optional(t?)      = input_arg_type(t),
+      symbol()          |
+      tuple()           |
+      record()          |
+      union()           = undefined,
+      named(n?)         = input_arg_type(named_interface_types_defs(it, !!)),
+      seq(t?)           |
+      set(t?)           = input_arg_type(t) & "[]",
+      tagged(_, t?)     = input_arg_type(t),
+      string            |
+      generic           = "String";
   }
 
 
@@ -112,21 +119,25 @@ implicit prg : CompiledPrg {
     }
 
     return match (it)
-      bool            = "boolean",
-      integer         = "long",
-      float           = "double",
-      string          = "String",
-      date            = "java.time.LocalDate",
-      time            = "java.time.LocalDateTime",
-      symbol()        |
-      tuple()         |
-      record()        |
-      union()         = undefined,
-      named()         = return_value_type(named_interface_types_defs(it, !!), types_names),
-      seq(t?)         |
-      set(t?)         = return_value_type(t, types_names) & "[]",
-      tagged(_, t?)   = return_value_type(t, types_names),
-      generic         = "Value";
+      bool              = "boolean",
+      integer           = "long",
+      float             = "double",
+      string            = "String",
+      date              = "java.time.LocalDate",
+      time              = "java.time.LocalDateTime",
+      optional(bool)    = "Boolean",
+      optional(integer) = "Long",
+      optional(float)   = "Double",
+      optional(t?)      = return_value_type(t),
+      symbol()          |
+      tuple()           |
+      record()          |
+      union()           = undefined,
+      named()           = return_value_type(named_interface_types_defs(it, !!), types_names),
+      seq(t?)           |
+      set(t?)           = return_value_type(t, types_names) & "[]",
+      tagged(_, t?)     = return_value_type(t, types_names),
+      generic           = "Value";
   }
 }
 
@@ -185,7 +196,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       decl_type_import_code(inter_type, expr, action_prefix);
 
 
-    String* import_code(<BasicInterType, CollInterType> inter_type, String expr, String action_prefix) {
+    String* import_code(<BasicInterType, CollInterType, OptionalInterType> inter_type, String expr, String action_prefix) {
       return import_code_ex(inter_type, expr & ".value", action_prefix);
     }
   }
@@ -216,6 +227,7 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       seq(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSeq"),
       set(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSet"),
       tagged()      = tagged_value_import_code(it, expr, action_prefix),
+      optional(t?)  = optional_value_import_code(t, expr, action_prefix),
       generic       = if treat_generic_as_value
                         then (action_prefix & "((ValueBase) " & expr & ").asObj();")
                         else (action_prefix & "Conversions.convertText(" & expr & ");");
@@ -330,6 +342,23 @@ if action_prefix != "return " {
     instr = action_prefix & "Builder.createTaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
     return (code | instr);
   }
+
+
+  String* optional_value_import_code(InterType inner_type, String expr, String action_prefix) {
+    code = match (inner_type)
+      bool    = (action_prefix & "Builder.createTaggedObj(SymbTable.JustSymbId, SymbObj.get(" & expr & ".booleanValue()));"),
+      integer = (action_prefix & "Builder.createTaggedIntObj(SymbTable.JustSymbId, " & expr & ".longValue());"),
+      float   = (action_prefix & "Builder.createTaggedObj(SymbTable.JustSymbId, new FloatObj(" & expr & ".doubleValue()));"),
+      _       = import_code_ex(inner_type, expr, action_prefix);
+
+    return (
+      "if (" & expr & " != null) {",
+    ) & indent_lines(code) & (
+      "}",
+      "else",
+      "  " & action_prefix & "SymbObj.get(SymbTable.NothingSymbId);"
+    );
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -381,7 +410,7 @@ implicit prg : CompiledPrg {
       export_code(inter_type, type_name, expr, action_prefix);
 
 
-    String* untagged_type_export_code(<BasicInterType, CollInterType> inter_type, String type_name, String expr, String action_prefix) {
+    String* untagged_type_export_code(<BasicInterType, CollInterType, OptionalInterType> inter_type, String type_name, String expr, String action_prefix) {
       unique_id = printed(_counter_(:any_value_will_do));
       var = "var_" & unique_id;
       code = (type_name & " " & var & " = new " & type_name & "();");
@@ -417,7 +446,26 @@ implicit prg : CompiledPrg {
       seq(t?)             |
       set(t?)             = array_export_code(t, expr, action_prefix),
       tagged()            = tagged_type_export_code(it, expr, action_prefix),
+      optional(t?)        = optional_type_export_code(t, expr, action_prefix),
       generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
+  }
+
+
+  String* optional_type_export_code(InterType inner_type, String expr, String action_prefix) {
+    code_nothing = (
+      "if (" & expr & ".isSymb(SymbTable.NothingSymbId))",
+      "  return null;"
+    );
+    code_just = match (inner_type)
+      bool    = (action_prefix & "Boolean.valueOf(" & expr & ".getInnerObj().isSymb(SymbTable.TrueSymbId));"),
+      integer = (action_prefix & "Long.valueOf(" & expr & ".getInnerLong());"),
+      float   = (action_prefix & "Double.valueOf(" & expr & ".getInnerObj().getDouble());"),
+      _       = { unique_id = _counter_(:any_value_will_do);
+                  var = "var_" & printed(unique_id);
+                  instr = "Obj " & var & " = " & expr & ".getInnerObj();";
+                  return (instr) & export_code(inner_type, var, action_prefix);
+                };
+    return code_nothing & code_just;
   }
 
 
@@ -553,6 +601,7 @@ if action_prefix != "return " {
       set()               |
       named()             |
       tagged()            |
+      optional()          |
       symbol()            |
       union()             = generic_array_export_code(elem_type, expr, action_prefix);
 
@@ -634,7 +683,7 @@ implicit typedefs : [TypeName -> NeType] {
     return is_symb_singl_type(type) or is_tuple(type) or is_record(type) or is_union(type) or is_tagged(type);
 
 
-    [+NeType] special_cases = [type_bool, type_string, type_date, type_time];
+    [+NeType] special_cases = [type_bool, type_string, type_date, type_time, type_maybe(type_any)];
 
 
     Bool is_tuple(NeType type) {
@@ -714,6 +763,12 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       if is_subset(type, type_tagged_obj) and is_symb_singl_type(tag_supertype(type))
         return monomorphically_tagged_values_interface_type(type, depth);
 
+      // Maybe type
+      if is_subset(type, type_maybe(type_any))
+        if not is_subset(type, tag_obj_type(symb_type(:just), type_any))
+          if not is_subset(type, symb_type(:nothing))
+            return maybe_value_interface_type(type, depth);
+
       // Any combination of symbols and tagged values
       if is_subset(type, ne_union_type([atom_type, type_tagged_obj]))
         return symbols_and_tagged_values_interface_type(type, depth);
@@ -772,6 +827,12 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       fail if untagged_type == empty_type;
       untagged_inter_type = interface_type(untagged_type, nat(depth-1));
       return :tagged(tag, untagged_inter_type);
+    }
+
+
+    InterType maybe_value_interface_type(NeType type, NzNat depth) {
+      inner_type = maybe_type_type_param(type);
+      return :optional(interface_type(inner_type, depth));
     }
 
 
@@ -872,5 +933,6 @@ implicit typedefs : [TypeName -> NeType] {
   record(fs?)     = [x : unused_var, t <- fs, x <- nested(t)],
   union(ts?)      = [x : t <- ts, x <- nested(t)],
   tagged(_, t?)   |
+  optional(t?)    |
   seq(t?)         |
   set(t?)         = nested(t);

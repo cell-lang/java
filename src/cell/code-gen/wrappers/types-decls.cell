@@ -199,6 +199,7 @@ String decl_type_export_funct_name(String name) = "export_" & name;
   // bin_rel(ts?)    |
   // tern_rel(ts?)   = union([declarable_types(t) : t <~ ts]),
   tagged()        = declarable_types(strip_tags(inter_type)),
+  optional(t?)    = declarable_types(t),
   named()         = [inter_type],
   union(ts?)      = [inter_type] & ts & [d : t <- ts, d <- declarable_types(t), d != strip_tags(t)];
 
@@ -303,7 +304,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     String* untagged_type_decl_or_doc(DeclInterType inter_type) = type_decl_or_doc(inter_type);
 
 
-    String* untagged_type_decl_or_doc(<BasicInterType, CollInterType> inter_type) {
+    String* untagged_type_decl_or_doc(<BasicInterType, CollInterType, OptionalInterType> inter_type) {
       type_name = match (direction)
         in  = input_arg_type(inter_type),
         out = return_value_type(inter_type, types_names);
