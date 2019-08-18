@@ -95,10 +95,7 @@ implicit prg : CompiledPrg {
       float             = "double",
       date              = "java.time.LocalDate",
       time              = "java.time.LocalDateTime",
-      optional(bool)    = "Boolean",
-      optional(integer) = "Long",
-      optional(float)   = "Double",
-      optional(t?)      = input_arg_type(t),
+      optional(t?)      = input_arg_obj_type(t),
       symbol()          |
       tuple()           |
       record()          |
@@ -106,12 +103,18 @@ implicit prg : CompiledPrg {
       named(n?)         = input_arg_type(named_interface_types_defs(it, !!)),
       seq(t?)           |
       set(t?)           = input_arg_type(t) & "[]",
-      map(integer, v?)  = "java.util.HashMap<Long, " & input_arg_type(v) & ">",
-      map(k?, v?)       = "java.util.HashMap<" & input_arg_type(k) & ", " & input_arg_type(v) & ">",
+      map(k?, v?)       = "java.util.HashMap<" & input_arg_obj_type(k) & ", " & input_arg_obj_type(v) & ">",
       tagged(_, t?)     = input_arg_type(t),
       string            |
       generic           = "String";
   }
+
+
+  String input_arg_obj_type(InterType it) =
+    bool    = "Boolean",
+    integer = "Long",
+    float   = "Double",
+    _       = input_arg_type(it);
 
 
   String return_value_type(InterType it) = return_value_type(it, output_types_names);
@@ -130,10 +133,7 @@ implicit prg : CompiledPrg {
       string            = "String",
       date              = "java.time.LocalDate",
       time              = "java.time.LocalDateTime",
-      optional(bool)    = "Boolean",
-      optional(integer) = "Long",
-      optional(float)   = "Double",
-      optional(t?)      = return_value_type(t),
+      optional(t?)      = ret_value_obj_type(t),
       symbol()          |
       tuple()           |
       record()          |
@@ -141,11 +141,17 @@ implicit prg : CompiledPrg {
       named()           = return_value_type(named_interface_types_defs(it, !!), types_names),
       seq(t?)           |
       set(t?)           = return_value_type(t, types_names) & "[]",
-      map(integer, v?)  = "java.util.HashMap<Long, " & input_arg_type(v) & ">",
-      map(k?, v?)       = "java.util.HashMap<" & input_arg_type(k) & ", " & input_arg_type(v) & ">",
+      map(k?, v?)       = "java.util.HashMap<" & ret_value_obj_type(k) & ", " & ret_value_obj_type(v) & ">",
       tagged(_, t?)     = return_value_type(t, types_names),
       generic           = "String";
   }
+
+
+  String ret_value_obj_type(InterType it) =
+    bool    = "Boolean",
+    integer = "Long",
+    float   = "Double",
+    _       = return_value_type(it);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -342,8 +348,8 @@ if action_prefix != "return " {
     value_var = "value_" & unique_id;
     keys_var = "keys_" & unique_id;
     values_var = "values_" & unique_id;
-    in_key_type = input_arg_type(key_type);
-    in_value_type = input_arg_type(value_type);
+    in_key_type = input_arg_obj_type(key_type);
+    in_value_type = input_arg_obj_type(value_type);
 
     code = (
       "Obj[] " & keys_var & " = new Obj[" & expr & ".size()];",
@@ -681,8 +687,8 @@ if action_prefix != "return " {
     out_value_var = "out_value_" & unique_id;
 
     out_type = return_value_type(:map(key_type, value_type));
-    out_key_type = return_value_type(key_type);
-    out_value_type = return_value_type(value_type);
+    out_key_type = ret_value_obj_type(key_type);
+    out_value_type = ret_value_obj_type(value_type);
 
     code = (
       out_type & " " & map_var & " = new " & out_type & "();",
@@ -889,7 +895,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 
       key_inter_type = :generic;
       for it <- (:integer, :string, :date, :time)
-        key_inter_type = it if is_subset(type, internal_type(it));
+        key_inter_type = it if is_subset(key_type, internal_type(it));
 
       value_inter_type = interface_type(value_type, rem_depth);
 
