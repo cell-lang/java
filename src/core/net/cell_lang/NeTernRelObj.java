@@ -282,17 +282,4 @@ final class NeTernRelObj extends Obj {
     }
     return minPrintedSize;
   }
-
-  public ValueBase getValue() {
-    int size = col1.length;
-    ValueBase[] values1 = new ValueBase[size];
-    ValueBase[] values2 = new ValueBase[size];
-    ValueBase[] values3 = new ValueBase[size];
-    for (int i=0 ; i < size ; i++) {
-      values1[i] = col1[i].getValue();
-      values2[i] = col2[i].getValue();
-      values3[i] = col3[i].getValue();
-    }
-    return new NeTernRelValue(values1, values2, values3);
-  }
 }

@@ -227,13 +227,13 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "  " & auto_class_name & "();",
       "",
       "  void setInput(Input input, String value);" if inputs != (),
-      "  Value readOutput(Output output);" if outputs != (),
+      "  String readOutput(Output output);" if outputs != (),
       "" if is_time_sensitive,
       "  void setElapsedMillisecs(int);" if is_time_sensitive,
       "  void setElapsedSecs(int);" if is_time_sensitive,
       "",
       "  " & apply_ret_type & " apply();",
-      "  Value readState();",
+      "  String readState();",
       "  void setState(String);",
       "",
       "  Output[] changedOutputs();" if outputs != ()
@@ -259,8 +259,8 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "  return automaton.elapsed_time == 0;" if is_time_sensitive,
       "}",
       "",
-      "public Value readState() {",
-      "  return Conversions.exportAsValue(automaton.copyState());",
+      "public String readState() {",
+      "  return Conversions.exportAsText(automaton.copyState());",
       "}",
       "",
       "public void setState(String str) {",
@@ -330,7 +330,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "  return outputs;",
         "}",
         "",
-        "public Value readOutput(Output output) {",
+        "public String readOutput(Output output) {",
         "  Obj obj = null;",
         "  switch (output) {"
       );
@@ -344,7 +344,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       }
       code = code & (
         "  }",
-        "  return Conversions.exportAsValue(obj);",
+        "  return Conversions.exportAsText(obj);",
         "}"
       );
     }

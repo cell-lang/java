@@ -35,8 +35,4 @@ final class BlankObj extends Obj {
   public int minPrintedSize() {
     return 5;
   }
-
-  public ValueBase getValue() {
-    throw Miscellanea.internalFail(this);
-  }
 }

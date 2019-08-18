@@ -12,7 +12,10 @@ type OptionalInterType  = optional(InterType);
 type NamedInterType     = named(TypeSymbol);
 
 type CollInterType      = seq(InterType),
-                          set(InterType);
+                          set(InterType),
+                          map(KeyInterType, InterType);
+
+type KeyInterType       = integer, string, date, time, generic;
 
 type SymbolInterType    = symbol(Symbol);
 
@@ -103,6 +106,8 @@ implicit prg : CompiledPrg {
       named(n?)         = input_arg_type(named_interface_types_defs(it, !!)),
       seq(t?)           |
       set(t?)           = input_arg_type(t) & "[]",
+      map(integer, v?)  = "java.util.HashMap<Long, " & input_arg_type(v) & ">",
+      map(k?, v?)       = "java.util.HashMap<" & input_arg_type(k) & ", " & input_arg_type(v) & ">",
       tagged(_, t?)     = input_arg_type(t),
       string            |
       generic           = "String";
@@ -136,8 +141,10 @@ implicit prg : CompiledPrg {
       named()           = return_value_type(named_interface_types_defs(it, !!), types_names),
       seq(t?)           |
       set(t?)           = return_value_type(t, types_names) & "[]",
+      map(integer, v?)  = "java.util.HashMap<Long, " & input_arg_type(v) & ">",
+      map(k?, v?)       = "java.util.HashMap<" & input_arg_type(k) & ", " & input_arg_type(v) & ">",
       tagged(_, t?)     = return_value_type(t, types_names),
-      generic           = "Value";
+      generic           = "String";
   }
 }
 
@@ -145,14 +152,11 @@ implicit prg : CompiledPrg {
 
 implicit prg : CompiledPrg {
   String* import_code(InterType it, String expr, String action_prefix) =
-    import_code_ex(it, expr, action_prefix, treat_generic_as_value = false);
-}
+    import_code_ex(it, expr, action_prefix);
 
 
-implicit prg : CompiledPrg, treat_generic_as_value : Bool {
   String* decl_type_import_code(SymbolInterType inter_type, String expr, String action_prefix) {
     return (action_prefix & "SymbObj.get(" & symb_idx_name(symbol(inter_type)) & ");");
-
   }
 
   String* decl_type_import_code(TupleInterType inter_type, String expr, String action_prefix) {
@@ -161,7 +165,6 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
 
   String* decl_type_import_code(RecordInterType inter_type, String expr, String action_prefix) {
     return record_import_code(fields(inter_type), expr, action_prefix);
-
   }
 
   String* decl_type_import_code(NamedInterType inter_type, String expr, String action_prefix) {
@@ -226,11 +229,10 @@ implicit prg : CompiledPrg, treat_generic_as_value : Bool {
       named()       = import_code_ex(named_interface_types_defs(it, !!), expr, action_prefix),
       seq(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSeq"),
       set(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSet"),
+      map(k?, v?)   = map_import_code(k, v, expr, action_prefix),
       tagged()      = tagged_value_import_code(it, expr, action_prefix),
       optional(t?)  = optional_value_import_code(t, expr, action_prefix),
-      generic       = if treat_generic_as_value
-                        then (action_prefix & "((ValueBase) " & expr & ").asObj();")
-                        else (action_prefix & "Conversions.convertText(" & expr & ");");
+      generic       = (action_prefix & "Conversions.convertText(" & expr & ");");
   }
 
 
@@ -318,9 +320,7 @@ if action_prefix != "return " {
 
     elem_code = import_code_ex(elem_type, expr_var & "[" & idx_var & "]", array_var & "[" & idx_var & "] = ");
 
-    native_elem_type = if treat_generic_as_value
-      then return_value_type(elem_type)
-      else input_arg_type(elem_type);
+    native_elem_type = input_arg_type(elem_type);
 
     return (
       native_elem_type & "[] " & expr_var & " = " & expr & ";",
@@ -330,6 +330,11 @@ if action_prefix != "return " {
       "}",
       action_prefix & ctor & "(" & array_var & ");"
     );
+  }
+
+
+  String* map_import_code(KeyInterType key_type, InterType value_type, String expr, String action_prefix) {
+    fail;
   }
 
 
@@ -445,9 +450,10 @@ implicit prg : CompiledPrg {
       named()             = export_code(named_interface_types_defs(it, !!), expr, action_prefix),
       seq(t?)             |
       set(t?)             = array_export_code(t, expr, action_prefix),
+      map(k?, v?)         = map_export_code(k, v, expr, action_prefix),
       tagged()            = tagged_type_export_code(it, expr, action_prefix),
       optional(t?)        = optional_type_export_code(t, expr, action_prefix),
-      generic             = (action_prefix & "Conversions.exportAsValue(" & expr & ");");
+      generic             = (action_prefix & "Conversions.exportAsText(" & expr & ");");
   }
 
 
@@ -591,7 +597,7 @@ if action_prefix != "return " {
       integer             = (action_prefix & "Conversions.toLongArray(" & expr & ");"),
       float               = (action_prefix & "Conversions.toDoubleArray(" & expr & ");"),
       string              = (action_prefix & "Conversions.toStringArray(" & expr & ");"),
-      generic             = (action_prefix & "Conversions.toValueArray(" & expr & ");"),
+      generic             = (action_prefix & "Conversions.toTextArray(" & expr & ");"),
       tagged(_, generic)  = array_export_code(:generic, expr, action_prefix),
       date                |
       time                |
@@ -599,6 +605,7 @@ if action_prefix != "return " {
       record()            |
       seq()               |
       set()               |
+      map()               |
       named()             |
       tagged()            |
       optional()          |
@@ -628,12 +635,17 @@ if action_prefix != "return " {
         action_prefix & array_var & ";"
       );
     }
+
+
+    String array_new_expr(InterType elem_type, String size_expr) =
+      seq(t?) | set(t?) = array_new_expr(t, size_expr) & "[]",
+      _                 = return_value_type(elem_type) & "[" & size_expr & "]";
   }
 
 
-  String array_new_expr(InterType elem_type, String size_expr) =
-    seq(t?) | set(t?) = array_new_expr(t, size_expr) & "[]",
-    _                 = return_value_type(elem_type) & "[" & size_expr & "]";
+  String* map_export_code(KeyInterType key_type, InterType value_type, String expr, String action_prefix) {
+    fail;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -751,9 +763,13 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       if is_subset(type, type_set)
         return set_interface_type(type, depth);
 
-      // Binary relations, including records and maps
+      // Maps, including records
+      if is_subset(type, type_map)
+        return map_record_interface_type(type, depth);
+
+      // Binary relations, excluding records and maps
       if is_subset(type, type_bin_rel)
-        return record_map_or_bin_rel_interface_type(type, depth);
+        return bin_rel_interface_type(type, depth);
 
       // // Ternary relations
       // if is_subset(type, type_tern_rel)
@@ -800,7 +816,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     }
 
 
-    InterType record_map_or_bin_rel_interface_type(NeType type, NzNat depth) {
+    InterType map_record_interface_type(NeType type, NzNat depth) {
       rem_depth = nat(depth - 1);
 
       maybe_fields = maybe_record_type_fields(type);
@@ -810,6 +826,20 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
           return :record([untag(l) -> interface_type(info.type, rem_depth) : l, info <- types]);
       }
 
+      key_type, value_type = bin_rel_args_supertypes(type);
+      fail if value_type == empty_type;
+
+      key_inter_type = :generic;
+      for it <- (:integer, :string, :date, :time)
+        key_inter_type = it if is_subset(type, internal_type(it));
+
+      value_inter_type = interface_type(value_type, rem_depth);
+
+      return :map(key_inter_type, value_inter_type);
+    }
+
+
+    InterType bin_rel_interface_type(NeType type, NzNat depth) {
       return :generic;
     }
 
@@ -935,4 +965,5 @@ implicit typedefs : [TypeName -> NeType] {
   tagged(_, t?)   |
   optional(t?)    |
   seq(t?)         |
-  set(t?)         = nested(t);
+  set(t?)         = nested(t),
+  map(k?, v?)     = nested(k) & nested(v);

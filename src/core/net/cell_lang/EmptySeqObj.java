@@ -102,10 +102,6 @@ final class EmptySeqObj extends SeqObj {
     return 2;
   }
 
-  public ValueBase getValue() {
-    return valueObj;
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   private static final boolean[] emptyBooleanArray = new boolean[0];
@@ -113,6 +109,4 @@ final class EmptySeqObj extends SeqObj {
   private static final long[]    emptyLongArray    = new long[0];
   private static final double[]  emptyDoubleArray  = new double[0];
   private static final Obj[]     emptyObjArray     = new Obj[0];
-
-  private static final SeqValue valueObj = new SeqValue(new ValueBase[0]);
 }

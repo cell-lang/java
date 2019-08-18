@@ -158,13 +158,7 @@ final class EmptyRelObj extends Obj {
     return 2;
   }
 
-  public ValueBase getValue() {
-    return valueObj;
-  }
-
   //////////////////////////////////////////////////////////////////////////////
-
-  private static final EmptyRelValue valueObj = new EmptyRelValue();
 
   private static final Obj[] emptyObjArray = new Obj[0];
 

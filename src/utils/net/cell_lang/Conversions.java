@@ -16,8 +16,8 @@ class Conversions {
     return obj;
   }
 
-  public static Value exportAsValue(Obj obj) {
-    return obj.getValue();
+  public static String exportAsText(Obj obj) {
+    return obj.toString();
   }
 
   public static Obj stringToObj(String str) {
@@ -133,12 +133,12 @@ class Conversions {
     return strs;
   }
 
-  public static Value[] toValueArray(Obj obj) {
+  public static String[] toTextArray(Obj obj) {
     Obj[] elts = obj.getArray((Obj[]) null);
     int len = elts.length;
-    Value[] values = new Value[len];
+    String[] strs = new String[len];
     for (int i=0 ; i < len ; i++)
-      values[i] = elts[i].getValue();
-    return values;
+      strs[i] = exportAsText(elts[i]);
+    return strs;
   }
 }

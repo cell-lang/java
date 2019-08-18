@@ -7,7 +7,6 @@ import java.io.Writer;
 final class SymbObj extends Obj {
   String string;
   int minPrintedSize;
-  SymbValue valueObj;
 
 
   public SymbObj(int id) {
@@ -16,7 +15,6 @@ final class SymbObj extends Obj {
     Miscellanea._assert(getSymbId() == id);
     string = SymbTable.idxToStr(id);
     minPrintedSize = string.length();
-    valueObj = new SymbValue(id);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -47,10 +45,6 @@ final class SymbObj extends Obj {
 
   public int minPrintedSize() {
     return minPrintedSize;
-  }
-
-  public ValueBase getValue() {
-    return valueObj;
   }
 
   //////////////////////////////////////////////////////////////////////////////

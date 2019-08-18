@@ -40,10 +40,6 @@ class IntObj extends Obj {
     return Long.toString(data).length();
   }
 
-  public ValueBase getValue() {
-    return new IntValue(data);
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   static IntObj[] smallIntObjs = new IntObj[384];

@@ -49,8 +49,4 @@ final class TaggedIntObj extends Obj {
   public int minPrintedSize() {
     return 2 + SymbTable.idxToStr(getTagId()).length() + Long.toString(data).length();
   }
-
-  public ValueBase getValue() {
-    return new TaggedValue(getTagId(), new IntValue(getInnerLong()));
-  }
 }
