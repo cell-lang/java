@@ -1,0 +1,45 @@
+implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
+  (String*, String*) handler_wrapper(UpdateId method_id, HandlerWrapper wrapper,
+                                      DBSymbol block_name, String ext_name, String class_name) {
+
+    fields, msg_inst_code, msg_expr = match (wrapper)
+      symbol()        = undefined,
+      tagged_record() = (wrapper.fields, wrapper.msg_inst_code, wrapper.msg_expr),
+      tagged_tuple()  = undefined;
+
+    args_inter_types = (interface_type(t) : unused_var_1, t, unused_var_2 <- fields);
+
+    arg_types = (input_arg_type(it) : it <- args_inter_types);
+    args_types_str = append(arg_types, ", ");
+    args_decls = append((it & " arg" & printed(i) : it @ i <- arg_types), ", ");
+
+    code = (
+      "",
+      "public void " & ext_name & "(" & args_decls & ") {"
+    );
+
+    field_vars = (native_var_ref_name(v) : unused_var_1, unused_var_2, v <- fields);
+    code = (code | "  Obj " & append(field_vars, ", ") & ";") if field_vars != ();
+    code = code & indent_lines(gen_vars_decls(msg_inst_code, [v : unused_var_1, unused_var_2, v <~ fields]));
+    code = (code | "") if |code| > 2;
+
+    code = code & join((
+      indent_lines(import_code(it, "arg" & printed(i), field_vars(i) & " = "))
+      : it @ i <- args_inter_types
+    ));
+
+    code = (
+      code & indent_lines(native_code(msg_inst_code, nothing, debug_mode=false)) |
+      "  boolean ok = automaton.updateEntryPoint(" & native_expr(msg_expr) & ", updater, env);",
+      "  if (!ok) {",
+      "    env = new Generated.Env();",
+      "    throw new RuntimeException(\"Update failed\");",
+      "  }",
+      "}"
+    );
+
+    docs = "void " & ext_name & "(" & args_types_str & ");";
+
+    return (code, (docs));
+  }
+}

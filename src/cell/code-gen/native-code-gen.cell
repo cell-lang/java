@@ -284,8 +284,8 @@ String* symbols_arrays_decls([(Symbol+, Nat)] symbs_seqs) {
 }
 
 
-String* gen_vars_decls(Instr* body, [ObjProcArg] args) {
-  vars_to_decl = [v : v <- vars_to_declare(body, args), not v :: AuxVar];
+String* gen_vars_decls(Instr* body, [AnyVar] exclusions) {
+  vars_to_decl = [v : v <- vars_to_declare(body), not exclusions(v), not v :: AuxVar];
 
   vector_vars = [v : v <- vars_to_decl, v :: VecVar];
   scalar_vars = vars_to_decl - vector_vars;

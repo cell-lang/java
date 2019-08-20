@@ -27,14 +27,13 @@ type VarTypesNotToDeclare = FnArg,
 
 
 ## BAD: THIS THING IS INCREDIBLY MESSY. I MUST IMPLEMENT A VERSION OF SELECT WITH A <STOP> GUARD
-[AnyVar] vars_to_declare(Instr* instrs, [ObjProcArg] fn_args) {
+[AnyVar] vars_to_declare(Instr* instrs) {
   vars = select(
     instrs,
     $ :: <AnyVar, ClsDef> and not $ :: <VarTypesNotToDeclare, ClsDef>
   );
   fail if not vars :: [AnyVar];
-  vars = vars - [:invalid_var]; ## THIS IS A REALLY, REALLY UGLY THING
-  return vars - fn_args;
+  return vars - [:invalid_var]; ## THIS IS A REALLY, REALLY UGLY THING
 }
 
 ////////////////////////////////////////////////////////////////////////////////
