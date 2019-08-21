@@ -76,11 +76,7 @@ implicit
 
 
   (String*, String*) handler_wrapper(UpdateId update_id, HandlerWrapper wrapper) {
-    name = match (wrapper)
-      symbol(s?)      = s,
-      tagged_record() |
-      tagged_tuple()  = wrapper.tag;
-    ext_name = call_handler_name(_untag_(name));
+    ext_name = call_handler_name(_untag_(wrapper.tag));
     return handler_wrapper(update_id, wrapper, block_name, ext_name, db_class_name);
   }
 

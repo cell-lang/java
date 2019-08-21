@@ -1,13 +1,8 @@
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   (String*, String*) handler_wrapper(UpdateId method_id, HandlerWrapper wrapper,
-                                      DBSymbol block_name, String ext_name, String class_name) {
-
-    fields, msg_inst_code, msg_expr = match (wrapper)
-      symbol()        = undefined,
-      tagged_record() = (wrapper.fields, wrapper.msg_inst_code, wrapper.msg_expr),
-      tagged_tuple()  = (wrapper.fields, wrapper.msg_inst_code, wrapper.msg_expr);
-
-    args_inter_types = (interface_type(t) : t, unused_var <- fields);
+                                     DBSymbol block_name, String ext_name, String class_name)
+  {
+    args_inter_types = (interface_type(t) : t, unused_var <- wrapper.fields);
 
     arg_types = (input_arg_type(it) : it <- args_inter_types);
     args_types_str = append(arg_types, ", ");
@@ -19,9 +14,9 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     );
 
     let context = :wrapper {
-      field_vars = (native_var_ref_name(v) : unused_var, v <- fields);
+      field_vars = (native_var_ref_name(v) : unused_var, v <- wrapper.fields);
       code = (code | "  Obj " & append(field_vars, ", ") & ";") if field_vars != ();
-      code = code & indent_lines(gen_vars_decls(msg_inst_code, [v : unused_var, v <~ fields]));
+      code = code & indent_lines(gen_vars_decls(wrapper.msg_inst_code, [v : unused_var, v <~ wrapper.fields]));
       code = (code | "") if |code| > 2;
 
       code = code & join((
@@ -30,8 +25,8 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       ));
 
       code = (
-        code & indent_lines(native_code(msg_inst_code, nothing, debug_mode=false)) |
-        "  boolean ok = automaton.updateEntryPoint(" & native_expr(msg_expr) & ", updater, env);",
+        code & indent_lines(native_code(wrapper.msg_inst_code, nothing, debug_mode=false)) |
+        "  boolean ok = automaton.updateEntryPoint(" & native_expr(wrapper.msg_expr) & ", updater, env);",
         "  if (!ok) {",
         "    env = new Generated.Env();",
         "    throw new RuntimeException(\"Update failed\");",
