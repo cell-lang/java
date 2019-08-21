@@ -1,4 +1,4 @@
-implicit prg : CompiledPrg, debug_mode : Bool {
+implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
   String* native_code(Instr* instrs, Maybe[Nat] block_id) =
     join((native_code(instr, block_id) : instr <- instrs));
 

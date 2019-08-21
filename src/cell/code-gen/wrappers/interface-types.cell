@@ -295,7 +295,7 @@ if action_prefix != "return " {
 
     field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
     for l, n @ i <- isort(field_names) {
-      code = (code | keys_var & "[" & printed(i) & "] = " & native_expr(object(l)) & ";");
+      code = (code | keys_var & "[" & printed(i) & "] = " & native_expr(object(l), context=:wrapper) & ";");
       field_expr = expr & "." & field_names(l, !!);
       asgnm_prefix = values_var & "[" & printed(i) & "] = ";
       code = code & import_code_ex(fields(l, !!), field_expr, asgnm_prefix);

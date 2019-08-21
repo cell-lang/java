@@ -28,15 +28,16 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       : it @ i <- args_inter_types
     ));
 
-    code = (
-      code & indent_lines(native_code(msg_inst_code, nothing, debug_mode=false)) |
-      "  boolean ok = automaton.updateEntryPoint(" & native_expr(msg_expr) & ", updater, env);",
-      "  if (!ok) {",
-      "    env = new Generated.Env();",
-      "    throw new RuntimeException(\"Update failed\");",
-      "  }",
-      "}"
-    );
+    let context = :wrapper
+      code = (
+        code & indent_lines(native_code(msg_inst_code, nothing, debug_mode=false)) |
+        "  boolean ok = automaton.updateEntryPoint(" & native_expr(msg_expr) & ", updater, env);",
+        "  if (!ok) {",
+        "    env = new Generated.Env();",
+        "    throw new RuntimeException(\"Update failed\");",
+        "  }",
+        "}"
+      );
 
     docs = "void " & ext_name & "(" & args_types_str & ");";
 

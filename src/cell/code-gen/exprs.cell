@@ -1,3 +1,6 @@
+type NativeContext = core, wrapper;
+
+implicit context : NativeContext {
 String native_expr(InlineObj) =
   object(s?)  = "SymbObj.get(" & symb_idx_name(s) & ")",
   empty_seq   = "EmptySeqObj.singleton",
@@ -431,4 +434,5 @@ String native_nary_op(String op, AnyTypeExpr+ exprs, Bool parenthesized) {
   expr = append((native_expr(e, true) : e <- exprs), op);
   expr = "(" & expr & ")" if |exprs| > 1 and parenthesized;
   return expr;
+}
 }
