@@ -5,9 +5,9 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     fields, msg_inst_code, msg_expr = match (wrapper)
       symbol()        = undefined,
       tagged_record() = (wrapper.fields, wrapper.msg_inst_code, wrapper.msg_expr),
-      tagged_tuple()  = undefined;
+      tagged_tuple()  = (wrapper.fields, wrapper.msg_inst_code, wrapper.msg_expr);
 
-    args_inter_types = (interface_type(t) : unused_var_1, t, unused_var_2 <- fields);
+    args_inter_types = (interface_type(t) : t, unused_var <- fields);
 
     arg_types = (input_arg_type(it) : it <- args_inter_types);
     args_types_str = append(arg_types, ", ");
@@ -18,9 +18,9 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "public void " & ext_name & "(" & args_decls & ") {"
     );
 
-    field_vars = (native_var_ref_name(v) : unused_var_1, unused_var_2, v <- fields);
+    field_vars = (native_var_ref_name(v) : unused_var, v <- fields);
     code = (code | "  Obj " & append(field_vars, ", ") & ";") if field_vars != ();
-    code = code & indent_lines(gen_vars_decls(msg_inst_code, [v : unused_var_1, unused_var_2, v <~ fields]));
+    code = code & indent_lines(gen_vars_decls(msg_inst_code, [v : unused_var, v <~ fields]));
     code = (code | "") if |code| > 2;
 
     code = code & join((
