@@ -40,8 +40,9 @@ implicit prg : CompiledPrg {
 
   // Types that need to be declared
   [DeclInterType] declared_types {
-    let typedefs = prg.typedefs
+    let typedefs = prg.typedefs {
       inter_types = [interface_type(t) : t <- boundary_types];
+    }
     named_types = [n : t <- inter_types, n <- nested_named_types(t)];
     loop {
       new_inter_types = [named_interface_types_defs(t, !!) : t <- named_types];

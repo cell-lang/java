@@ -3,7 +3,9 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     symbs = program_symbols;
     assert |symbs| <= 64 * 1024; ## IMPLEMENT PROPERLY
 
-    code = ("static final int " & symb_idx_name(s) & " = " & printed(i) & ";" : s @ i <- symbs) & 4 * ("");
+    let context = :core {
+      code = ("static final int " & symb_idx_name(s) & " = " & printed(i) & ";" : s @ i <- symbs) & 4 * ("");
+    }
 
     for s @ i <- symbs {
       is_first = mod(i, 100) == 0;
@@ -36,8 +38,10 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     cls_obj_typedef = generate_cls_obj_typedef(all_cls_arities);
     code = code & cls_obj_typedef & 4 * ("") if cls_obj_typedef != ();
 
-    code = code & join(((d | "", "") : d <- native_opt_type_decls));
-    code = (code | "", "") if native_opt_type_decls != ();
+    let context = :core {
+      code = code & join(((d | "", "") : d <- native_opt_type_decls));
+      code = (code | "", "") if native_opt_type_decls != ();
+    }
 
     int_seqs_code = gen_int_seqs_code(prg.int_seqs);
 
@@ -193,7 +197,12 @@ String* private_class_def(String* class_def) = (
 String* gen_env_decl(CompiledPrg prg) {
   all_impl_args = union([p.impl_args : p <- prg.procs]);
 
-  env_decl = ("static class Env {") & ("  public Obj " & native_var_decl_name(impl_arg(bare_id(a))) & ";" : a <- isort(all_impl_args));
+  let context = :core {
+    env_decl = ("static class Env {") &
+               ( "  public Obj " & native_var_decl_name(impl_arg(bare_id(a))) & ";"
+                 : a <- isort(all_impl_args)
+               );
+  }
 
   semi_consts_cache_vars = isort([p.name : p <- prg.procs, p.cached and p.impl_args != []]);
   semi_consts_cache_vars_decls = ("  public Obj " & memo_var_name(v) & ";" : v <- semi_consts_cache_vars);
@@ -279,35 +288,38 @@ String* symbols_arrays_decls([(Symbol+, Nat)] symbs_seqs) {
 
   String symbols_array_decl(Symbol+ symbs, Nat index) {
     name = const_symb_seq_name(index);
-    symbs_strs = (symb_idx_name(s) : s <- symbs);
+    let context = :core
+      symbs_strs = (symb_idx_name(s) : s <- symbs);
     return "public static int[] " & name & " = {" & append(symbs_strs, ", ") & "};";
   }
 }
 
 
-String* gen_vars_decls(Instr* body, [AnyVar] exclusions) {
-  vars_to_decl = [v : v <- vars_to_declare(body), not exclusions(v), not v :: AuxVar];
+implicit context : NativeContext {
+  String* gen_vars_decls(Instr* body, [AnyVar] exclusions) {
+    vars_to_decl = [v : v <- vars_to_declare(body), not exclusions(v), not v :: AuxVar];
 
-  vector_vars = [v : v <- vars_to_decl, v :: VecVar];
-  scalar_vars = vars_to_decl - vector_vars;
+    vector_vars = [v : v <- vars_to_decl, v :: VecVar];
+    scalar_vars = vars_to_decl - vector_vars;
 
-  scalar_vars_by_type = group_by(scalar_vars, native_var_type);
-  scalar_vars_decls = (
-    t & " " & append((native_var_decl_name(v) : v <- isort(vs)), ", ") & ";"
-    : t, vs <- isort(scalar_vars_by_type)
-  );
+    scalar_vars_by_type = group_by(scalar_vars, native_var_type);
+    scalar_vars_decls = (
+      t & " " & append((native_var_decl_name(v) : v <- isort(vs)), ", ") & ";"
+      : t, vs <- isort(scalar_vars_by_type)
+    );
 
-  vec_vars_by_id = group_by(vector_vars, $.id);
-  new_vec_vars = [vvar(id, nz_nat(max([v.size : v <- vs]))) : id, vs <- vec_vars_by_id];
-  vec_vars_decls = (var_decl(v) : v <- isort(new_vec_vars));
+    vec_vars_by_id = group_by(vector_vars, $.id);
+    new_vec_vars = [vvar(id, nz_nat(max([v.size : v <- vs]))) : id, vs <- vec_vars_by_id];
+    vec_vars_decls = (var_decl(v) : v <- isort(new_vec_vars));
 
-  assert {
-    vec_var_ids  = [v.id : v <- vector_vars];
-    ref_new_vec_vars = [vvar(id, nz_nat(max(nonempty([v.size : v <- vector_vars, v.id == id])))) : id <- vec_var_ids];
-    return new_vec_vars == ref_new_vec_vars;
-  };
+    assert {
+      vec_var_ids  = [v.id : v <- vector_vars];
+      ref_new_vec_vars = [vvar(id, nz_nat(max(nonempty([v.size : v <- vector_vars, v.id == id])))) : id <- vec_var_ids];
+      return new_vec_vars == ref_new_vec_vars;
+    };
 
-  return scalar_vars_decls & vec_vars_decls;
+    return scalar_vars_decls & vec_vars_decls;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -208,15 +208,15 @@ implicit prg : CompiledPrg, context : <core>, debug_mode : Bool {
     "  }",
     "}"
   );
+
+
+  String memb_var_decl(MembIntVectVar var) {
+    native_type = native_var_type(var);
+    name = native_var_decl_name(var);
+    return "public " & native_type & " " & name & " = new long[" & printed(var.size) & "];";
+  }
+
+
+  String memb_var_decl(<SignalVar, MembObjVar, PendingInputVar, MembIntVar, MembBoolVar> var) =
+    "public " & native_var_type(var) & " " & native_var_decl_name(var) & ";";
 }
-
-
-String memb_var_decl(MembIntVectVar var) {
-  native_type = native_var_type(var);
-  name = native_var_decl_name(var);
-  return "public " & native_type & " " & name & " = new long[" & printed(var.size) & "];";
-}
-
-
-String memb_var_decl(<SignalVar, MembObjVar, PendingInputVar, MembIntVar, MembBoolVar> var) =
-  "public " & native_var_type(var) & " " & native_var_decl_name(var) & ";";

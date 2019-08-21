@@ -162,7 +162,7 @@ implicit prg : CompiledPrg {
 
 
   String* decl_type_import_code(SymbolInterType inter_type, String expr, String action_prefix) {
-    return (action_prefix & "SymbObj.get(" & symb_idx_name(symbol(inter_type)) & ");");
+    return (action_prefix & "SymbObj.get(" & symb_idx_qual_name(symbol(inter_type)) & ");");
   }
 
   String* decl_type_import_code(TupleInterType inter_type, String expr, String action_prefix) {
@@ -197,7 +197,7 @@ implicit prg : CompiledPrg {
       code = import_code(untagged_type, expr, next_action_prefix);
     }
     tag = object(type_tag(inter_type));
-    instr = action_prefix & "Builder.createTaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
+    instr = action_prefix & "Builder.createTaggedObj(" & symb_idx_qual_name(tag) & ", " & out_var & ");";
     return (code | instr);
 
 
@@ -228,7 +228,7 @@ implicit prg : CompiledPrg {
       string        = (action_prefix & "Conversions.stringToObj(" & expr & ");"),
       date          = (action_prefix & "Conversions.dateToObj(" & expr & ");"),
       time          = (action_prefix & "Conversions.dateTimeToObj(" & expr & ");"),
-      symbol(s?)    = (action_prefix & "SymbObj.get(" & symb_idx_name(s) & ");"),
+      symbol(s?)    = (action_prefix & "SymbObj.get(" & symb_idx_qual_name(s) & ");"),
       tuple()       |
       record()      |
       union()       = undefined, // They are supposed to always be declared
@@ -378,7 +378,7 @@ if action_prefix != "return " {
     out_var = "var_" & unique_id;
     code = import_code_ex(untagged_type(tagged_type), expr, "Obj " & out_var & " = ");
     tag = object(type_tag(tagged_type));
-    instr = action_prefix & "Builder.createTaggedObj(Generated." & symb_idx_name(tag) & ", " & out_var & ");";
+    instr = action_prefix & "Builder.createTaggedObj(" & symb_idx_qual_name(tag) & ", " & out_var & ");";
     return (code | instr);
   }
 
@@ -545,7 +545,7 @@ if action_prefix != "return " {
         symbs_code = ("switch (" & expr & ".getSymbId()) {");
         for s, t @ i <- isort(symbol_type_map) {
           symbs_code = symbs_code & (
-            "  case " & symb_idx_name(s) & ":",
+            "  case " & symb_idx_base_name(s) & ":",
             "    " & action_prefix & output_types_names(t, !!) & ".singleton;",
             "    break" if action_prefix != "return ", ## BAD BAD BAD
             ""
@@ -568,7 +568,7 @@ if action_prefix != "return " {
         for tag, type @ i <- isort(tag_type_map) {
           type_name = output_types_names(type, !!);
           tagged_values_code = tagged_values_code & (
-            "  case " & symb_idx_name(object(tag)) & ":",
+            "  case " & symb_idx_base_name(object(tag)) & ":",
             "    " & action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");",
             ""
           );
@@ -600,7 +600,7 @@ if action_prefix != "return " {
         asgnm_text = record_var & "." & field_names(l, !!) & " = ";
         field_unique_id = printed(_counter_(:any_value_will_do));
         field_var = "var_" & field_unique_id;
-        field_store_instr = "Obj " & field_var & " = " & expr & ".lookupField(" & symb_idx_name(l) & ");";
+        field_store_instr = "Obj " & field_var & " = " & expr & ".lookupField(" & symb_idx_qual_name(l) & ");";
         return (field_store_instr) & export_code(t, field_var, asgnm_text);
       } : l, t <- isort(fields)
     ));
@@ -1031,3 +1031,7 @@ implicit typedefs : [TypeName -> NeType] {
   seq(t?)         |
   set(t?)         = nested(t),
   map(k?, v?)     = nested(k) & nested(v);
+
+
+String symb_idx_base_name(<Atom, SymbObj> symb) = symb_idx_name(symb, context=:core);
+String symb_idx_qual_name(<Atom, SymbObj> symb) = symb_idx_name(symb, context=:wrapper);

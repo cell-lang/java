@@ -18,17 +18,17 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "public void " & ext_name & "(" & args_decls & ") {"
     );
 
-    field_vars = (native_var_ref_name(v) : unused_var, v <- fields);
-    code = (code | "  Obj " & append(field_vars, ", ") & ";") if field_vars != ();
-    code = code & indent_lines(gen_vars_decls(msg_inst_code, [v : unused_var, v <~ fields]));
-    code = (code | "") if |code| > 2;
+    let context = :wrapper {
+      field_vars = (native_var_ref_name(v) : unused_var, v <- fields);
+      code = (code | "  Obj " & append(field_vars, ", ") & ";") if field_vars != ();
+      code = code & indent_lines(gen_vars_decls(msg_inst_code, [v : unused_var, v <~ fields]));
+      code = (code | "") if |code| > 2;
 
-    code = code & join((
-      indent_lines(import_code(it, "arg" & printed(i), field_vars(i) & " = "))
-      : it @ i <- args_inter_types
-    ));
+      code = code & join((
+        indent_lines(import_code(it, "arg" & printed(i), field_vars(i) & " = "))
+        : it @ i <- args_inter_types
+      ));
 
-    let context = :wrapper
       code = (
         code & indent_lines(native_code(msg_inst_code, nothing, debug_mode=false)) |
         "  boolean ok = automaton.updateEntryPoint(" & native_expr(msg_expr) & ", updater, env);",
@@ -38,6 +38,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "  }",
         "}"
       );
+    }
 
     docs = "void " & ext_name & "(" & args_types_str & ");";
 

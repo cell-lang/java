@@ -102,7 +102,7 @@ String obj_to_repr(AnyLowLevelRepr repr, String expr) =
   symbol              |
   array()             |
   object              = expr,
-  opt_tag_rec_repr()  = "(Generated." & opt_tag_rec_name(repr.tag, repr.index) & ") " & expr;
+  opt_tag_rec_repr()  = "(" & opt_tag_rec_name(repr.tag, repr.index, context=:wrapper) & ") " & expr;
 
 
 String repr_to_obj(AnyLowLevelRepr repr, String expr) =

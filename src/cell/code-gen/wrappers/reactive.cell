@@ -120,7 +120,7 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
     ret_type = return_value_type(inter_type);
 
     name = safe_name(id);
-    var_name = native_var_decl_name(signal_var(id));
+    var_name = native_var_decl_name(signal_var(id), context=:wrapper);
 
     code = (
       "",
@@ -181,13 +181,15 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     cleanup_method_name = cleanup_method_name(block.name);
     apply_method_name = apply_method_name(block.name);
 
-    input_set_methods_names = (input_set_method_name(block.name, i) : i <- ord_inputs);
-    output_vars_names = (native_var_decl_name(signal_var(o)) : o <- ord_outputs);
+    let context = :wrapper {
+      input_set_methods_names = (input_set_method_name(block.name, i) : i <- ord_inputs);
+      output_vars_names = (native_var_decl_name(signal_var(o)) : o <- ord_outputs);
 
-    input_memb_test_pred_name = (native_fn_name(block.input_memb_preds[i]) : i <- ord_inputs);
+      input_memb_test_pred_name = (native_fn_name(block.input_memb_preds[i]) : i <- ord_inputs);
 
-    elapsed_time_var_name = native_var_decl_name(elapsed_time);
-    changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
+      elapsed_time_var_name = native_var_decl_name(elapsed_time);
+      changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
+    }
 
     methods = block.methods;
     let block = block {
