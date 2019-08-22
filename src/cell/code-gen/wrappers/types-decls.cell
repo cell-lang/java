@@ -320,7 +320,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
 
   String* type_decl_or_doc(UnionInterType type) = (
-    "interface " & name_and_parents_decl(true) & " {",
+    (if doc_only then "" else "public ",) & interface " & name_and_parents_decl(true) & " {",
     "",
     "}"
   );
