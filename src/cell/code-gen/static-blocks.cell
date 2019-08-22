@@ -28,7 +28,6 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
     methods_code = [native_user_def_method_code(block.name, id, m) : id, m <- block.methods];
     updates_code = native_updates_code(block);
-    accessors_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.accessors];
 
     class_name = native_name(block.name);
 
@@ -47,7 +46,6 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       (""), indent_lines(full_check_code),
       join((("") & indent_lines(c) : c <- isort(methods_code))),
       join((("") & indent_lines(c) : c <- isort(updates_code))),
-      join((("") & indent_lines(c) : c <- isort(accessors_code))),
       ("", ""), indent_lines(updater_creation_code(block)),
       (""), indent_lines(updater_reset_code(block)),
       ("}")
