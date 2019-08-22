@@ -2,29 +2,31 @@ String path_prefix = "automaton.";
 
 
 implicit prg : CompiledPrg, block_name : DBSymbol {
-  String external_name(MethodSymbol member) = sentence_case(bare_id(member));
+  String external_name(Symbol name) = sentence_case(name);
 
-  String pretty_name(MethodSymbol member) = safe_lower_camel_case(bare_id(member));
+  String pretty_name(Symbol name) = safe_lower_camel_case(name);
 
   String db_class_name = safe_class_name(block_name);
 }
 
 
 implicit prg : CompiledPrg, block_name : DBSymbol, duplicate_names : [String, Nat] {
+  String call_handler_name(Symbol name, Nat arity) =
+    if pretty_name_has_conflicts(name, arity)
+      then "__" & external_name(name) // Fallback name
+      else pretty_name(name);
 
-  String call_handler_name(Symbol name) {
-    return _print_(name);
+
+  String call_method_name(MethodId method_id) {
+    bare_id = bare_id(method_id.symbol);
+    return if pretty_name_has_conflicts(bare_id, method_id.arity)
+      then "_" & external_name(bare_id) // Fallback name
+      else pretty_name(bare_id);
   }
 
 
-  String call_method_name(MethodId method_id) =
-    if pretty_name_has_conflicts(method_id.symbol, method_id.arity)
-      then "_" & external_name(method_id.symbol) // Fallback name
-      else pretty_name(method_id.symbol);
-
-
-  Bool pretty_name_has_conflicts(MethodSymbol member, Nat arity) {
-    pretty_name = pretty_name(member);
+  Bool pretty_name_has_conflicts(Symbol member_id, Nat arity) {
+    pretty_name = pretty_name(member_id);
     builtin_methods = builtin_methods;
     return pretty_name == db_class_name or
            builtin_methods(pretty_name, arity) or
@@ -56,26 +58,20 @@ implicit prg : CompiledPrg, block_name : DBSymbol, duplicate_names : [String, Na
 }
 
 
-implicit
-  prg             : CompiledPrg,
-  typedefs        : [TypeName -> NeType], ## REMOVE IT IF POSSIBLE. IT'S REDUNDANT
-  block_name      : DBSymbol,
-  duplicate_names : [String, Nat] {
-
-  ## WHAT'S THAT is_gen_memb_tester? WHY IS IT false WITH ACCESSORS?
+## REMOVE typedefs IF POSSIBLE. IT'S REDUNDANT
+implicit prg : CompiledPrg, typedefs : [TypeName -> NeType], block_name : DBSymbol, duplicate_names : [String, Nat] {
   (String*, String*) db_method_wrapper(MethodId method_id, <CompiledMethod, OptCompMethod> method, Bool is_gen_memb_tester) {
     if not method_id.id? {
       ext_name = call_method_name(method_id);
       return method_wrapper(method_id, method, block_name, ext_name, db_class_name, path_prefix, is_gen_memb_tester);
     }
-    else {
+    else
       return ((), ());
-    }
   }
 
 
   (String*, String*) handler_wrapper(UpdateId update_id, HandlerWrapper wrapper) {
-    ext_name = call_handler_name(_untag_(wrapper.tag));
+    ext_name = call_handler_name(untag(wrapper.tag), |wrapper.fields|);
     return handler_wrapper(update_id, wrapper, block_name, ext_name, db_class_name);
   }
 
@@ -90,14 +86,9 @@ implicit
     methods_wrappers_code, methods_wrappers_docs = (join(ls) : ls <- unzip(methods_wrappers));
     methods_wrappers_docs = ("") & methods_wrappers_docs if methods_wrappers_docs != ();
 
-    ## THIS PART OF THE CODE IS USELESS NOW, SINCE THE accessors FIELD IS NOT USED ANYMORE
-    accessors_wrappers = isort([db_method_wrapper(id, m, false) : id, m <- block.accessors]);
-    accessors_wrappers_code, accessors_wrappers_docs = (join(ls) : ls <- unzip(accessors_wrappers));
-    accessors_wrappers_docs = ("") & accessors_wrappers_docs if accessors_wrappers_docs != ();
+    code = handlers_wrappers_code & methods_wrappers_code;
 
-    code = handlers_wrappers_code & methods_wrappers_code & accessors_wrappers_code;
-
-    docs_by_type = (methods_wrappers_docs, accessors_wrappers_docs);
+    docs_by_type = (handlers_wrappers_docs, methods_wrappers_docs);
     docs = join((indent_lines(d) : d <- docs_by_type));
 
     return (code, docs);
@@ -108,41 +99,41 @@ implicit
 
 implicit prg : CompiledPrg, block_name : DBSymbol {
   (String, Nat)* pretty_names(StaticBlock block) {
+    handlers_names = ((pretty_name(_untag_(h.tag)), |h.fields|) : id, h <- isort(block.exported_handlers));
     methods_names = (
-      (pretty_name(id.symbol), id.arity) : id, unused_var <- isort(block.methods), not id.id?
+      (pretty_name(bare_id(id.symbol)), id.arity) : id, unused_var <- isort(block.methods), not id.id?
     );
-    accessors_names = ((pretty_name(id.symbol), id.arity) : id, unused_var <- isort(block.accessors));
-    return methods_names & accessors_names;
+    return handlers_names & methods_names;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-[NeType] interface_types(StaticBlock root_block) {
-  methods_types = union([set(m.args_types) & [m.ret_type] : unused_var, m <- root_block.methods]);
-  accessors_types = union([set(a.args_types) & [a.ret_type] : unused_var, a <- root_block.accessors]);
-  return methods_types & accessors_types;
+[NeType] interface_types(StaticBlock block) {
+  handlers_types = [t : unused_var_1, h <- block.exported_handlers, t, unused_var_2 <~ h.fields];
+  methods_types = union([set(m.args_types) & [m.ret_type] : unused_var, m <- block.methods]);
+  return handlers_types & methods_types;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
-  (String, String*, String*) static_auto_wrapper(StaticBlock root_block, [MethodId] gen_memb_testers_ids) {
-    let block_name = root_block.name {
-      dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block))];
+  (String, String*, String*) static_auto_wrapper(StaticBlock block, [MethodId] gen_memb_testers_ids) {
+    let block_name = block.name {
+      dup_names = [id(0), id(1) : id <- duplicates(pretty_names(block))];
       let duplicate_names = dup_names {
-        accessors_code, accessors_docs = static_auto_accessors(root_block, gen_memb_testers_ids);
+        accessors_code, accessors_docs = static_auto_accessors(block, gen_memb_testers_ids);
         class_name = db_class_name;
       }
     }
 
-    db_name = native_name(root_block.name);
-    updater_name = native_updater_name(root_block.name);
-    has_any_updates = root_block.msg_memb_pred != nothing;
+    db_name = native_name(block.name);
+    updater_name = native_updater_name(block.name);
+    has_any_updates = block.msg_memb_pred != nothing;
 
-    links_types = (upper_camel_case(bare_id(l)) : l <- root_block.links);
+    links_types = (upper_camel_case(bare_id(l)) : l <- block.links);
 
     ctor_impl_args = (t & " d" & printed(i) : t @ i <- links_types);
 
@@ -167,7 +158,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "  Generated." & updater_name & " updater;"
     );
 
-    for rel_auto_id @ i <- root_block.links {
+    for rel_auto_id @ i <- block.links {
       dep_decl = "  " & safe_class_name(rel_auto_id) & " dependee" & _print_(i) & ";";
       class_impl = (class_impl | dep_decl);
     }
@@ -180,7 +171,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "    updater = automaton.newUpdater(" & dep_updaters_args_list & ");"
     );
 
-    for rel_auto_id @ i <- root_block.links {
+    for rel_auto_id @ i <- block.links {
       idx_str = _print_(i);
       class_impl = (class_impl | "    dependee" & idx_str & " = d" & idx_str & ";");
     }
@@ -192,7 +183,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "    if (!(writer instanceof BufferedWriter))",
       "      writer = new BufferedWriter(writer);",
       "    try {",
-      "      " & native_method_call("automaton", write_state_proc_name(root_block.name), ("writer"), context=:wrapper),
+      "      " & native_method_call("automaton", write_state_proc_name(block.name), ("writer"), context=:wrapper),
       "    }",
       "    catch(IOException e) {",
       "      throw new RuntimeException(e);",
@@ -218,9 +209,9 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "",
         "  public void execute(String text) {",
         "    Obj msg = Conversions.convertText(text);",
-        "    if (!Generated." & native_fn_name(value_unsafe(root_block.msg_memb_pred)) & "(msg))",
+        "    if (!Generated." & native_fn_name(value_unsafe(block.msg_memb_pred)) & "(msg))",
         "      throw new RuntimeException(\"Invalid message\");",
-        "    boolean " & native_method_call("ok", "automaton", update_entry_point_name(root_block.name), ("msg", "updater", "env"), context=:wrapper),
+        "    boolean " & native_method_call("ok", "automaton", update_entry_point_name(block.name), ("msg", "updater", "env"), context=:wrapper),
         "    if (!ok) {",
         "      env = new Generated.Env();",
         "      throw new RuntimeException(\"Update failed\");",
