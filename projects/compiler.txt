@@ -46,6 +46,7 @@
 ../compiler/src/stage-2/methods.cell
 ../compiler/src/stage-2/accessors.cell
 ../compiler/src/stage-2/searching.cell
+../compiler/src/stage-2/hacks.cell
 
 
 // Stage 2 - relational layer
@@ -169,6 +170,7 @@
 ../java/src/cell/code-gen/wrappers/static.cell
 ../java/src/cell/code-gen/wrappers/types-decls.cell
 ../java/src/cell/code-gen/wrappers/methods.cell
+../java/src/cell/code-gen/wrappers/handlers.cell
 
 
 // Main file

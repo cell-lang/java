@@ -3,7 +3,7 @@ implicit prg : CompiledPrg {
   [NeType] boundary_types {
     react_blocks_types = [t : b <- prg.react_blocks, t <- interface_types(b)];
     static_blocks_map = [b.name -> b : b <- prg.static_blocks];
-    static_blocks_types = [t : b <- prg.static_blocks, t <- interface_types(b, static_blocks_map)];
+    static_blocks_types = [t : b <- prg.static_blocks, t <- interface_types(b)];
     return react_blocks_types & static_blocks_types;
   }
 

@@ -1,16 +1,16 @@
 String path_prefix = "automaton.";
 
 
-implicit prg : CompiledPrg, block_name : DBSymbol, root_block_name : DBSymbol {
+implicit prg : CompiledPrg, block_name : DBSymbol {
   String external_name(MethodSymbol member) = sentence_case(bare_id(member));
 
   String pretty_name(MethodSymbol member) = safe_lower_camel_case(bare_id(member));
 
-  String db_class_name = safe_class_name(root_block_name);
+  String db_class_name = safe_class_name(block_name);
 }
 
 
-implicit prg : CompiledPrg, block_name : DBSymbol, root_block_name : DBSymbol, duplicate_names : [String, Nat] {
+implicit prg : CompiledPrg, block_name : DBSymbol, duplicate_names : [String, Nat] {
 
   String call_handler_name(Symbol name) {
     return _print_(name);
@@ -60,7 +60,6 @@ implicit
   prg             : CompiledPrg,
   typedefs        : [TypeName -> NeType], ## REMOVE IT IF POSSIBLE. IT'S REDUNDANT
   block_name      : DBSymbol,
-  root_block_name : DBSymbol,
   duplicate_names : [String, Nat] {
 
   ## WHAT'S THAT is_gen_memb_tester? WHY IS IT false WITH ACCESSORS?
@@ -82,7 +81,7 @@ implicit
 
   //////////////////////////////////////////////////////////////////////////////
 
-  (String*, String*) static_auto_accessors(StaticBlock block, [DBSymbol -> StaticBlock] blocks, [MethodId] gen_memb_testers_ids) {
+  (String*, String*) static_auto_accessors(StaticBlock block, [MethodId] gen_memb_testers_ids) {
     handlers_wrappers = (handler_wrapper(id, h) : id, h <- isort(block.exported_handlers));
     handlers_wrappers_code, handlers_wrappers_docs = (join(ls) : ls <- unzip(handlers_wrappers));
     handlers_wrappers_docs = ("") & handlers_wrappers_docs if handlers_wrappers_docs != ();
@@ -107,8 +106,8 @@ implicit
 
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit prg : CompiledPrg, block_name : DBSymbol, root_block_name : DBSymbol {
-  (String, Nat)* pretty_names(StaticBlock block, [DBSymbol -> StaticBlock] blocks) {
+implicit prg : CompiledPrg, block_name : DBSymbol {
+  (String, Nat)* pretty_names(StaticBlock block) {
     methods_names = (
       (pretty_name(id.symbol), id.arity) : id, unused_var <- isort(block.methods), not id.id?
     );
@@ -120,7 +119,7 @@ implicit prg : CompiledPrg, block_name : DBSymbol, root_block_name : DBSymbol {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-[NeType] interface_types(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks) {
+[NeType] interface_types(StaticBlock root_block) {
   methods_types = union([set(m.args_types) & [m.ret_type] : unused_var, m <- root_block.methods]);
   accessors_types = union([set(a.args_types) & [a.ret_type] : unused_var, a <- root_block.accessors]);
   return methods_types & accessors_types;
@@ -130,11 +129,11 @@ implicit prg : CompiledPrg, block_name : DBSymbol, root_block_name : DBSymbol {
 ////////////////////////////////////////////////////////////////////////////////
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
-  (String, String*, String*) static_auto_wrapper(StaticBlock root_block, [DBSymbol -> StaticBlock] blocks, [MethodId] gen_memb_testers_ids) {
-    let block_name = root_block.name, root_block_name = root_block.name {
-      dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block, blocks))];
+  (String, String*, String*) static_auto_wrapper(StaticBlock root_block, [MethodId] gen_memb_testers_ids) {
+    let block_name = root_block.name {
+      dup_names = [id(0), id(1) : id <- duplicates(pretty_names(root_block))];
       let duplicate_names = dup_names {
-        accessors_code, accessors_docs = static_auto_accessors(root_block, blocks, gen_memb_testers_ids);
+        accessors_code, accessors_docs = static_auto_accessors(root_block, gen_memb_testers_ids);
         class_name = db_class_name;
       }
     }
