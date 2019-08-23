@@ -111,7 +111,7 @@ implicit prg : CompiledPrg, block_name : DBSymbol {
 ////////////////////////////////////////////////////////////////////////////////
 
 [NeType] interface_types(StaticBlock block) {
-  handlers_types = [t : unused_var_1, h <- block.exported_handlers, t, unused_var_2 <~ h.fields];
+  handlers_types = [t : unused_var_1, h <- block.exported_handlers, t, unused_var_2, unused_var_3 <~ h.fields];
   methods_types = union([set(m.args_types) & [m.ret_type] : unused_var, m <- block.methods]);
   return handlers_types & methods_types;
 }
