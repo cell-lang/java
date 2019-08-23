@@ -33,12 +33,11 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       : it @ i <- args_inter_types
     ));
 
-    conds = ("Generated." & native_fn_name(p) & "(objArg" & printed(i) & ")" : i, p <- mono_args);
+    conds = (native_fn_name(p, context=:wrapper) & "(objArg" & printed(i) & ")" : i, p <- mono_args);
     if poly_args != () {
       poly_conds = ((
-        "Generated." & native_fn_name(ps(i)) & "(objArg" & printed(i) & ")" : i <- poly_args
-        ) : ps <- isort(memb_preds)
-      );
+          native_fn_name(ps(i), context=:wrapper) & "(objArg" & printed(i) & ")" : i <- poly_args
+      ) : ps <- isort(memb_preds));
       anded_conds = ({
           c = append(cs, " && ");
           c = "(" & c & ")" if |cs| > 1;

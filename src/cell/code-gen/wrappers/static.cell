@@ -209,7 +209,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "",
         "  public void execute(String text) {",
         "    Obj msg = Conversions.convertText(text);",
-        "    if (!Generated." & native_fn_name(value_unsafe(block.msg_memb_pred)) & "(msg))",
+        "    if (!" & native_fn_name(value_unsafe(block.msg_memb_pred), context=:wrapper) & "(msg))",
         "      throw new RuntimeException(\"Invalid message\");",
         "    boolean " & native_method_call("ok", "automaton", update_entry_point_name(block.name), ("msg", "updater", "env"), context=:wrapper),
         "    if (!ok) {",

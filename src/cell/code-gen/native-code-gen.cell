@@ -204,7 +204,7 @@ String* gen_env_decl(CompiledPrg prg) {
   }
 
   semi_consts_cache_vars = isort([p.name : p <- prg.procs, p.cached and p.impl_args != []]);
-  semi_consts_cache_vars_decls = ("  public Obj " & memo_var_name(v) & ";" : v <- semi_consts_cache_vars);
+  semi_consts_cache_vars_decls = ("  public Obj " & memo_var_name(v, context=:core) & ";" : v <- semi_consts_cache_vars);
   env_decl = (env_decl | "") & semi_consts_cache_vars_decls if semi_consts_cache_vars_decls != ();
 
   env_decl = env_decl & ("};");

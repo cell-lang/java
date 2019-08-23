@@ -269,7 +269,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "  if (automaton.is_new)",
       "    throw new RuntimeException(\"Cannot set state: automaton instance is not new\");",
       "  Obj obj = Conversions.convertText(str);",
-      "  if (!Generated." & native_fn_name(block.state_memb_pred) & "(obj))",
+      "  if (!" & native_fn_name(block.state_memb_pred, context=:wrapper) & "(obj))",
       "    throw new RuntimeException(\"Invalid state\");",
       "  automaton.setState(obj);",
       "}"
