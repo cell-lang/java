@@ -120,7 +120,7 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
     ret_type = return_value_type(inter_type);
 
     name = safe_name(id);
-    var_name = native_var_decl_name(signal_var(id));
+    var_name = native_var_decl_name(signal_var(id), context=:wrapper);
 
     code = (
       "",
@@ -181,13 +181,15 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     cleanup_method_name = cleanup_method_name(block.name);
     apply_method_name = apply_method_name(block.name);
 
-    input_set_methods_names = (input_set_method_name(block.name, i) : i <- ord_inputs);
-    output_vars_names = (native_var_decl_name(signal_var(o)) : o <- ord_outputs);
+    let context = :wrapper {
+      input_set_methods_names = (input_set_method_name(block.name, i) : i <- ord_inputs);
+      output_vars_names = (native_var_decl_name(signal_var(o)) : o <- ord_outputs);
 
-    input_memb_test_pred_name = (native_fn_name(block.input_memb_preds[i]) : i <- ord_inputs);
+      input_memb_test_pred_name = (native_fn_name(block.input_memb_preds[i]) : i <- ord_inputs);
 
-    elapsed_time_var_name = native_var_decl_name(elapsed_time);
-    changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
+      elapsed_time_var_name = native_var_decl_name(elapsed_time);
+      changed_outputs_count_var_name = native_var_decl_name(changed_outputs_count);
+    }
 
     methods = block.methods;
     let block = block {
@@ -227,13 +229,13 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "  " & auto_class_name & "();",
       "",
       "  void setInput(Input input, String value);" if inputs != (),
-      "  Value readOutput(Output output);" if outputs != (),
+      "  String readOutput(Output output);" if outputs != (),
       "" if is_time_sensitive,
       "  void setElapsedMillisecs(int);" if is_time_sensitive,
       "  void setElapsedSecs(int);" if is_time_sensitive,
       "",
       "  " & apply_ret_type & " apply();",
-      "  Value readState();",
+      "  String readState();",
       "  void setState(String);",
       "",
       "  Output[] changedOutputs();" if outputs != ()
@@ -259,15 +261,15 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "  return automaton.elapsed_time == 0;" if is_time_sensitive,
       "}",
       "",
-      "public Value readState() {",
-      "  return Conversions.exportAsValue(automaton.copyState());",
+      "public String readState() {",
+      "  return Conversions.exportAsText(automaton.copyState());",
       "}",
       "",
       "public void setState(String str) {",
       "  if (automaton.is_new)",
       "    throw new RuntimeException(\"Cannot set state: automaton instance is not new\");",
       "  Obj obj = Conversions.convertText(str);",
-      "  if (!Generated." & native_fn_name(block.state_memb_pred) & "(obj))",
+      "  if (!" & native_fn_name(block.state_memb_pred, context=:wrapper) & "(obj))",
       "    throw new RuntimeException(\"Invalid state\");",
       "  automaton.setState(obj);",
       "}"
@@ -330,7 +332,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "  return outputs;",
         "}",
         "",
-        "public Value readOutput(Output output) {",
+        "public String readOutput(Output output) {",
         "  Obj obj = null;",
         "  switch (output) {"
       );
@@ -344,7 +346,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       }
       code = code & (
         "  }",
-        "  return Conversions.exportAsValue(obj);",
+        "  return Conversions.exportAsText(obj);",
         "}"
       );
     }

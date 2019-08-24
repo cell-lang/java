@@ -154,12 +154,4 @@ final class NeSetObj extends Obj {
     }
     return minPrintedSize;
   }
-
-  public ValueBase getValue() {
-    int size = elts.length;
-    ValueBase[] values = new ValueBase[size];
-    for (int i=0 ; i < size ; i++)
-      values[i] = elts[i].getValue();
-    return new NeSetValue(values);
-  }
 }

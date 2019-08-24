@@ -3,7 +3,9 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     symbs = program_symbols;
     assert |symbs| <= 64 * 1024; ## IMPLEMENT PROPERLY
 
-    code = ("static final int " & symb_idx_name(s) & " = " & printed(i) & ";" : s @ i <- symbs) & 4 * ("");
+    let context = :core {
+      code = ("static final int " & symb_idx_name(s) & " = " & printed(i) & ";" : s @ i <- symbs) & 4 * ("");
+    }
 
     for s @ i <- symbs {
       is_first = mod(i, 100) == 0;
@@ -36,8 +38,10 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     cls_obj_typedef = generate_cls_obj_typedef(all_cls_arities);
     code = code & cls_obj_typedef & 4 * ("") if cls_obj_typedef != ();
 
-    code = code & join(((d | "", "") : d <- native_opt_type_decls));
-    code = (code | "", "") if native_opt_type_decls != ();
+    let context = :core {
+      code = code & join(((d | "", "") : d <- native_opt_type_decls));
+      code = (code | "", "") if native_opt_type_decls != ();
+    }
 
     int_seqs_code = gen_int_seqs_code(prg.int_seqs);
 
@@ -61,14 +65,14 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       sorted_lambda_exprs,
       ord_react_blocks,
       ord_static_blocks,
-      prg.int_seqs
+      prg.int_seqs,
+      context = :core
     );
 
-    static_blocks_map = [b.name -> b : b <- prg.static_blocks];
     let prg = prg, typedefs = prg.typedefs {
       react_auto_wrappers = (react_auto_wrapper(b) : b <- ord_react_blocks);
       rel_auto_wrappers = (
-        static_auto_wrapper(b, static_blocks_map, lookup(gen_memb_testers_ids, b.name, [])) : b <- ord_static_blocks
+        static_auto_wrapper(b, lookup(gen_memb_testers_ids, b.name, [])) : b <- ord_static_blocks
       );
       inter_types_decls = interface_types_decls;
       inter_types_docs = interface_types_docs;
@@ -138,7 +142,6 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
       // Runtime support for the functional subset of the language
       core_runtime if include_runtime,
-      private_class_def(value_class_def) if has_main and include_runtime,
       ("") if include_runtime,
 
       // Runtime support for mutable relation variables
@@ -158,10 +161,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       gen_code = gen_code & join(isort(unused_wrappers));
     }
 
-    files = ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs if wrappers_docs != ()] & wrappers;
-    if include_runtime and not has_main
-      files = files & ["Value.java" -> value_class_def];
-    return files;
+    return ["Generated.java" -> gen_code, "interfaces.txt" -> wrappers_docs if wrappers_docs != ()] & wrappers;
 
 
     String* generate_cls_obj_typedef([NzNat] arities) {
@@ -192,10 +192,15 @@ String* private_class_def(String* class_def) = (
 String* gen_env_decl(CompiledPrg prg) {
   all_impl_args = union([p.impl_args : p <- prg.procs]);
 
-  env_decl = ("static class Env {") & ("  public Obj " & native_var_decl_name(impl_arg(bare_id(a))) & ";" : a <- isort(all_impl_args));
+  let context = :core {
+    env_decl = ("static class Env {") &
+               ( "  public Obj " & native_var_decl_name(impl_arg(bare_id(a))) & ";"
+                 : a <- isort(all_impl_args)
+               );
+  }
 
   semi_consts_cache_vars = isort([p.name : p <- prg.procs, p.cached and p.impl_args != []]);
-  semi_consts_cache_vars_decls = ("  public Obj " & memo_var_name(v) & ";" : v <- semi_consts_cache_vars);
+  semi_consts_cache_vars_decls = ("  public Obj " & memo_var_name(v, context=:core) & ";" : v <- semi_consts_cache_vars);
   env_decl = (env_decl | "") & semi_consts_cache_vars_decls if semi_consts_cache_vars_decls != ();
 
   env_decl = env_decl & ("};");
@@ -278,41 +283,44 @@ String* symbols_arrays_decls([(Symbol+, Nat)] symbs_seqs) {
 
   String symbols_array_decl(Symbol+ symbs, Nat index) {
     name = const_symb_seq_name(index);
-    symbs_strs = (symb_idx_name(s) : s <- symbs);
+    let context = :core
+      symbs_strs = (symb_idx_name(s) : s <- symbs);
     return "public static int[] " & name & " = {" & append(symbs_strs, ", ") & "};";
   }
 }
 
 
-String* gen_vars_decls(Instr* body, [ObjProcArg] args) {
-  vars_to_decl = [v : v <- vars_to_declare(body, args), not v :: AuxVar];
+implicit context : NativeContext {
+  String* gen_vars_decls(Instr* body, [AnyVar] exclusions) {
+    vars_to_decl = [v : v <- vars_to_declare(body), not exclusions(v), not v :: AuxVar];
 
-  vector_vars = [v : v <- vars_to_decl, v :: VecVar];
-  scalar_vars = vars_to_decl - vector_vars;
+    vector_vars = [v : v <- vars_to_decl, v :: VecVar];
+    scalar_vars = vars_to_decl - vector_vars;
 
-  scalar_vars_by_type = group_by(scalar_vars, native_var_type);
-  scalar_vars_decls = (
-    t & " " & append((native_var_decl_name(v) : v <- isort(vs)), ", ") & ";"
-    : t, vs <- isort(scalar_vars_by_type)
-  );
+    scalar_vars_by_type = group_by(scalar_vars, native_var_type);
+    scalar_vars_decls = (
+      t & " " & append((native_var_decl_name(v) : v <- isort(vs)), ", ") & ";"
+      : t, vs <- isort(scalar_vars_by_type)
+    );
 
-  vec_vars_by_id = group_by(vector_vars, $.id);
-  new_vec_vars = [vvar(id, nz_nat(max([v.size : v <- vs]))) : id, vs <- vec_vars_by_id];
-  vec_vars_decls = (var_decl(v) : v <- isort(new_vec_vars));
+    vec_vars_by_id = group_by(vector_vars, $.id);
+    new_vec_vars = [vvar(id, nz_nat(max([v.size : v <- vs]))) : id, vs <- vec_vars_by_id];
+    vec_vars_decls = (var_decl(v) : v <- isort(new_vec_vars));
 
-  assert {
-    vec_var_ids  = [v.id : v <- vector_vars];
-    ref_new_vec_vars = [vvar(id, nz_nat(max(nonempty([v.size : v <- vector_vars, v.id == id])))) : id <- vec_var_ids];
-    return new_vec_vars == ref_new_vec_vars;
-  };
+    assert {
+      vec_var_ids  = [v.id : v <- vector_vars];
+      ref_new_vec_vars = [vvar(id, nz_nat(max(nonempty([v.size : v <- vector_vars, v.id == id])))) : id <- vec_var_ids];
+      return new_vec_vars == ref_new_vec_vars;
+    };
 
-  return scalar_vars_decls & vec_vars_decls;
+    return scalar_vars_decls & vec_vars_decls;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], debug_mode : Bool {
+implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], context : <core>, debug_mode : Bool {
   String* native_code(ObjProcDef* obj_proc_defs, BoolProcDef* bool_proc_defs, LambdaExpr* lambda_exprs, ReactBlock* react_blocks, StaticBlock* static_blocks, Int+* int_seqs) {
     type_checking_fns = join((native_code(d) & ("", "") : d <- bool_proc_defs)) & 4 * ("");
     closures = join((gen_lambda(d, i) & ("", "") : d @ i <- lambda_exprs)) & 4 * ("");
@@ -444,39 +452,39 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type EncodInst  = blank_obj, ObjExpr, ElemVar, PendingInputVar, VecVar, ArrayVar, BoolExpr, IntExpr,
-                  Int32Expr, FloatExpr, ItVar, StreamVar, AnyClsVar, AnyTableVar, AnyValueStoreId,
-                  AnyAutoVar, AnyDBVar;
+type NonStringEncodable = blank_obj, ObjExpr, ElemVar, PendingInputVar, VecVar, ArrayVar, BoolExpr,
+                          IntExpr, Int32Expr, FloatExpr, ItVar, StreamVar, AnyClsVar, AnyTableVar,
+                          AnyValueStoreId, AnyAutoVar, AnyDBVar;
+
+type Encodable = NonStringEncodable, String;
 
 
-String native_code(EncodInst enc) = native_expr(enc);
-String native_code(String str)    = str;
+implicit context : NativeContext {
+  String native_code(NonStringEncodable enc) = native_expr(enc);
+  String native_code(String str) = str;
 
 
-protocol Encodable:
-  native_code : Encodable -> String;
+  String native_method_call_expr(Encodable target, String method_name, Encodable* args) =
+    native_code(target) & "." & method_name & "(" & append((native_code(a) : a <- args), ", ") & ")";
 
+  String native_method_call(Encodable target, String method_name, Encodable* args) =
+    native_method_call_expr(target, method_name, args) & ";";
 
-String native_method_call_expr(Encodable target, String method_name, Encodable* args) =
-  native_code(target) & "." & method_name & "(" & append((native_code(a) : a <- args), ", ") & ")";
+  String native_method_call(Encodable res, Encodable target, String method_name, Encodable* args) =
+    native_code(res) & " = " & native_method_call(target, method_name, args);
 
-String native_method_call(Encodable target, String method_name, Encodable* args) =
-  native_method_call_expr(target, method_name, args) & ";";
+  String native_static_call(String static_name, Encodable* args) =
+    static_name & "(" & append((native_code(a) : a <- args), ", ") & ");";
 
-String native_method_call(Encodable res, Encodable target, String method_name, Encodable* args) =
-  native_code(res) & " = " & native_method_call(target, method_name, args);
+  String native_static_call(Encodable res, String static_name, Encodable* args) =
+    native_code(res) & " = " & native_static_call(static_name, args);
 
-String native_static_call(String static_name, Encodable* args) =
-  static_name & "(" & append((native_code(a) : a <- args), ", ") & ");";
+  String native_new_call(Encodable res, String obj_type, Encodable* args) =
+    native_code(res) & " = new " & obj_type & "(" & append((native_code(a) : a <- args), ", ") & ");";
 
-String native_static_call(Encodable res, String static_name, Encodable* args) =
-  native_code(res) & " = " & native_static_call(static_name, args);
-
-String native_new_call(Encodable res, String obj_type, Encodable* args) =
-  native_code(res) & " = new " & obj_type & "(" & append((native_code(a) : a <- args), ", ") & ");";
-
-String native_assignment_code(Encodable var, Encodable value) =
-  native_code(var) & " = " & native_code(value) & ";";
+  String native_assignment_code(Encodable var, Encodable value) =
+    native_code(var) & " = " & native_code(value) & ";";
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

@@ -426,7 +426,6 @@ abstract class Obj implements Comparable<Obj> {
 
   public abstract void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel);
   public abstract int minPrintedSize();
-  public abstract ValueBase getValue();
 
   //////////////////////////////////////////////////////////////////////////////
   ////////////////////////// OBSOLETE STUFF TO REMOVE //////////////////////////

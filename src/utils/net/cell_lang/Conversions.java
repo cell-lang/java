@@ -2,6 +2,9 @@ package net.cell_lang;
 
 import java.util.Arrays;
 import java.io.StringReader;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 
 class Conversions {
@@ -13,14 +16,52 @@ class Conversions {
     return obj;
   }
 
-  public static Value exportAsValue(Obj obj) {
-    return obj.getValue();
+  public static String exportAsText(Obj obj) {
+    return obj.toString();
   }
 
   public static Obj stringToObj(String str) {
     //## THIS ONE IS REAL BAD TOO. IT SHOULD USE THE MINIMUM SIZE ARRAY POSSIBLE!
     int[] cps = Miscellanea.codePoints(str);
     return Builder.createTaggedObj(SymbTable.StringSymbId, Builder.createSeq(cps));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static Obj dateToObj(LocalDate date) {
+    return Builder.createTaggedIntObj(SymbTable.DateSymbId, date.toEpochDay());
+  }
+
+  public static LocalDate objToDate(Obj date) {
+    long epochNanoSecs = date.getInnerLong();
+    long epochDay = epochNanoSecs >= 0 ?
+      epochNanoSecs / 86400000000000L :
+      ((epochNanoSecs + 86399999999999L) / 86400000000000L) - 1;
+    return LocalDate.ofEpochDay(epochDay);
+  }
+
+  public static Obj dateTimeToObj(LocalDateTime time) {
+    long epochSecond = time.toEpochSecond(ZoneOffset.UTC);
+    int nanosecs = time.getNano();
+    if (epochSecond >= -9223372036L) {
+      if (epochSecond < 9223372036L | (epochSecond == 9223372036L & nanosecs <= 854775807)) {
+        long epochNanoSecs = 1000000000 * epochSecond + nanosecs;
+        return Builder.createTaggedIntObj(SymbTable.TimeSymbId, epochNanoSecs);
+      }
+    }
+    else if (epochSecond == -9223372037L & nanosecs >= 145224192) {
+      long epochNanoSecs = -9223372036000000000L - (1000000000 - nanosecs);
+      return Builder.createTaggedIntObj(SymbTable.TimeSymbId, epochNanoSecs);
+    }
+    throw new RuntimeException("DateTime is outside the supported range: " + time.toString());
+  }
+
+  public static LocalDateTime objToDateTime(Obj time) {
+    long epochNanoSecs = time.getInnerLong();
+    long epochSecond = epochNanoSecs >= 0 ?
+      epochNanoSecs / 1000000000 :
+      ((epochNanoSecs + 999999999) / 1000000000) - 1;
+    return LocalDateTime.ofEpochSecond(epochSecond, (int) (epochNanoSecs - epochSecond), ZoneOffset.UTC);
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -85,12 +126,12 @@ class Conversions {
     return strs;
   }
 
-  public static Value[] toValueArray(Obj obj) {
+  public static String[] toTextArray(Obj obj) {
     Obj[] elts = obj.getArray((Obj[]) null);
     int len = elts.length;
-    Value[] values = new Value[len];
+    String[] strs = new String[len];
     for (int i=0 ; i < len ; i++)
-      values[i] = elts[i].getValue();
-    return values;
+      strs[i] = exportAsText(elts[i]);
+    return strs;
   }
 }

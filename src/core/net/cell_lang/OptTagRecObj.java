@@ -52,10 +52,6 @@ abstract class OptTagRecObj extends Obj {
     return SymbTable.idxToStr(getTagId()).length() + getInnerObj().minPrintedSize();
   }
 
-  public ValueBase getValue() {
-    return new TaggedValue(getTagId(), getInnerObj().getValue());
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   protected Obj[] getValues() {

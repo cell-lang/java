@@ -3,7 +3,7 @@ implicit prg : CompiledPrg {
   [NeType] boundary_types {
     react_blocks_types = [t : b <- prg.react_blocks, t <- interface_types(b)];
     static_blocks_map = [b.name -> b : b <- prg.static_blocks];
-    static_blocks_types = [t : b <- prg.static_blocks, t <- interface_types(b, static_blocks_map)];
+    static_blocks_types = [t : b <- prg.static_blocks, t <- interface_types(b)];
     return react_blocks_types & static_blocks_types;
   }
 
@@ -40,8 +40,9 @@ implicit prg : CompiledPrg {
 
   // Types that need to be declared
   [DeclInterType] declared_types {
-    let typedefs = prg.typedefs
+    let typedefs = prg.typedefs {
       inter_types = [interface_type(t) : t <- boundary_types];
+    }
     named_types = [n : t <- inter_types, n <- nested_named_types(t)];
     loop {
       new_inter_types = [named_interface_types_defs(t, !!) : t <- named_types];
@@ -77,8 +78,11 @@ implicit prg : CompiledPrg {
         integer   |
         float     |
         string    |
+        date      |
+        time      |
         seq()     |
         set()     |
+        map()     |
         generic   = true,
         _         = false;
   }
@@ -186,15 +190,19 @@ String decl_type_export_funct_name(String name) = "export_" & name;
   integer         |
   float           |
   string          |
+  date            |
+  time            |
   generic         = [],
   symbol()        = [inter_type],
   tuple(ts?)      = [inter_type] & union([declarable_types(t) : t <~ ts]),
   record(fs?)     = [inter_type] & union([declarable_types(t) : l, t <- fs]),
   seq(t?)         |
   set(t?)         = declarable_types(t),
+  map(k?, v?)     = declarable_types(k) & declarable_types(v),
   // bin_rel(ts?)    |
   // tern_rel(ts?)   = union([declarable_types(t) : t <~ ts]),
   tagged()        = declarable_types(strip_tags(inter_type)),
+  optional(t?)    = declarable_types(t),
   named()         = [inter_type],
   union(ts?)      = [inter_type] & ts & [d : t <- ts, d <- declarable_types(t), d != strip_tags(t)];
 
@@ -299,7 +307,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
     String* untagged_type_decl_or_doc(DeclInterType inter_type) = type_decl_or_doc(inter_type);
 
 
-    String* untagged_type_decl_or_doc(<BasicInterType, CollInterType> inter_type) {
+    String* untagged_type_decl_or_doc(<BasicInterType, CollInterType, OptionalInterType> inter_type) {
       type_name = match (direction)
         in  = input_arg_type(inter_type),
         out = return_value_type(inter_type, types_names);
@@ -312,7 +320,7 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
 
   String* type_decl_or_doc(UnionInterType type) = (
-    "interface " & name_and_parents_decl(true) & " {",
+    {if doc_only then "" else "public "} & "interface " & name_and_parents_decl(true) & " {",
     "",
     "}"
   );
@@ -369,12 +377,12 @@ implicit prg : CompiledPrg {
     type_def = match (inter_type)
       named()   = named_interface_types_defs(inter_type, !!),
       _         = inter_type;
-    body = decl_type_import_code(type_def, "obj", "return ", treat_generic_as_value = false);
+    body = decl_type_import_code(type_def, "obj", "return ");
     sign_line = "static Obj " & decl_type_import_funct_name(type_name) & "(" & type_name & " obj) {";
     code = (sign_line) & indent_lines(body) & ("}");
     out_type_name = output_types_names(inter_type, !!);
     if out_type_name != type_name {
-      out_body = decl_type_import_code(type_def, "obj", "return ", treat_generic_as_value = true);
+      out_body = decl_type_import_code(type_def, "obj", "return ");
       out_fn_name = decl_type_import_funct_name(out_type_name);
       out_sign_line = "static Obj " & out_fn_name & "(" & out_type_name & " obj) {";
       code = code & ("", out_sign_line) & indent_lines(out_body) & ("}");

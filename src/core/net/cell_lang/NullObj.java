@@ -35,8 +35,4 @@ final class NullObj extends Obj {
   public int minPrintedSize() {
     return 4;
   }
-
-  public ValueBase getValue() {
-    throw Miscellanea.internalFail(this);
-  }
 }

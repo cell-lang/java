@@ -39,10 +39,6 @@ final class FloatObj extends Obj {
     return Double.toString(getDouble()).length();
   }
 
-  public ValueBase getValue() {
-    return new FloatValue(getDouble());
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   public static int compare(double x1, double x2) {

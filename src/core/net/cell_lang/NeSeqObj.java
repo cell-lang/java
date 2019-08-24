@@ -175,14 +175,6 @@ abstract class NeSeqObj extends SeqObj {
     return minPrintedSize;
   }
 
-  public ValueBase getValue() {
-    int len = getSize();
-    ValueBase[] values = new ValueBase[len];
-    for (int i=0 ; i < len ; i++)
-      values[i] = getObjAt(i).getValue();
-    return new SeqValue(values);
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   public int packedRanges(int minSize, int offset, int[] offsets, NeSeqObj[] ranges, int writeOffset) {

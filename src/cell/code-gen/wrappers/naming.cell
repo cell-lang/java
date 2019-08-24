@@ -11,7 +11,7 @@ implicit prg : CompiledPrg {
 }
 
 
-implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
+implicit prg : CompiledPrg, taken_names : [String] {
   String safe_class_name(DeclInterType inter_type, Bool retry, Maybe[Nat] unique_id) {
     name = default_name(inter_type, retry);
     name = take(name, 60);
@@ -35,7 +35,7 @@ implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
     seq(t?)           = default_name(t, retry) & "_Seq",
     set(t?)           = default_name(t, retry) & "_Set",
     tagged(s?, t?)    = upper_camel_case(s) & if retry then "_" & default_name(t, true) else "",
-    generic           = if direction == :in then "String" else "Value";
+    generic           = "String";
 
 
   String default_name(BasicTypeSymbol, Bool) =
@@ -82,7 +82,6 @@ Bool is_reserved(String id) {
 
   return in(id, keywords_and_literals) or
          in(id, runtime_classes) or
-         in(id, runtime_interfaces) or
          in(id, standard_generated_classes);
 }
 
@@ -157,9 +156,6 @@ Bool is_reserved(String id) {
 ];
 
 
-[String] runtime_interfaces = ["Value"];
-
-
 [String] runtime_classes = [
   "Algs",
   "ArrayObj",
@@ -178,14 +174,12 @@ Bool is_reserved(String id) {
   "CodePointStream",
   "Conversions",
   "EmptyRelObj",
-  "EmptyRelValue",
   "EmptySeqObj",
   "FloatArrayObj",
   "FloatArrayObjBase",
   "FloatArrayObjs",
   "FloatArraySliceObj",
   "FloatObj",
-  "FloatValue",
   "Hacks",
   "Index",
   "Int32ArrayObj",
@@ -202,18 +196,14 @@ Bool is_reserved(String id) {
   "Ints21",
   "Ints231",
   "Ints312",
-  "IntValue",
   "Lexer",
   "Miscellanea",
   "NeBinRelObj",
-  "NeBinRelValue",
   "NeFloatSeqObj",
   "NeIntSeqObj",
   "NeSeqObj",
   "NeSetObj",
-  "NeSetValue",
   "NeTernRelObj",
-  "NeTernRelValue",
   "NullObj",
   "Obj",
   "OneWayBinTable",
@@ -228,7 +218,6 @@ Bool is_reserved(String id) {
   "RecordObj",
   "SeqIter",
   "SeqObj",
-  "SeqValue",
   "SetIter",
   "ShortArrayObj",
   "ShortArrayObjBase",
@@ -240,9 +229,7 @@ Bool is_reserved(String id) {
   "SymBinaryTableUpdater",
   "SymbObj",
   "SymbTable",
-  "SymbValue",
   "TaggedObj",
-  "TaggedValue",
   "TernaryTable",
   "TernaryTableUpdater",
   "TernRelIter",
@@ -254,8 +241,6 @@ Bool is_reserved(String id) {
   "UnsignedByteArrayObjBase",
   "UnsignedByteArraySliceObj",
   "Utils",
-  "Value",
-  "ValueBase",
   "ValueStore",
   "ValueStoreBase",
   "ValueStoreUpdater"

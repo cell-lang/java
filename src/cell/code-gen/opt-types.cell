@@ -1,4 +1,4 @@
-implicit prg : CompiledPrg {
+implicit prg : CompiledPrg, context : <core> {
   String** native_opt_type_decls {
     return join(((native_tag_rec_type_decl(s, r, i) : r @ i <- rs) : s, rs <- isort(prg.opt_reprs)));
   }
@@ -55,7 +55,7 @@ implicit prg : CompiledPrg {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Methods generation //////////////////////////////
 
-implicit tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Symbol -> LowLevelRepr] {
+implicit context : <core>, tag : Symbol, ord_labels : Symbol+, opt_labels : [Symbol], reprs : [Symbol -> LowLevelRepr] {
   String* finish_init_def(Symbol* ord_mand_labels, Symbol* ord_opt_labels, Nat idx) {
     if ord_mand_labels != () {
       hashcodes = (obj_data_expr(reprs(l, !!), opt_rec_field_name(l)) : l <- ord_mand_labels);

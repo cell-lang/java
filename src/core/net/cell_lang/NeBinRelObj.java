@@ -293,17 +293,6 @@ class NeBinRelObj extends Obj {
     return minPrintedSize;
   }
 
-  public ValueBase getValue() {
-    int size = col1.length;
-    ValueBase[] values1 = new ValueBase[size];
-    ValueBase[] values2 = new ValueBase[size];
-    for (int i=0 ; i < size ; i++) {
-      values1[i] = col1[i].getValue();
-      values2[i] = col2[i].getValue();
-    }
-    return new NeBinRelValue(values1, values2, isMap);
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   Obj[] getCol1() {

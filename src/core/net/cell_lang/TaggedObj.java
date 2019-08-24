@@ -180,8 +180,4 @@ final class TaggedObj extends Obj {
     }
     return minPrintedSize;
   }
-
-  public ValueBase getValue() {
-    return new TaggedValue(getTagId(), obj.getValue());
-  }
 }

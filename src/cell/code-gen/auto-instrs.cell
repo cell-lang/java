@@ -1,4 +1,4 @@
-implicit prg : CompiledPrg, debug_mode : Bool {
+implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
   String auto_expr_native_code(RefObjExpr expr, WriteObjVar var) =
     copy_state()              = native_method_call(var, expr.var, copy_state_proc_name(expr.type), ()),
     copy_rel()                = native_copy_rel_code(var, expr.tables, expr.applied_perm),

@@ -165,11 +165,6 @@ class RecordObj extends NeBinRelObj {
     return super.minPrintedSize();
   }
 
-  public ValueBase getValue() {
-    buildCol1();
-    return super.getValue();
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   Obj[] getCol1() {

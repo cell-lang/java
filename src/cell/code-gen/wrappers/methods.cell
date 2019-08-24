@@ -26,17 +26,18 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       "public " & ret_val_str & " " & ext_name & "(" & args_decls & ") {"
     );
 
+    code = (code | "  Obj " & append(("objArg" & printed(i) : i < arity), ", ") & ";", "") if arity > 0;
+
     code = code & join((
-      indent_lines(import_code(it, "arg" & printed(i), "Obj objArg" & printed(i) & " = "))
+      indent_lines(import_code(it, "arg" & printed(i), "objArg" & printed(i) & " = "))
       : it @ i <- args_inter_types
     ));
 
-    conds = ("Generated." & native_fn_name(p) & "(objArg" & printed(i) & ")" : i, p <- mono_args);
+    conds = (native_fn_name(p, context=:wrapper) & "(objArg" & printed(i) & ")" : i, p <- mono_args);
     if poly_args != () {
       poly_conds = ((
-        "Generated." & native_fn_name(ps(i)) & "(objArg" & printed(i) & ")" : i <- poly_args
-        ) : ps <- isort(memb_preds)
-      );
+          native_fn_name(ps(i), context=:wrapper) & "(objArg" & printed(i) & ")" : i <- poly_args
+      ) : ps <- isort(memb_preds));
       anded_conds = ({
           c = append(cs, " && ");
           c = "(" & c & ")" if |cs| > 1;
@@ -100,7 +101,7 @@ String obj_to_repr(AnyLowLevelRepr repr, String expr) =
   symbol              |
   array()             |
   object              = expr,
-  opt_tag_rec_repr()  = "(Generated." & opt_tag_rec_name(repr.tag, repr.index) & ") " & expr;
+  opt_tag_rec_repr()  = "(" & opt_tag_rec_name(repr.tag, repr.index, context=:wrapper) & ") " & expr;
 
 
 String repr_to_obj(AnyLowLevelRepr repr, String expr) =

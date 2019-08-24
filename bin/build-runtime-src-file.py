@@ -47,6 +47,7 @@ src_Ints312                   = 'algorithms/net/cell_lang/Ints312.java'
 src_Array                     = 'utils/net/cell_lang/Array.java'
 src_BiIntPredicate            = 'utils/net/cell_lang/BiIntPredicate.java'
 src_CharStream                = 'utils/net/cell_lang/CharStream.java'
+src_Conversions               = 'utils/net/cell_lang/Conversions.java'
 src_Hashing                   = 'utils/net/cell_lang/Hashing.java'
 src_IntCtrs                   = 'utils/net/cell_lang/IntCtrs.java'
 src_IntIdxMap                 = 'utils/net/cell_lang/IntIdxMap.java'
@@ -99,20 +100,6 @@ src_UnaryTable                = 'automata/net/cell_lang/UnaryTable.java'
 src_UnaryTableUpdater         = 'automata/net/cell_lang/UnaryTableUpdater.java'
 src_ValueStore                = 'automata/net/cell_lang/ValueStore.java'
 src_ValueStoreUpdater         = 'automata/net/cell_lang/ValueStoreUpdater.java'
-
-src_Conversions               = 'misc/net/cell_lang/Conversions.java'
-
-src_EmptyRelValue             = 'misc/net/cell_lang/EmptyRelValue.java'
-src_FloatValue                = 'misc/net/cell_lang/FloatValue.java'
-src_IntValue                  = 'misc/net/cell_lang/IntValue.java'
-src_NeBinRelValue             = 'misc/net/cell_lang/NeBinRelValue.java'
-src_NeSetValue                = 'misc/net/cell_lang/NeSetValue.java'
-src_NeTernRelValue            = 'misc/net/cell_lang/NeTernRelValue.java'
-src_SeqValue                  = 'misc/net/cell_lang/SeqValue.java'
-src_SymbValue                 = 'misc/net/cell_lang/SymbValue.java'
-src_TaggedValue               = 'misc/net/cell_lang/TaggedValue.java'
-src_ValueBase                 = 'misc/net/cell_lang/ValueBase.java'
-src_Value                     = 'misc/net/cell_lang/Value.java'
 
 # src_Hacks                     = 'hacks/net/cell_lang/Hacks.java'
 
@@ -182,20 +169,7 @@ std_sources = [
   src_TokenType,
   src_DateTime,
   src_ObjVisitor,
-  src_ObjPrinter,
-
-  src_EmptyRelValue,
-  src_FloatValue,
-  src_IntValue,
-  src_NeBinRelValue,
-  src_NeSetValue,
-  src_NeTernRelValue,
-  src_SeqValue,
-  src_SymbValue,
-  src_TaggedValue,
-  src_ValueBase
-
-  # src_Value
+  src_ObjPrinter
 ]
 
 table_sources = [
@@ -344,8 +318,7 @@ _, input_dir, out_fname, empty_out_fname = argv
 file_data = [
   data_array_def('core_runtime', input_dir, std_sources, False),
   data_array_def('table_runtime', input_dir, table_sources, False),
-  data_array_def('interface_runtime', input_dir, interface_sources, False),
-  data_array_def('value_class_def', input_dir, [src_Value], True)
+  data_array_def('interface_runtime', input_dir, interface_sources, False)
 ]
 
 out_file = open(out_fname, 'w')
@@ -358,8 +331,7 @@ for i, f in enumerate(file_data):
 empty_file_data = [
   data_array_def('core_runtime', input_dir, [], False),
   data_array_def('table_runtime', input_dir, [], False),
-  data_array_def('interface_runtime', input_dir, [], False),
-  data_array_def('value_class_def', input_dir, [], True)
+  data_array_def('interface_runtime', input_dir, [], False)
 ]
 
 empty_out_file = open(empty_out_fname, 'w')

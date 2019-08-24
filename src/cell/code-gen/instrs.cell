@@ -1,4 +1,4 @@
-implicit prg : CompiledPrg, debug_mode : Bool {
+implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
   String* native_code(Instr* instrs, Maybe[Nat] block_id) =
     join((native_code(instr, block_id) : instr <- instrs));
 
@@ -262,7 +262,7 @@ implicit prg : CompiledPrg, debug_mode : Bool {
 
 
   String native_code(RefObjExpr expr, OptTagRecVar var) =
-    inst_opt_tag_rec()          = native_new_call(var, opt_tag_rec_name(expr.tag, expr.repr_idx), ());
+    inst_opt_tag_rec() = native_new_call(var, opt_tag_rec_name(expr.tag, expr.repr_idx), ());
 
 
   String native_build_const_int_seq_code(Nat seq_id, ObjVar var) {
