@@ -19,7 +19,7 @@ implicit prg : CompiledPrg, context : <core>, debug_mode : Bool {
 
     ## THERE MIGHT BE A BUG HERE
     all_loc_vars = vars_to_declare(block.apply_code) &
-                   union([vars_to_declare(c) : id, c <- block.nodes_update_code]);
+                   union([vars_to_declare(c) : id c <- block.nodes_update_code]);
     aux_vars = [v : v <- all_loc_vars, v :: AuxVar] & [curr_time if has_time_rules];
     aux_vars_decls = (var_decl(v) : v <- isort(aux_vars));
     aux_vars_decls = (aux_vars_decls | "") if aux_vars != ();
@@ -50,12 +50,12 @@ implicit prg : CompiledPrg, context : <core>, debug_mode : Bool {
         loc_vars_decls = gen_vars_decls(body, []);
         loc_vars_decls = (loc_vars_decls | "") if loc_vars_decls != ();
         return ("", sgn) & indent_lines(loc_vars_decls & native_code(body, nothing)) & ("}");
-      } : id, body <- block.nodes_update_code
+      } : id body <- block.nodes_update_code
     ];
 
     queue_update_methods_code = [
       gen_queue_update_method(block.name, id, method.body, method.args)
-      : id, method <- block.queue_update_code
+      : id method <- block.queue_update_code
     ];
 
     state_is_def_code = native_state_is_def_code(block.name, block.state_is_def_code);
@@ -70,7 +70,7 @@ implicit prg : CompiledPrg, context : <core>, debug_mode : Bool {
       gen_input_setter(block.name, id, i, queue_input_updates) : id @ i <- block.ord_inputs
     );
 
-    user_def_methods_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id, m <- block.methods];
+    user_def_methods_code = [native_user_def_method_code(block.name, id, m.args_vars, m.code) : id m <- block.methods];
 
     const_data = [gen_const_data(block.name, c) : c <- block.const_data];
 
@@ -140,7 +140,7 @@ implicit prg : CompiledPrg, context : <core>, debug_mode : Bool {
     final_args = (if a != nothing then value(a) else fn_arg(i) : a @ i <- args);
     args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- final_args));
     sgn = "public Obj " & user_def_method_name(block_name, name) & "(" & args_str & "Env env)";
-    vars_decls = gen_vars_decls(body, [value(a) : a <~ args, a != nothing]);
+    vars_decls = gen_vars_decls(body, [value(a) : a <- args, a != nothing]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn & " {",) & indent_lines(body_text) & ("}");
   }
@@ -156,9 +156,9 @@ implicit prg : CompiledPrg, context : <core>, debug_mode : Bool {
       "  }",
       "  else {",
       "    " & pending_input_var_str & " = value;",
-      "    long idx = this.update_count_0;" if queue_node,
-      "    this.nodes_to_update_0[(int) idx] = " & printed(node_idx) & ";" if queue_node,
-      "    this.update_count_0 = idx + 1;" if queue_node,
+      "    long idx = this.updateCount0;" if queue_node,
+      "    this.nodesToUpdate0[(int) idx] = " & printed(node_idx) & ";" if queue_node,
+      "    this.updateCount0 = idx + 1;" if queue_node,
       "    " & up_to_date_var & " = false;",
       "  }",
       "}"

@@ -82,7 +82,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType], block_name : DBSymb
     handlers_wrappers_code, handlers_wrappers_docs = (join(ls) : ls <- unzip(handlers_wrappers));
     handlers_wrappers_docs = ("") & handlers_wrappers_docs if handlers_wrappers_docs != ();
 
-    methods_wrappers = isort([db_method_wrapper(id, m, gen_memb_testers_ids(id)) : id, m <- block.methods]);
+    methods_wrappers = isort([db_method_wrapper(id, m, gen_memb_testers_ids(id)) : id m <- block.methods]);
     methods_wrappers_code, methods_wrappers_docs = (join(ls) : ls <- unzip(methods_wrappers));
     methods_wrappers_docs = ("") & methods_wrappers_docs if methods_wrappers_docs != ();
 
@@ -101,7 +101,7 @@ implicit prg : CompiledPrg, block_name : DBSymbol {
   (String, Nat)* pretty_names(StaticBlock block) {
     handlers_names = ((pretty_name(_untag_(h.tag)), |h.fields|) : id, h <- isort(block.exported_handlers));
     methods_names = (
-      (pretty_name(bare_id(id.symbol)), id.arity) : id, unused_var <- isort(block.methods), not id.id?
+      (pretty_name(bare_id(id.symbol)), id.arity) : id, _ <- isort(block.methods), not id.id?
     );
     return handlers_names & methods_names;
   }
@@ -111,8 +111,8 @@ implicit prg : CompiledPrg, block_name : DBSymbol {
 ////////////////////////////////////////////////////////////////////////////////
 
 [NeType] interface_types(StaticBlock block) {
-  handlers_types = [t : unused_var_1, h <- block.exported_handlers, t, unused_var_2, unused_var_3 <~ h.fields];
-  methods_types = union([set(m.args_types) & [m.ret_type] : unused_var, m <- block.methods]);
+  handlers_types = [t : _ h <- block.exported_handlers, (t, _, _) <- h.fields];
+  methods_types = union([set(m.args_types) & [m.ret_type] : _ m <- block.methods]);
   return handlers_types & methods_types;
 }
 

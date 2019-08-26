@@ -113,7 +113,7 @@ implicit prg : CompiledPrg {
 
   // Declaration of the interface types in the host language -> Cell direction
   [DeclInterType -> String*] input_types_decls = [
-    t -> type_decl(t, input_types_names, :in) : t, s <- input_types_names
+    t -> type_decl(t, input_types_names, :in) : t s <- input_types_names
   ];
 
 
@@ -122,7 +122,7 @@ implicit prg : CompiledPrg {
     taken_names = []; ## IMPLEMENT IMPLEMENT IMPLEMENT
 
     names = interface_type_names(declared_types, direction = :out, taken_names = taken_names);
-    decls = [t -> type_decl(t, names, :out) : t, unused_var <- names];
+    decls = [t -> type_decl(t, names, :out) : t _ <- names];
 
     loop {
       conflicts = union([{
@@ -144,19 +144,19 @@ implicit prg : CompiledPrg {
 
   // Declaration of the interface types in the Cell -> host language direction
   [DeclInterType -> String*] output_types_decls {
-    return [t -> type_decl(t, output_types_names, :out) : t, s <- output_types_names];
+    return [t -> type_decl(t, output_types_names, :out) : t s <- output_types_names];
   }
 
 
   // Input types documentation
   [DeclInterType -> String*] input_types_docs = [
-    t -> type_docs(t, input_types_names, :in) : t, unused_var <- input_types_names
+    t -> type_docs(t, input_types_names, :in) : t _ <- input_types_names
   ];
 
 
   // Output types documentation
   [DeclInterType -> String*] output_types_docs = [
-    t -> type_docs(t, output_types_names, :out) : t, unused_var <- output_types_names
+    t -> type_docs(t, output_types_names, :out) : t _ <- output_types_names
   ];
 
 
@@ -165,11 +165,11 @@ implicit prg : CompiledPrg {
     header = ("package net.cell_lang;", "");
     input_types = [
       input_types_names(inter_type, !!) & ".java" -> header & decl
-      : inter_type, decl <- input_types_decls
+      : inter_type decl <- input_types_decls
     ];
     output_types = [
       output_types_names(inter_type, !!) & ".java" -> header & decl
-      : inter_type, decl <- output_types_decls
+      : inter_type decl <- output_types_decls
     ];
     return input_types & output_types;
   }
@@ -194,13 +194,13 @@ String decl_type_export_funct_name(String name) = "export_" & name;
   time            |
   generic         = [],
   symbol()        = [inter_type],
-  tuple(ts?)      = [inter_type] & union([declarable_types(t) : t <~ ts]),
-  record(fs?)     = [inter_type] & union([declarable_types(t) : l, t <- fs]),
+  tuple(ts?)      = [inter_type] & union([declarable_types(t) : t <- ts]),
+  record(fs?)     = [inter_type] & union([declarable_types(t) : l t <- fs]),
   seq(t?)         |
   set(t?)         = declarable_types(t),
   map(k?, v?)     = declarable_types(k) & declarable_types(v),
   // bin_rel(ts?)    |
-  // tern_rel(ts?)   = union([declarable_types(t) : t <~ ts]),
+  // tern_rel(ts?)   = union([declarable_types(t) : t <- ts]),
   tagged()        = declarable_types(strip_tags(inter_type)),
   optional(t?)    = declarable_types(t),
   named()         = [inter_type],
@@ -226,7 +226,7 @@ implicit prg : CompiledPrg, taken_names : [String], direction : <in, out> {
     loop {
       conflicts = non_injective_keys_by_value(type_names);
       break if conflicts == [];
-      renamed_types = [t -> safe_class_name(t, false, just(i)) : ts <- conflicts, t @ i <~ isort(ts)];
+      renamed_types = [t -> safe_class_name(t, false, just(i)) : ts <- conflicts, t @ i <- isort(ts)];
       type_names = [t -> lookup(renamed_types, t, type_names(t, !!)) : t <- decl_types];
 
       ## THIS IS JUST A CHECK THAT HAS TO BE REMOVED
@@ -273,12 +273,12 @@ implicit prg : CompiledPrg, types_names : [DeclInterType -> String], direction :
 
   String* type_decl_or_doc(RecordInterType type) {
     fields = match (direction)
-      in  = [l -> input_arg_type(t) : l, t <- untag(type)],
-      out = [l -> return_value_type(t, types_names) : l, t <- untag(type)];
+      in  = [l -> input_arg_type(t) : l t <- untag(type)],
+      out = [l -> return_value_type(t, types_names) : l t <- untag(type)];
     field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
-    max_len = max([length(t) : unused_var, t <- fields]);
+    max_len = max([length(t) : _ t <- fields]);
     body = ({
-        spaces = string((ascii_space : unused_var < max_len - length(t)));
+        spaces = string((ascii_space : _ < max_len - length(t)));
         return {if doc_only then "" else "public "} & t & spaces & " " & field_names(l, !!) & ";";
       } : l, t <- isort(fields)
     );
@@ -410,7 +410,7 @@ implicit prg : CompiledPrg {
   conflicting_names = duplicate_values(nice_field_names);
   return [
     l -> if conflicting_names(n) then safe_lower_camel_case(l, true) else n
-    : l, n <- nice_field_names
+    : l n <- nice_field_names
   ];
 }
 
@@ -422,16 +422,16 @@ InterType strip_tags(InterType type) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-[V] duplicate_values([K -> V] map) = duplicates((v : unused_var, v <- isort(map)));
+[V] duplicate_values([K -> V] map) = duplicates((v : _, v <- isort(map)));
 
 [K] non_injective_keys([K -> V] map) {
   dup_vals = duplicate_values(map);
-  return [k : k, v <- map, dup_vals(v)];
+  return [k : k v <- map, dup_vals(v)];
 }
 
 [K -> V] remove_non_injective_keys([K -> V] map) {
   keys_to_remove = non_injective_keys(map);
-  return [k -> v : k, v <- map, not keys_to_remove(k)];
+  return [k -> v : k v <- map, not keys_to_remove(k)];
 }
 
 [[+K]] non_injective_keys_by_value([K -> V] map) =

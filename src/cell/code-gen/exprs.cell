@@ -134,7 +134,7 @@ implicit context : NativeContext {
 
   String native_table_contains(AnyTableVar table, Maybe[Int32Var]+ tuple, Bool symmetric) {
     name = "contains";
-    if (a <~ tuple : a == nothing) {
+    if (a <- tuple : a == nothing) {
       if not symmetric {
         suffix = append((printed(i+1) : a @ i <- tuple, a != nothing));
       }

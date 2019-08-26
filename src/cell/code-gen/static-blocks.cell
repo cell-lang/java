@@ -1,12 +1,12 @@
 implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], context : <core>, debug_mode : Bool {
   String* native_static_block_decl(StaticBlock block) {
     links_decls = ("public " & native_name(l) & " linkedAuto" & printed(i) & ";" : l @ i <- block.links);
-    state_vars_decls = ["public Obj " & native_var_decl_name(v) & ";" : v, unused_var <- block.state_vars];
+    state_vars_decls = ["public Obj " & native_var_decl_name(v) & ";" : v _ <- block.state_vars];
     value_store_decls = [{
       type = native_name(t);
       return "public " & type & " " & native_var_decl_name(v) & " = new " & type & "();";
-    } : v, t <- block.value_stores];
-    table_decls = ["public " & native_table_type(t) & " " & native_var_decl_name(v) & ";" : v, t <- block.tables];
+    } : v t <- block.value_stores];
+    table_decls = ["public " & native_table_type(t) & " " & native_var_decl_name(v) & ";" : v t <- block.tables];
 
     memb_decls = links_decls & isort(state_vars_decls) & isort(value_store_decls) & isort(table_decls);
 
@@ -26,7 +26,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
     full_check_code = full_check_method_code(block);
 
-    methods_code = [native_user_def_method_code(block.name, id, m) : id, m <- block.methods];
+    methods_code = [native_user_def_method_code(block.name, id, m) : id m <- block.methods];
     updates_code = native_updates_code(block);
 
     class_name = native_name(block.name);
@@ -413,7 +413,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
 
   String* full_check_method_code(StaticBlock block) {
-    keys = [(v, arity(t), k) : v, t <- block.tables, needs_keys_check(t), k <- keys(t)];
+    keys = [(v, arity(t), k) : v t <- block.tables, needs_keys_check(t), k <- keys(t)];
     ord_keys = sort_by_key(keys, $(1));
     keys_check_code = join(({
       method_name = key_check_method_names((a, k), !!);
@@ -465,7 +465,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
     vars_decls = (
       "public Obj " & native_var_decl_name(pending_state_var(bare_id(v))) & ";"
-      : v, unused_var <- isort(block.state_vars)
+      : v, _ <- isort(block.state_vars)
     );
 
     stores_decls = (
@@ -537,7 +537,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     dep_apply_code_vars_reset_code = (dependee_apply_code_var_ref_name(linked_db_var(i)) & " = 0;" : i < |block.links|);
 
     value_stores_reset_code = (
-      native_method_call(updater_var_ref_name(vs), "reset", ()) : vs, unused_var <- isort(block.value_stores)
+      native_method_call(updater_var_ref_name(vs), "reset", ()) : vs, _ <- isort(block.value_stores)
     );
 
     tables_reset_code = (
@@ -576,7 +576,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     final_args = (if a != nothing then value(a) else fn_arg(i) : a @ i <- args);
     args_str = append(("Obj " & native_var_decl_name(a) & ", " : a <- final_args));
     sgn = "public Obj " & user_def_method_name(block_name, method_id) & "(" & args_str & "Env env) {";
-    vars_decls = gen_vars_decls(body, [value(a) : a <~ args, a != nothing]);
+    vars_decls = gen_vars_decls(body, [value(a) : a <- args, a != nothing]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
     return (sgn) & indent_lines(body_text) & ("}");
   }
@@ -584,7 +584,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
   [String*] native_updates_code(StaticBlock b) {
     let block = b
-      code = [native_update_code(b.name, id, u.args_vars, u.body) : id, u <- b.updates];
+      code = [native_update_code(b.name, id, u.args_vars, u.body) : id u <- b.updates];
     return code;
   }
 }
@@ -598,7 +598,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       handler_id()  = "void",
       update_id()   = "void";
     sgn = "public " & ret_type & " " & update_name(block_name, update_id) & "(" & args_str & native_updater_name(block_name) & " updater, Env env) {";
-    vars_decls = gen_vars_decls(body, [a : a <~ args, a :: StdVar]);
+    vars_decls = gen_vars_decls(body, [a : a <- args, a :: StdVar]);
     body_text = vars_decls & ("" if vars_decls != ()) & native_code(body, nothing);
 
     body_text = body_text & match (update_id)
@@ -627,7 +627,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     }
 
     String* main_handler_apply_method(DBSymbol block_name) {
-      ids = [i : id, unused_var <- block.updates, handler_id(i?) ?= id];
+      ids = [i : id _ <- block.updates, handler_id(i?) ?= id];
       return () if ids == [];
       assert max(ids) == |ids| - 1 and min(ids) == 0;
 
@@ -761,7 +761,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
 
   String* updates_check_code(StaticBlock block, [TableVar] insertion_tables, [TableVar] deletion_tables) {
-    keys = [(v, arity(t), k) : v, t <- block.tables, insertion_tables(v), k <- keys(t)];
+    keys = [(v, arity(t), k) : v t <- block.tables, insertion_tables(v), k <- keys(t)];
     check_exprs = (check_expr(k) : k <- sort_by_key(keys, order));
     keys_check_code = join((
       ( "if (!" & e & ")",
@@ -836,7 +836,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
 
     Nat order((TableVar, NzNat, [+Nat]) key) {
-      unused_var, arity, args = key;
+      _, arity, args = key;
       return key_check_orders(arity, args, !!);
     }
 

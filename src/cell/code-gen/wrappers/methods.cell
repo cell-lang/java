@@ -19,7 +19,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     memb_preds = method.args_memb_preds;
     args_types_by_pos = ([ps(i) : ps <- memb_preds] : i < arity);
     mono_args = ((i, only(ts)) : ts @ i <- args_types_by_pos, |ts| == 1);
-    poly_args = isort([i : ts @ i <~ args_types_by_pos, |ts| != 1]);
+    poly_args = isort([i : ts @ i <- args_types_by_pos, |ts| != 1]);
 
     code = (
       "",

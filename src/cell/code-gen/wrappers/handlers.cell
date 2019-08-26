@@ -18,7 +18,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
     let context = :wrapper {
       field_vars = (native_var_ref_name(v) : v <- fields_vars);
       code = (code | "  Obj " & append(field_vars, ", ") & ";") if field_vars != ();
-      already_decl_vars = [v : v <~ fields_vars];
+      already_decl_vars = [v : v <- fields_vars];
       code = code & indent_lines(gen_vars_decls(wrapper.msg_inst_code, already_decl_vars));
       code = (code | "") if |code| > 2;
 

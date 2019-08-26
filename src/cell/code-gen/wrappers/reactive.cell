@@ -25,11 +25,11 @@ implicit prg : CompiledPrg, block : ReactBlock {
   }
 
   [String] inputs_and_outputs_names = [
-    safe_name(s) : s, unused_var <- block.inputs | s, unused_var <- block.outputs
+    safe_name(s) : s _ <- block.inputs | s _ <- block.outputs
   ];
 
   [String, Nat] duplicate_method_names {
-    method_ids = [id.symbol, id.arity : id, unused_var <- block.methods, not id.id?];
+    method_ids = [id.symbol, id.arity : id _ <- block.methods, not id.id?];
     native_ids = ((safe_lower_camel_case(bare_id(s)), a) : s, a <- isort(method_ids));
     return [nid(0), nid(1) : nid <- duplicates(native_ids)];
   }
@@ -99,8 +99,9 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
 
     code = (
       "",
-      "public void " & name & "(" & input_type & " value) {"
-    ) & indent_lines(import_code(inter_type, "value", "Obj obj = ")) & (
+      "public void " & name & "(" & input_type & " value) {",
+      "  Obj obj;"
+    ) & indent_lines(import_code(inter_type, "value", "obj = ")) & (
       "  internalSetInput(Input." & uc_name & ", obj);",
       "}"
     );
@@ -155,9 +156,9 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
 ////////////////////////////////////////////////////////////////////////////////
 
 [NeType] interface_types(ReactBlock block) {
-  inputs_types = [info.type : id, info <- block.inputs];
-  outputs_types = [info.type : id, info <- block.outputs];
-  methods_types = union([set(m.args_types) & [m.ret_type] : id, m <- block.methods]);
+  inputs_types = [info.type : id info <- block.inputs];
+  outputs_types = [info.type : id info <- block.outputs];
+  methods_types = union([set(m.args_types) & [m.ret_type] : id m <- block.methods]);
   return inputs_types & outputs_types & methods_types;
 }
 
@@ -196,7 +197,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       input_setters, input_setters_docs = (join(ls) : ls <- unzip((input_setter(i) : i <- ord_inputs)));
       output_getters, output_getters_docs = (join(ls) : ls <- unzip((output_getter(o) : o <- ord_outputs)));
       methods_wrappers, methods_wrappers_docs = (
-        join(ls) : ls <- unzip(isort([auto_method_wrapper(id, m) : id, m <- methods]))
+        join(ls) : ls <- unzip(isort([auto_method_wrapper(id, m) : id m <- methods]))
       );
     }
 
@@ -302,7 +303,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         code = code & (
           "" if j > 0,
           "    case " & input & ":",
-          "      if (Generated." & input_memb_test_pred_name(j) & "(obj)) {",
+          "      if (" & input_memb_test_pred_name(j) & "(obj)) {",
           "        automaton." & input_set_methods_names(j) & "(obj);",
           "        return;",
           "      }",
@@ -324,11 +325,11 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       code = code & (
         "",
         "public Output[] changedOutputs() {",
-        "  int count = (int) automaton.changed_outputs_count;",
+        "  int count = (int) automaton.changedOutputsCount;",
         "  Output[] outputs = new Output[count];",
         "  Output[] values = Output.values();", ## THIS SHOULD BE MADE MORE EFFICIENT
         "  for (int i=0 ; i < count ; i++)",
-        "    outputs[i] = values[(int) automaton.changed_outputs[i]];",
+        "    outputs[i] = values[(int) automaton.changedOutputs[i]];",
         "  return outputs;",
         "}",
         "",

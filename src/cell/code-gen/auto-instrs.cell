@@ -11,14 +11,14 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
       match (t)
         table()   = false,
         column()  = true
-      : unused_var, t <- tables
+      : _ t <- tables
     ]);
 
     symmetric = only([
       match (t)
         table()   = t.symmetric,
         column()  = false
-      : unused_var, t <- tables
+      : _ t <- tables
     ]);
     assert not symmetric or (applied_perm == [0 -> 0, 1 -> 1] or applied_perm == [0 -> 0, 1 -> 1, 2 -> 2]);
 

@@ -132,6 +132,7 @@ soft-clean:
 	@rm -f src/automata/net/cell_lang/*.class
 	@rm -f src/misc/net/cell_lang/*.class
 	@rm -f cellc-java cellcd-java cellc-java.jar cellcd-java.jar
+	@rm -f debug/*
 	@rm -rf tmp
 	@mkdir tmp
 	@mkdir tmp/codegen

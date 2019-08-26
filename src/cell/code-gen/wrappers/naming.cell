@@ -27,6 +27,8 @@ implicit prg : CompiledPrg, taken_names : [String] {
     integer           = "Long",
     float             = "Double",
     string            = "String",
+    date              = "LocalDate",
+    time              = "LocalDateTime",
     symbol(s?)        = upper_camel_case(s),
     tuple(ts?)        = append((default_name(t, retry) : t <- ts), "_"),
     record(fs?)       = append((upper_camel_case(l) : l <- isort(keys(fs))), "_"),
@@ -75,7 +77,7 @@ Bool is_reserved(String id) {
       prefix = take(p, len);
       if prefix == p {
         rest = drop(p, len);
-        return false if (ch <~ chars(rest) : not is_digit(ch));
+        return false if (ch <- chars(rest) : not is_digit(ch));
       }
     }
   }

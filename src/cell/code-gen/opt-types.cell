@@ -23,7 +23,7 @@ implicit prg : CompiledPrg, context : <core> {
     body          = (native_types(i) & spaces(i) & v & ";" : v @ i <- vars_names);
 
     // Test variables declarations
-    set_test_labels = isort([l : l, f <- fields, f.optional, not is_nullable(f.repr)]);
+    set_test_labels = isort([l : l f <- fields, f.optional, not is_nullable(f.repr)]);
     if set_test_labels != () {
       test_vars_decls = ("boolean " & opt_rec_field_nonempty_test_var(l) & ";" : l <- set_test_labels);
       body = (body | "") & test_vars_decls;

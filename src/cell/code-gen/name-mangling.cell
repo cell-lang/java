@@ -187,7 +187,7 @@ implicit context : NativeContext {
       update_expr_index                   = "update_expr_index",
       update_source_var(a?)               = prefix & _print_(a) & "_V_update_source",
       null_locks_count_var(a?)            = prefix & _print_(a) & "_V_null_locks_count",
-      update_count_var(l?)                = prefix & "update_count_" & printed(l),
+      update_count_var(l?)                = prefix & "updateCount" & printed(l),
       nodes_to_update_var()               = prefix & "nodesToUpdate" & printed(v.level) & "[(int) (" & native_idx_expr(v.index) & ")]",
       next_trigger_time_var(a?)           = prefix & _print_(a) & "_V_next_trigger_time",
       curr_time_slot_var(a?)              = prefix & _print_(a) & "_V_curr_time_slot",
@@ -196,8 +196,8 @@ implicit context : NativeContext {
       time_varying_cond_ids_heap_var(i?)  = prefix & "time_varying_cond_ids_heap[" & printed(i) & "]",
       last_update_time                    = prefix & "last_update_time",
       elapsed_time                        = prefix & "elapsed_time",
-      changed_outputs_count               = prefix & "changed_outputs_count",
-      changed_output()                    = prefix & "changed_outputs[(int) (" & native_idx_expr(v.index) & ")]",
+      changed_outputs_count               = prefix & "changedOutputsCount",
+      changed_output()                    = prefix & "changedOutputs[(int) (" & native_idx_expr(v.index) & ")]",
       elapsed_time(av?)                   = native_var_name(av, false) & ".elapsed_time",
       nested_auto_int_var()               = native_var_name(v.auto_var, true) & "." & native_var_name(v.memb_var, false);
   }

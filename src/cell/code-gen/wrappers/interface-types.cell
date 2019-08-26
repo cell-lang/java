@@ -706,6 +706,7 @@ if action_prefix != "return " {
     return (
       code |
       "  " & map_var & ".put(" & out_key_var & ", " & out_value_var & ");",
+      "  " & iter_var & ".next();",
       "}",
       action_prefix & " " & map_var & ";"
     );
@@ -777,7 +778,7 @@ implicit typedefs : [TypeName -> NeType] {
       maybe_fields = maybe_record_type_fields(type);
       if maybe_fields != nothing {
         types = value(maybe_fields);
-        return true if not (l, info <- types : info.optional);
+        return true if not (l info <- types : info.optional);
       }
       return false;
     }
@@ -886,8 +887,8 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
       maybe_fields = maybe_record_type_fields(type);
       if maybe_fields != nothing {
         types = value(maybe_fields);
-        if not (l, info <- types : info.optional)
-          return :record([untag(l) -> interface_type(info.type, rem_depth) : l, info <- types]);
+        if not (l info <- types : info.optional)
+          return :record([untag(l) -> interface_type(info.type, rem_depth) : l info <- types]);
       }
 
       key_type, value_type = bin_rel_args_supertypes(type);
@@ -1023,8 +1024,8 @@ implicit typedefs : [TypeName -> NeType] {
   generic         |
   symbol()        |
   named()         = [],
-  tuple(ts?)      = [x : t <~ ts, x <- nested(t)],
-  record(fs?)     = [x : unused_var, t <- fs, x <- nested(t)],
+  tuple(ts?)      = [x : t <- ts, x <- nested(t)],
+  record(fs?)     = [x : _ t <- fs, x <- nested(t)],
   union(ts?)      = [x : t <- ts, x <- nested(t)],
   tagged(_, t?)   |
   optional(t?)    |
