@@ -86,7 +86,7 @@ implicit prg : CompiledPrg {
   String input_arg_type(InterType it) {
     if in(it, declared_types) {
       fail if not it :: DeclInterType; ## BAD
-      return input_types_names(it, !!) if not is_simplifiable(it);
+      return input_types_names(it, !) if not is_simplifiable(it);
     }
 
     return match (it)
@@ -100,7 +100,7 @@ implicit prg : CompiledPrg {
       tuple()           |
       record()          |
       union()           = undefined,
-      named(n?)         = input_arg_type(named_interface_types_defs(it, !!)),
+      named(n?)         = input_arg_type(named_interface_types_defs(it, !)),
       seq(t?)           |
       set(t?)           = input_arg_type(t) & "[]",
       map(k?, v?)       = "java.util.HashMap<" & input_arg_obj_type(k) & ", " & input_arg_obj_type(v) & ">",
@@ -123,7 +123,7 @@ implicit prg : CompiledPrg {
   String return_value_type(InterType it, [DeclInterType -> String] types_names) {
     if in(it, declared_types) {
       fail if not it :: DeclInterType; ## BAD
-      return types_names(it, !!) if not is_simplifiable(it);
+      return types_names(it, !) if not is_simplifiable(it);
     }
 
     return match (it)
@@ -138,7 +138,7 @@ implicit prg : CompiledPrg {
       tuple()           |
       record()          |
       union()           = undefined,
-      named()           = return_value_type(named_interface_types_defs(it, !!), types_names),
+      named()           = return_value_type(named_interface_types_defs(it, !), types_names),
       seq(t?)           |
       set(t?)           = return_value_type(t, types_names) & "[]",
       map(k?, v?)       = "java.util.HashMap<" & ret_value_obj_type(k) & ", " & ret_value_obj_type(v) & ">",
@@ -187,7 +187,7 @@ implicit prg : CompiledPrg {
     next_action_prefix = "Obj " & out_var & " = ";
     untagged_type = untagged_type(inter_type);
     if untagged_type :: <NamedInterType, UnionInterType> and in(untagged_type, declared_types) {
-      type_name = input_types_names(untagged_type, !!);
+      type_name = input_types_names(untagged_type, !);
       unique_id = printed(_counter_(:any_value_will_do));
       in_var = "var_" & unique_id;
       code = (type_name & " " & in_var & " = " & expr & ".value;");
@@ -216,7 +216,7 @@ implicit prg : CompiledPrg {
     if in(it, declared_types) {
       fail if not it :: DeclInterType; ## BAD
       if not is_simplifiable(it) {
-        type_name = input_types_names(it, !!);
+        type_name = input_types_names(it, !);
         return (action_prefix & "Generated." & decl_type_import_funct_name(type_name) & "(" & expr & ");");
       }
     }
@@ -232,7 +232,7 @@ implicit prg : CompiledPrg {
       tuple()       |
       record()      |
       union()       = undefined, // They are supposed to always be declared
-      named()       = import_code_ex(named_interface_types_defs(it, !!), expr, action_prefix),
+      named()       = import_code_ex(named_interface_types_defs(it, !), expr, action_prefix),
       seq(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSeq"),
       set(t?)       = array_import_code(t, expr, action_prefix, "Builder.createSet"),
       map(k?, v?)   = map_import_code(k, v, expr, action_prefix),
@@ -244,7 +244,7 @@ implicit prg : CompiledPrg {
 
   String* named_type_import_code(NamedInterType inter_type, String expr, String action_prefix) =
     if in(inter_type, declared_types)
-      then (action_prefix & decl_type_import_funct_name(input_types_names(inter_type, !!)) & "(" & expr & ");")
+      then (action_prefix & decl_type_import_funct_name(input_types_names(inter_type, !)) & "(" & expr & ");")
       else import_code_ex(:generic, expr, action_prefix);
 
 
@@ -264,7 +264,7 @@ if action_prefix != "return " {
     code = ("Obj " & out_var & ";" if not is_return);
     local_action = if is_return then action_prefix else out_var & " = ";
     for t @ i <- isort(types) {
-      type_name = input_types_names(t, !!);
+      type_name = input_types_names(t, !);
       code = code & (
         {if i > 0 then "else " else ""} & "if (" & expr & " instanceof " & type_name & ") {",
         "  " & type_name & " " & in_var & " = (" & type_name & ") " & expr & ";",
@@ -296,9 +296,9 @@ if action_prefix != "return " {
     field_names = java_adjusted_unambiguous_lower_camel_case_names(keys(fields));
     for l, n @ i <- isort(field_names) {
       code = (code | keys_var & "[" & printed(i) & "] = " & native_expr(object(l), context=:wrapper) & ";");
-      field_expr = expr & "." & field_names(l, !!);
+      field_expr = expr & "." & field_names(l, !);
       asgnm_prefix = values_var & "[" & printed(i) & "] = ";
-      code = code & import_code_ex(fields(l, !!), field_expr, asgnm_prefix);
+      code = code & import_code_ex(fields(l, !), field_expr, asgnm_prefix);
     }
 
     map_creation_expr = "Builder.createMap(" & keys_var & ", " & values_var & ", " & printed(count) & ")";
@@ -419,7 +419,7 @@ implicit prg : CompiledPrg {
   String* export_code(NamedInterType inter_type, String type_name, String expr, String action_prefix) {
     assert in(inter_type, declared_types);
     return export_code(inter_type, expr, action_prefix);
-    // type_name = output_types_names(inter_type, !!);
+    // type_name = output_types_names(inter_type, !);
     // return (action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");")
   }
 
@@ -465,7 +465,7 @@ implicit prg : CompiledPrg {
     if in(it, declared_types) {
       fail if not it :: DeclInterType; ## BAD
       if not is_simplifiable(it) {
-        type_name = output_types_names(it, !!);
+        type_name = output_types_names(it, !);
         return (action_prefix & "Generated." & decl_type_export_funct_name(type_name) & "(" & expr & ");");
       }
     }
@@ -477,11 +477,11 @@ implicit prg : CompiledPrg {
       string              = (action_prefix & expr & ".getString();"),
       date                = (action_prefix & "Conversions.objToDate(" & expr & ");"),
       time                = (action_prefix & "Conversions.objToDateTime(" & expr & ");"),
-      symbol()            = (action_prefix & output_types_names(it, !!) & ".singleton;"),
+      symbol()            = (action_prefix & output_types_names(it, !) & ".singleton;"),
       tuple()             |
       record()            |
       union()             = undefined, // They are supposed to always be declared
-      named()             = export_code(named_interface_types_defs(it, !!), expr, action_prefix),
+      named()             = export_code(named_interface_types_defs(it, !), expr, action_prefix),
       seq(t?)             |
       set(t?)             = array_export_code(t, expr, action_prefix),
       map(k?, v?)         = map_export_code(k, v, expr, action_prefix),
@@ -533,10 +533,10 @@ if action_prefix != "return " {
     assert symb_types & tagged_types & named_types == types;
 
     symbol_type_map = [symbol(t) -> t : t <- symb_types] &
-                      [s -> t : t <- named_types, s <- symbols(t, named_interface_types_defs($, !!))];
+                      [s -> t : t <- named_types, s <- symbols(t, named_interface_types_defs($, !))];
 
     tag_type_map = [type_tag(t) -> t : t <- tagged_types] &
-                   [s -> t : t <- named_types, s <- tags(t, named_interface_types_defs($, !!))];
+                   [s -> t : t <- named_types, s <- tags(t, named_interface_types_defs($, !))];
 
     code = ();
 
@@ -546,7 +546,7 @@ if action_prefix != "return " {
         for s, t @ i <- isort(symbol_type_map) {
           symbs_code = symbs_code & (
             "  case " & symb_idx_base_name(s) & ":",
-            "    " & action_prefix & output_types_names(t, !!) & ".singleton;",
+            "    " & action_prefix & output_types_names(t, !) & ".singleton;",
             "    break" if action_prefix != "return ", ## BAD BAD BAD
             ""
           );
@@ -556,7 +556,7 @@ if action_prefix != "return " {
       }
       else {
         only_type = only(values(symbol_type_map));
-        symbs_code = (action_prefix & output_types_names(only_type, !!) & ".singleton;");
+        symbs_code = (action_prefix & output_types_names(only_type, !) & ".singleton;");
       }
       symbs_code = ("if (" & expr & ".isSymb()) {",) & indent_lines(symbs_code) & ("}") if tag_type_map != [];
       code = code & symbs_code;
@@ -566,7 +566,7 @@ if action_prefix != "return " {
       if |tag_type_map| > 1 {
         tagged_values_code = ("switch (" & expr & ".getTagId()) {");
         for tag, type @ i <- isort(tag_type_map) {
-          type_name = output_types_names(type, !!);
+          type_name = output_types_names(type, !);
           tagged_values_code = tagged_values_code & (
             "  case " & symb_idx_base_name(object(tag)) & ":",
             "    " & action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");",
@@ -577,7 +577,7 @@ if action_prefix != "return " {
 
       }
       else {
-        type_name = output_types_names(only(values(tag_type_map)), !!);
+        type_name = output_types_names(only(values(tag_type_map)), !);
         tagged_values_code = (action_prefix & decl_type_export_funct_name(type_name) & "(" & expr & ");");
       }
       if symbol_type_map != []
@@ -597,7 +597,7 @@ if action_prefix != "return " {
 
     record_inst_instr = type_name & " " & record_var & " = new " & type_name & "();";
     asgnm_code = join(({
-        asgnm_text = record_var & "." & field_names(l, !!) & " = ";
+        asgnm_text = record_var & "." & field_names(l, !) & " = ";
         field_unique_id = printed(_counter_(:any_value_will_do));
         field_var = "var_" & field_unique_id;
         field_store_instr = "Obj " & field_var & " = " & expr & ".lookupField(" & symb_idx_qual_name(l) & ");";

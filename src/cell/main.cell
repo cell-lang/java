@@ -3,7 +3,7 @@ Int Main(String* args) {
 
   if argc < 2 {
     Print(
-      "Cell to Java compiler version 0.4.7\n"   &
+      "Cell to Java compiler version 0.4.8\n"   &
       "Usage: java -jar cellc-java.jar <options> <project file> <output directory>\n" &
       "Available options:\n"                                                          &
       "  -d     debug mode\n"                                                         &
@@ -74,7 +74,7 @@ Int Main(String* args) {
   }
 
   Print(
-    "Cell to Java compiler version 0.4.7\n"   &
+    "Cell to Java compiler version 0.4.8\n"   &
     "Warning: this is a beta version\n"       &
     // "Use -q option to suppress this output\n" &
     "Compiling project " & fname & "\n"
@@ -340,7 +340,7 @@ type CmdLineOpts = (
     fns = [f : f <- prg.fndefs, fn_ids(f.id)];
     methods = [
       (a, m)  : a <- prg.data_bases,
-                method_ids(a.name, *),
+                method_ids(a.name, _),
                 ids = method_ids(a.name),
                 m <- a.methods,
                 ids(m.id)

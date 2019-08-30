@@ -377,7 +377,7 @@ implicit context : NativeContext {
     String native_fn_name(ProcSymbol proc_symb) {
       bare_symb = match (proc_symb) proc_symbol(s?) = s;
       name = upper_camel_case(bare_symb) & "_P";
-      name = "Procs." & name if builtin_procs_map(proc_symb, *);
+      name = "Procs." & name if builtin_procs_map(proc_symb, _);
       return name;
     }
 

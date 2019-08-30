@@ -1,5 +1,5 @@
 implicit prg : CompiledPrg {
-  String safe_class_name(<DBSymbol, AutoSymbol> id) = safe_block_class_names(id, !!);
+  String safe_class_name(<DBSymbol, AutoSymbol> id) = safe_block_class_names(id, !);
 
   [<DBSymbol, AutoSymbol> -> String] safe_block_class_names = [
     b.name -> {
@@ -16,7 +16,7 @@ implicit prg : CompiledPrg, taken_names : [String] {
     name = default_name(inter_type, retry);
     name = take(name, 60);
     name = name & "_" & printed(value(unique_id)) if unique_id != nothing;
-    while taken_names(name) or is_reserved(name) or safe_block_class_names(*, name)
+    while taken_names(name) or is_reserved(name) or safe_block_class_names(_, name)
       name = name & "_";
     return name;
   }

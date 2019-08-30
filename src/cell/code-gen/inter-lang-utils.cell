@@ -155,7 +155,7 @@ implicit prg : CompiledPrg {
 
     symbols_map = [untag(s) -> i : s @ i <- program_symbols];
     return [ls -> {
-        ord_labels = sort_set(ls, symbols_map($a, !!) < symbols_map($b, !!));
+        ord_labels = sort_set(ls, symbols_map($a, !) < symbols_map($b, !));
         return (nonempty(ord_labels), i);
       } : ls @ i <- ord_symbs_sets
     ];

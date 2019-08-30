@@ -32,7 +32,7 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
     }
     else {
       assert arity == 3;
-      perm_args = if symmetric then () else (applied_perm(!!, i) : i < arity);
+      perm_args = if symmetric then () else (applied_perm(!, i) : i < arity);
     }
 
     table_vars = keys(tables);

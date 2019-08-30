@@ -284,9 +284,9 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
 
 
   String native_mk_record_code([+SymbObj -> AtomicExpr] fields, WriteObjVar var) {
-    ord_labels, index = symbols_sets_info([untag(l) : l _ <- fields], !!);
+    ord_labels, index = symbols_sets_info([untag(l) : l _ <- fields], !);
     label_set_name = const_symb_seq_name(index);
-    values_strs = (native_expr(fields(object(l), !!)) : l <- ord_labels);
+    values_strs = (native_expr(fields(object(l), !)) : l <- ord_labels);
     value_array_expr = "new Obj[] {" & append(values_strs, ", ") & "}";
     return native_new_call(var, "RecordObj", (label_set_name, value_array_expr));
   }

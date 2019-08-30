@@ -20,7 +20,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     set_state_code = native_set_state_code(block.name, block.set_state_code);
     load_state_code = native_load_state_code(block.name, block.memb_var_check_exprs, block.rel_vars_load_code);
 
-    update_entry_point_code = if block.updates(main_handler, *)
+    update_entry_point_code = if block.updates(main_handler, _)
       then update_entry_point(block.name)
       else ();
 
@@ -416,7 +416,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     keys = [(v, arity(t), k) : v t <- block.tables, needs_keys_check(t), k <- keys(t)];
     ord_keys = sort_by_key(keys, $(1));
     keys_check_code = join(({
-      method_name = key_check_method_names((a, k), !!);
+      method_name = key_check_method_names((a, k), !);
       return (
         "if (!" & native_var_ref_name(v) & "." & method_name & "())",
         "  return false;"
@@ -801,7 +801,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
 
     String key_check_method_name(NzNat arity, [+Nat] key) =
-      "checkKey_" & key_check_method_suffixes(arity, key, !!);
+      "checkKey_" & key_check_method_suffixes(arity, key, !);
 
 
     [NzNat, [+Nat], String] key_check_method_suffixes = [
@@ -837,7 +837,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
     Nat order((TableVar, NzNat, [+Nat]) key) {
       _, arity, args = key;
-      return key_check_orders(arity, args, !!);
+      return key_check_orders(arity, args, !);
     }
 
 

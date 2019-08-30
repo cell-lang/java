@@ -51,13 +51,13 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     static_blocks_dep_map = [b.name -> set(b.links) : b <- prg.static_blocks];
     ord_static_block_names = join((isort(bs) : bs <- topological_sort(static_blocks_dep_map)));
     static_blocks_by_name = [b.name -> b : b <- prg.static_blocks];
-    ord_static_blocks = (static_blocks_by_name(b, !!) : b <- ord_static_block_names);
+    ord_static_blocks = (static_blocks_by_name(b, !) : b <- ord_static_block_names);
 
     // Sorting reactive blocks in topological order
     react_blocks_dep_map = [b.name -> [t : _ t <- b.nested_auto_vars] : b <- prg.react_blocks];
     ord_react_blocks_names = join((isort(bs) : bs <- topological_sort(react_blocks_dep_map)));
     react_blocks_by_name = [b.name -> b : b <- prg.react_blocks];
-    ord_react_blocks = (react_blocks_by_name(b, !!) : b <- ord_react_blocks_names);
+    ord_react_blocks = (react_blocks_by_name(b, !) : b <- ord_react_blocks_names);
 
     proc_code = native_code(
       isort(prg.procs),
