@@ -7,20 +7,20 @@ class KeyViolationException extends RuntimeException {
   String relvarName;
   int[] key;
   Obj[] tuple1, tuple2;
-  boolean tuple2IsNew;
+  boolean betweenNew;
 
-  KeyViolationException(String relvarName, int[] key, Obj[] tuple1, Obj[] tuple2, boolean tuple2IsNew) {
+  KeyViolationException(String relvarName, int[] key, Obj[] tuple1, Obj[] tuple2, boolean betweenNew) {
     this.relvarName = relvarName;
     this.key = key;
     this.tuple1 = tuple1;
     this.tuple2 = tuple2;
-    this.tuple2IsNew = tuple2IsNew;
+    this.betweenNew = betweenNew;
   }
 
   public String toString() {
     boolean isComposite = key.length > 1;
     StringWriter writer = new StringWriter();
-    writer.write("Key violation: relation variable " + relvarName + ", column");
+    writer.write("Key violation: relation variable: " + relvarName + ", column");
     if (isComposite)
       writer.write("s");
     writer.write(":");
@@ -28,7 +28,7 @@ class KeyViolationException extends RuntimeException {
       writer.write(" ");
       writer.write(Integer.toString(key[i]));
     }
-    writer.write(tuple2IsNew ?
+    writer.write(betweenNew ?
       "\nAttempt to insert conflicting tuples:\n" :
       "\nAttempt to insert tuple that conflicts with existing one:\n"
     );

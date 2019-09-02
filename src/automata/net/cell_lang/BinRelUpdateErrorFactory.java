@@ -32,11 +32,11 @@ class BinRelUpdateErrorFactory {
     return col1KeyViolation(arg1Surr, arg2Surr, arg1To2.apply(arg1Surr)[0], false);
   }
 
-  private KeyViolationException col1KeyViolation(int arg1Surr, int arg2Surr, int otherArg2Surr, boolean tuple2IsNew) {
+  private KeyViolationException col1KeyViolation(int arg1Surr, int arg2Surr, int otherArg2Surr, boolean betweenNew) {
     Obj arg1 = mapper1.surrToObj(arg1Surr);
     Obj[] tuple1 = new Obj[] {arg1, mapper2.surrToObj(arg2Surr)};
     Obj[] tuple2 = new Obj[] {arg1, mapper2.surrToObj(otherArg2Surr)};
-    return new KeyViolationException(relvarName, col1Key, tuple1, tuple2, tuple2IsNew);
+    return new KeyViolationException(relvarName, col1Key, tuple1, tuple2, betweenNew);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -49,10 +49,10 @@ class BinRelUpdateErrorFactory {
     return col2KeyViolation(arg1Surr, arg2Surr, arg2To1.apply(arg2Surr)[0], false);
   }
 
-  private KeyViolationException col2KeyViolation(int arg1Surr, int arg2Surr, int otherArg1Surr, boolean tuple2IsNew) {
+  private KeyViolationException col2KeyViolation(int arg1Surr, int arg2Surr, int otherArg1Surr, boolean betweenNew) {
     Obj arg2 = mapper2.surrToObj(arg2Surr);
     Obj[] tuple1 = new Obj[] {mapper1.surrToObj(arg1Surr), arg2};
     Obj[] tuple2 = new Obj[] {mapper1.surrToObj(otherArg1Surr), arg2};
-    return new KeyViolationException(relvarName, col2Key, tuple1, tuple2, tuple2IsNew);
+    return new KeyViolationException(relvarName, col2Key, tuple1, tuple2, betweenNew);
   }
 }
