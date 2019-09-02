@@ -19,12 +19,16 @@ final class IntColumnUpdater {
   boolean dirty = false;
   long[] bitmap = Array.emptyLongArray;
 
+  String relvarName;
   IntColumn column;
+  ValueStoreUpdater store;
 
   //////////////////////////////////////////////////////////////////////////////
 
-  IntColumnUpdater(IntColumn column, ValueStoreUpdater storeUpdater) {
+  IntColumnUpdater(String relvarName, IntColumn column, ValueStoreUpdater store) {
+    this.relvarName = relvarName;
     this.column = column;
+    this.store = store;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -149,54 +153,53 @@ final class IntColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_1() {
-    if (insertCount == 0 & updateCount == 0)
-      return true;
-    Miscellanea._assert(maxIdx != -1);
+  public void checkKey_1() {
+    if (insertCount != 0 | updateCount != 0) {
+      Miscellanea._assert(maxIdx != -1);
 
-    if (maxIdx / 32 >= bitmap.length)
-      bitmap = Array.extend(bitmap, Array.capacity(bitmap.length, maxIdx / 32 + 1));
+      if (maxIdx / 32 >= bitmap.length)
+        bitmap = Array.extend(bitmap, Array.capacity(bitmap.length, maxIdx / 32 + 1));
 
-    // 00 - untouched
-    // 01 - deleted
-    // 10 - inserted
-    // 11 - updated or inserted and deleted
+      // 00 - untouched
+      // 01 - deleted
+      // 10 - inserted
+      // 11 - updated or inserted and deleted
 
-    dirty = true;
+      dirty = true;
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int idx = deleteIdxs[i];
-      int slotIdx = idx / 32;
-      int bitsShift = 2 * (idx % 32);
-      bitmap[slotIdx] |= 1L << bitsShift;
-    }
-
-    for (int i=0 ; i < updateCount ; i++) {
-      int idx = updateIdxs[i];
-      int slotIdx = idx / 32;
-      int bitsShift = 2 * (idx % 32);
-      long slot = bitmap[slotIdx];
-      if (((slot >> bitsShift) & 2) != 0) {
-        //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
-        return false;
+      for (int i=0 ; i < deleteCount ; i++) {
+        int idx = deleteIdxs[i];
+        int slotIdx = idx / 32;
+        int bitsShift = 2 * (idx % 32);
+        bitmap[slotIdx] |= 1L << bitsShift;
       }
-      bitmap[slotIdx] = slot | (3L << bitsShift);
-    }
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int idx = insertIdxs[i];
-      int slotIdx = idx / 32;
-      int bitsShift = 2 * (idx % 32);
-      long slot = bitmap[slotIdx];
-      int bits = (int) ((slot >> bitsShift) & 3);
-      if ((bits == 0 && column.contains1(idx)) | bits >= 2) {
-        //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
-        return false;
+      for (int i=0 ; i < updateCount ; i++) {
+        int idx = updateIdxs[i];
+        int slotIdx = idx / 32;
+        int bitsShift = 2 * (idx % 32);
+        long slot = bitmap[slotIdx];
+        if (((slot >> bitsShift) & 2) != 0)
+          //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+          throw col1KeyViolation(idx, updateValues[i], true);
+        bitmap[slotIdx] = slot | (3L << bitsShift);
       }
-      bitmap[slotIdx] = slot | (2L << bitsShift);
-    }
 
-    return true;
+      for (int i=0 ; i < insertCount ; i++) {
+        int idx = insertIdxs[i];
+        int slotIdx = idx / 32;
+        int bitsShift = 2 * (idx % 32);
+        long slot = bitmap[slotIdx];
+        int bits = (int) ((slot >> bitsShift) & 3);
+        if (bits >= 2)
+          //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+          throw col1KeyViolation(idx, insertValues[i], true);
+        if ((bits == 0 && column.contains1(idx)))
+          //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+          throw col1KeyViolation(idx, insertValues[i], false);
+        bitmap[slotIdx] = slot | (2L << bitsShift);
+      }
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -220,5 +223,31 @@ final class IntColumnUpdater {
 
     // Checking that no entries were invalidated by a deletion on the target table
     return target.checkDeletedKeys(this::contains1);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private KeyViolationException col1KeyViolation(int idx, long value, boolean betweenNew) {
+    if (betweenNew) {
+      for (int i=0 ; i < updateCount ; i++)
+        if (updateIdxs[i] == idx)
+          return col1KeyViolation(idx, value, updateValues[i], betweenNew);
+
+      for (int i=0 ; i < insertCount ; i++)
+        if (insertIdxs[i] == idx)
+          return col1KeyViolation(idx, value, insertValues[i], betweenNew);
+
+      throw Miscellanea.internalFail();
+    }
+    else
+      return col1KeyViolation(idx, value, column.lookup(idx), betweenNew);
+  }
+
+  private KeyViolationException col1KeyViolation(int idx, long value, long otherValue, boolean betweenNew) {
+    //## BUG: Stores may contain only part of the value (id(5) -> 5)
+    Obj key = store.surrToValue(idx);
+    Obj[] tuple1 = new Obj[] {key, IntObj.get(value)};
+    Obj[] tuple2 = new Obj[] {key, IntObj.get(otherValue)};
+    return new KeyViolationException(relvarName, new int[] {1}, tuple1, tuple2, betweenNew);
   }
 }
