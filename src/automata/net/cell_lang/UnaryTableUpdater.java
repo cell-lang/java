@@ -22,7 +22,7 @@ class UnaryTableUpdater {
   ValueStoreUpdater store;
 
 
-  public UnaryTableUpdater(UnaryTable table, ValueStoreUpdater store) {
+  public UnaryTableUpdater(String relvarName, UnaryTable table, ValueStoreUpdater store) {
     this.table = table;
     this.store = store;
   }

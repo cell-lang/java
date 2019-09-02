@@ -3,7 +3,7 @@ package net.cell_lang;
 import java.util.function.IntPredicate;
 
 
-class BinaryTableUpdater {
+class BinaryTableUpdater extends BinRelUpdateErrorFactory {
   int deleteCount = 0;
   int[] deleteList = Array.emptyIntArray;
 
@@ -20,7 +20,9 @@ class BinaryTableUpdater {
   ValueStoreUpdater store1;
   ValueStoreUpdater store2;
 
-  public BinaryTableUpdater(BinaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2) {
+  public BinaryTableUpdater(String relvarName, BinaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2) {
+    //## BUG: Stores may contain only part of the value (id(5) -> 5)
+    super(relvarName, table::restrict1, table::restrict2, store1::surrToValue, store2::surrToValue);
     this.table = table;
     this.store1 = store1;
     this.store2 = store2;
@@ -222,57 +224,51 @@ class BinaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_1() {
-    if (insertCount == 0)
-      return true;
+  public void checkKey_1() {
+    if (insertCount != 0) {
+      prepare12();
 
-    prepare12();
+      int prev1 = -1;
+      int prev2 = -1;
 
-    int prev1 = -1;
-    int prev2 = -1;
+      for (int i=0 ; i < insertCount ; i++) {
+        int curr1 = insertList[2 * i];
+        int curr2 = insertList[2 * i + 1];
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int curr1 = insertList[2 * i];
-      int curr2 = insertList[2 * i + 1];
+        if (curr1 == prev1 & curr2 != prev2)
+          throw col1KeyViolation(curr1, curr2, prev2);
 
-      if (curr1 == prev1 & curr2 != prev2)
-        return false;
+        if (!Ints12.contains1(deleteList, deleteCount, curr1) && table.contains1(curr1))
+          throw col1KeyViolation(curr1, curr2);
 
-      if (!Ints12.contains1(deleteList, deleteCount, curr1) && table.contains1(curr1))
-        return false;
-
-      prev1 = curr1;
-      prev2 = curr2;
+        prev1 = curr1;
+        prev2 = curr2;
+      }
     }
-
-    return true;
   }
 
-  public boolean checkKey_2() {
-    if (insertCount == 0)
-      return true;
+  public void checkKey_2() {
+    if (insertCount != 0) {
+      prepare21();
 
-    prepare21();
+      int prev1 = -1;
+      int prev2 = -1;
 
-    int prev1 = -1;
-    int prev2 = -1;
+      for (int i=0 ; i < insertCount ; i++) {
+        int curr1 = insertList[2 * i];
+        int curr2 = insertList[2 * i + 1];
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int curr1 = insertList[2 * i];
-      int curr2 = insertList[2 * i + 1];
-
-      if (curr2 == prev2 & curr1 != prev1)
-        return false;
+        if (curr2 == prev2 & curr1 != prev1)
+          throw col2KeyViolation(curr1, curr2, prev1);
 
 
-      if (!Ints21.contains2(deleteList, deleteCount, curr2) && table.contains2(curr2))
-        return false;
+        if (!Ints21.contains2(deleteList, deleteCount, curr2) && table.contains2(curr2))
+          throw col2KeyViolation(curr1, curr2);
 
-      prev1 = curr1;
-      prev2 = curr2;
+        prev1 = curr1;
+        prev2 = curr2;
+      }
     }
-
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////

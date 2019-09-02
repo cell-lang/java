@@ -72,4 +72,13 @@ class Procs {
   public static void Exit_P(Obj code, Object env) {
     System.exit((int) code.getLong());
   }
+
+  public static Obj Error_P(RelAutoBase automaton, RelAutoUpdaterBase updater, Object env) {
+    if (updater.lastException != null) {
+      String msg = updater.lastException.toString();
+      return Builder.createTaggedObj(SymbTable.JustSymbId, Conversions.stringToObj(msg));
+    }
+    else
+      return SymbObj.get(SymbTable.NothingSymbId);
+  }
 }
