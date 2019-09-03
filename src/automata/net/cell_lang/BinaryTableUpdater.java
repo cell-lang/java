@@ -3,7 +3,7 @@ package net.cell_lang;
 import java.util.function.IntPredicate;
 
 
-class BinaryTableUpdater extends BinRelUpdateErrorFactory {
+class BinaryTableUpdater {
   int deleteCount = 0;
   int[] deleteList = Array.emptyIntArray;
 
@@ -16,13 +16,13 @@ class BinaryTableUpdater extends BinRelUpdateErrorFactory {
   enum Ord {ORD_NONE, ORD_12, ORD_21};
   Ord currOrd = Ord.ORD_NONE;
 
+  String relvarName;
   BinaryTable table;
   ValueStoreUpdater store1;
   ValueStoreUpdater store2;
 
   public BinaryTableUpdater(String relvarName, BinaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2) {
-    //## BUG: Stores may contain only part of the value (id(5) -> 5)
-    super(relvarName, table::restrict1, table::restrict2, store1::surrToValue, store2::surrToValue);
+    this.relvarName = relvarName;
     this.table = table;
     this.store1 = store1;
     this.store2 = store2;
@@ -438,5 +438,46 @@ class BinaryTableUpdater extends BinRelUpdateErrorFactory {
 
     // store1.dump();
     // store2.dump();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static final int[] col1Key = new int[] {1};
+
+  private KeyViolationException col1KeyViolation(int arg1Surr, int arg2Surr, int otherArg2Surr) {
+    return col1KeyViolation(arg1Surr, arg2Surr, otherArg2Surr, true);
+  }
+
+  private KeyViolationException col1KeyViolation(int arg1Surr, int arg2Surr) {
+    return col1KeyViolation(arg1Surr, arg2Surr, table.restrict1(arg1Surr)[0], false);
+  }
+
+  private KeyViolationException col1KeyViolation(int arg1Surr, int arg2Surr, int otherArg2Surr, boolean betweenNew) {
+    //## BUG: STORES MAY CONTAIN ONLY PART OF THE ACTUAL VALUE (id(5) -> 5)
+    Obj arg1 = store1.surrToValue(arg1Surr);
+    Obj[] tuple1 = new Obj[] {arg1, store2.surrToValue(arg2Surr)};
+    Obj[] tuple2 = new Obj[] {arg1, store2.surrToValue(otherArg2Surr)};
+    return new KeyViolationException(relvarName, col1Key, tuple1, tuple2, betweenNew);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static final int[] col2Key = new int[] {2};
+
+  private KeyViolationException col2KeyViolation(int arg1Surr, int arg2Surr, int otherArg1Surr) {
+    return col2KeyViolation(arg1Surr, arg2Surr, otherArg1Surr, true);
+  }
+
+  private KeyViolationException col2KeyViolation(int arg1Surr, int arg2Surr) {
+    return col2KeyViolation(arg1Surr, arg2Surr, table.restrict2(arg2Surr)[0], false);
+  }
+
+  private KeyViolationException col2KeyViolation(int arg1Surr, int arg2Surr, int otherArg1Surr, boolean betweenNew) {
+    //## BUG: STORES MAY CONTAIN ONLY PART OF THE ACTUAL VALUE (id(5) -> 5)
+    Obj arg2 = store2.surrToValue(arg2Surr);
+    Obj[] tuple1 = new Obj[] {store1.surrToValue(arg1Surr), arg2};
+    Obj[] tuple2 = new Obj[] {store1.surrToValue(otherArg1Surr), arg2};
+    return new KeyViolationException(relvarName, col2Key, tuple1, tuple2, betweenNew);
   }
 }
