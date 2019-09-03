@@ -185,58 +185,58 @@ class AssocTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_1() {
-    if (insertCount == 0)
-      return true;
+  // public boolean checkKey_1() {
+  //   if (insertCount == 0)
+  //     return true;
 
-    prepare12();
+  //   prepare12();
 
-    int prev1 = -1;
-    int prev2 = -1;
+  //   int prev1 = -1;
+  //   int prev2 = -1;
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int curr1 = insertList[2 * i];
-      int curr2 = insertList[2 * i + 1];
+  //   for (int i=0 ; i < insertCount ; i++) {
+  //     int curr1 = insertList[2 * i];
+  //     int curr2 = insertList[2 * i + 1];
 
-      if (curr1 == prev1 & curr2 != prev2)
-        return false;
+  //     if (curr1 == prev1 & curr2 != prev2)
+  //       return false;
 
-      if (!Ints12.contains1(deleteList, deleteCount, curr1) && table.contains1(curr1))
-        return false;
+  //     if (!Ints12.contains1(deleteList, deleteCount, curr1) && table.contains1(curr1))
+  //       return false;
 
-      prev1 = curr1;
-      prev2 = curr2;
-    }
+  //     prev1 = curr1;
+  //     prev2 = curr2;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
-  public boolean checkKey_2() {
-    if (insertCount == 0)
-      return true;
+  // public boolean checkKey_2() {
+  //   if (insertCount == 0)
+  //     return true;
 
-    prepare21();
+  //   prepare21();
 
-    int prev1 = -1;
-    int prev2 = -1;
+  //   int prev1 = -1;
+  //   int prev2 = -1;
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int curr1 = insertList[2 * i];
-      int curr2 = insertList[2 * i + 1];
+  //   for (int i=0 ; i < insertCount ; i++) {
+  //     int curr1 = insertList[2 * i];
+  //     int curr2 = insertList[2 * i + 1];
 
-      if (curr2 == prev2 & curr1 != prev1)
-        return false;
+  //     if (curr2 == prev2 & curr1 != prev1)
+  //       return false;
 
 
-      if (!Ints21.contains2(deleteList, deleteCount, curr2) && table.contains2(curr2))
-        return false;
+  //     if (!Ints21.contains2(deleteList, deleteCount, curr2) && table.contains2(curr2))
+  //       return false;
 
-      prev1 = curr1;
-      prev2 = curr2;
-    }
+  //     prev1 = curr1;
+  //     prev2 = curr2;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
   //////////////////////////////////////////////////////////////////////////////
 
