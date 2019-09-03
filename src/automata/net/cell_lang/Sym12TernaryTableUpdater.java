@@ -444,27 +444,24 @@ class Sym12TernaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static final int[] key_12 = new int[] {1, 2};
-  public static final int[] key_3  = new int[] {3};
-
   private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3, int otherArg3) {
-    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, key_12, true);
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, KeyViolationException.key_12, true);
   }
 
   private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3) {
     int otherArg3 = table.lookup12(arg1, arg2);
-    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, key_12, false);
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, KeyViolationException.key_12, false);
   }
 
   private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2) {
-    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, key_3, true);
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, KeyViolationException.key_3, true);
   }
 
   private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3) {
     Sym12TernaryTable.Iter3 it = table.getIter3(arg3);
     int otherArg1 = it.get1();
     int otherArg2 = it.get2();
-    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, key_3, false);
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, KeyViolationException.key_3, false);
   }
 
   private KeyViolationException keyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2, int otherArg3, int[] key, boolean betweenNew) {

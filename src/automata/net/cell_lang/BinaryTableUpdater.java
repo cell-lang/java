@@ -443,8 +443,6 @@ class BinaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  private static final int[] col1Key = new int[] {1};
-
   private KeyViolationException col1KeyViolation(int arg1Surr, int arg2Surr, int otherArg2Surr) {
     return col1KeyViolation(arg1Surr, arg2Surr, otherArg2Surr, true);
   }
@@ -458,12 +456,10 @@ class BinaryTableUpdater {
     Obj arg1 = store1.surrToValue(arg1Surr);
     Obj[] tuple1 = new Obj[] {arg1, store2.surrToValue(arg2Surr)};
     Obj[] tuple2 = new Obj[] {arg1, store2.surrToValue(otherArg2Surr)};
-    return new KeyViolationException(relvarName, col1Key, tuple1, tuple2, betweenNew);
+    return new KeyViolationException(relvarName, KeyViolationException.key_1, tuple1, tuple2, betweenNew);
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
-  private static final int[] col2Key = new int[] {2};
 
   private KeyViolationException col2KeyViolation(int arg1Surr, int arg2Surr, int otherArg1Surr) {
     return col2KeyViolation(arg1Surr, arg2Surr, otherArg1Surr, true);
@@ -478,6 +474,6 @@ class BinaryTableUpdater {
     Obj arg2 = store2.surrToValue(arg2Surr);
     Obj[] tuple1 = new Obj[] {store1.surrToValue(arg1Surr), arg2};
     Obj[] tuple2 = new Obj[] {store1.surrToValue(otherArg1Surr), arg2};
-    return new KeyViolationException(relvarName, col2Key, tuple1, tuple2, betweenNew);
+    return new KeyViolationException(relvarName, KeyViolationException.key_2, tuple1, tuple2, betweenNew);
   }
 }

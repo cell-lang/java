@@ -4,6 +4,13 @@ import java.io.StringWriter;
 
 
 class KeyViolationException extends RuntimeException {
+  public static int[] key_1 = new int[] {1};
+  public static int[] key_2 = new int[] {2};
+  public static int[] key_3 = new int[] {3};
+  public static int[] key_12 = new int[] {1, 2};
+  public static int[] key_13 = new int[] {1, 3};
+  public static int[] key_23 = new int[] {2, 3};
+
   String relvarName;
   int[] key;
   Obj[] tuple1, tuple2;

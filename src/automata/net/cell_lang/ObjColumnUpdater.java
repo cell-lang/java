@@ -259,6 +259,6 @@ final class ObjColumnUpdater {
     Obj key = store.surrToValue(idx);
     Obj[] tuple1 = new Obj[] {key, value};
     Obj[] tuple2 = new Obj[] {key, otherValue};
-    return new KeyViolationException(relvarName, new int[] {1}, tuple1, tuple2, betweenNew);
+    return new KeyViolationException(relvarName, KeyViolationException.key_1, tuple1, tuple2, betweenNew);
   }
 }
