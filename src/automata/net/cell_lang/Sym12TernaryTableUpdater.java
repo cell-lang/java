@@ -17,12 +17,15 @@ class Sym12TernaryTableUpdater {
   int[] insertList12;
   int[] insertList3;
 
+  String relvarName;
+
   Sym12TernaryTable table;
   ValueStoreUpdater store12, store3;
 
   boolean prepared = false;
 
-  public Sym12TernaryTableUpdater(Sym12TernaryTable table, ValueStoreUpdater store12, ValueStoreUpdater store3) {
+  public Sym12TernaryTableUpdater(String relvarName, Sym12TernaryTable table, ValueStoreUpdater store12, ValueStoreUpdater store3) {
+    this.relvarName = relvarName;
     this.table = table;
     this.store12 = store12;
     this.store3 = store3;
@@ -294,62 +297,56 @@ class Sym12TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_12() {
-    if (insertCount == 0)
-      return true;
+  public void checkKey_12() {
+    if (insertCount != 0) {
+      prepare();
 
-    prepare();
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
 
-    int prevArg1 = -1;
-    int prevArg2 = -1;
-    int prevArg3 = -1;
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int arg1 = insertList[3 * i];
-      int arg2 = insertList[3 * i + 1];
-      int arg3 = insertList[3 * i + 2];
+        if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 != prevArg3)
+          throw cols12KeyViolationException(arg1, arg2, arg3, prevArg3);
 
-      if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 != prevArg3)
-        return false;
+        if (!Ints123.contains12(deleteList, deleteCount, arg1, arg2) && table.contains12(arg1, arg2))
+          throw cols12KeyViolationException(arg1, arg2, arg3);
 
-      if (!Ints123.contains12(deleteList, deleteCount, arg1, arg2) && table.contains12(arg1, arg2))
-        return false;
-
-      prevArg1 = arg1;
-      prevArg2 = arg2;
-      prevArg3 = arg3;
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
     }
-
-    return true;
   }
 
-  public boolean checkKey_3() {
-    if (insertCount == 0)
-      return true;
+  public void checkKey_3() {
+    if (insertCount != 0) {
+      prepareDelete3();
 
-    prepareDelete3();
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
 
-    int prevArg1 = -1;
-    int prevArg2 = -1;
-    int prevArg3 = -1;
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int arg1 = insertList[3 * i];
-      int arg2 = insertList[3 * i + 1];
-      int arg3 = insertList[3 * i + 2];
+        if (arg3 == prevArg3 & (arg1 != prevArg1 | arg2 != prevArg2))
+          throw col3KeyViolationException(arg1, arg2, arg3, prevArg1, prevArg2);
 
-      if (arg3 == prevArg3 & (arg1 != prevArg1 | arg2 != prevArg2))
-        return false;
+        if (!Ints.contains(deleteList, arg3) && table.contains3(arg3))
+          throw col3KeyViolationException(arg1, arg2, arg3);
 
-      if (!Ints.contains(deleteList, arg3) && table.contains3(arg3))
-        return false;
-
-      prevArg1 = arg1;
-      prevArg2 = arg2;
-      prevArg3 = arg3;
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
     }
-
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -443,5 +440,46 @@ class Sym12TernaryTableUpdater {
       if (!target.contains(insertList[3*i], insertList[3*i+1]))
         return false;
     return target.checkDeletedKeys(this::contains12);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static final int[] key_12 = new int[] {1, 2};
+  public static final int[] key_3  = new int[] {3};
+
+  private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3, int otherArg3) {
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, key_12, true);
+  }
+
+  private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3) {
+    int otherArg3 = table.lookup12(arg1, arg2);
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, key_12, false);
+  }
+
+  private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2) {
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, key_3, true);
+  }
+
+  private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3) {
+    Sym12TernaryTable.Iter3 it = table.getIter3(arg3);
+    int otherArg1 = it.get1();
+    int otherArg2 = it.get2();
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, key_3, false);
+  }
+
+  private KeyViolationException keyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2, int otherArg3, int[] key, boolean betweenNew) {
+    //## BUG: STORES MAY CONTAIN ONLY PART OF THE ACTUAL VALUE (id(5) -> 5)
+    Obj obj1 = store12.surrToValue(arg1);
+    Obj obj2 = store12.surrToValue(arg2);
+    Obj obj3 = store3.surrToValue(arg3);
+
+    Obj otherObj1 = arg1 == otherArg1 ? obj1 : store12.surrToValue(otherArg1);
+    Obj otherObj2 = arg2 == otherArg2 ? obj2 : store12.surrToValue(otherArg2);
+    Obj otherObj3 = arg3 == otherArg3 ? obj3 : store3.surrToValue(otherArg3);
+
+    Obj[] tuple1 = new Obj[] {obj1, obj2, obj3};
+    Obj[] tuple2 = new Obj[] {otherObj1, otherObj2, otherObj3};
+
+    return new KeyViolationException(relvarName, key, tuple1, tuple2, betweenNew);
   }
 }

@@ -15,13 +15,16 @@ class TernaryTableUpdater {
   int insertCount = 0;
   int[] insertList = emptyArray;
 
+  String relvarName;
+
   TernaryTable table;
   ValueStoreUpdater store1, store2, store3;
 
   enum Ord {ORD_NONE, ORD_123, ORD_231, ORD_312};
   Ord currOrd = Ord.ORD_NONE;
 
-  public TernaryTableUpdater(TernaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2, ValueStoreUpdater store3) {
+  public TernaryTableUpdater(String relvarName, TernaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2, ValueStoreUpdater store3) {
+    this.relvarName = relvarName;
     this.table = table;
     this.store1 = store1;
     this.store2 = store2;
@@ -131,27 +134,27 @@ class TernaryTableUpdater {
     }
 
     for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
+      int arg1 = insertList[3 * i];
+      int arg2 = insertList[3 * i + 1];
+      int arg3 = insertList[3 * i + 2];
 
-      if (!table.contains(field1, field2, field3)) {
-        table.insert(field1, field2, field3);
-        store1.addRef(field1);
-        store2.addRef(field2);
-        store3.addRef(field3);
+      if (!table.contains(arg1, arg2, arg3)) {
+        table.insert(arg1, arg2, arg3);
+        store1.addRef(arg1);
+        store2.addRef(arg2);
+        store3.addRef(arg3);
       }
     }
   }
 
   public void finish() {
     for (int i=0 ; i < deleteCount ; i++) {
-      int field1 = deleteList[3 * i];
-      int field2 = deleteList[3 * i + 1];
-      int field3 = deleteList[3 * i + 2];
-      store1.release(field1);
-      store2.release(field2);
-      store3.release(field3);
+      int arg1 = deleteList[3 * i];
+      int arg2 = deleteList[3 * i + 1];
+      int arg3 = deleteList[3 * i + 2];
+      store1.release(arg1);
+      store2.release(arg2);
+      store3.release(arg3);
     }
   }
 
@@ -361,120 +364,108 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_12() {
-    if (insertCount == 0)
-      return true;
+  public void checkKey_12() {
+    if (insertCount != 0) {
+      prepare123();
 
-    prepare123();
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
 
-    int prevField1 = -1;
-    int prevField2 = -1;
-    int prevField3 = -1;
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
+        if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 != prevArg3)
+          throw cols12KeyViolationException(arg1, arg2, arg3, prevArg3);
 
-      if (field1 == prevField1 & field2 == prevField2 & field3 != prevField3)
-        return false;
+        if (!Ints123.contains12(deleteList, deleteCount, arg1, arg2) && table.contains12(arg1, arg2))
+          throw cols12KeyViolationException(arg1, arg2, arg3);
 
-      if (!Ints123.contains12(deleteList, deleteCount, field1, field2) && table.contains12(field1, field2))
-        return false;
-
-      prevField1 = field1;
-      prevField2 = field2;
-      prevField3 = field3;
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
     }
-
-    return true;
   }
 
-  public boolean checkKey_3() {
-    if (insertCount == 0)
-      return true;
+  public void checkKey_3() {
+    if (insertCount != 0) {
+      prepare312();
 
-    prepare312();
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
 
-    int prevField1 = -1;
-    int prevField2 = -1;
-    int prevField3 = -1;
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
+        if (arg3 == prevArg3 & (arg1 != prevArg1 | arg2 != prevArg2))
+          throw col3KeyViolationException(arg1, arg2, arg3, prevArg1, prevArg2);
 
-      if (field3 == prevField3 & (field1 != prevField1 | field2 != prevField2))
-        return false;
+        if (!Ints312.contains3(deleteList, deleteCount, arg3) && table.contains3(arg3))
+          throw col3KeyViolationException(arg1, arg2, arg3);
 
-      if (!Ints312.contains3(deleteList, deleteCount, field3) && table.contains3(field3))
-        return false;
-
-      prevField1 = field1;
-      prevField2 = field2;
-      prevField3 = field3;
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
     }
-
-    return true;
   }
 
-  public boolean checkKey_23() {
-    if (insertCount == 0)
-      return true;
+  public void checkKey_23() {
+    if (insertCount != 0) {
+      prepare231();
 
-    prepare231();
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
 
-    int prevField1 = -1;
-    int prevField2 = -1;
-    int prevField3 = -1;
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
+        if (arg2 == prevArg2 & arg3 == prevArg3 & arg1 != prevArg1)
+          throw cols23KeyViolationException(arg1, arg2, arg3, prevArg1);
 
-      if (field2 == prevField2 & field3 == prevField3 & field1 != prevField1)
-        return false;
+        if (!Ints231.contains23(deleteList, deleteCount, arg2, arg3) && table.contains23(arg2, arg3))
+          throw cols23KeyViolationException(arg1, arg2, arg3);
 
-      if (!Ints231.contains23(deleteList, deleteCount, field2, field3) && table.contains23(field2, field3))
-        return false;
-
-      prevField1 = field1;
-      prevField2 = field2;
-      prevField3 = field3;
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
     }
-
-    return true;
   }
 
-  public boolean checkKey_13() {
-    if (insertCount == 0)
-      return true;
+  public void checkKey_13() {
+    if (insertCount != 0) {
+      prepare312();
 
-    prepare312();
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
 
-    int prevField1 = -1;
-    int prevField2 = -1;
-    int prevField3 = -1;
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
 
-    for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
+        if (arg1 == prevArg1 & arg3 == prevArg3 & arg2 != prevArg2)
+          throw cols13KeyViolationException(arg1, arg2, arg3, prevArg2);
 
-      if (field1 == prevField1 & field3 == prevField3 & field2 != prevField2)
-        return false;
+        if (!Ints312.contains13(deleteList, deleteCount, arg1, arg3) && table.contains13(arg1, arg3))
+          throw cols13KeyViolationException(arg1, arg2, arg3);
 
-      if (!Ints312.contains13(deleteList, deleteCount, field1, field3) && table.contains13(field1, field3))
-        return false;
-
-      prevField1 = field1;
-      prevField2 = field2;
-      prevField3 = field3;
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
     }
-
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -637,5 +628,66 @@ class TernaryTableUpdater {
       if (!target.contains(insertList[3*i], insertList[3*i+1]))
         return false;
     return target.checkDeletedKeys_12(this::contains12);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static final int[] key_12 = new int[] {1, 2};
+  public static final int[] key_3  = new int[] {3};
+  public static final int[] key_23 = new int[] {2, 3};
+  public static final int[] key_13 = new int[] {1, 3};
+
+  private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3, int otherArg3) {
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, key_12, true);
+  }
+
+  private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3) {
+    int otherArg3 = table.lookup12(arg1, arg2);
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, key_12, false);
+  }
+
+  private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2) {
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, key_3, true);
+  }
+
+  private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3) {
+    TernaryTable.Iter3 it = table.getIter3(arg3);
+    int otherArg1 = it.get1();
+    int otherArg2 = it.get2();
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, key_3, false);
+  }
+
+  private KeyViolationException cols23KeyViolationException(int arg1, int arg2, int arg3, int otherArg1) {
+    return keyViolationException(arg1, arg2, arg3, otherArg1, arg2, arg3, key_23, true);
+  }
+
+  private KeyViolationException cols23KeyViolationException(int arg1, int arg2, int arg3) {
+    int otherArg1 = table.lookup23(arg2, arg3);
+    return keyViolationException(arg1, arg2, arg3, otherArg1, arg2, arg3, key_23, false);
+  }
+
+  private KeyViolationException cols13KeyViolationException(int arg1, int arg2, int arg3, int otherArg2) {
+    return keyViolationException(arg1, arg2, arg3, arg1, otherArg2, arg3, key_13, true);
+  }
+
+  private KeyViolationException cols13KeyViolationException(int arg1, int arg2, int arg3) {
+    int otherArg2 = table.lookup13(arg1, arg3);
+    return keyViolationException(arg1, arg2, arg3, arg1, otherArg2, arg3, key_13, false);
+  }
+
+  private KeyViolationException keyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2, int otherArg3, int[] key, boolean betweenNew) {
+    //## BUG: STORES MAY CONTAIN ONLY PART OF THE ACTUAL VALUE (id(5) -> 5)
+    Obj obj1 = store1.surrToValue(arg1);
+    Obj obj2 = store2.surrToValue(arg2);
+    Obj obj3 = store3.surrToValue(arg3);
+
+    Obj otherObj1 = arg1 == otherArg1 ? obj1 : store1.surrToValue(otherArg1);
+    Obj otherObj2 = arg2 == otherArg2 ? obj2 : store2.surrToValue(otherArg2);
+    Obj otherObj3 = arg3 == otherArg3 ? obj3 : store3.surrToValue(otherArg3);
+
+    Obj[] tuple1 = new Obj[] {obj1, obj2, obj3};
+    Obj[] tuple2 = new Obj[] {otherObj1, otherObj2, otherObj3};
+
+    return new KeyViolationException(relvarName, key, tuple1, tuple2, betweenNew);
   }
 }
