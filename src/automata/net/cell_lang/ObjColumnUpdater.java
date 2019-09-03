@@ -147,8 +147,25 @@ final class ObjColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean contains1(int surr1) {
-    throw Miscellanea.internalFail();
+  private boolean contains1(int surr1) {
+    if (surr1 > maxIdx)
+      return column.contains1(surr1);
+
+    // This call is only needed to build the delete/update/insert bitmap
+    if (!dirty)
+      checkKey_1();
+
+    int slotIdx = surr1 / 32;
+    int bitsShift = 2 * (surr1 % 32);
+    long slot = bitmap[slotIdx];
+    long status = slot >> bitsShift;
+
+    if ((status & 2) != 0)
+      return true;  // Inserted/updated
+    else if ((status & 1) != 0)
+      return false; // Deleted and not reinserted
+    else
+      return column.contains1(surr1); // Untouched
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -200,12 +217,6 @@ final class ObjColumnUpdater {
         bitmap[slotIdx] = slot | (2L << bitsShift);
       }
     }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  public boolean checkDeletedKeys_1(IntPredicate source) {
-    throw Miscellanea.internalFail();
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -237,12 +237,6 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys_1(IntPredicate source) {
-    throw Miscellanea.internalFail();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
   // bin_rel(a, _) -> unary_rel(a);
   public boolean checkForeignKeys_1(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
