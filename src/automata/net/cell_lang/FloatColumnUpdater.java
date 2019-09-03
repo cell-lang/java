@@ -22,12 +22,16 @@ final class FloatColumnUpdater {
   boolean col1KeyViolated = false;
   long[] bitmap = Array.emptyLongArray;
 
+  String relvarName;
   FloatColumn column;
+  ValueStoreUpdater store;
 
   //////////////////////////////////////////////////////////////////////////////
 
-  FloatColumnUpdater(FloatColumn column, ValueStoreUpdater storeUpdater) {
+  FloatColumnUpdater(String relvarName, FloatColumn column, ValueStoreUpdater store) {
+    this.relvarName = relvarName;
     this.column = column;
+    this.store = store;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -153,11 +157,13 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean contains1(int surr1) {
+  private boolean contains1(int surr1) {
     if (surr1 > maxIdx)
       return !clear && column.contains1(surr1);
 
-    buildBitmap();
+    // This call is only needed to build the delete/update/insert bitmap
+    if (!dirty)
+      checkKey_1();
 
     int slotIdx = surr1 / 32;
     int bitsShift = 2 * (surr1 % 32);
@@ -174,61 +180,58 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_1() {
-    if (insertCount == 0 & updateCount == 0)
-      return true;
-    Miscellanea._assert(maxIdx != -1);
-    buildBitmap();
-    return !col1KeyViolated;
-  }
+  public void checkKey_1() {
+    if (insertCount != 0 | updateCount != 0) {
+      Miscellanea._assert(maxIdx != -1);
+      Miscellanea._assert(!dirty);
 
-  //////////////////////////////////////////////////////////////////////////////
+      dirty = true;
 
-  private void buildBitmap() {
-    if (dirty)
-      return;
+      if (maxIdx / 32 >= bitmap.length)
+        bitmap = Array.extend(bitmap, Array.capacity(bitmap.length, maxIdx / 32 + 1));
 
-    if (maxIdx / 32 >= bitmap.length)
-      bitmap = Array.extend(bitmap, Array.capacity(bitmap.length, maxIdx / 32 + 1));
+      // 00 - untouched
+      // 01 - deleted
+      // 10 - inserted
+      // 11 - updated or inserted and deleted
 
-    // 00 - untouched
-    // 01 - deleted
-    // 10 - inserted
-    // 11 - updated or inserted and deleted
+      if (clear) {
+        Array.fill(bitmap, 0x5555555555555555L); //## BAD: THIS CAN BE MADE MORE EFFICIENT
+      }
+      else {
+        for (int i=0 ; i < deleteCount ; i++) {
+          int idx = deleteIdxs[i];
+          int slotIdx = idx / 32;
+          int bitsShift = 2 * (idx % 32);
+          bitmap[slotIdx] |= 1L << bitsShift;
+        }
+      }
 
-    dirty = true;
-
-    if (clear) {
-      Array.fill(bitmap, 0x5555555555555555L); //## BAD: THIS CAN BE MADE MORE EFFICIENT
-    }
-    else {
-      for (int i=0 ; i < deleteCount ; i++) {
-        int idx = deleteIdxs[i];
+      for (int i=0 ; i < updateCount ; i++) {
+        int idx = updateIdxs[i];
         int slotIdx = idx / 32;
         int bitsShift = 2 * (idx % 32);
-        bitmap[slotIdx] |= 1L << bitsShift;
+        long slot = bitmap[slotIdx];
+        if (((slot >> bitsShift) & 2) != 0)
+          //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+          throw col1KeyViolation(idx, updateValues[i], true);
+        bitmap[slotIdx] = slot | (3L << bitsShift);
       }
-    }
 
-    for (int i=0 ; i < updateCount ; i++) {
-      int idx = updateIdxs[i];
-      int slotIdx = idx / 32;
-      int bitsShift = 2 * (idx % 32);
-      long slot = bitmap[slotIdx];
-      if (((slot >> bitsShift) & 2) != 0)
-        col1KeyViolated = true;
-      bitmap[slotIdx] = slot | (3L << bitsShift);
-    }
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int idx = insertIdxs[i];
-      int slotIdx = idx / 32;
-      int bitsShift = 2 * (idx % 32);
-      long slot = bitmap[slotIdx];
-      int bits = (int) ((slot >> bitsShift) & 3);
-      if ((bits == 0 && column.contains1(idx)) | bits >= 2)
-        col1KeyViolated = true;
-      bitmap[slotIdx] = slot | (2L << bitsShift);
+      for (int i=0 ; i < insertCount ; i++) {
+        int idx = insertIdxs[i];
+        int slotIdx = idx / 32;
+        int bitsShift = 2 * (idx % 32);
+        long slot = bitmap[slotIdx];
+        int bits = (int) ((slot >> bitsShift) & 3);
+        if (bits >= 2)
+          //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+          throw col1KeyViolation(idx, insertValues[i], true);
+        if ((bits == 0 && column.contains1(idx)))
+          //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+          throw col1KeyViolation(idx, insertValues[i], false);
+        bitmap[slotIdx] = slot | (2L << bitsShift);
+      }
     }
   }
 
@@ -253,5 +256,31 @@ final class FloatColumnUpdater {
 
     // Checking that no entries were invalidated by a deletion on the target table
     return target.checkDeletedKeys(this::contains1);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private KeyViolationException col1KeyViolation(int idx, double value, boolean betweenNew) {
+    if (betweenNew) {
+      for (int i=0 ; i < updateCount ; i++)
+        if (updateIdxs[i] == idx)
+          return col1KeyViolation(idx, value, updateValues[i], betweenNew);
+
+      for (int i=0 ; i < insertCount ; i++)
+        if (insertIdxs[i] == idx)
+          return col1KeyViolation(idx, value, insertValues[i], betweenNew);
+
+      throw Miscellanea.internalFail();
+    }
+    else
+      return col1KeyViolation(idx, value, column.lookup(idx), betweenNew);
+  }
+
+  private KeyViolationException col1KeyViolation(int idx, double value, double otherValue, boolean betweenNew) {
+    //## BUG: Stores may contain only part of the value (id(5) -> 5)
+    Obj key = store.surrToValue(idx);
+    Obj[] tuple1 = new Obj[] {key, new FloatObj(value)};
+    Obj[] tuple2 = new Obj[] {key, new FloatObj(otherValue)};
+    return new KeyViolationException(relvarName, new int[] {1}, tuple1, tuple2, betweenNew);
   }
 }
