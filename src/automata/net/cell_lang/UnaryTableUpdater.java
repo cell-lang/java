@@ -175,6 +175,33 @@ class UnaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  public interface DeletabilityChecker {
+    void check(UnaryTableUpdater updater, int surr);
+  }
+
+  public void _checkDeletedKeys(DeletabilityChecker deletabilityChecker) {
+    prepare();
+
+    if (clear) {
+      UnaryTable.Iter it = table.getIter();
+      while (!it.done()) {
+        int surr = it.get();
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          deletabilityChecker.check(this, surr);
+        it.next();
+      }
+    }
+    else {
+      for (int i=0 ; i < deleteCount ; i++) {
+        int surr = deleteList[i];
+        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
+          deletabilityChecker.check(this, surr);
+      }
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   // unary_rel_1(x) -> unary_rel_2(x);
   public boolean checkForeignKeys(UnaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)

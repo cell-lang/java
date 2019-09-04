@@ -99,7 +99,7 @@ class ForeignKeyViolationException extends RuntimeException {
     writer.write("Foreign key violation: " + fromRelvar + type.originArgs() + " -> " + toRelvar + type.targetArgs() + "\n");
     if (toTuple == null) {
       // The violation was caused by an insertion
-      writer.write("The violation was caused by the insertion of the following tuple:\n  (");
+      writer.write("The failure was caused by the attempted insertion of the following tuple:\n  (");
       for (int i=0 ; i < fromTuple.length ; i++) {
         if (i > 0)
           writer.write(", ");
@@ -108,7 +108,21 @@ class ForeignKeyViolationException extends RuntimeException {
       writer.write(")\n");
     }
     else {
-
+      // The violation was caused by a deletion in the target table
+      writer.write("The failure was caused by the attempted deletion of:\n  " + toRelvar + "(");
+      for (int i=0 ; i < toTuple.length ; i++) {
+        if (i > 0)
+          writer.write(", ");
+        toTuple[i].print(writer, Integer.MAX_VALUE, true, 0);
+      }
+      writer.write(")\n");
+      writer.write("which was prevented by the presence of:\n  " + fromRelvar + "(");
+      for (int i=0 ; i < fromTuple.length ; i++) {
+        if (i > 0)
+          writer.write(", ");
+        fromTuple[i].print(writer, Integer.MAX_VALUE, true, 0);
+      }
+      writer.write(")\n");
     }
     return writer.toString();
   }
