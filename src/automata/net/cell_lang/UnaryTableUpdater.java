@@ -18,11 +18,13 @@ class UnaryTableUpdater {
 
   boolean prepared = false;
 
+  String relvarName;
   UnaryTable table;
   ValueStoreUpdater store;
 
 
   public UnaryTableUpdater(String relvarName, UnaryTable table, ValueStoreUpdater store) {
+    this.relvarName = relvarName;
     this.table = table;
     this.store = store;
   }

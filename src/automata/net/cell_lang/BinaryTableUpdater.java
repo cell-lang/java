@@ -351,14 +351,14 @@ class BinaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   // bin_rel(a, _) -> unary_rel(a);
-  public boolean checkForeignKeys_1(UnaryTableUpdater target) {
+  public void checkForeignKeys_1(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[2*i]))
-        return false;
+        throw foreignKey1ViolationException(1, insertList[2*i], insertList[2*i+1], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains1);
+    target.checkDeletedKeys(this::contains1);
   }
 
   // bin_rel(_, b) -> unary_rel(b);
@@ -475,5 +475,12 @@ class BinaryTableUpdater {
     Obj[] tuple1 = new Obj[] {store1.surrToValue(arg1Surr), arg2};
     Obj[] tuple2 = new Obj[] {store1.surrToValue(otherArg1Surr), arg2};
     return new KeyViolationException(relvarName, KeyViolationException.key_2, tuple1, tuple2, betweenNew);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private ForeignKeyViolationException foreignKey1ViolationException(int column, int arg1Surr, int arg2Surr, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store1.surrToValue(arg1Surr), store2.surrToValue(arg2Surr)};
+    return ForeignKeyViolationException.unaryBinary(relvarName, column, target.relvarName, tuple);
   }
 }
