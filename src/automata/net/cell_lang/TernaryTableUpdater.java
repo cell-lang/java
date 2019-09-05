@@ -178,28 +178,34 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public void prepare123() {
-    Miscellanea._assert(currOrd == Ord.ORD_NONE | currOrd == Ord.ORD_123);
-    if (currOrd != Ord.ORD_123) {
-      Ints123.sort(deleteList, deleteCount);
-      Ints123.sort(insertList, insertCount);
-      currOrd = Ord.ORD_123;
+    if (deleteCount != 0 | insertCount != 0) {
+      Miscellanea._assert(currOrd == Ord.ORD_NONE | currOrd == Ord.ORD_123);
+      if (currOrd != Ord.ORD_123) {
+        Ints123.sort(deleteList, deleteCount);
+        Ints123.sort(insertList, insertCount);
+        currOrd = Ord.ORD_123;
+      }
     }
   }
 
   public void prepare231() {
-    Miscellanea._assert(currOrd != Ord.ORD_312);
-    if (currOrd != Ord.ORD_231) {
-      Ints231.sort(deleteList, deleteCount);
-      Ints231.sort(insertList, insertCount);
-      currOrd = Ord.ORD_231;
+    if (deleteCount != 0 | insertCount != 0) {
+      Miscellanea._assert(currOrd != Ord.ORD_312);
+      if (currOrd != Ord.ORD_231) {
+        Ints231.sort(deleteList, deleteCount);
+        Ints231.sort(insertList, insertCount);
+        currOrd = Ord.ORD_231;
+      }
     }
   }
 
   public void prepare312() {
-    if (currOrd != Ord.ORD_312) {
-      Ints312.sort(deleteList, deleteCount);
-      Ints312.sort(insertList, insertCount);
-      currOrd = Ord.ORD_312;
+    if (deleteCount != 0 | insertCount != 0) {
+      if (currOrd != Ord.ORD_312) {
+        Ints312.sort(deleteList, deleteCount);
+        Ints312.sort(insertList, insertCount);
+        currOrd = Ord.ORD_312;
+      }
     }
   }
 

@@ -140,19 +140,23 @@ class BinaryTableUpdater {
   }
 
   public void prepare12() {
-    Miscellanea._assert(currOrd != Ord.ORD_21);
-    if (currOrd != Ord.ORD_12) {
-      Ints12.sort(deleteList, deleteCount);
-      Ints12.sort(insertList, insertCount);
-      currOrd = Ord.ORD_12;
+    if (deleteCount != 0 | insertCount != 0) {
+      Miscellanea._assert(currOrd != Ord.ORD_21);
+      if (currOrd != Ord.ORD_12) {
+        Ints12.sort(deleteList, deleteCount);
+        Ints12.sort(insertList, insertCount);
+        currOrd = Ord.ORD_12;
+      }
     }
   }
 
   public void prepare21() {
-    if (currOrd != Ord.ORD_21) {
-      Ints21.sort(deleteList, deleteCount);
-      Ints21.sort(insertList, insertCount);
-      currOrd = Ord.ORD_21;
+    if (deleteCount != 0 | insertCount != 0) {
+      if (currOrd != Ord.ORD_21) {
+        Ints21.sort(deleteList, deleteCount);
+        Ints21.sort(insertList, insertCount);
+        currOrd = Ord.ORD_21;
+      }
     }
   }
 
