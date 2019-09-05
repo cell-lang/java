@@ -770,12 +770,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     foreign_keys  = [k : k <- block.insert_checked_foreign_keys, insertion_tables(k.origin)] &
                     [k : k <- block.delete_checked_foreign_keys, deletion_tables(k.target)];
 
-    check_exprs = (check_expr(k) : k <- sort_by_key(foreign_keys, order));
-    foreign_keys_check_code = join((
-      ( "if (!" & e & ")",
-        "  Miscellanea.softFail();"
-      ) : e <- check_exprs
-    ));
+    foreign_keys_check_code = (check_stmt(k) : k <- sort_by_key(foreign_keys, order));
     foreign_keys_check_code = ("") & foreign_keys_check_code if foreign_keys != [];
 
     return keys_check_code & foreign_keys_check_code;
@@ -789,11 +784,11 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     }
 
 
-    String check_expr(BlockForeignKey key) {
+    String check_stmt(BlockForeignKey key) {
       origin = pending_updates_var_ref_name(key.origin);
       target = pending_updates_var_ref_name(key.target);
       method = foreign_key_check_method_name(key.type);
-      return native_method_call_expr(origin, method, (target));
+      return native_method_call_expr(origin, method, (target)) & ";";
     }
 
 
