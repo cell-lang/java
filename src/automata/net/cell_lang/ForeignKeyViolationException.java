@@ -26,16 +26,33 @@ class ForeignKeyViolationException extends RuntimeException {
     }
   }
 
-  private static final class UnaryBinaryForeignKeyType implements ForeignKeyType {
+  private static final class BinaryUnaryForeignKeyType implements ForeignKeyType {
     int column;
 
-    public UnaryBinaryForeignKeyType(int column) {
+    public BinaryUnaryForeignKeyType(int column) {
       Miscellanea._assert(column == 1 | column == 2);
       this.column = column;
     }
 
     public String originArgs() {
       return column == 1 ? "(a, _)" : "(_, a)";
+    }
+
+    public String targetArgs() {
+      return "(a)";
+    }
+  }
+
+  private static final class TernaryUnaryForeignKeyType implements ForeignKeyType {
+    int column;
+
+    public TernaryUnaryForeignKeyType(int column) {
+      Miscellanea._assert(column == 1 | column == 2 | column == 3);
+      this.column = column;
+    }
+
+    public String originArgs() {
+      return column == 1 ? "(a, _, _)" : column == 2 ? "(_, a, _)" : "(_, _, a)";
     }
 
     public String targetArgs() {
@@ -75,21 +92,54 @@ class ForeignKeyViolationException extends RuntimeException {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public static ForeignKeyViolationException unaryUnary(String fromRelvar, String toRelvar, Obj[] fromTuple) {
-    return unaryUnary(fromRelvar, toRelvar, fromTuple, null);
+  public static ForeignKeyViolationException unaryUnary(String fromRelvar, String toRelvar, Obj value) {
+    Obj[] tuple = new Obj[] {value};
+    return new ForeignKeyViolationException(UNARY_UNARY, fromRelvar, toRelvar, tuple, tuple);
   }
 
-  public static ForeignKeyViolationException unaryUnary(String fromRelvar, String toRelvar, Obj[] fromTuple, Obj[] toTuple) {
-    return new ForeignKeyViolationException(UNARY_UNARY, fromRelvar, toRelvar, fromTuple, toTuple);
+  public static ForeignKeyViolationException binaryUnary(String fromRelvar, int column, String toRelvar, Obj[] fromTuple) {
+    return binaryUnary(fromRelvar, column, toRelvar, fromTuple, null);
   }
 
-  public static ForeignKeyViolationException unaryBinary(String fromRelvar, int column, String toRelvar, Obj[] fromTuple) {
-    return unaryBinary(fromRelvar, column, toRelvar, fromTuple, null);
-  }
-
-  public static ForeignKeyViolationException unaryBinary(String fromRelvar, int column, String toRelvar, Obj[] fromTuple, Obj[] toTuple) {
-    ForeignKeyType type = new UnaryBinaryForeignKeyType(column);
+  public static ForeignKeyViolationException binaryUnary(String fromRelvar, int column, String toRelvar, Obj[] fromTuple, Obj toArg) {
+    ForeignKeyType type = new BinaryUnaryForeignKeyType(column);
+    Obj[] toTuple = toArg != null ? new Obj[] {toArg} : null;
     return new ForeignKeyViolationException(type, fromRelvar, toRelvar, fromTuple, toTuple);
+  }
+
+  public static ForeignKeyViolationException symBinaryUnary(String fromRelvar, String toRelvar, Obj[] fromTuple) {
+    return symBinaryUnary(fromRelvar, toRelvar, fromTuple, null);
+  }
+
+  public static ForeignKeyViolationException symBinaryUnary(String fromRelvar, String toRelvar, Obj[] fromTuple, Obj toArg) {
+    Obj[] toTuple = toArg != null ? new Obj[] {toArg} : null;
+    return new ForeignKeyViolationException(SYM_BINARY_UNARY, fromRelvar, toRelvar, fromTuple, toTuple);
+  }
+
+  public static ForeignKeyViolationException ternaryUnary(String fromRelvar, int column, String toRelvar, Obj[] fromTuple) {
+    return ternaryUnary(fromRelvar, column, toRelvar, fromTuple, null);
+  }
+
+  public static ForeignKeyViolationException ternaryUnary(String fromRelvar, int column, String toRelvar, Obj[] fromTuple, Obj toArg) {
+    ForeignKeyType type = new TernaryUnaryForeignKeyType(column);
+    Obj[] toTuple = toArg != null ? new Obj[] {toArg} : null;
+    return new ForeignKeyViolationException(type, fromRelvar, toRelvar, fromTuple, toTuple);
+  }
+
+  public static ForeignKeyViolationException symTernary12Unary(String fromRelvar, String toRelvar, Obj[] fromTuple) {
+    return new ForeignKeyViolationException(SYM_TERNARY_UNARY, fromRelvar, toRelvar, fromTuple, null);
+  }
+
+  public static ForeignKeyViolationException symTernary12Unary(String fromRelvar, String toRelvar, Obj[] fromTuple, Obj toArg) {
+    return new ForeignKeyViolationException(SYM_TERNARY_UNARY, fromRelvar, toRelvar, fromTuple, new Obj[] {toArg});
+  }
+
+  public static ForeignKeyViolationException symTernary3Unary(String fromRelvar, String toRelvar, Obj[] fromTuple) {
+    return ternaryUnary(fromRelvar, 3, toRelvar, fromTuple);
+  }
+
+  public static ForeignKeyViolationException symTernary3Unary(String fromRelvar, String toRelvar, Obj[] fromTuple, Obj toArg) {
+    return ternaryUnary(fromRelvar, 3, toRelvar, fromTuple, toArg);
   }
 
   //////////////////////////////////////////////////////////////////////////////

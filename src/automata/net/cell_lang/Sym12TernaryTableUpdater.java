@@ -413,26 +413,43 @@ class Sym12TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   // tern_rel(a, b, _) -> unary_rel(a), unary_rel(b)
-  public boolean checkForeignKeys_1_2(UnaryTableUpdater target) {
+  public void checkForeignKeys_1_2(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
+    for (int i=0 ; i < insertCount ; i++) {
       if (!target.contains(insertList[3*i]) | !target.contains(insertList[3*i+1]))
-        return false;
+        throw toUnaryForeignKeyViolation12(insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
+    }
 
     // Checking that no entries were invalidates by a deletion on the target table
-    return target.checkDeletedKeys(this::contains_1_2);
+    target.checkDeletedKeys(deletabilityChecker12);
   }
 
+  UnaryTableUpdater.DeletabilityChecker deletabilityChecker12 =
+    new UnaryTableUpdater.DeletabilityChecker() {
+      public void check(UnaryTableUpdater target, int surr12) {
+        if (contains_1_2(surr12))
+          throw toUnaryForeignKeyViolation12(surr12, target);
+      }
+    };
+
   // tern_rel(_, _, c) -> unary_rel(c)
-  public boolean checkForeignKeys_3(UnaryTableUpdater target) {
+  public void checkForeignKeys_3(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i+2]))
-        return false;
+        throw toUnaryForeignKeyViolation3(insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains3);
+    target.checkDeletedKeys(deletabilityChecker3);
   }
+
+  UnaryTableUpdater.DeletabilityChecker deletabilityChecker3 =
+    new UnaryTableUpdater.DeletabilityChecker() {
+      public void check(UnaryTableUpdater target, int surr3) {
+        if (contains3(surr3))
+          throw toUnaryForeignKeyViolation3(surr3, target);
+      }
+    };
 
   // tern_rel(a, b, _) -> binary_rel(a, b)
   public boolean checkForeignKeys_12(SymBinaryTableUpdater target) {
@@ -478,5 +495,35 @@ class Sym12TernaryTableUpdater {
     Obj[] tuple2 = new Obj[] {otherObj1, otherObj2, otherObj3};
 
     return new KeyViolationException(relvarName, key, tuple1, tuple2, betweenNew);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation12(int arg1Surr, int arg2Surr, int arg3Surr, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store12.surrToValue(arg1Surr), store12.surrToValue(arg2Surr), store3.surrToValue(arg3Surr)};
+    return ForeignKeyViolationException.symTernary12Unary(relvarName, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation12(int arg12Surr, UnaryTableUpdater target) {
+    Sym12TernaryTable.Iter it = table.getIter_1_2(arg12Surr);
+    Obj arg1 = store12.surrToValue(arg12Surr);
+    Obj arg2 = store12.surrToValue(it.get1());
+    Obj arg3 = store3.surrToValue(it.get2());
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.symTernary12Unary(relvarName, target.relvarName, tuple, arg1);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation3(int arg1Surr, int arg2Surr, int arg3Surr, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store12.surrToValue(arg1Surr), store12.surrToValue(arg2Surr), store3.surrToValue(arg3Surr)};
+    return ForeignKeyViolationException.symTernary3Unary(relvarName, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation3(int arg3Surr, UnaryTableUpdater target) {
+    Sym12TernaryTable.Iter3 it = table.getIter3(arg3Surr);
+    Obj arg1 = store12.surrToValue(it.get1());
+    Obj arg2 = store12.surrToValue(it.get2());
+    Obj arg3 = store3.surrToValue(arg3Surr);
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.symTernary3Unary(relvarName, target.relvarName, tuple, arg3);
   }
 }

@@ -148,38 +148,11 @@ class UnaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys(IntPredicate source) {
-    prepare();
-
-    if (clear) {
-      UnaryTable.Iter it = table.getIter();
-      while (!it.done()) {
-        int surr = it.get();
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.test(surr))
-            return false;
-        it.next();
-      }
-    }
-    else {
-      for (int i=0 ; i < deleteCount ; i++) {
-        int surr = deleteList[i];
-        if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          if (source.test(surr))
-            return false;
-      }
-    }
-
-    return true;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
   public interface DeletabilityChecker {
     void check(UnaryTableUpdater updater, int surr);
   }
 
-  public void _checkDeletedKeys(DeletabilityChecker deletabilityChecker) {
+  public void checkDeletedKeys(DeletabilityChecker deletabilityChecker) {
     prepare();
 
     if (clear) {
@@ -203,12 +176,20 @@ class UnaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   // unary_rel_1(x) -> unary_rel_2(x);
-  public boolean checkForeignKeys(UnaryTableUpdater target) {
+  public void checkForeignKeys(UnaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[i]))
-        return false;
-    return target.checkDeletedKeys(this::contains);
+        throw toUnaryForeignKeyViolation(insertList[i], target);
+    target.checkDeletedKeys(deletabilityChecker);
   }
+
+  DeletabilityChecker deletabilityChecker =
+    new DeletabilityChecker() {
+      public void check(UnaryTableUpdater target, int surr) {
+        if (contains(surr))
+          throw toUnaryForeignKeyViolation(surr, target);
+      }
+    };
 
   // unary_rel(x) -> binary_rel(x, _);
   public boolean checkForeignKeys_1(BinaryTableUpdater target) {
@@ -272,5 +253,11 @@ class UnaryTableUpdater {
       if (!target.contains3(insertList[i]))
         return false;
     return target.checkDeletedKeys_3(this::contains);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation(int surr, UnaryTableUpdater target) {
+    return ForeignKeyViolationException.unaryUnary(relvarName, target.relvarName, store.surrToValue(surr));
   }
 }

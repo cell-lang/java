@@ -590,37 +590,61 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   // tern_rel(a, _, _) -> unary_rel(a);
-  public boolean checkForeignKeys_1(UnaryTableUpdater target) {
+  public void checkForeignKeys_1(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i]))
-        return false;
+        throw toUnaryForeignKeyViolation(1, insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains1);
+    target.checkDeletedKeys(deletabilityChecker1);
   }
 
+  UnaryTableUpdater.DeletabilityChecker deletabilityChecker1 =
+    new UnaryTableUpdater.DeletabilityChecker() {
+      public void check(UnaryTableUpdater target, int surr1) {
+        if (contains1(surr1))
+          throw toUnaryForeignKeyViolation1(surr1, target);
+      }
+    };
+
   // tern_rel(_, b, _) -> unary_rel(b);
-  public boolean checkForeignKeys_2(UnaryTableUpdater target) {
+  public void checkForeignKeys_2(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i+1]))
-        return false;
+        throw toUnaryForeignKeyViolation(2, insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains2);
+    target.checkDeletedKeys(deletabilityChecker2);
   }
 
+  UnaryTableUpdater.DeletabilityChecker deletabilityChecker2 =
+    new UnaryTableUpdater.DeletabilityChecker() {
+      public void check(UnaryTableUpdater target, int surr2) {
+        if (contains2(surr2))
+          throw toUnaryForeignKeyViolation2(surr2, target);
+      }
+    };
+
   // tern_rel(_, _, c) -> unary_rel(c)
-  public boolean checkForeignKeys_3(UnaryTableUpdater target) {
+  public void checkForeignKeys_3(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i+2]))
-        return false;
+        throw toUnaryForeignKeyViolation(3, insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains3);
+    target.checkDeletedKeys(deletabilityChecker3);
   }
+
+  UnaryTableUpdater.DeletabilityChecker deletabilityChecker3 =
+    new UnaryTableUpdater.DeletabilityChecker() {
+      public void check(UnaryTableUpdater target, int surr3) {
+        if (contains3(surr3))
+          throw toUnaryForeignKeyViolation3(surr3, target);
+      }
+    };
 
   // tern_rel(a, b, _) -> binary_rel(a, b)
   public boolean checkForeignKeys_12(BinaryTableUpdater target) {
@@ -684,5 +708,39 @@ class TernaryTableUpdater {
     Obj[] tuple2 = new Obj[] {otherObj1, otherObj2, otherObj3};
 
     return new KeyViolationException(relvarName, key, tuple1, tuple2, betweenNew);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation(int column, int arg1Surr, int arg2Surr, int arg3Surr, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store1.surrToValue(arg1Surr), store2.surrToValue(arg2Surr), store3.surrToValue(arg3Surr)};
+    return ForeignKeyViolationException.ternaryUnary(relvarName, column, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation1(int delSurr, UnaryTableUpdater target) {
+    TernaryTable.Iter1 it = table.getIter1(delSurr);
+    Obj arg1 = store1.surrToValue(delSurr);
+    Obj arg2 = store2.surrToValue(it.get1());
+    Obj arg3 = store3.surrToValue(it.get2());
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.ternaryUnary(relvarName, 1, target.relvarName, tuple, arg1);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation2(int delSurr, UnaryTableUpdater target) {
+    TernaryTable.Iter2 it = table.getIter2(delSurr);
+    Obj arg1 = store1.surrToValue(it.get1());
+    Obj arg2 = store2.surrToValue(delSurr);
+    Obj arg3 = store3.surrToValue(it.get2());
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.ternaryUnary(relvarName, 2, target.relvarName, tuple, arg2);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation3(int delSurr, UnaryTableUpdater target) {
+    TernaryTable.Iter3 it = table.getIter3(delSurr);
+    Obj arg1 = store1.surrToValue(it.get1());
+    Obj arg2 = store2.surrToValue(it.get2());
+    Obj arg3 = store3.surrToValue(delSurr);
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.ternaryUnary(relvarName, 3, target.relvarName, tuple, arg3);
   }
 }
