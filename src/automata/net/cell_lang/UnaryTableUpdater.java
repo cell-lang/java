@@ -192,44 +192,99 @@ class UnaryTableUpdater {
     };
 
   // unary_rel(x) -> binary_rel(x, _);
-  public boolean checkForeignKeys_1(BinaryTableUpdater target) {
+  public void checkForeignKeys_1(BinaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains1(insertList[i]))
-        return false;
-    return target.checkDeletedKeys_1(this::contains);
+        throw toBinaryForeingKeyViolation1(insertList[i], target);
+    target.checkDeletedKeys_1(binaryTableDeletabilityChecker1);
   }
+
+  BinaryTableUpdater.DeletabilityChecker binaryTableDeletabilityChecker1 =
+    new BinaryTableUpdater.DeletabilityChecker() {
+      public boolean isLive(int surr) {
+        return contains(surr);
+      }
+
+      public void onViolation(BinaryTableUpdater target, int surr1, int surr2) {
+        throw toBinaryForeingKeyViolation1(surr1, surr2, target);
+      }
+    };
 
   // unary_rel(x) -> binary_rel(_, x);
-  public boolean checkForeignKeys_2(BinaryTableUpdater target) {
+  public void checkForeignKeys_2(BinaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains2(insertList[i]))
-        return false;
-    return target.checkDeletedKeys_2(this::contains);
+        throw toBinaryForeingKeyViolation2(insertList[i], target);
+    target.checkDeletedKeys_2(binaryTableDeletabilityChecker2);
   }
+
+  BinaryTableUpdater.DeletabilityChecker binaryTableDeletabilityChecker2 =
+    new BinaryTableUpdater.DeletabilityChecker() {
+      public boolean isLive(int surr) {
+        return contains(surr);
+      }
+
+      public void onViolation(BinaryTableUpdater target, int surr1, int surr2) {
+        throw toBinaryForeingKeyViolation2(surr1, surr2, target);
+      }
+    };
 
   // unary_rel(x) -> ternary_rel(x, _, _)
-  public boolean checkForeignKeys_1(TernaryTableUpdater target) {
+  public void checkForeignKeys_1(TernaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains1(insertList[i]))
-        return false;
-    return target.checkDeletedKeys_1(this::contains);
+        throw toTernaryForeignKeyViolation1(insertList[i], target);
+    target.checkDeletedKeys_1(ternaryTableDeletabilityChecker1);
   }
+
+  TernaryTableUpdater.DeletabilityChecker ternaryTableDeletabilityChecker1 =
+    new TernaryTableUpdater.DeletabilityChecker() {
+      public boolean isLive(int surr) {
+        return contains(surr);
+      }
+
+      public void onViolation(TernaryTableUpdater target, int surr1, int surr2, int surr3) {
+        throw toTernaryForeingKeyViolation1(surr1, surr2, surr3, target);
+      }
+    };
 
   // unary_rel(x) -> ternary_rel(, x, _)
-  public boolean checkForeignKeys_2(TernaryTableUpdater target) {
+  public void checkForeignKeys_2(TernaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains2(insertList[i]))
-        return false;
-    return target.checkDeletedKeys_2(this::contains);
+        throw toTernaryForeignKeyViolation2(insertList[i], target);
+    target.checkDeletedKeys_2(ternaryTableDeletabilityChecker2);
   }
 
+  TernaryTableUpdater.DeletabilityChecker ternaryTableDeletabilityChecker2 =
+    new TernaryTableUpdater.DeletabilityChecker() {
+      public boolean isLive(int surr) {
+        return contains(surr);
+      }
+
+      public void onViolation(TernaryTableUpdater target, int surr1, int surr2, int surr3) {
+        throw toTernaryForeingKeyViolation2(surr1, surr2, surr3, target);
+      }
+    };
+
   // unary_rel(x) -> ternary_rel(_, _, x)
-  public boolean checkForeignKeys_3(TernaryTableUpdater target) {
+  public void checkForeignKeys_3(TernaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains3(insertList[i]))
-        return false;
-    return target.checkDeletedKeys_3(this::contains);
+        throw toTernaryForeignKeyViolation3(insertList[i], target);
+    target.checkDeletedKeys_3(ternaryTableDeletabilityChecker3);
   }
+
+  TernaryTableUpdater.DeletabilityChecker ternaryTableDeletabilityChecker3 =
+    new TernaryTableUpdater.DeletabilityChecker() {
+      public boolean isLive(int surr) {
+        return contains(surr);
+      }
+
+      public void onViolation(TernaryTableUpdater target, int surr1, int surr2, int surr3) {
+        throw toTernaryForeingKeyViolation3(surr1, surr2, surr3, target);
+      }
+    };
 
   // unary_rel(x) -> sym_binary_rel(x, _) | sym_binary_rel(_, x)
   public boolean checkForeignKeys(SymBinaryTableUpdater target) {
@@ -259,5 +314,76 @@ class UnaryTableUpdater {
 
   private ForeignKeyViolationException toUnaryForeignKeyViolation(int surr, UnaryTableUpdater target) {
     return ForeignKeyViolationException.unaryUnary(relvarName, target.relvarName, store.surrToValue(surr));
+  }
+
+  private ForeignKeyViolationException toBinaryForeingKeyViolation1(int surr, BinaryTableUpdater target) {
+    Obj arg = store.surrToValue(surr);
+    return ForeignKeyViolationException.unaryBinary(relvarName, 1, target.relvarName, arg);
+  }
+
+  private ForeignKeyViolationException toBinaryForeingKeyViolation1(int surr1, int surr2, BinaryTableUpdater target) {
+    Miscellanea._assert(store == target.store1);
+    Obj arg1 = store.surrToValue(surr1);
+    Obj arg2 = target.store2.surrToValue(surr2);
+    Obj[] tuple = new Obj[] {arg1, arg2};
+    return ForeignKeyViolationException.unaryBinary(relvarName, 1, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toBinaryForeingKeyViolation2(int surr, BinaryTableUpdater target) {
+    Obj arg = store.surrToValue(surr);
+    return ForeignKeyViolationException.unaryBinary(relvarName, 2, target.relvarName, arg);
+  }
+
+  private ForeignKeyViolationException toBinaryForeingKeyViolation2(int surr1, int surr2, BinaryTableUpdater target) {
+    Miscellanea._assert(store == target.store2);
+    Obj arg1 = target.store1.surrToValue(surr1);
+    Obj arg2 = store.surrToValue(surr2);
+    Obj[] tuple = new Obj[] {arg1, arg2};
+    return ForeignKeyViolationException.unaryBinary(relvarName, 2, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toTernaryForeignKeyViolation1(int surr, TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store1);
+    Obj arg = store.surrToValue(surr);
+    return ForeignKeyViolationException.unaryTernary(relvarName, 1, target.relvarName, arg);
+  }
+
+  private ForeignKeyViolationException toTernaryForeingKeyViolation1(int surr1, int surr2, int surr3, TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store1);
+    Obj arg1 = store.surrToValue(surr1);
+    Obj arg2 = target.store2.surrToValue(surr2);
+    Obj arg3 = target.store3.surrToValue(surr3);
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.unaryTernary(relvarName, 1, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toTernaryForeignKeyViolation2(int surr, TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store2);
+    Obj arg = store.surrToValue(surr);
+    return ForeignKeyViolationException.unaryTernary(relvarName, 2, target.relvarName, arg);
+  }
+
+  private ForeignKeyViolationException toTernaryForeingKeyViolation2(int surr1, int surr2, int surr3, TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store2);
+    Obj arg1 = target.store1.surrToValue(surr1);
+    Obj arg2 = store.surrToValue(surr2);
+    Obj arg3 = target.store3.surrToValue(surr3);
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.unaryTernary(relvarName, 2, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toTernaryForeignKeyViolation3(int surr, TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store3);
+    Obj arg = store.surrToValue(surr);
+    return ForeignKeyViolationException.unaryTernary(relvarName, 3, target.relvarName, arg);
+  }
+
+  private ForeignKeyViolationException toTernaryForeingKeyViolation3(int surr1, int surr2, int surr3, TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store3);
+    Obj arg1 = target.store1.surrToValue(surr1);
+    Obj arg2 = target.store2.surrToValue(surr2);
+    Obj arg3 = store.surrToValue(surr3);
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.unaryTernary(relvarName, 3, target.relvarName, tuple);
   }
 }

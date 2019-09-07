@@ -277,12 +277,18 @@ class BinaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys_1(IntPredicate source) {
+  public interface DeletabilityChecker {
+    boolean isLive(int surr);
+    void onViolation(BinaryTableUpdater updater, int surr1, int surr2);
+  }
+
+  public void checkDeletedKeys_1(DeletabilityChecker deletabilityChecker) {
     prepare12();
 
     for (int i=0 ; i < deleteCount ; ) {
-      int surr1 = deleteList[2 * i];
-      if (!Ints12.contains1(insertList, insertCount, surr1) && source.test(surr1)) {
+      int offset = 2 * i;
+      int surr1 = deleteList[offset];
+      if (!Ints12.contains1(insertList, insertCount, surr1) && deletabilityChecker.isLive(surr1)) {
         int count = table.count1(surr1);
         Miscellanea._assert(count > 0);
 
@@ -298,22 +304,24 @@ class BinaryTableUpdater {
         }
 
         Miscellanea._assert(deleteCount1 <= count);
-        if (deleteCount1 == count)
-          return false;
+        if (deleteCount1 == count) {
+          int[] surrs2 = table.restrict1(surr1);
+          for (int j=0 ; j < surrs2.length ; j++)
+            Miscellanea._assert(Ints12.contains(deleteList, deleteCount, surr1, surrs2[j]));
+          deletabilityChecker.onViolation(this, deleteList[offset], deleteList[offset+1]);
+        }
       }
       else
         i++;
     }
-
-    return true;
   }
 
-  public boolean checkDeletedKeys_2(IntPredicate source) {
+  public void checkDeletedKeys_2(DeletabilityChecker deletabilityChecker) {
     prepare21();
 
     for (int i=0 ; i < deleteCount ; ) {
       int surr2 = deleteList[2 * i + 1];
-      if (!Ints21.contains2(insertList, insertCount, surr2) && source.test(surr2)) {
+      if (!Ints21.contains2(insertList, insertCount, surr2) && deletabilityChecker.isLive(surr2)) {
         int count = table.count2(surr2);
         Miscellanea._assert(count > 0);
 
@@ -328,14 +336,21 @@ class BinaryTableUpdater {
           }
         }
 
-        if (deleteCount2 == count)
-          return false;
+        if (deleteCount2 == count) {
+          int[] surrs1 = table.restrict2(surr2);
+          for (int j=0 ; j < surrs1.length ; j++)
+            Miscellanea._assert(Ints12.contains(deleteList, deleteCount, surrs1[j], surr2));
+          deletabilityChecker.onViolation(this, surrs1[0], surr2);
+        }
       }
       else
         i++;
     }
+  }
 
-    return true;
+  public interface BinaryDeletabilityChecker {
+    boolean isLive(int surr1, int surr2);
+    void onViolation(BinaryTableUpdater updater, int surr1, int surr2);
   }
 
   public boolean checkDeletedKeys_12(BiIntPredicate source) {
