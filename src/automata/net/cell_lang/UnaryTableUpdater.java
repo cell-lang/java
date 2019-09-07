@@ -287,12 +287,22 @@ class UnaryTableUpdater {
     };
 
   // unary_rel(x) -> sym_binary_rel(x, _) | sym_binary_rel(_, x)
-  public boolean checkForeignKeys(SymBinaryTableUpdater target) {
+  public void checkForeignKeys(SymBinaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[i]))
-        return false;
-    return target.checkDeletedKeys((a1, a2) -> contains(a1) & contains(a2));
+        throw toSymBinaryForeingKeyViolation(insertList[i], target);
+    target.checkDeletedKeys(symBinaryTableDeletabilityChecker);
   }
+
+  SymBinaryTableUpdater.DeletabilityChecker symBinaryTableDeletabilityChecker =
+    new SymBinaryTableUpdater.DeletabilityChecker() {
+      public void checkHint(SymBinaryTableUpdater updater, int surr1, int surr2) {
+        if (contains(surr1) && !updater.contains(surr1))
+          throw toSymBinaryForeingKeyViolation(surr1, surr2, updater);
+        if (contains(surr2) && !updater.contains(surr2))
+          throw toSymBinaryForeingKeyViolation(surr2, surr1, updater);
+      }
+    };
 
   // unary_rel(x) -> sym_ternary_rel(x, _, _) | sym_ternary_rel(_, x, _)
   public boolean checkForeignKeys_1_2(Sym12TernaryTableUpdater target) {
@@ -385,5 +395,18 @@ class UnaryTableUpdater {
     Obj arg3 = store.surrToValue(surr3);
     Obj[] tuple = new Obj[] {arg1, arg2, arg3};
     return ForeignKeyViolationException.unaryTernary(relvarName, 3, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toSymBinaryForeingKeyViolation(int surr, SymBinaryTableUpdater target) {
+    Miscellanea._assert(store == target.store);
+    Obj arg = store.surrToValue(surr);
+    return ForeignKeyViolationException.unarySymBinary(relvarName, target.relvarName, arg);
+  }
+
+  private ForeignKeyViolationException toSymBinaryForeingKeyViolation(int surr, int otherSurr, SymBinaryTableUpdater target) {
+    Miscellanea._assert(store == target.store);
+    Obj arg = store.surrToValue(surr);
+    Obj otherArg = store.surrToValue(otherSurr);
+    return ForeignKeyViolationException.unarySymBinary(relvarName, target.relvarName, arg, otherArg);
   }
 }

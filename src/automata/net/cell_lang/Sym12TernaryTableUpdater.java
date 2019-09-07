@@ -295,6 +295,34 @@ class Sym12TernaryTableUpdater {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+
+  public int lookupAny12(int surr1, int surr2) {
+    if (surr1 > surr2) {
+      int tmp = surr1;
+      surr1 = surr2;
+      surr2 = tmp;
+    }
+
+    prepare();
+    if (Ints123.contains12(insertList, insertCount, surr1, surr2)) {
+      int idxFirst = Ints123.indexFirst12(insertList, insertCount, surr1, surr2);
+      return insertList[3 * idxFirst + 2];
+    }
+
+    if (table.contains12(surr1, surr2)) {
+      Sym12TernaryTable.Iter12 it = table.getIter12(surr1, surr2);
+      Miscellanea._assert(!it.done());
+      do {
+        if (!Ints123.contains(deleteList, deleteCount, surr1, surr2, it.get1()))
+          return it.get1();
+        it.next();
+      } while (!it.done());
+    }
+
+    throw Miscellanea.internalFail();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
   public void checkKey_12() {
@@ -412,7 +440,7 @@ class Sym12TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  // tern_rel(a, b, _) -> unary_rel(a), unary_rel(b)
+  // sym_tern_rel(a, b, _) -> unary_rel(a), unary_rel(b)
   public void checkForeignKeys_1_2(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++) {
@@ -432,7 +460,7 @@ class Sym12TernaryTableUpdater {
       }
     };
 
-  // tern_rel(_, _, c) -> unary_rel(c)
+  // sym_tern_rel(_, _, c) -> unary_rel(c)
   public void checkForeignKeys_3(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
@@ -451,13 +479,21 @@ class Sym12TernaryTableUpdater {
       }
     };
 
-  // tern_rel(a, b, _) -> binary_rel(a, b)
-  public boolean checkForeignKeys_12(SymBinaryTableUpdater target) {
+  // sym_tern_rel(a, b, _) -> sym_binary_rel(a, b)
+  public void checkForeignKeys_12(SymBinaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i], insertList[3*i+1]))
-        return false;
-    return target.checkDeletedKeys(this::contains12);
+        throw toSymBinaryForeingKeyViolation(insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
+    target.checkDeletedKeys(symBinaryTableDeletabilityChecker);
   }
+
+  SymBinaryTableUpdater.DeletabilityChecker symBinaryTableDeletabilityChecker =
+    new SymBinaryTableUpdater.DeletabilityChecker() {
+      public void checkHint(SymBinaryTableUpdater updater, int surr1, int surr2) {
+        if (contains12(surr1, surr2) && !updater.contains(surr1, surr2))
+          throw toSymBinaryForeingKeyViolation(surr1, surr2, lookupAny12(surr1, surr2), updater);
+      }
+    };
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -525,5 +561,13 @@ class Sym12TernaryTableUpdater {
     Obj arg3 = store3.surrToValue(arg3Surr);
     Obj[] tuple = new Obj[] {arg1, arg2, arg3};
     return ForeignKeyViolationException.symTernary3Unary(relvarName, target.relvarName, tuple, arg3);
+  }
+
+  private ForeignKeyViolationException toSymBinaryForeingKeyViolation(int surr1, int surr2, int surr3, SymBinaryTableUpdater target) {
+    Miscellanea._assert(store12 == target.store);
+    Obj arg1 = store12.surrToValue(surr1);
+    Obj arg2 = store12.surrToValue(surr2);
+    Obj arg3 = store3.surrToValue(surr3);
+    return ForeignKeyViolationException.symTernarySymBinary(relvarName, target.relvarName, arg1, arg2, arg3);
   }
 }

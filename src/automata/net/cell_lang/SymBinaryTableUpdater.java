@@ -176,18 +176,20 @@ class SymBinaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys(BiIntPredicate source) {
+  public interface DeletabilityChecker {
+    void checkHint(SymBinaryTableUpdater updater, int surr1, int surr2);
+  }
+
+  public void checkDeletedKeys(DeletabilityChecker deletabilityChecker) {
     prepare();
 
     for (int i=0 ; i < deleteCount ; i++) {
       int surr1 = deleteList[2 * i];
       int surr2 = deleteList[2 * i + 1];
+      //## THIS DOESN'T SEEM RIGHT
       if (!Ints12.contains(insertList, insertCount, surr1, surr2))
-        if (source.test(surr1, surr2))
-          return false;
+        deletabilityChecker.checkHint(this, surr1, surr2);
     }
-
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////

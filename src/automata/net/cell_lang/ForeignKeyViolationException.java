@@ -202,6 +202,22 @@ class ForeignKeyViolationException extends RuntimeException {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  public static ForeignKeyViolationException unarySymBinary(String fromRelvar, String toRelvar, Obj arg) {
+    return new ForeignKeyViolationException(UNARY_SYM_BINARY, fromRelvar, toRelvar, new Obj[] {arg}, null);
+  }
+
+  public static ForeignKeyViolationException unarySymBinary(String fromRelvar, String toRelvar, Obj arg, Obj otherArg) {
+    return new ForeignKeyViolationException(UNARY_SYM_BINARY, fromRelvar, toRelvar, new Obj[] {arg}, new Obj[] {arg, otherArg});
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static ForeignKeyViolationException symTernarySymBinary(String fromRelvar, String toRelvar, Obj arg1, Obj arg2, Obj arg3) {
+    return new ForeignKeyViolationException(SYM_TERNARY_SYM_BINARY, fromRelvar, toRelvar, new Obj[] {arg1, arg2}, new Obj[] {arg1, arg2, arg3});
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   public String toString() {
     StringWriter writer = new StringWriter();
     writer.write("Foreign key violation: " + fromRelvar + type.originArgs() + " -> " + toRelvar + type.targetArgs() + "\n");
