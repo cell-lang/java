@@ -368,6 +368,34 @@ class TernaryTableUpdater {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+
+  public int lookupAny12(int surr1, int surr2) {
+    prepare123();
+
+    if (Ints123.contains12(insertList, insertCount, surr1, surr2)) {
+      int idxFirst = Ints123.indexFirst12(insertList, insertCount, surr1, surr2);
+      return insertList[3 * idxFirst + 2];
+    }
+
+    int idx = Ints123.indexFirst12(deleteList, deleteCount, surr1, surr2);
+    if (idx == -1)
+      return table.getIter12(surr1, surr2).get1();
+
+    int count = Ints123.count12(deleteList, deleteCount, surr1, surr2, idx);
+
+    TernaryTable.Iter12 it = table.getIter12(surr1, surr2);
+    while (!it.done()) {
+      // Tuples in the [idx, idx+count) range are sorted in both 1/2/3
+      // and 3/1/2 order, since the first two arguments are the same
+      if (!Ints312.contains3(deleteList, idx, count, it.get1()))
+        return it.get1();
+      it.next();
+    }
+
+    throw Miscellanea.internalFail();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
   public void checkKey_12() {
@@ -566,14 +594,19 @@ class TernaryTableUpdater {
     }
   }
 
-  public boolean checkDeletedKeys_12(BiIntPredicate source) {
+  public interface BinaryDeletabilityChecker {
+    boolean isLive(int surr1, int surr2);
+    void onViolation(int surr1, int surr2, int surr3, TernaryTableUpdater updater);
+  }
+
+  public void checkDeletedKeys_12(BinaryDeletabilityChecker deletabilityChecker) {
     prepare123();
 
     for (int i=0 ; i < deleteCount ; ) {
       int offset = 3 * i;
       int surr1 = deleteList[offset];
       int surr2 = deleteList[offset + 1];
-      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && source.test(surr1, surr2)) {
+      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && deletabilityChecker.isLive(surr1, surr2)) {
         int surr3 = deleteList[3 * i + 2];
         int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
         for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
@@ -585,12 +618,11 @@ class TernaryTableUpdater {
           }
         }
         if (table.count12Eq(surr1, surr2, removedCount))
-          return false;
+          deletabilityChecker.onViolation(surr1, surr2, deleteList[offset+2], this);
       }
       else
         i++;
     }
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -654,12 +686,24 @@ class TernaryTableUpdater {
     };
 
   // tern_rel(a, b, _) -> binary_rel(a, b)
-  public boolean checkForeignKeys_12(BinaryTableUpdater target) {
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertList[3*i], insertList[3*i+1]))
-        return false;
-    return target.checkDeletedKeys_12(this::contains12);
+  public void checkForeignKeys_12(BinaryTableUpdater target) {
+    for (int i=0 ; i < insertCount ; i++) {
+      int offset = 3 * i;
+      int arg1 = insertList[offset];
+      int arg2 = insertList[offset+1];
+      if (!target.contains(arg1, arg2))
+        throw toBinaryForeignKeyViolation(arg1, arg2, insertList[offset+2], target);
+    }
+    target.checkDeletedKeys_12(deletabilityChecker12);
   }
+
+  BinaryTableUpdater.BinaryDeletabilityChecker deletabilityChecker12 =
+    new BinaryTableUpdater.BinaryDeletabilityChecker() {
+      public void check(int surr1, int surr2, BinaryTableUpdater updater) {
+        if (contains12(surr1, surr2))
+          throw toBinaryForeignKeyViolation(surr1, surr2, updater);
+      }
+    };
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -749,5 +793,19 @@ class TernaryTableUpdater {
     Obj arg3 = store3.surrToValue(delSurr);
     Obj[] tuple = new Obj[] {arg1, arg2, arg3};
     return ForeignKeyViolationException.ternaryUnary(relvarName, 3, target.relvarName, tuple, arg3);
+  }
+
+  private ForeignKeyViolationException toBinaryForeignKeyViolation(int surr1, int surr2, int surr3, BinaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store1.surrToValue(surr1), store2.surrToValue(surr2), store3.surrToValue(surr3)};
+    return ForeignKeyViolationException.ternaryBinary(relvarName, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toBinaryForeignKeyViolation(int surr1, int surr2, BinaryTableUpdater target) {
+    Obj arg1 = store1.surrToValue(surr1);
+    Obj arg2 = store2.surrToValue(surr2);
+    Obj arg3 = store3.surrToValue(lookupAny12(surr1, surr2));
+    Obj[] fromTuple = new Obj[] {arg1, arg2, arg3};
+    Obj[] toTuple = new Obj[] {arg1, arg2};
+    return ForeignKeyViolationException.ternaryBinary(relvarName, target.relvarName, fromTuple, toTuple);
   }
 }

@@ -104,13 +104,6 @@ class ForeignKeyViolationException extends RuntimeException {
   public static final ForeignKeyType SYM_BINARY_SYM_TERNARY = new NoArgsForeignKeyType("(a | b)", "(a | b, _)");
   public static final ForeignKeyType SYM_TERNARY_SYM_BINARY = new NoArgsForeignKeyType("(a | b, _)", "(a | b)");
 
-  // type ForeignKeyType = unary_unary, unary_binary(<0..1>), unary_ternary(<0..2>),
-  //                       binary_unary(<0..1>), ternary_unary(<0..2>),
-  //                       binary_ternary, ternary_binary,
-  //                       unary_sym_binary, unary_sym_ternary,
-  //                       sym_binary_unary, sym_ternary_unary,
-  //                       sym_binary_sym_ternary, sym_ternary_sym_binary;
-
 
   ForeignKeyType type;
   String fromRelvar, toRelvar;
@@ -214,6 +207,26 @@ class ForeignKeyViolationException extends RuntimeException {
 
   public static ForeignKeyViolationException symTernarySymBinary(String fromRelvar, String toRelvar, Obj arg1, Obj arg2, Obj arg3) {
     return new ForeignKeyViolationException(SYM_TERNARY_SYM_BINARY, fromRelvar, toRelvar, new Obj[] {arg1, arg2}, new Obj[] {arg1, arg2, arg3});
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static ForeignKeyViolationException binaryTernary(String fromRelvar, String toRelvar, Obj arg1, Obj arg2) {
+    return new ForeignKeyViolationException(BINARY_TERNARY, fromRelvar, toRelvar, new Obj[] {arg1, arg2}, null);
+  }
+
+  public static ForeignKeyViolationException binaryTernary(String fromRelvar, String toRelvar, Obj arg1, Obj arg2, Obj arg3) {
+    return new ForeignKeyViolationException(BINARY_TERNARY, fromRelvar, toRelvar, new Obj[] {arg1, arg2}, new Obj[] {arg1, arg2, arg3});
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static ForeignKeyViolationException ternaryBinary(String fromRelvar, String toRelvar, Obj[] fromTuple) {
+    return new ForeignKeyViolationException(BINARY_TERNARY, fromRelvar, toRelvar, fromTuple, null);
+  }
+
+  public static ForeignKeyViolationException ternaryBinary(String fromRelvar, String toRelvar, Obj[] fromTuple, Obj[] toTuple) {
+    return new ForeignKeyViolationException(BINARY_TERNARY, fromRelvar, toRelvar, fromTuple, toTuple);
   }
 
   //////////////////////////////////////////////////////////////////////////////
