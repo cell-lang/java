@@ -168,6 +168,33 @@ final class ObjColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  private Obj lookup(int surr1) {
+    if (surr1 <= maxIdx) {
+      Miscellanea._assert(dirty);
+
+      int slotIdx = surr1 / 32;
+      int bitsShift = 2 * (surr1 % 32);
+      long slot = bitmap[slotIdx];
+      long status = slot >> bitsShift;
+
+      if ((status & 2) != 0) {
+        for (int i=0 ; i < insertCount ; i++)
+          if (insertIdxs[i] == surr1)
+            return insertValues[i];
+
+        for (int i=0 ; i < updateCount ; i++)
+          if (updateIdxs[i] == surr1)
+            return updateValues[i];
+
+        Miscellanea.internalFail();
+      }
+    }
+
+    return column.lookup(surr1);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   public void checkKey_1() {
     if (insertCount != 0 | updateCount != 0) {
       Miscellanea._assert(maxIdx != -1);
@@ -220,19 +247,27 @@ final class ObjColumnUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   // bin_rel(a, _) -> unary_rel(a);
-  public boolean checkForeignKeys_1(UnaryTableUpdater target) {
+  public void checkForeignKeys_1(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertIdxs[i]))
-        return false;
+        throw foreignKeyViolation(insertIdxs[i], insertValues[i], target);
 
     for (int i=0 ; i < updateCount ; i++)
       if (!target.contains(updateIdxs[i]))
-        return false;
+        throw foreignKeyViolation(updateIdxs[i], updateValues[i], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains1);
+    target.checkDeletedKeys(deletabilityChecker);
   }
+
+  UnaryTableUpdater.DeletabilityChecker deletabilityChecker =
+    new UnaryTableUpdater.DeletabilityChecker() {
+      public void check(UnaryTableUpdater updater, int surr) {
+        if (contains1(surr))
+          throw foreignKeyViolation(surr, updater);
+      }
+    };
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -258,5 +293,18 @@ final class ObjColumnUpdater {
     Obj[] tuple1 = new Obj[] {key, value};
     Obj[] tuple2 = new Obj[] {key, otherValue};
     return new KeyViolationException(relvarName, KeyViolationException.key_1, tuple1, tuple2, betweenNew);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private ForeignKeyViolationException foreignKeyViolation(int keySurr, Obj value, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store.surrToValue(keySurr), value};
+    return ForeignKeyViolationException.binaryUnary(relvarName, 1, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException foreignKeyViolation(int keySurr, UnaryTableUpdater target) {
+    Obj key = store.surrToValue(keySurr);
+    Obj[] fromTuple = new Obj[] {key, lookup(keySurr)};
+    return ForeignKeyViolationException.binaryUnary(relvarName, 1, target.relvarName, fromTuple, key);
   }
 }
