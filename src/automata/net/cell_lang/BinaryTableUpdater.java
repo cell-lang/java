@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.function.IntPredicate;
-
 
 class BinaryTableUpdater {
   int deleteCount = 0;
@@ -352,7 +350,7 @@ class BinaryTableUpdater {
     void check(int surr1, int surr2, BinaryTableUpdater target);
   }
 
-  public boolean checkDeletedKeys_12(BinaryDeletabilityChecker deletabilityChecker) {
+  public void checkDeletedKeys_12(BinaryDeletabilityChecker deletabilityChecker) {
     prepare12();
 
     for (int i=0 ; i < deleteCount ; i++) {
@@ -361,8 +359,6 @@ class BinaryTableUpdater {
       if (!Ints12.contains(insertList, insertCount, surr1, surr2))
         deletabilityChecker.check(surr1, surr2, this);
     }
-
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -1,7 +1,6 @@
 package net.cell_lang;
 
 import java.util.Arrays;
-import java.util.function.IntPredicate;
 
 
 class UnaryTableUpdater {
@@ -294,8 +293,8 @@ class UnaryTableUpdater {
     target.checkDeletedKeys(symBinaryTableDeletabilityChecker);
   }
 
-  SymBinaryTableUpdater.DeletabilityChecker symBinaryTableDeletabilityChecker =
-    new SymBinaryTableUpdater.DeletabilityChecker() {
+  SymBinaryTableUpdater.DeletabilityHintChecker symBinaryTableDeletabilityChecker =
+    new SymBinaryTableUpdater.DeletabilityHintChecker() {
       public void checkHint(SymBinaryTableUpdater updater, int surr1, int surr2) {
         if (contains(surr1) && !updater.contains(surr1))
           throw toSymBinaryForeingKeyViolation(surr1, surr2, updater);
@@ -305,20 +304,41 @@ class UnaryTableUpdater {
     };
 
   // unary_rel(x) -> sym_ternary_rel(x, _, _) | sym_ternary_rel(_, x, _)
-  public boolean checkForeignKeys_1_2(Sym12TernaryTableUpdater target) {
+  public void checkForeignKeys_1_2(Sym12TernaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains_1_2(insertList[i]))
-        return false;
-    return target.checkDeletedKeys_12((a1, a2) -> contains(a1) & contains(a2));
+        throw toSymTernaryForeignKeyViolation12(insertList[i], target);
+    target.checkDeletedKeys_1_2(symTernaryTableDeletabilityChecker12);
   }
 
+  Sym12TernaryTableUpdater.DeletabilityHintChecker symTernaryTableDeletabilityChecker12 =
+    new Sym12TernaryTableUpdater.DeletabilityHintChecker() {
+      public void checkHint(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater updater) {
+        if (contains(surr1) && !updater.contains_1_2(surr1))
+          throw toSymTernaryForeignKeyViolation12(surr1, surr2, surr3, updater);
+        if (contains(surr2) && !updater.contains_1_2(surr2))
+          throw toSymTernaryForeignKeyViolation12(surr2, surr1, surr3, updater);
+      }
+    };
+
   // unary_rel(x) -> sym_ternary_rel(_, _, x)
-  public boolean checkForeignKeys_3(Sym12TernaryTableUpdater target) {
+  public void checkForeignKeys_3(Sym12TernaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains3(insertList[i]))
-        return false;
-    return target.checkDeletedKeys_3(this::contains);
+        throw toSymTernaryForeignKeyViolation3(insertList[i], target);
+    target.checkDeletedKeys_3(symTernaryTableDeletabilityChecker3);
   }
+
+  Sym12TernaryTableUpdater.DeletabilityChecker symTernaryTableDeletabilityChecker3 =
+    new Sym12TernaryTableUpdater.DeletabilityChecker() {
+      public boolean isLive(int surr) {
+        return contains(surr);
+      }
+
+      public void onViolation(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater updater) {
+        throw toSymTernaryForeingKeyViolation3(surr1, surr2, surr3, updater);
+      }
+    };
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -408,5 +428,32 @@ class UnaryTableUpdater {
     Obj arg = store.surrToValue(surr);
     Obj otherArg = store.surrToValue(otherSurr);
     return ForeignKeyViolationException.unarySymBinary(relvarName, target.relvarName, arg, otherArg);
+  }
+
+  private ForeignKeyViolationException toSymTernaryForeignKeyViolation12(int surr, Sym12TernaryTableUpdater target) {
+    Obj arg = store.surrToValue(surr);
+    return ForeignKeyViolationException.unarySym12Ternary(relvarName, target.relvarName, arg);
+  }
+
+  private ForeignKeyViolationException toSymTernaryForeignKeyViolation12(int delSurr12, int otherSurr12, int surr3, Sym12TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store12);
+    Obj delArg12 = store.surrToValue(delSurr12);
+    Obj otherArg12 = store.surrToValue(otherSurr12);
+    Obj arg3 = store.surrToValue(surr3);
+    return ForeignKeyViolationException.unarySym12Ternary(relvarName, target.relvarName, delArg12, otherArg12, arg3);
+  }
+
+  private ForeignKeyViolationException toSymTernaryForeignKeyViolation3(int surr, Sym12TernaryTableUpdater target) {
+    Obj arg = store.surrToValue(surr);
+    return ForeignKeyViolationException.unaryTernary(relvarName, 3, target.relvarName, arg);
+  }
+
+  private ForeignKeyViolationException toSymTernaryForeingKeyViolation3(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store3);
+    Obj arg1 = target.store12.surrToValue(surr1);
+    Obj arg2 = target.store12.surrToValue(surr2);
+    Obj arg3 = store.surrToValue(surr3);
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.unaryTernary(relvarName, 3, target.relvarName, tuple);
   }
 }

@@ -45,7 +45,6 @@ src_Ints231                   = 'algorithms/net/cell_lang/Ints231.java'
 src_Ints312                   = 'algorithms/net/cell_lang/Ints312.java'
 
 src_Array                     = 'utils/net/cell_lang/Array.java'
-src_BiIntPredicate            = 'utils/net/cell_lang/BiIntPredicate.java'
 src_CharStream                = 'utils/net/cell_lang/CharStream.java'
 src_Conversions               = 'utils/net/cell_lang/Conversions.java'
 src_Hashing                   = 'utils/net/cell_lang/Hashing.java'
@@ -149,7 +148,6 @@ std_sources = [
   src_Ints312,
 
   src_Array,
-  src_BiIntPredicate,
   src_CharStream,
   src_Hashing,
   src_IntCtrs,

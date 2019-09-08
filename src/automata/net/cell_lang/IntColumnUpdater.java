@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.function.IntPredicate;
-
 
 final class IntColumnUpdater {
   int deleteCount = 0;

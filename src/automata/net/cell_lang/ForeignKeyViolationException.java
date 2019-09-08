@@ -143,6 +143,17 @@ class ForeignKeyViolationException extends RuntimeException {
     return new ForeignKeyViolationException(SYM_BINARY_UNARY, fromRelvar, toRelvar, fromTuple, toTuple);
   }
 
+  public static ForeignKeyViolationException symBinarySymTernary(String fromRelvar, String toRelvar, Obj arg1, Obj arg2) {
+    Obj[] fromTuple = new Obj[] {arg1, arg2};
+    return new ForeignKeyViolationException(SYM_BINARY_SYM_TERNARY, fromRelvar, toRelvar, fromTuple, null);
+  }
+
+  public static ForeignKeyViolationException symBinarySymTernary(String fromRelvar, String toRelvar, Obj arg1, Obj arg2, Obj arg3) {
+    Obj[] fromTuple = new Obj[] {arg1, arg2};
+    Obj[] toTuple = new Obj[] {arg1, arg2, arg3};
+    return new ForeignKeyViolationException(SYM_BINARY_SYM_TERNARY, fromRelvar, toRelvar, fromTuple, toTuple);
+  }
+
   public static ForeignKeyViolationException ternaryUnary(String fromRelvar, int column, String toRelvar, Obj[] fromTuple) {
     return ternaryUnary(fromRelvar, column, toRelvar, fromTuple, null);
   }
@@ -201,6 +212,16 @@ class ForeignKeyViolationException extends RuntimeException {
 
   public static ForeignKeyViolationException unarySymBinary(String fromRelvar, String toRelvar, Obj arg, Obj otherArg) {
     return new ForeignKeyViolationException(UNARY_SYM_BINARY, fromRelvar, toRelvar, new Obj[] {arg}, new Obj[] {arg, otherArg});
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static ForeignKeyViolationException unarySym12Ternary(String fromRelvar, String toRelvar, Obj arg) {
+    return new ForeignKeyViolationException(UNARY_SYM_TERNARY, fromRelvar, toRelvar, new Obj[] {arg}, null);
+  }
+
+  public static ForeignKeyViolationException unarySym12Ternary(String fromRelvar, String toRelvar, Obj delArg12, Obj otherArg12, Obj arg3) {
+    return new ForeignKeyViolationException(UNARY_SYM_TERNARY, fromRelvar, toRelvar, new Obj[] {delArg12}, new Obj[] {delArg12, otherArg12, arg3});
   }
 
   //////////////////////////////////////////////////////////////////////////////

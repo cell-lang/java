@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.function.IntPredicate;
-
 
 //      Column      Update map    Flagged   Description             Deletions   Insertions
 //

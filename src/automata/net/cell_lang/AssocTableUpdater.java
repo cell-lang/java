@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.function.IntPredicate;
-
 
 //## BAD BAD BAD: THIS IS ALMOST IDENTICAL TO BinaryTableUpdater
 class AssocTableUpdater {
@@ -240,80 +238,80 @@ class AssocTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys_1(IntPredicate source) {
-    prepare12();
+  // public void checkDeletedKeys_1(source) {
+  //   prepare12();
 
-    for (int i=0 ; i < deleteCount ; ) {
-      int surr1 = deleteList[2 * i];
-      if (!Ints12.contains1(insertList, insertCount, surr1) && source.test(surr1)) {
-        int count = table.count1(surr1);
-        Miscellanea._assert(count > 0);
+  //   for (int i=0 ; i < deleteCount ; ) {
+  //     int surr1 = deleteList[2 * i];
+  //     if (!Ints12.contains1(insertList, insertCount, surr1) && source.test(surr1)) {
+  //       int count = table.count1(surr1);
+  //       Miscellanea._assert(count > 0);
 
-        int surr2 = deleteList[2 * i + 1];
-        int deleteCount1 = table.contains(surr1, surr2) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[2*i] == surr1 ; i++) {
-          int currSurr2 = deleteList[2*i+1];
-          if (currSurr2 != surr2) {
-            surr2 = currSurr2;
-            if (table.contains(surr1, surr2))
-              deleteCount1++;
-          }
-        }
+  //       int surr2 = deleteList[2 * i + 1];
+  //       int deleteCount1 = table.contains(surr1, surr2) ? 1 : 0;
+  //       for (i++ ; i < deleteCount && deleteList[2*i] == surr1 ; i++) {
+  //         int currSurr2 = deleteList[2*i+1];
+  //         if (currSurr2 != surr2) {
+  //           surr2 = currSurr2;
+  //           if (table.contains(surr1, surr2))
+  //             deleteCount1++;
+  //         }
+  //       }
 
-        Miscellanea._assert(deleteCount1 <= count);
-        if (deleteCount1 == count)
-          return false;
-      }
-      else
-        i++;
-    }
+  //       Miscellanea._assert(deleteCount1 <= count);
+  //       if (deleteCount1 == count)
+  //         return false;
+  //     }
+  //     else
+  //       i++;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
-  public boolean checkDeletedKeys_2(IntPredicate source) {
-    prepare21();
+  // public void checkDeletedKeys_2(source) {
+  //   prepare21();
 
-    for (int i=0 ; i < deleteCount ; ) {
-      int surr2 = deleteList[2 * i + 1];
-      if (!Ints21.contains2(insertList, insertCount, surr2) && source.test(surr2)) {
-        int count = table.count2(surr2);
-        Miscellanea._assert(count > 0);
+  //   for (int i=0 ; i < deleteCount ; ) {
+  //     int surr2 = deleteList[2 * i + 1];
+  //     if (!Ints21.contains2(insertList, insertCount, surr2) && source.test(surr2)) {
+  //       int count = table.count2(surr2);
+  //       Miscellanea._assert(count > 0);
 
-        int surr1 = deleteList[2 * i];
-        int deleteCount2 = table.contains(surr1, surr2) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[2*i+1] == surr2 ; i++) {
-          int currSurr1 = deleteList[2 * i];
-          if (currSurr1 != surr1) {
-            surr1 = currSurr1;
-            if (table.contains(surr1, surr2))
-              deleteCount2++;
-          }
-        }
+  //       int surr1 = deleteList[2 * i];
+  //       int deleteCount2 = table.contains(surr1, surr2) ? 1 : 0;
+  //       for (i++ ; i < deleteCount && deleteList[2*i+1] == surr2 ; i++) {
+  //         int currSurr1 = deleteList[2 * i];
+  //         if (currSurr1 != surr1) {
+  //           surr1 = currSurr1;
+  //           if (table.contains(surr1, surr2))
+  //             deleteCount2++;
+  //         }
+  //       }
 
-        if (deleteCount2 == count)
-          return false;
-      }
-      else
-        i++;
-    }
+  //       if (deleteCount2 == count)
+  //         return false;
+  //     }
+  //     else
+  //       i++;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
-  public boolean checkDeletedKeys_12(BiIntPredicate source) {
-    prepare12();
+  // public void checkDeletedKeys_12(source) {
+  //   prepare12();
 
-    for (int i=0 ; i < deleteCount ; i++) {
-      int surr1 = deleteList[2 * i];
-      int surr2 = deleteList[2 * i + 1];
-      if (!Ints12.contains(insertList, insertCount, surr1, surr2))
-        if (source.test(surr1, surr2))
-          return false;
-    }
+  //   for (int i=0 ; i < deleteCount ; i++) {
+  //     int surr1 = deleteList[2 * i];
+  //     int surr2 = deleteList[2 * i + 1];
+  //     if (!Ints12.contains(insertList, insertCount, surr1, surr2))
+  //       if (source.test(surr1, surr2))
+  //         return false;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
   //////////////////////////////////////////////////////////////////////////////
 

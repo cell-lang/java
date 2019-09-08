@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.function.IntPredicate;
-
 
 class SlaveTernTableUpdater {
   static int[] emptyArray = new int[0];
@@ -394,7 +392,7 @@ class SlaveTernTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  // public boolean checkDeletedKeys_1(IntPredicate source) {
+  // public void checkDeletedKeys_1(source) {
   //   prepare123();
 
   //   for (int i=0 ; i < deleteCount ; ) {
@@ -423,7 +421,7 @@ class SlaveTernTableUpdater {
   //   return true;
   // }
 
-  // public boolean checkDeletedKeys_2(IntPredicate source) {
+  // public void checkDeletedKeys_2(source) {
   //   prepare231();
 
   //   for (int i=0 ; i < deleteCount ; ) {
@@ -452,7 +450,7 @@ class SlaveTernTableUpdater {
   //   return true;
   // }
 
-  // public boolean checkDeletedKeys_3(IntPredicate source) {
+  // public void checkDeletedKeys_3(source) {
   //   prepare312();
 
   //   for (int i=0 ; i < deleteCount ; ) {
@@ -482,32 +480,32 @@ class SlaveTernTableUpdater {
   //   return true;
   // }
 
-  public boolean checkDeletedKeys_12(BiIntPredicate source) {
-    prepare123();
+  // public void checkDeletedKeys_12(source) {
+  //   prepare123();
 
-    for (int i=0 ; i < deleteCount ; ) {
-      int offset = 3 * i;
-      int surr1 = deleteList[offset];
-      int surr2 = deleteList[offset + 1];
-      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && source.test(surr1, surr2)) {
-        int surr3 = deleteList[3 * i + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr3 != surr3) {
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count12(surr1, surr2) == removedCount)
-          return false;
-      }
-      else
-        i++;
-    }
-    return true;
-  }
+  //   for (int i=0 ; i < deleteCount ; ) {
+  //     int offset = 3 * i;
+  //     int surr1 = deleteList[offset];
+  //     int surr2 = deleteList[offset + 1];
+  //     if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && source.test(surr1, surr2)) {
+  //       int surr3 = deleteList[3 * i + 2];
+  //       int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
+  //       for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
+  //         int currSurr3 = deleteList[3 * i + 2];
+  //         if (currSurr3 != surr3) {
+  //           surr3 = currSurr3;
+  //           if (table.contains(surr1, surr2, surr3))
+  //             removedCount++;
+  //         }
+  //       }
+  //       if (table.count12(surr1, surr2) == removedCount)
+  //         return false;
+  //     }
+  //     else
+  //       i++;
+  //   }
+  //   return true;
+  // }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
