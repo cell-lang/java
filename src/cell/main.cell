@@ -3,7 +3,7 @@ Int Main(String* args) {
 
   if argc < 2 {
     Print(
-      "Cell to Java compiler version 0.4.8\n"   &
+      "Cell to Java compiler version 0.5\n"   &
       "Usage: java -jar cellc-java.jar <options> <project file> <output directory>\n" &
       "Available options:\n"                                                          &
       "  -d     debug mode\n"                                                         &
@@ -74,7 +74,7 @@ Int Main(String* args) {
   }
 
   Print(
-    "Cell to Java compiler version 0.4.8\n"   &
+    "Cell to Java compiler version 0.5\n"   &
     "Warning: this is a beta version\n"       &
     // "Use -q option to suppress this output\n" &
     "Compiling project " & fname & "\n"
