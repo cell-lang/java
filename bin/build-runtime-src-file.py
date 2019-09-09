@@ -68,12 +68,11 @@ src_ObjVisitor                = 'utils/net/cell_lang/ObjVisitor.java'
 src_ObjPrinter                = 'utils/net/cell_lang/ObjPrinter.java'
 
 src_ArrayIter                 = 'automata/net/cell_lang/ArrayIter.java'
-src_AssocTable                = 'automata/net/cell_lang/AssocTable.java'
-src_AssocTableUpdater         = 'automata/net/cell_lang/AssocTableUpdater.java'
+# src_AssocTable                = 'automata/net/cell_lang/AssocTable.java'
+# src_AssocTableUpdater         = 'automata/net/cell_lang/AssocTableUpdater.java'
 src_BinaryTable               = 'automata/net/cell_lang/BinaryTable.java'
 src_BinaryTableUpdater        = 'automata/net/cell_lang/BinaryTableUpdater.java'
 src_ColumnBase                = 'automata/net/cell_lang/ColumnBase.java'
-src_ColumnUpdater             = 'automata/net/cell_lang/ColumnUpdater.java'
 src_FloatColumn               = 'automata/net/cell_lang/FloatColumn.java'
 src_FloatColumnUpdater        = 'automata/net/cell_lang/FloatColumnUpdater.java'
 src_Index                     = 'automata/net/cell_lang/Index.java'
@@ -87,8 +86,6 @@ src_ObjStore                  = 'automata/net/cell_lang/ObjStore.java'
 src_ObjStoreUpdater           = 'automata/net/cell_lang/ObjStoreUpdater.java'
 src_OneWayBinTable            = 'automata/net/cell_lang/OneWayBinTable.java'
 src_OverflowTable             = 'automata/net/cell_lang/OverflowTable.java'
-src_SlaveTernTable            = 'automata/net/cell_lang/SlaveTernTable.java'
-src_SlaveTernTableUpdater     = 'automata/net/cell_lang/SlaveTernTableUpdater.java'
 src_Sym12TernaryTable         = 'automata/net/cell_lang/Sym12TernaryTable.java'
 src_Sym12TernaryTableUpdater  = 'automata/net/cell_lang/Sym12TernaryTableUpdater.java'
 src_SymBinaryTable            = 'automata/net/cell_lang/SymBinaryTable.java'
@@ -172,12 +169,11 @@ std_sources = [
 
 table_sources = [
   src_ArrayIter,
-  src_AssocTable,
-  src_AssocTableUpdater,
+  # src_AssocTable,
+  # src_AssocTableUpdater,
   src_BinaryTable,
   src_BinaryTableUpdater,
   src_ColumnBase,
-  src_ColumnUpdater,
   src_FloatColumn,
   src_FloatColumnUpdater,
   src_Index,
@@ -191,8 +187,6 @@ table_sources = [
   src_ObjStoreUpdater,
   src_OneWayBinTable,
   src_OverflowTable,
-  src_SlaveTernTable,
-  src_SlaveTernTableUpdater,
   src_Sym12TernaryTable,
   src_Sym12TernaryTableUpdater,
   src_SymBinaryTable,
