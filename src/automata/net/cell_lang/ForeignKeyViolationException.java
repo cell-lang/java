@@ -97,12 +97,12 @@ class ForeignKeyViolationException extends RuntimeException {
   public static final ForeignKeyType UNARY_UNARY = new NoArgsForeignKeyType("(a)", "(a)");
   public static final ForeignKeyType BINARY_TERNARY = new NoArgsForeignKeyType("(a, b)", "(a, b, _)");
   public static final ForeignKeyType TERNARY_BINARY = new NoArgsForeignKeyType("(a, b, _)", "(a, b)");
-  public static final ForeignKeyType UNARY_SYM_BINARY = new NoArgsForeignKeyType("(a)", "(a | _)");
-  public static final ForeignKeyType UNARY_SYM_TERNARY = new NoArgsForeignKeyType("(a)", "(a | _, _)");
-  public static final ForeignKeyType SYM_BINARY_UNARY = new NoArgsForeignKeyType("(a | _)", "(a)");
-  public static final ForeignKeyType SYM_TERNARY_UNARY = new NoArgsForeignKeyType("(a | _, _)", "(a)");
-  public static final ForeignKeyType SYM_BINARY_SYM_TERNARY = new NoArgsForeignKeyType("(a | b)", "(a | b, _)");
-  public static final ForeignKeyType SYM_TERNARY_SYM_BINARY = new NoArgsForeignKeyType("(a | b, _)", "(a | b)");
+  public static final ForeignKeyType UNARY_SYM_BINARY = new NoArgsForeignKeyType("(a)", "(a, _)");
+  public static final ForeignKeyType UNARY_SYM_TERNARY = new NoArgsForeignKeyType("(a)", "(a, _, _)");
+  public static final ForeignKeyType SYM_BINARY_UNARY = new NoArgsForeignKeyType("(a, _)", "(a)");
+  public static final ForeignKeyType SYM_TERNARY_UNARY = new NoArgsForeignKeyType("(a, _, _)", "(a)");
+  public static final ForeignKeyType SYM_BINARY_SYM_TERNARY = new NoArgsForeignKeyType("(a, b)", "(a, b, _)");
+  public static final ForeignKeyType SYM_TERNARY_SYM_BINARY = new NoArgsForeignKeyType("(a, b, _)", "(a, b)");
 
 
   ForeignKeyType type;
