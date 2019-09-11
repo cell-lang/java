@@ -176,18 +176,20 @@ class SymBinaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public interface DeletabilityHintChecker {
-    void checkHint(SymBinaryTableUpdater updater, int surr1, int surr2);
+  public interface DeleteChecker {
+    void checkDelete(int surr1, int surr2, SymBinaryTableUpdater target);
   }
 
-  public void checkDeletedKeys(DeletabilityHintChecker deletabilityChecker) {
+  public void checkDeletes(DeleteChecker deleteChecker) {
+    // Needs to be called before iterating through deleteList, otherwise a call to
+    // checkDelete() -> contains() -> prepare() could reorder it while it's being iterated on
     prepare();
 
     for (int i=0 ; i < deleteCount ; i++) {
-      int surr1 = deleteList[2 * i];
-      int surr2 = deleteList[2 * i + 1];
-      if (!Ints12.contains(insertList, insertCount, surr1, surr2))
-        deletabilityChecker.checkHint(this, surr1, surr2);
+      int offset = 2 * i;
+      int surr1 = deleteList[offset];
+      int surr2 = deleteList[offset + 1];
+      deleteChecker.checkDelete(surr1, surr2, this);
     }
   }
 
@@ -223,17 +225,14 @@ class SymBinaryTableUpdater {
         throw toSym12TernaryForeignKeyViolation(insertList[2*i], insertList[2*i+1], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    target.checkDeletedKeys_12(deletabilityChecker_12);
+    target.checkDeletes(deleteChecker_12);
   }
 
-  Sym12TernaryTableUpdater.BinaryDeletabilityChecker deletabilityChecker_12 =
-    new Sym12TernaryTableUpdater.BinaryDeletabilityChecker() {
-      public boolean isLive(int surr1, int surr2) {
-        return contains(surr1, surr2);
-      }
-
-      public void onViolation(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater target) {
-        throw toSym12TernaryForeignKeyViolation(surr1, surr2, surr3, target);
+  Sym12TernaryTableUpdater.DeleteChecker deleteChecker_12 =
+    new Sym12TernaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater target) {
+        if (contains(surr1, surr2) && !target.contains12(surr1, surr2))
+          throw toSym12TernaryForeignKeyViolation(surr1, surr2, surr3, target);
       }
     };
 

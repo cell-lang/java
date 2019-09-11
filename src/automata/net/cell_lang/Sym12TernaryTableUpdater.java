@@ -274,6 +274,7 @@ class Sym12TernaryTableUpdater {
 
   public boolean contains3(int surr3) {
     prepareInsert3();
+
     if (Ints.contains(insertList3, surr3))
       return true;
 
@@ -379,81 +380,21 @@ class Sym12TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public interface BinaryDeletabilityChecker {
-    boolean isLive(int surr1, int surr2);
-    void onViolation(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater target);
+  public interface DeleteChecker {
+    void checkDelete(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater updater);
   }
 
-  public void checkDeletedKeys_12(BinaryDeletabilityChecker deletabilityChecker) {
+  public void checkDeletes(DeleteChecker deletabilityChecker) {
+    // Needs to be called before iterating through deleteList, otherwise a call to
+    // checkDelete() -> contains12() -> prepare() could reorder it while it's being iterated on
     prepare();
 
-    for (int i=0 ; i < deleteCount ; ) {
-      int offset = 3 * i;
-      int surr1 = deleteList[offset];
-      int surr2 = deleteList[offset + 1];
-      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && deletabilityChecker.isLive(surr1, surr2)) {
-        int surr3 = deleteList[offset + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr3 != surr3) {
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count12Eq(surr1, surr2, removedCount))
-          deletabilityChecker.onViolation(surr1, surr2, surr3, this);
-      }
-      else
-        i++;
-    }
-  }
-
-  public interface DeletabilityHintChecker {
-    void checkHint(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater updater);
-  }
-
-  public void checkDeletedKeys_1_2(DeletabilityHintChecker deletabilityChecker) {
     for (int i=0 ; i < deleteCount ; i++) {
       int offset = 3 * i;
       int surr1 = deleteList[offset];
       int surr2 = deleteList[offset + 1];
       int surr3 = deleteList[offset + 2];
-      deletabilityChecker.checkHint(surr1, surr2, surr3, this);
-    }
-  }
-
-  public interface DeletabilityChecker {
-    boolean isLive(int surr3);
-    void onViolation(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater target);
-  }
-
-  public void checkDeletedKeys_3(DeletabilityChecker deletabilityChecker) {
-    prepare();
-    prepareInsert3();
-
-    for (int i=0 ; i < deleteCount ; ) {
-      int surr3 = deleteList[3 * i + 2];
-      if (!Ints.contains(insertList3, surr3) && deletabilityChecker.isLive(surr3)) {
-        int surr1 = deleteList[3 * i];
-        int surr2 = deleteList[3 * i + 1];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i+2] == surr3 ; i++) {
-          int currSurr1 = deleteList[3 * i];
-          int currSurr2 = deleteList[3 * i + 1];
-          if (currSurr1 != surr1 | currSurr2 != surr2) {
-            surr1 = currSurr1;
-            surr2 = currSurr2;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count3Eq(surr3, removedCount))
-          deletabilityChecker.onViolation(surr1, surr2, surr3, this);
-      }
-      else
-        i++;
+      deletabilityChecker.checkDelete(surr1, surr2, surr3, this);
     }
   }
 
@@ -504,14 +445,14 @@ class Sym12TernaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i], insertList[3*i+1]))
         throw toSymBinaryForeingKeyViolation(insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
-    target.checkDeletedKeys(symBinaryTableDeletabilityChecker);
+    target.checkDeletes(symBinaryTableDeleteChecker);
   }
 
-  SymBinaryTableUpdater.DeletabilityHintChecker symBinaryTableDeletabilityChecker =
-    new SymBinaryTableUpdater.DeletabilityHintChecker() {
-      public void checkHint(SymBinaryTableUpdater updater, int surr1, int surr2) {
-        if (contains12(surr1, surr2) && !updater.contains(surr1, surr2))
-          throw toSymBinaryForeingKeyViolation(surr1, surr2, lookupAny12(surr1, surr2), updater);
+  SymBinaryTableUpdater.DeleteChecker symBinaryTableDeleteChecker =
+    new SymBinaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, SymBinaryTableUpdater target) {
+        if (contains12(surr1, surr2) && !target.contains(surr1, surr2))
+          throw toSymBinaryForeingKeyViolation(surr1, surr2, lookupAny12(surr1, surr2), target);
       }
     };
 
