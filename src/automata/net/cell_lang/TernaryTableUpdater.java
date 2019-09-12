@@ -503,123 +503,32 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public interface DeletabilityChecker {
-    boolean isLive(int surr);
-    void onViolation(TernaryTableUpdater updater, int surr1, int surr2, int surr3);
+  public interface DeleteChecker {
+    void checkDelete(int surr1, int surr2, int surr3, TernaryTableUpdater target);
   }
 
-  public void checkDeletedKeys_1(DeletabilityChecker deletabilityChecker) {
+  public void checkDeletes123(DeleteChecker deleteChecker) {
     prepare123();
-
-    for (int i=0 ; i < deleteCount ; ) {
-      int offset = 3 * i;
-      int surr1 = deleteList[offset];
-      if (!Ints123.contains1(insertList, insertCount, surr1) && deletabilityChecker.isLive(surr1)) {
-        int surr2 = deleteList[offset + 1];
-        int surr3 = deleteList[offset + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 ; i++) {
-          int currSurr2 = deleteList[3 * i + 1];
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr2 != surr2 | currSurr3 != surr3) {
-            surr2 = currSurr2;
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count1Eq(surr1, removedCount))
-          deletabilityChecker.onViolation(this, deleteList[offset], deleteList[offset+1], deleteList[offset+2]);
-      }
-      else
-        i++;
-    }
+    checkDeletes(deleteChecker);
   }
 
-  public void checkDeletedKeys_2(DeletabilityChecker deletabilityChecker) {
+  public void checkDeletes231(DeleteChecker deleteChecker) {
     prepare231();
-
-    for (int i=0 ; i < deleteCount ; ) {
-      int offset = 3 * i;
-      int surr2 = deleteList[offset + 1];
-      if (!Ints231.contains2(insertList, insertCount, surr2) && deletabilityChecker.isLive(surr2)) {
-        int surr1 = deleteList[offset];
-        int surr3 = deleteList[offset + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i+1] == surr2 ; i++) {
-          int currSurr1 = deleteList[3 * i];
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr1 != surr1 | currSurr3 != surr3) {
-            surr1 = currSurr1;
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count2Eq(surr2, removedCount))
-          deletabilityChecker.onViolation(this, deleteList[offset], deleteList[offset+1], deleteList[offset+2]);
-      }
-      else
-        i++;
-    }
+    checkDeletes(deleteChecker);
   }
 
-  public void checkDeletedKeys_3(DeletabilityChecker deletabilityChecker) {
+  public void checkDeletes312(DeleteChecker deleteChecker) {
     prepare312();
-
-    for (int i=0 ; i < deleteCount ; ) {
-      int offset = 3 * i;
-      int surr3 = deleteList[offset + 2];
-      if (!Ints312.contains3(insertList, insertCount, surr3) && deletabilityChecker.isLive(surr3)) {
-        int surr1 = deleteList[offset];
-        int surr2 = deleteList[offset + 1];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i+2] == surr3 ; i++) {
-          int currSurr1 = deleteList[3 * i];
-          int currSurr2 = deleteList[3 * i + 1];
-          if (currSurr1 != surr1 | currSurr2 != surr2) {
-            surr1 = currSurr1;
-            surr2 = currSurr2;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count3Eq(surr3, removedCount))
-          deletabilityChecker.onViolation(this, deleteList[offset], deleteList[offset+1], deleteList[offset+2]);
-      }
-      else
-        i++;
-    }
+    checkDeletes(deleteChecker);
   }
 
-  public interface BinaryDeletabilityChecker {
-    boolean isLive(int surr1, int surr2);
-    void onViolation(int surr1, int surr2, int surr3, TernaryTableUpdater updater);
-  }
-
-  public void checkDeletedKeys_12(BinaryDeletabilityChecker deletabilityChecker) {
-    prepare123();
-
-    for (int i=0 ; i < deleteCount ; ) {
+  private void checkDeletes(DeleteChecker deleteChecker) {
+    for (int i=0 ; i < deleteCount ; i++) {
       int offset = 3 * i;
       int surr1 = deleteList[offset];
-      int surr2 = deleteList[offset + 1];
-      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && deletabilityChecker.isLive(surr1, surr2)) {
-        int surr3 = deleteList[3 * i + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr3 != surr3) {
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count12Eq(surr1, surr2, removedCount))
-          deletabilityChecker.onViolation(surr1, surr2, deleteList[offset+2], this);
-      }
-      else
-        i++;
+      int surr2 = deleteList[offset+1];
+      int surr3 = deleteList[offset+2];
+      deleteChecker.checkDelete(surr1, surr2, surr3, this);
     }
   }
 

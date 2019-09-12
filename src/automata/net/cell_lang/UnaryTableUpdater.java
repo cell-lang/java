@@ -227,17 +227,14 @@ class UnaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains1(insertList[i]))
         throw toTernaryForeignKeyViolation1(insertList[i], target);
-    target.checkDeletedKeys_1(ternaryTableDeletabilityChecker1);
+    target.checkDeletes123(ternaryTableDeleteChecker1);
   }
 
-  TernaryTableUpdater.DeletabilityChecker ternaryTableDeletabilityChecker1 =
-    new TernaryTableUpdater.DeletabilityChecker() {
-      public boolean isLive(int surr) {
-        return contains(surr);
-      }
-
-      public void onViolation(TernaryTableUpdater target, int surr1, int surr2, int surr3) {
-        throw toTernaryForeingKeyViolation1(surr1, surr2, surr3, target);
+  TernaryTableUpdater.DeleteChecker ternaryTableDeleteChecker1 =
+    new TernaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, int surr3, TernaryTableUpdater target) {
+        if (contains(surr1) && !target.contains1(surr1))
+          throw toTernaryForeingKeyViolation1(surr1, surr2, surr3, target);
       }
     };
 
@@ -246,17 +243,14 @@ class UnaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains2(insertList[i]))
         throw toTernaryForeignKeyViolation2(insertList[i], target);
-    target.checkDeletedKeys_2(ternaryTableDeletabilityChecker2);
+    target.checkDeletes231(ternaryTableDeleteChecker2);
   }
 
-  TernaryTableUpdater.DeletabilityChecker ternaryTableDeletabilityChecker2 =
-    new TernaryTableUpdater.DeletabilityChecker() {
-      public boolean isLive(int surr) {
-        return contains(surr);
-      }
-
-      public void onViolation(TernaryTableUpdater target, int surr1, int surr2, int surr3) {
-        throw toTernaryForeingKeyViolation2(surr1, surr2, surr3, target);
+  TernaryTableUpdater.DeleteChecker ternaryTableDeleteChecker2 =
+    new TernaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, int surr3, TernaryTableUpdater target) {
+        if (contains(surr2) && !target.contains2(surr2))
+          throw toTernaryForeingKeyViolation2(surr1, surr2, surr3, target);
       }
     };
 
@@ -265,17 +259,14 @@ class UnaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains3(insertList[i]))
         throw toTernaryForeignKeyViolation3(insertList[i], target);
-    target.checkDeletedKeys_3(ternaryTableDeletabilityChecker3);
+    target.checkDeletes312(ternaryTableDeleteChecker3);
   }
 
-  TernaryTableUpdater.DeletabilityChecker ternaryTableDeletabilityChecker3 =
-    new TernaryTableUpdater.DeletabilityChecker() {
-      public boolean isLive(int surr) {
-        return contains(surr);
-      }
-
-      public void onViolation(TernaryTableUpdater target, int surr1, int surr2, int surr3) {
-        throw toTernaryForeingKeyViolation3(surr1, surr2, surr3, target);
+  TernaryTableUpdater.DeleteChecker ternaryTableDeleteChecker3 =
+    new TernaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, int surr3, TernaryTableUpdater target) {
+        if (contains(surr3) && !target.contains3(surr3))
+          throw toTernaryForeingKeyViolation3(surr1, surr2, surr3, target);
       }
     };
 

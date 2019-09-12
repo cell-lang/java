@@ -352,17 +352,14 @@ class BinaryTableUpdater {
     }
 
     // Checking that no entries were invalidated by a deletion on the target table
-    target.checkDeletedKeys_12(deletabilityChecker12);
+    target.checkDeletes123(deleteChecker12);
   }
 
-  TernaryTableUpdater.BinaryDeletabilityChecker deletabilityChecker12 =
-    new TernaryTableUpdater.BinaryDeletabilityChecker() {
-      public boolean isLive(int surr1, int surr2) {
-        return contains(surr1, surr2);
-      }
-
-      public void onViolation(int surr1, int surr2, int surr3, TernaryTableUpdater target) {
-        throw toTernaryForeignKeyViolation(surr1, surr2, surr3, target);
+  TernaryTableUpdater.DeleteChecker deleteChecker12 =
+    new TernaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, int surr3, TernaryTableUpdater target) {
+        if (contains(surr1, surr2) && !target.contains12(surr1, surr2))
+          throw toTernaryForeignKeyViolation(surr1, surr2, surr3, target);
       }
     };
 
