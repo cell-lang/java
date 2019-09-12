@@ -692,14 +692,14 @@ class TernaryTableUpdater {
       if (!target.contains(arg1, arg2))
         throw toBinaryForeignKeyViolation(arg1, arg2, insertList[offset+2], target);
     }
-    target.checkDeletedKeys_12(deletabilityChecker12);
+    target.checkDeletes12(deleteChecker12);
   }
 
-  BinaryTableUpdater.BinaryDeletabilityChecker deletabilityChecker12 =
-    new BinaryTableUpdater.BinaryDeletabilityChecker() {
-      public void check(int surr1, int surr2, BinaryTableUpdater updater) {
-        if (contains12(surr1, surr2))
-          throw toBinaryForeignKeyViolation(surr1, surr2, updater);
+  BinaryTableUpdater.DeleteChecker deleteChecker12 =
+    new BinaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, BinaryTableUpdater target) {
+        if (contains12(surr1, surr2) && !target.contains(surr1, surr2))
+          throw toBinaryForeignKeyViolation(surr1, surr2, target);
       }
     };
 

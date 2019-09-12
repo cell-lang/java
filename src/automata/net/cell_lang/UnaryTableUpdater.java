@@ -195,17 +195,14 @@ class UnaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains1(insertList[i]))
         throw toBinaryForeingKeyViolation1(insertList[i], target);
-    target.checkDeletedKeys_1(binaryTableDeletabilityChecker1);
+    target.checkDeletes12(binaryTableDeleteChecker1);
   }
 
-  BinaryTableUpdater.DeletabilityChecker binaryTableDeletabilityChecker1 =
-    new BinaryTableUpdater.DeletabilityChecker() {
-      public boolean isLive(int surr) {
-        return contains(surr);
-      }
-
-      public void onViolation(BinaryTableUpdater target, int surr1, int surr2) {
-        throw toBinaryForeingKeyViolation1(surr1, surr2, target);
+  BinaryTableUpdater.DeleteChecker binaryTableDeleteChecker1 =
+    new BinaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, BinaryTableUpdater target) {
+        if (contains(surr1) && !target.contains1(surr1))
+          throw toBinaryForeingKeyViolation1(surr1, surr2, target);
       }
     };
 
@@ -214,17 +211,14 @@ class UnaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains2(insertList[i]))
         throw toBinaryForeingKeyViolation2(insertList[i], target);
-    target.checkDeletedKeys_2(binaryTableDeletabilityChecker2);
+    target.checkDeletes21(binaryTableDeleteChecker2);
   }
 
-  BinaryTableUpdater.DeletabilityChecker binaryTableDeletabilityChecker2 =
-    new BinaryTableUpdater.DeletabilityChecker() {
-      public boolean isLive(int surr) {
-        return contains(surr);
-      }
-
-      public void onViolation(BinaryTableUpdater target, int surr1, int surr2) {
-        throw toBinaryForeingKeyViolation2(surr1, surr2, target);
+  BinaryTableUpdater.DeleteChecker binaryTableDeleteChecker2 =
+    new BinaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, BinaryTableUpdater target) {
+        if (contains(surr2) && !target.contains2(surr2))
+          throw toBinaryForeingKeyViolation2(surr1, surr2, target);
       }
     };
 
