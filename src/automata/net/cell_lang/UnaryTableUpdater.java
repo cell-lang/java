@@ -147,11 +147,11 @@ class UnaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public interface DeletabilityChecker {
+  public interface DeleteChecker {
     void check(UnaryTableUpdater updater, int surr);
   }
 
-  public void checkDeletedKeys(DeletabilityChecker deletabilityChecker) {
+  public void checkDeletedKeys(DeleteChecker deleteChecker) {
     prepare();
 
     if (clear) {
@@ -159,7 +159,7 @@ class UnaryTableUpdater {
       while (!it.done()) {
         int surr = it.get();
         if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          deletabilityChecker.check(this, surr);
+          deleteChecker.check(this, surr);
         it.next();
       }
     }
@@ -167,7 +167,7 @@ class UnaryTableUpdater {
       for (int i=0 ; i < deleteCount ; i++) {
         int surr = deleteList[i];
         if (Arrays.binarySearch(insertList, 0, insertCount, surr) < 0)
-          deletabilityChecker.check(this, surr);
+          deleteChecker.check(this, surr);
       }
     }
   }
@@ -179,11 +179,11 @@ class UnaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[i]))
         throw toUnaryForeignKeyViolation(insertList[i], target);
-    target.checkDeletedKeys(deletabilityChecker);
+    target.checkDeletedKeys(deleteChecker);
   }
 
-  DeletabilityChecker deletabilityChecker =
-    new DeletabilityChecker() {
+  DeleteChecker deleteChecker =
+    new DeleteChecker() {
       public void check(UnaryTableUpdater target, int surr) {
         if (contains(surr))
           throw toUnaryForeignKeyViolation(surr, target);

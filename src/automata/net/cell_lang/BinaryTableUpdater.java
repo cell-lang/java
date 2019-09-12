@@ -310,11 +310,11 @@ class BinaryTableUpdater {
         throw toUnaryForeignKeyViolation(1, insertList[2*i], insertList[2*i+1], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    target.checkDeletedKeys(deletabilityChecker1);
+    target.checkDeletedKeys(deleteChecker1);
   }
 
-  UnaryTableUpdater.DeletabilityChecker deletabilityChecker1 =
-    new UnaryTableUpdater.DeletabilityChecker() {
+  UnaryTableUpdater.DeleteChecker deleteChecker1 =
+    new UnaryTableUpdater.DeleteChecker() {
       public void check(UnaryTableUpdater target, int surr1) {
         if (contains1(surr1))
           throw toUnaryForeignKeyViolation1(surr1, target);
@@ -329,11 +329,11 @@ class BinaryTableUpdater {
         throw toUnaryForeignKeyViolation(2, insertList[2*i], insertList[2*i+1], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    target.checkDeletedKeys(deletabilityChecker2);
+    target.checkDeletedKeys(deleteChecker2);
   }
 
-  UnaryTableUpdater.DeletabilityChecker deletabilityChecker2 =
-    new UnaryTableUpdater.DeletabilityChecker() {
+  UnaryTableUpdater.DeleteChecker deleteChecker2 =
+    new UnaryTableUpdater.DeleteChecker() {
       public void check(UnaryTableUpdater target, int surr2) {
         if (contains2(surr2))
           throw toUnaryForeignKeyViolation2(surr2, target);

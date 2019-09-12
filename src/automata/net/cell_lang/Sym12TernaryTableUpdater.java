@@ -384,7 +384,7 @@ class Sym12TernaryTableUpdater {
     void checkDelete(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater updater);
   }
 
-  public void checkDeletes(DeleteChecker deletabilityChecker) {
+  public void checkDeletes(DeleteChecker deleteChecker) {
     // Needs to be called before iterating through deleteList, otherwise a call to
     // checkDelete() -> contains12() -> prepare() could reorder it while it's being iterated on
     prepare();
@@ -394,7 +394,7 @@ class Sym12TernaryTableUpdater {
       int surr1 = deleteList[offset];
       int surr2 = deleteList[offset + 1];
       int surr3 = deleteList[offset + 2];
-      deletabilityChecker.checkDelete(surr1, surr2, surr3, this);
+      deleteChecker.checkDelete(surr1, surr2, surr3, this);
     }
   }
 
@@ -410,11 +410,11 @@ class Sym12TernaryTableUpdater {
     }
 
     // Checking that no entries were invalidates by a deletion on the target table
-    target.checkDeletedKeys(deletabilityChecker12);
+    target.checkDeletedKeys(deleteChecker12);
   }
 
-  UnaryTableUpdater.DeletabilityChecker deletabilityChecker12 =
-    new UnaryTableUpdater.DeletabilityChecker() {
+  UnaryTableUpdater.DeleteChecker deleteChecker12 =
+    new UnaryTableUpdater.DeleteChecker() {
       public void check(UnaryTableUpdater target, int surr12) {
         if (contains_1_2(surr12))
           throw toUnaryForeignKeyViolation12(surr12, target);
@@ -429,11 +429,11 @@ class Sym12TernaryTableUpdater {
         throw toUnaryForeignKeyViolation3(insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    target.checkDeletedKeys(deletabilityChecker3);
+    target.checkDeletedKeys(deleteChecker3);
   }
 
-  UnaryTableUpdater.DeletabilityChecker deletabilityChecker3 =
-    new UnaryTableUpdater.DeletabilityChecker() {
+  UnaryTableUpdater.DeleteChecker deleteChecker3 =
+    new UnaryTableUpdater.DeleteChecker() {
       public void check(UnaryTableUpdater target, int surr3) {
         if (contains3(surr3))
           throw toUnaryForeignKeyViolation3(surr3, target);

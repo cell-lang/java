@@ -256,11 +256,11 @@ final class IntColumnUpdater {
         throw foreignKeyViolation(updateIdxs[i], updateValues[i], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    target.checkDeletedKeys(deletabilityChecker);
+    target.checkDeletedKeys(deleteChecker);
   }
 
-  UnaryTableUpdater.DeletabilityChecker deletabilityChecker =
-    new UnaryTableUpdater.DeletabilityChecker() {
+  UnaryTableUpdater.DeleteChecker deleteChecker =
+    new UnaryTableUpdater.DeleteChecker() {
       public void check(UnaryTableUpdater updater, int surr) {
         if (contains1(surr))
           throw foreignKeyViolation(surr, updater);

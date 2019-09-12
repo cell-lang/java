@@ -206,11 +206,11 @@ class SymBinaryTableUpdater {
       }
 
     // Checking that no entries were invalidated by a deletion on the target table
-    target.checkDeletedKeys(deletabilityChecker_1_2);
+    target.checkDeletedKeys(deleteChecker_1_2);
   }
 
-  UnaryTableUpdater.DeletabilityChecker deletabilityChecker_1_2 =
-    new UnaryTableUpdater.DeletabilityChecker() {
+  UnaryTableUpdater.DeleteChecker deleteChecker_1_2 =
+    new UnaryTableUpdater.DeleteChecker() {
       public void check(UnaryTableUpdater target, int surr) {
         if (contains(surr))
           throw toUnaryForeignKeyViolation(surr, target);
