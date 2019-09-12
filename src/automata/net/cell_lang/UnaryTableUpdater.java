@@ -33,23 +33,6 @@ class UnaryTableUpdater {
     deleteCount = 0;
   }
 
-  // public void set(Obj value) {
-  //   Miscellanea._assert(deleteCount == 0 & insertCount == 0);
-  //   clear();
-  //   int size = value.getSize();
-  //   insertCount = size;
-  //   insertList = new int[size];
-  //   Obj[] elts = value.getArray((Obj[]) null);
-  //   Miscellanea._assert(elts.length == size);
-  //   for (int i=0 ; i < size ; i++) {
-  //     Obj val = elts[i];
-  //     int surr = store.valueToSurrEx(val);
-  //     if (surr == -1)
-  //       surr = store.insert(val);
-  //     insertList[i] = surr;
-  //   }
-  // }
-
   public void delete(long value) {
     if (!clear || table.contains((int) value))
       deleteList = Array.append(deleteList, deleteCount++, (int) value);
