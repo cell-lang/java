@@ -281,8 +281,9 @@ class BinaryTableUpdater {
 
   public void checkDeletes12(DeleteChecker deleteChecker) {
     prepare12();
+    Miscellanea._assert(currOrd == (deleteCount != 0 | insertCount != 0 ? Ord.ORD_12 : Ord.ORD_NONE));
     checkDeletes(deleteChecker);
-    Miscellanea._assert(currOrd == Ord.ORD_12);
+    Miscellanea._assert(currOrd == (deleteCount != 0 | insertCount != 0 ? Ord.ORD_12 : Ord.ORD_NONE));
   }
 
   public void checkDeletes21(DeleteChecker deleteChecker) {

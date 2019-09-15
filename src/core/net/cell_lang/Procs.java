@@ -1,5 +1,7 @@
 package net.cell_lang;
 
+import java.io.StringWriter;
+import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -74,8 +76,19 @@ class Procs {
   }
 
   public static Obj Error_P(RelAutoBase automaton, RelAutoUpdaterBase updater, Object env) {
-    if (updater.lastException != null) {
-      String msg = updater.lastException.toString();
+    Exception e = updater.lastException;
+    if (e != null) {
+      String msg;
+      if (e instanceof KeyViolationException || e instanceof ForeignKeyViolationException) {
+        msg = e.toString();
+      }
+      else {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        updater.lastException.printStackTrace(printWriter);
+        printWriter.flush();
+        msg = stringWriter.toString();
+      }
       return Builder.createTaggedObj(SymbTable.JustSymbId, Conversions.stringToObj(msg));
     }
     else
