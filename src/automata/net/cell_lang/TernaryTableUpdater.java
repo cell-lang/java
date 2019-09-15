@@ -90,21 +90,8 @@ class TernaryTableUpdater {
   public void delete2(int arg2) {
     TernaryTable.Iter2 it = table.getIter2(arg2);
     while (!it.done()) {
-      if (deleteCount >= deleteIdxs.length) {
-        int capacity = Array.nextCapacity(deleteIdxs.length);
-        deleteIdxs = Array.extend(deleteIdxs, capacity);
-        deleteList = Array.extend(deleteList, 3 * capacity);
-      }
-      deleteIdxs[deleteCount] = it.index();
-      int offset = 3 * deleteCount;
-      deleteList[offset]   = it.get1();
-      deleteList[offset+1] = arg2;
-      deleteList[offset+2] = it.get2();
-      deleteCount++;
-
-      // deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
-      // deleteList = Array.append3(deleteList, deleteCount++, it.get1(), arg2, it.get2());
-
+      deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), arg2, it.get2());
       it.next();
     }
   }
@@ -121,14 +108,69 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
+  // void dump(String msg) {
+  //   if (Miscellanea.debugFlag) {
+  //     System.out.println();
+  //     System.out.println(msg);
+  //     for (int i=0 ; i < deleteCount ; i++) {
+  //       int idx = deleteIdxs[i];
+  //       int offset = 3 * i;
+  //       int arg0 = deleteList[offset];
+  //       int arg1 = deleteList[offset+1];
+  //       int arg2 = deleteList[offset+2];
+  //       boolean ok = table.contains(arg0, arg1, arg2);
+  //       System.out.printf("delete (%d, %d, %d) @ %d, %s\n", arg0, arg1, arg2, idx, ok);
+  //     }
+  //     System.out.println();
+  //     for (int i=0 ; i < table.flatTuples.length / 3 ; i++) {
+  //       int offset = 3 * i;
+  //       int arg0 = table.flatTuples[offset];
+  //       int arg1 = table.flatTuples[offset+1];
+  //       int arg2 = table.flatTuples[offset+2];
+  //       System.out.printf("%2d: (%2d, %2d, %2d)\n", i, arg0, arg1, arg2);
+  //     }
+  //     System.out.printf("\ncurrOrd = %s\n", currOrd);
+  //   }
+  // }
+
   public void apply() {
-    for (int i=0 ; i < deleteCount ; i++) {
-      if (!table.deleteAt(deleteIdxs[i])) {
+    if (currOrd == Ord.ORD_NONE) {
+      // deleteList has not been reordered, so it still matches deleteIdxs
+      for (int i=0 ; i < deleteCount ; i++)
+        if (!table.deleteAt(deleteIdxs[i]))
+          deleteList[3*i] = -1;
+    }
+    else if (deleteCount != 0) {
+      // deleteList was reorder, so the correspondence with deleteIdxs has been lost
+      // On the other hand, since deleteList is now ordered, we can eliminate the duplicates
+
+      int DEBUG_count_1 = 0;
+      int DEBUG_count_2 = 0;
+
+      for (int i=0 ; i < deleteCount ; i++)
+        if (!table.deleteAt(deleteIdxs[i]))
+          DEBUG_count_1++;
+
+      int prevArg1 = deleteList[0];
+      int prevArg2 = deleteList[1];
+      int prevArg3 = deleteList[2];
+      for (int i=1 ; i < deleteCount ; i++) {
         int offset = 3 * i;
-        store1.addRef(deleteList[offset]);
-        store2.addRef(deleteList[offset+1]);
-        store3.addRef(deleteList[offset+2]);
+        int arg1 = deleteList[offset];
+        int arg2 = deleteList[offset + 1];
+        int arg3 = deleteList[offset + 2];
+        if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 == prevArg3) {
+          deleteList[offset] = -1;
+          DEBUG_count_2++;
+        }
+        else {
+          prevArg1 = arg1;
+          prevArg2 = arg2;
+          prevArg3 = arg3;
+        }
       }
+
+      Miscellanea._assert(DEBUG_count_1 == DEBUG_count_2);
     }
 
     for (int i=0 ; i < insertCount ; i++) {
@@ -147,12 +189,15 @@ class TernaryTableUpdater {
 
   public void finish() {
     for (int i=0 ; i < deleteCount ; i++) {
-      int arg1 = deleteList[3 * i];
-      int arg2 = deleteList[3 * i + 1];
-      int arg3 = deleteList[3 * i + 2];
-      store1.release(arg1);
-      store2.release(arg2);
-      store3.release(arg3);
+      int offset = 3 * i;
+      int arg1 = deleteList[offset];
+      if (arg1 != -1) {
+        int arg2 = deleteList[offset+1];
+        int arg3 = deleteList[offset+2];
+        store1.release(arg1);
+        store2.release(arg2);
+        store3.release(arg3);
+      }
     }
   }
 
