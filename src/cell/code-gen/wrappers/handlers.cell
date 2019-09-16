@@ -44,7 +44,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "  boolean ok = automaton.updateEntryPoint(" & native_expr(wrapper.msg_expr) & ", updater, env);",
         "  if (!ok) {",
         "    env = new Generated.Env();",
-        "    throw new RuntimeException(\"Update failed\");",
+        "    throw updater.getLastRuntimeException();",
         "  }",
         "}"
       );

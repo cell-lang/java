@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.function.IntPredicate;
-
 
 class TernaryTableUpdater {
   static int[] emptyArray = new int[0];
@@ -15,13 +13,16 @@ class TernaryTableUpdater {
   int insertCount = 0;
   int[] insertList = emptyArray;
 
+  String relvarName;
+
   TernaryTable table;
   ValueStoreUpdater store1, store2, store3;
 
   enum Ord {ORD_NONE, ORD_123, ORD_231, ORD_312};
   Ord currOrd = Ord.ORD_NONE;
 
-  public TernaryTableUpdater(TernaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2, ValueStoreUpdater store3) {
+  public TernaryTableUpdater(String relvarName, TernaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2, ValueStoreUpdater store3) {
+    this.relvarName = relvarName;
     this.table = table;
     this.store1 = store1;
     this.store2 = store2;
@@ -89,21 +90,8 @@ class TernaryTableUpdater {
   public void delete2(int arg2) {
     TernaryTable.Iter2 it = table.getIter2(arg2);
     while (!it.done()) {
-      if (deleteCount >= deleteIdxs.length) {
-        int capacity = Array.nextCapacity(deleteIdxs.length);
-        deleteIdxs = Array.extend(deleteIdxs, capacity);
-        deleteList = Array.extend(deleteList, 3 * capacity);
-      }
-      deleteIdxs[deleteCount] = it.index();
-      int offset = 3 * deleteCount;
-      deleteList[offset]   = it.get1();
-      deleteList[offset+1] = arg2;
-      deleteList[offset+2] = it.get2();
-      deleteCount++;
-
-      // deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
-      // deleteList = Array.append3(deleteList, deleteCount++, it.get1(), arg2, it.get2());
-
+      deleteIdxs = Array.append(deleteIdxs, deleteCount, it.index());
+      deleteList = Array.append3(deleteList, deleteCount++, it.get1(), arg2, it.get2());
       it.next();
     }
   }
@@ -120,38 +108,96 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
+  // void dump(String msg) {
+  //   if (Miscellanea.debugFlag) {
+  //     System.out.println();
+  //     System.out.println(msg);
+  //     for (int i=0 ; i < deleteCount ; i++) {
+  //       int idx = deleteIdxs[i];
+  //       int offset = 3 * i;
+  //       int arg0 = deleteList[offset];
+  //       int arg1 = deleteList[offset+1];
+  //       int arg2 = deleteList[offset+2];
+  //       boolean ok = table.contains(arg0, arg1, arg2);
+  //       System.out.printf("delete (%d, %d, %d) @ %d, %s\n", arg0, arg1, arg2, idx, ok);
+  //     }
+  //     System.out.println();
+  //     for (int i=0 ; i < table.flatTuples.length / 3 ; i++) {
+  //       int offset = 3 * i;
+  //       int arg0 = table.flatTuples[offset];
+  //       int arg1 = table.flatTuples[offset+1];
+  //       int arg2 = table.flatTuples[offset+2];
+  //       System.out.printf("%2d: (%2d, %2d, %2d)\n", i, arg0, arg1, arg2);
+  //     }
+  //     System.out.printf("\ncurrOrd = %s\n", currOrd);
+  //   }
+  // }
+
   public void apply() {
-    for (int i=0 ; i < deleteCount ; i++) {
-      if (!table.deleteAt(deleteIdxs[i])) {
+    if (currOrd == Ord.ORD_NONE) {
+      // deleteList has not been reordered, so it still matches deleteIdxs
+      for (int i=0 ; i < deleteCount ; i++)
+        if (!table.deleteAt(deleteIdxs[i]))
+          deleteList[3*i] = -1;
+    }
+    else if (deleteCount != 0) {
+      // deleteList was reorder, so the correspondence with deleteIdxs has been lost
+      // On the other hand, since deleteList is now ordered, we can eliminate the duplicates
+
+      int DEBUG_count_1 = 0;
+      int DEBUG_count_2 = 0;
+
+      for (int i=0 ; i < deleteCount ; i++)
+        if (!table.deleteAt(deleteIdxs[i]))
+          DEBUG_count_1++;
+
+      int prevArg1 = deleteList[0];
+      int prevArg2 = deleteList[1];
+      int prevArg3 = deleteList[2];
+      for (int i=1 ; i < deleteCount ; i++) {
         int offset = 3 * i;
-        store1.addRef(deleteList[offset]);
-        store2.addRef(deleteList[offset+1]);
-        store3.addRef(deleteList[offset+2]);
+        int arg1 = deleteList[offset];
+        int arg2 = deleteList[offset + 1];
+        int arg3 = deleteList[offset + 2];
+        if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 == prevArg3) {
+          deleteList[offset] = -1;
+          DEBUG_count_2++;
+        }
+        else {
+          prevArg1 = arg1;
+          prevArg2 = arg2;
+          prevArg3 = arg3;
+        }
       }
+
+      Miscellanea._assert(DEBUG_count_1 == DEBUG_count_2);
     }
 
     for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
+      int arg1 = insertList[3 * i];
+      int arg2 = insertList[3 * i + 1];
+      int arg3 = insertList[3 * i + 2];
 
-      if (!table.contains(field1, field2, field3)) {
-        table.insert(field1, field2, field3);
-        store1.addRef(field1);
-        store2.addRef(field2);
-        store3.addRef(field3);
+      if (!table.contains(arg1, arg2, arg3)) {
+        table.insert(arg1, arg2, arg3);
+        store1.addRef(arg1);
+        store2.addRef(arg2);
+        store3.addRef(arg3);
       }
     }
   }
 
   public void finish() {
     for (int i=0 ; i < deleteCount ; i++) {
-      int field1 = deleteList[3 * i];
-      int field2 = deleteList[3 * i + 1];
-      int field3 = deleteList[3 * i + 2];
-      store1.release(field1);
-      store2.release(field2);
-      store3.release(field3);
+      int offset = 3 * i;
+      int arg1 = deleteList[offset];
+      if (arg1 != -1) {
+        int arg2 = deleteList[offset+1];
+        int arg3 = deleteList[offset+2];
+        store1.release(arg1);
+        store2.release(arg2);
+        store3.release(arg3);
+      }
     }
   }
 
@@ -175,28 +221,34 @@ class TernaryTableUpdater {
   //////////////////////////////////////////////////////////////////////////////
 
   public void prepare123() {
-    Miscellanea._assert(currOrd == Ord.ORD_NONE | currOrd == Ord.ORD_123);
-    if (currOrd != Ord.ORD_123) {
-      Ints123.sort(deleteList, deleteCount);
-      Ints123.sort(insertList, insertCount);
-      currOrd = Ord.ORD_123;
+    if (deleteCount != 0 | insertCount != 0) {
+      Miscellanea._assert(currOrd == Ord.ORD_NONE | currOrd == Ord.ORD_123);
+      if (currOrd != Ord.ORD_123) {
+        Ints123.sort(deleteList, deleteCount);
+        Ints123.sort(insertList, insertCount);
+        currOrd = Ord.ORD_123;
+      }
     }
   }
 
   public void prepare231() {
-    Miscellanea._assert(currOrd != Ord.ORD_312);
-    if (currOrd != Ord.ORD_231) {
-      Ints231.sort(deleteList, deleteCount);
-      Ints231.sort(insertList, insertCount);
-      currOrd = Ord.ORD_231;
+    if (deleteCount != 0 | insertCount != 0) {
+      Miscellanea._assert(currOrd != Ord.ORD_312);
+      if (currOrd != Ord.ORD_231) {
+        Ints231.sort(deleteList, deleteCount);
+        Ints231.sort(insertList, insertCount);
+        currOrd = Ord.ORD_231;
+      }
     }
   }
 
   public void prepare312() {
-    if (currOrd != Ord.ORD_312) {
-      Ints312.sort(deleteList, deleteCount);
-      Ints312.sort(insertList, insertCount);
-      currOrd = Ord.ORD_312;
+    if (deleteCount != 0 | insertCount != 0) {
+      if (currOrd != Ord.ORD_312) {
+        Ints312.sort(deleteList, deleteCount);
+        Ints312.sort(insertList, insertCount);
+        currOrd = Ord.ORD_312;
+      }
     }
   }
 
@@ -359,283 +411,353 @@ class TernaryTableUpdater {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_12() {
-    if (insertCount == 0)
-      return true;
-
+  public int lookupAny12(int surr1, int surr2) {
     prepare123();
 
-    int prevField1 = -1;
-    int prevField2 = -1;
-    int prevField3 = -1;
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
-
-      if (field1 == prevField1 & field2 == prevField2 & field3 != prevField3)
-        return false;
-
-      if (!Ints123.contains12(deleteList, deleteCount, field1, field2) && table.contains12(field1, field2))
-        return false;
-
-      prevField1 = field1;
-      prevField2 = field2;
-      prevField3 = field3;
+    if (Ints123.contains12(insertList, insertCount, surr1, surr2)) {
+      int idxFirst = Ints123.indexFirst12(insertList, insertCount, surr1, surr2);
+      return insertList[3 * idxFirst + 2];
     }
 
-    return true;
-  }
+    int idx = Ints123.indexFirst12(deleteList, deleteCount, surr1, surr2);
+    if (idx == -1)
+      return table.getIter12(surr1, surr2).get1();
 
-  public boolean checkKey_3() {
-    if (insertCount == 0)
-      return true;
+    int count = Ints123.count12(deleteList, deleteCount, surr1, surr2, idx);
 
-    prepare312();
-
-    int prevField1 = -1;
-    int prevField2 = -1;
-    int prevField3 = -1;
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
-
-      if (field3 == prevField3 & (field1 != prevField1 | field2 != prevField2))
-        return false;
-
-      if (!Ints312.contains3(deleteList, deleteCount, field3) && table.contains3(field3))
-        return false;
-
-      prevField1 = field1;
-      prevField2 = field2;
-      prevField3 = field3;
+    TernaryTable.Iter12 it = table.getIter12(surr1, surr2);
+    while (!it.done()) {
+      // Tuples in the [idx, idx+count) range are sorted in both 1/2/3
+      // and 3/1/2 order, since the first two arguments are the same
+      if (!Ints312.contains3(deleteList, idx, count, it.get1()))
+        return it.get1();
+      it.next();
     }
 
-    return true;
+    throw Miscellanea.internalFail();
   }
 
-  public boolean checkKey_23() {
-    if (insertCount == 0)
-      return true;
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
+  public void checkKey_12() {
+    if (insertCount != 0) {
+      prepare123();
+
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
+
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
+
+        if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 != prevArg3)
+          throw cols12KeyViolationException(arg1, arg2, arg3, prevArg3);
+
+        if (!Ints123.contains12(deleteList, deleteCount, arg1, arg2) && table.contains12(arg1, arg2))
+          throw cols12KeyViolationException(arg1, arg2, arg3);
+
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
+    }
+  }
+
+  public void checkKey_3() {
+    if (insertCount != 0) {
+      prepare312();
+
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
+
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
+
+        if (arg3 == prevArg3 & (arg1 != prevArg1 | arg2 != prevArg2))
+          throw col3KeyViolationException(arg1, arg2, arg3, prevArg1, prevArg2);
+
+        if (!Ints312.contains3(deleteList, deleteCount, arg3) && table.contains3(arg3))
+          throw col3KeyViolationException(arg1, arg2, arg3);
+
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
+    }
+  }
+
+  public void checkKey_23() {
+    if (insertCount != 0) {
+      prepare231();
+
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
+
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
+
+        if (arg2 == prevArg2 & arg3 == prevArg3 & arg1 != prevArg1)
+          throw cols23KeyViolationException(arg1, arg2, arg3, prevArg1);
+
+        if (!Ints231.contains23(deleteList, deleteCount, arg2, arg3) && table.contains23(arg2, arg3))
+          throw cols23KeyViolationException(arg1, arg2, arg3);
+
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
+    }
+  }
+
+  public void checkKey_13() {
+    if (insertCount != 0) {
+      prepare312();
+
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
+
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
+
+        if (arg1 == prevArg1 & arg3 == prevArg3 & arg2 != prevArg2)
+          throw cols13KeyViolationException(arg1, arg2, arg3, prevArg2);
+
+        if (!Ints312.contains13(deleteList, deleteCount, arg1, arg3) && table.contains13(arg1, arg3))
+          throw cols13KeyViolationException(arg1, arg2, arg3);
+
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  public interface DeleteChecker {
+    void checkDelete(int surr1, int surr2, int surr3, TernaryTableUpdater target);
+  }
+
+  public void checkDeletes123(DeleteChecker deleteChecker) {
+    prepare123();
+    checkDeletes(deleteChecker);
+  }
+
+  public void checkDeletes231(DeleteChecker deleteChecker) {
     prepare231();
-
-    int prevField1 = -1;
-    int prevField2 = -1;
-    int prevField3 = -1;
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
-
-      if (field2 == prevField2 & field3 == prevField3 & field1 != prevField1)
-        return false;
-
-      if (!Ints231.contains23(deleteList, deleteCount, field2, field3) && table.contains23(field2, field3))
-        return false;
-
-      prevField1 = field1;
-      prevField2 = field2;
-      prevField3 = field3;
-    }
-
-    return true;
+    checkDeletes(deleteChecker);
   }
 
-  public boolean checkKey_13() {
-    if (insertCount == 0)
-      return true;
-
+  public void checkDeletes312(DeleteChecker deleteChecker) {
     prepare312();
-
-    int prevField1 = -1;
-    int prevField2 = -1;
-    int prevField3 = -1;
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[3 * i];
-      int field2 = insertList[3 * i + 1];
-      int field3 = insertList[3 * i + 2];
-
-      if (field1 == prevField1 & field3 == prevField3 & field2 != prevField2)
-        return false;
-
-      if (!Ints312.contains13(deleteList, deleteCount, field1, field3) && table.contains13(field1, field3))
-        return false;
-
-      prevField1 = field1;
-      prevField2 = field2;
-      prevField3 = field3;
-    }
-
-    return true;
+    checkDeletes(deleteChecker);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
-
-  public boolean checkDeletedKeys_1(IntPredicate source) {
-    prepare123();
-
-    for (int i=0 ; i < deleteCount ; ) {
-      int surr1 = deleteList[3 * i];
-      if (!Ints123.contains1(insertList, insertCount, surr1) && source.test(surr1)) {
-        Miscellanea._assert(source.test(surr1));
-        int surr2 = deleteList[3 * i + 1];
-        int surr3 = deleteList[3 * i + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 ; i++) {
-          int currSurr2 = deleteList[3 * i + 1];
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr2 != surr2 | currSurr3 != surr3) {
-            surr2 = currSurr2;
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count1Eq(surr1, removedCount))
-          return false;
-      }
-      else
-        i++;
-    }
-    return true;
-  }
-
-  public boolean checkDeletedKeys_2(IntPredicate source) {
-    prepare231();
-
-    for (int i=0 ; i < deleteCount ; ) {
-      int surr2 = deleteList[3 * i + 1];
-      if (!Ints231.contains2(insertList, insertCount, surr2) && source.test(surr2)) {
-        Miscellanea._assert(source.test(surr2));
-        int surr1 = deleteList[3 * i];
-        int surr3 = deleteList[3 * i + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i+1] == surr2 ; i++) {
-          int currSurr1 = deleteList[3 * i];
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr1 != surr1 | currSurr3 != surr3) {
-            surr1 = currSurr1;
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count2Eq(surr2, removedCount))
-          return false;
-      }
-      else
-        i++;
-    }
-    return true;
-  }
-
-  public boolean checkDeletedKeys_3(IntPredicate source) {
-    prepare312();
-
-    for (int i=0 ; i < deleteCount ; ) {
-      int surr3 = deleteList[3 * i + 2];
-      if (!Ints312.contains3(insertList, insertCount, surr3) && source.test(surr3)) {
-        Miscellanea._assert(source.test(surr3));
-        int surr1 = deleteList[3 * i];
-        int surr2 = deleteList[3 * i + 1];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i+2] == surr3 ; i++) {
-          int currSurr1 = deleteList[3 * i];
-          int currSurr2 = deleteList[3 * i + 1];
-          if (currSurr1 != surr1 | currSurr2 != surr2) {
-            surr1 = currSurr1;
-            surr2 = currSurr2;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count3Eq(surr3, removedCount))
-          return false;
-      }
-      else
-        i++;
-    }
-
-    return true;
-  }
-
-  public boolean checkDeletedKeys_12(BiIntPredicate source) {
-    prepare123();
-
-    for (int i=0 ; i < deleteCount ; ) {
+  private void checkDeletes(DeleteChecker deleteChecker) {
+    for (int i=0 ; i < deleteCount ; i++) {
       int offset = 3 * i;
       int surr1 = deleteList[offset];
-      int surr2 = deleteList[offset + 1];
-      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && source.test(surr1, surr2)) {
-        int surr3 = deleteList[3 * i + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr3 != surr3) {
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count12Eq(surr1, surr2, removedCount))
-          return false;
-      }
-      else
-        i++;
+      int surr2 = deleteList[offset+1];
+      int surr3 = deleteList[offset+2];
+      deleteChecker.checkDelete(surr1, surr2, surr3, this);
     }
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
   // tern_rel(a, _, _) -> unary_rel(a);
-  public boolean checkForeignKeys_1(UnaryTableUpdater target) {
+  public void checkForeignKeys_1(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i]))
-        return false;
+        throw toUnaryForeignKeyViolation(1, insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains1);
+    target.checkDeletedKeys(deleteChecker1);
   }
 
+  UnaryTableUpdater.DeleteChecker deleteChecker1 =
+    new UnaryTableUpdater.DeleteChecker() {
+      public void check(UnaryTableUpdater target, int surr1) {
+        if (contains1(surr1))
+          throw toUnaryForeignKeyViolation1(surr1, target);
+      }
+    };
+
   // tern_rel(_, b, _) -> unary_rel(b);
-  public boolean checkForeignKeys_2(UnaryTableUpdater target) {
+  public void checkForeignKeys_2(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i+1]))
-        return false;
+        throw toUnaryForeignKeyViolation(2, insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains2);
+    target.checkDeletedKeys(deleteChecker2);
   }
 
+  UnaryTableUpdater.DeleteChecker deleteChecker2 =
+    new UnaryTableUpdater.DeleteChecker() {
+      public void check(UnaryTableUpdater target, int surr2) {
+        if (contains2(surr2))
+          throw toUnaryForeignKeyViolation2(surr2, target);
+      }
+    };
+
   // tern_rel(_, _, c) -> unary_rel(c)
-  public boolean checkForeignKeys_3(UnaryTableUpdater target) {
+  public void checkForeignKeys_3(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i+2]))
-        return false;
+        throw toUnaryForeignKeyViolation(3, insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains3);
+    target.checkDeletedKeys(deleteChecker3);
   }
 
+  UnaryTableUpdater.DeleteChecker deleteChecker3 =
+    new UnaryTableUpdater.DeleteChecker() {
+      public void check(UnaryTableUpdater target, int surr3) {
+        if (contains3(surr3))
+          throw toUnaryForeignKeyViolation3(surr3, target);
+      }
+    };
+
   // tern_rel(a, b, _) -> binary_rel(a, b)
-  public boolean checkForeignKeys_12(BinaryTableUpdater target) {
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertList[3*i], insertList[3*i+1]))
-        return false;
-    return target.checkDeletedKeys_12(this::contains12);
+  public void checkForeignKeys_12(BinaryTableUpdater target) {
+    for (int i=0 ; i < insertCount ; i++) {
+      int offset = 3 * i;
+      int arg1 = insertList[offset];
+      int arg2 = insertList[offset+1];
+      if (!target.contains(arg1, arg2))
+        throw toBinaryForeignKeyViolation(arg1, arg2, insertList[offset+2], target);
+    }
+    target.checkDeletes12(deleteChecker12);
+  }
+
+  BinaryTableUpdater.DeleteChecker deleteChecker12 =
+    new BinaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, BinaryTableUpdater target) {
+        if (contains12(surr1, surr2) && !target.contains(surr1, surr2))
+          throw toBinaryForeignKeyViolation(surr1, surr2, target);
+      }
+    };
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3, int otherArg3) {
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, KeyViolationException.key_12, true);
+  }
+
+  private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3) {
+    int otherArg3 = table.lookup12(arg1, arg2);
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, KeyViolationException.key_12, false);
+  }
+
+  private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2) {
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, KeyViolationException.key_3, true);
+  }
+
+  private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3) {
+    TernaryTable.Iter3 it = table.getIter3(arg3);
+    int otherArg1 = it.get1();
+    int otherArg2 = it.get2();
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, KeyViolationException.key_3, false);
+  }
+
+  private KeyViolationException cols23KeyViolationException(int arg1, int arg2, int arg3, int otherArg1) {
+    return keyViolationException(arg1, arg2, arg3, otherArg1, arg2, arg3, KeyViolationException.key_23, true);
+  }
+
+  private KeyViolationException cols23KeyViolationException(int arg1, int arg2, int arg3) {
+    int otherArg1 = table.lookup23(arg2, arg3);
+    return keyViolationException(arg1, arg2, arg3, otherArg1, arg2, arg3, KeyViolationException.key_23, false);
+  }
+
+  private KeyViolationException cols13KeyViolationException(int arg1, int arg2, int arg3, int otherArg2) {
+    return keyViolationException(arg1, arg2, arg3, arg1, otherArg2, arg3, KeyViolationException.key_13, true);
+  }
+
+  private KeyViolationException cols13KeyViolationException(int arg1, int arg2, int arg3) {
+    int otherArg2 = table.lookup13(arg1, arg3);
+    return keyViolationException(arg1, arg2, arg3, arg1, otherArg2, arg3, KeyViolationException.key_13, false);
+  }
+
+  private KeyViolationException keyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2, int otherArg3, int[] key, boolean betweenNew) {
+    //## BUG: STORES MAY CONTAIN ONLY PART OF THE ACTUAL VALUE (id(5) -> 5)
+    Obj obj1 = store1.surrToValue(arg1);
+    Obj obj2 = store2.surrToValue(arg2);
+    Obj obj3 = store3.surrToValue(arg3);
+
+    Obj otherObj1 = arg1 == otherArg1 ? obj1 : store1.surrToValue(otherArg1);
+    Obj otherObj2 = arg2 == otherArg2 ? obj2 : store2.surrToValue(otherArg2);
+    Obj otherObj3 = arg3 == otherArg3 ? obj3 : store3.surrToValue(otherArg3);
+
+    Obj[] tuple1 = new Obj[] {obj1, obj2, obj3};
+    Obj[] tuple2 = new Obj[] {otherObj1, otherObj2, otherObj3};
+
+    return new KeyViolationException(relvarName, key, tuple1, tuple2, betweenNew);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation(int column, int arg1Surr, int arg2Surr, int arg3Surr, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store1.surrToValue(arg1Surr), store2.surrToValue(arg2Surr), store3.surrToValue(arg3Surr)};
+    return ForeignKeyViolationException.ternaryUnary(relvarName, column, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation1(int delSurr, UnaryTableUpdater target) {
+    TernaryTable.Iter1 it = table.getIter1(delSurr);
+    Obj arg1 = store1.surrToValue(delSurr);
+    Obj arg2 = store2.surrToValue(it.get1());
+    Obj arg3 = store3.surrToValue(it.get2());
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.ternaryUnary(relvarName, 1, target.relvarName, tuple, arg1);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation2(int delSurr, UnaryTableUpdater target) {
+    TernaryTable.Iter2 it = table.getIter2(delSurr);
+    Obj arg1 = store1.surrToValue(it.get1());
+    Obj arg2 = store2.surrToValue(delSurr);
+    Obj arg3 = store3.surrToValue(it.get2());
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.ternaryUnary(relvarName, 2, target.relvarName, tuple, arg2);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation3(int delSurr, UnaryTableUpdater target) {
+    TernaryTable.Iter3 it = table.getIter3(delSurr);
+    Obj arg1 = store1.surrToValue(it.get1());
+    Obj arg2 = store2.surrToValue(it.get2());
+    Obj arg3 = store3.surrToValue(delSurr);
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.ternaryUnary(relvarName, 3, target.relvarName, tuple, arg3);
+  }
+
+  private ForeignKeyViolationException toBinaryForeignKeyViolation(int surr1, int surr2, int surr3, BinaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store1.surrToValue(surr1), store2.surrToValue(surr2), store3.surrToValue(surr3)};
+    return ForeignKeyViolationException.ternaryBinary(relvarName, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toBinaryForeignKeyViolation(int surr1, int surr2, BinaryTableUpdater target) {
+    Obj arg1 = store1.surrToValue(surr1);
+    Obj arg2 = store2.surrToValue(surr2);
+    Obj arg3 = store3.surrToValue(lookupAny12(surr1, surr2));
+    Obj[] fromTuple = new Obj[] {arg1, arg2, arg3};
+    Obj[] toTuple = new Obj[] {arg1, arg2};
+    return ForeignKeyViolationException.ternaryBinary(relvarName, target.relvarName, fromTuple, toTuple);
   }
 }

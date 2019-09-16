@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.function.IntPredicate;
-
 
 final class FloatColumnUpdater {
   boolean clear = false;
@@ -22,12 +20,16 @@ final class FloatColumnUpdater {
   boolean col1KeyViolated = false;
   long[] bitmap = Array.emptyLongArray;
 
+  String relvarName;
   FloatColumn column;
+  ValueStoreUpdater store;
 
   //////////////////////////////////////////////////////////////////////////////
 
-  FloatColumnUpdater(FloatColumn column, ValueStoreUpdater storeUpdater) {
+  FloatColumnUpdater(String relvarName, FloatColumn column, ValueStoreUpdater store) {
+    this.relvarName = relvarName;
     this.column = column;
+    this.store = store;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -153,11 +155,13 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean contains1(int surr1) {
+  private boolean contains1(int surr1) {
     if (surr1 > maxIdx)
       return !clear && column.contains1(surr1);
 
-    buildBitmap();
+    // This call is only needed to build the delete/update/insert bitmap
+    if (!dirty)
+      buildBitmapAndCheckKey();
 
     int slotIdx = surr1 / 32;
     int bitsShift = 2 * (surr1 % 32);
@@ -174,19 +178,46 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_1() {
-    if (insertCount == 0 & updateCount == 0)
-      return true;
-    Miscellanea._assert(maxIdx != -1);
-    buildBitmap();
-    return !col1KeyViolated;
+  private double lookup(int surr1) {
+    if (surr1 <= maxIdx & (insertCount != 0 | updateCount != 0)) {
+      Miscellanea._assert(dirty);
+
+      int slotIdx = surr1 / 32;
+      int bitsShift = 2 * (surr1 % 32);
+      long slot = bitmap[slotIdx];
+      long status = slot >> bitsShift;
+
+      if ((status & 2) != 0) {
+        for (int i=0 ; i < insertCount ; i++)
+          if (insertIdxs[i] == surr1)
+            return insertValues[i];
+
+        for (int i=0 ; i < updateCount ; i++)
+          if (updateIdxs[i] == surr1)
+            return updateValues[i];
+
+        Miscellanea.internalFail();
+      }
+    }
+
+    return column.lookup(surr1);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private void buildBitmap() {
-    if (dirty)
-      return;
+  public void checkKey_1() {
+    if (insertCount != 0 | updateCount != 0) {
+      Miscellanea._assert(maxIdx != -1);
+      Miscellanea._assert(!dirty);
+
+      buildBitmapAndCheckKey();
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private void buildBitmapAndCheckKey() {
+    dirty = true;
 
     if (maxIdx / 32 >= bitmap.length)
       bitmap = Array.extend(bitmap, Array.capacity(bitmap.length, maxIdx / 32 + 1));
@@ -195,8 +226,6 @@ final class FloatColumnUpdater {
     // 01 - deleted
     // 10 - inserted
     // 11 - updated or inserted and deleted
-
-    dirty = true;
 
     if (clear) {
       Array.fill(bitmap, 0x5555555555555555L); //## BAD: THIS CAN BE MADE MORE EFFICIENT
@@ -216,7 +245,8 @@ final class FloatColumnUpdater {
       int bitsShift = 2 * (idx % 32);
       long slot = bitmap[slotIdx];
       if (((slot >> bitsShift) & 2) != 0)
-        col1KeyViolated = true;
+        //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+        throw col1KeyViolation(idx, updateValues[i], true);
       bitmap[slotIdx] = slot | (3L << bitsShift);
     }
 
@@ -226,32 +256,77 @@ final class FloatColumnUpdater {
       int bitsShift = 2 * (idx % 32);
       long slot = bitmap[slotIdx];
       int bits = (int) ((slot >> bitsShift) & 3);
-      if ((bits == 0 && column.contains1(idx)) | bits >= 2)
-        col1KeyViolated = true;
+      if (bits >= 2)
+        //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+        throw col1KeyViolation(idx, insertValues[i], true);
+      if ((bits == 0 && column.contains1(idx)))
+        //## HERE I WOULD ACTUALLY NEED TO CHECK THAT THE NEW VALUE IS DIFFERENT FROM THE OLD ONE
+        throw col1KeyViolation(idx, insertValues[i], false);
       bitmap[slotIdx] = slot | (2L << bitsShift);
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys_1(IntPredicate source) {
-    throw Miscellanea.internalFail();
+  // bin_rel(a, _) -> unary_rel(a);
+  public void checkForeignKeys_1(UnaryTableUpdater target) {
+    // Checking that every new entry satisfies the foreign key
+    for (int i=0 ; i < insertCount ; i++)
+      if (!target.contains(insertIdxs[i]))
+        throw foreignKeyViolation(insertIdxs[i], insertValues[i], target);
+
+    for (int i=0 ; i < updateCount ; i++)
+      if (!target.contains(updateIdxs[i]))
+        throw foreignKeyViolation(updateIdxs[i], updateValues[i], target);
+
+    // Checking that no entries were invalidated by a deletion on the target table
+    target.checkDeletedKeys(deleteChecker);
+  }
+
+  UnaryTableUpdater.DeleteChecker deleteChecker =
+    new UnaryTableUpdater.DeleteChecker() {
+      public void check(UnaryTableUpdater updater, int surr) {
+        if (contains1(surr))
+          throw foreignKeyViolation(surr, updater);
+      }
+    };
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private KeyViolationException col1KeyViolation(int idx, double value, boolean betweenNew) {
+    if (betweenNew) {
+      for (int i=0 ; i < updateCount ; i++)
+        if (updateIdxs[i] == idx)
+          return col1KeyViolation(idx, value, updateValues[i], betweenNew);
+
+      for (int i=0 ; i < insertCount ; i++)
+        if (insertIdxs[i] == idx)
+          return col1KeyViolation(idx, value, insertValues[i], betweenNew);
+
+      throw Miscellanea.internalFail();
+    }
+    else
+      return col1KeyViolation(idx, value, column.lookup(idx), betweenNew);
+  }
+
+  private KeyViolationException col1KeyViolation(int idx, double value, double otherValue, boolean betweenNew) {
+    //## BUG: Stores may contain only part of the value (id(5) -> 5)
+    Obj key = store.surrToValue(idx);
+    Obj[] tuple1 = new Obj[] {key, new FloatObj(value)};
+    Obj[] tuple2 = new Obj[] {key, new FloatObj(otherValue)};
+    return new KeyViolationException(relvarName, KeyViolationException.key_1, tuple1, tuple2, betweenNew);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  // bin_rel(a, _) -> unary_rel(a);
-  public boolean checkForeignKeys_1(UnaryTableUpdater target) {
-    // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertIdxs[i]))
-        return false;
+  private ForeignKeyViolationException foreignKeyViolation(int keySurr, double value, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store.surrToValue(keySurr), new FloatObj(value)};
+    return ForeignKeyViolationException.binaryUnary(relvarName, 1, target.relvarName, tuple);
+  }
 
-    for (int i=0 ; i < updateCount ; i++)
-      if (!target.contains(updateIdxs[i]))
-        return false;
-
-    // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains1);
+  private ForeignKeyViolationException foreignKeyViolation(int keySurr, UnaryTableUpdater target) {
+    Obj key = store.surrToValue(keySurr);
+    Obj[] fromTuple = new Obj[] {key, new FloatObj(lookup(keySurr))};
+    return ForeignKeyViolationException.binaryUnary(relvarName, 1, target.relvarName, fromTuple, key);
   }
 }

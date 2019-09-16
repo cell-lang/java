@@ -15,11 +15,14 @@ class SymBinaryTableUpdater {
 
   boolean prepared = false;
 
+  String relvarName;
+
   SymBinaryTable table;
   ValueStoreUpdater store;
 
 
-  public SymBinaryTableUpdater(SymBinaryTable table, ValueStoreUpdater store) {
+  public SymBinaryTableUpdater(String relvarName, SymBinaryTable table, ValueStoreUpdater store) {
+    this.relvarName = relvarName;
     this.table = table;
     this.store = store;
   }
@@ -173,41 +176,92 @@ class SymBinaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys(BiIntPredicate source) {
+  public interface DeleteChecker {
+    void checkDelete(int surr1, int surr2, SymBinaryTableUpdater target);
+  }
+
+  public void checkDeletes(DeleteChecker deleteChecker) {
+    // Needs to be called before iterating through deleteList, otherwise a call to
+    // checkDelete() -> contains() -> prepare() could reorder it while it's being iterated on
     prepare();
 
     for (int i=0 ; i < deleteCount ; i++) {
-      int surr1 = deleteList[2 * i];
-      int surr2 = deleteList[2 * i + 1];
-      if (!Ints12.contains(insertList, insertCount, surr1, surr2))
-        if (source.test(surr1, surr2))
-          return false;
+      int offset = 2 * i;
+      int surr1 = deleteList[offset];
+      int surr2 = deleteList[offset + 1];
+      deleteChecker.checkDelete(surr1, surr2, this);
     }
-
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   // bin_rel(a, b) -> unary_rel(a), unary_rel(b);
-  public boolean checkForeignKeys_1_2(UnaryTableUpdater target) {
+  public void checkForeignKeys_1_2(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < 2 * insertCount ; i++)
-      if (!target.contains(insertList[i]))
-        return false;
+      if (!target.contains(insertList[i])) {
+        int surr1 = i % 2 == 0 ? insertList[i] : insertList[i-1];
+        int surr2 = i % 2 == 0 ? insertList[i+1] : insertList[i];
+        throw toUnaryForeignKeyViolation(surr1, surr2, target);
+      }
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains);
+    target.checkDeletedKeys(deleteChecker_1_2);
   }
 
+  UnaryTableUpdater.DeleteChecker deleteChecker_1_2 =
+    new UnaryTableUpdater.DeleteChecker() {
+      public void check(UnaryTableUpdater target, int surr) {
+        if (contains(surr))
+          throw toUnaryForeignKeyViolation(surr, target);
+      }
+    };
+
   // bin_rel(a, b) -> ternary_rel(a, b, _)
-  public boolean checkForeignKeys_12(Sym12TernaryTableUpdater target) {
+  public void checkForeignKeys_12(Sym12TernaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains12(insertList[2*i], insertList[2*i+1]))
-        return false;
+        throw toSym12TernaryForeignKeyViolation(insertList[2*i], insertList[2*i+1], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys_12(this::contains);
+    target.checkDeletes(deleteChecker_12);
+  }
+
+  Sym12TernaryTableUpdater.DeleteChecker deleteChecker_12 =
+    new Sym12TernaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater target) {
+        if (contains(surr1, surr2) && !target.contains12(surr1, surr2))
+          throw toSym12TernaryForeignKeyViolation(surr1, surr2, surr3, target);
+      }
+    };
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation(int arg1Surr, int arg2Surr, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store.surrToValue(arg1Surr), store.surrToValue(arg2Surr)};
+    return ForeignKeyViolationException.symBinaryUnary(relvarName, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation(int delSurr, UnaryTableUpdater target) {
+    int otherSurr = table.restrict(delSurr)[0];
+    Obj arg1 = store.surrToValue(delSurr);
+    Obj[] tuple1 = new Obj[] {arg1, store.surrToValue(otherSurr)};
+    return ForeignKeyViolationException.symBinaryUnary(relvarName, target.relvarName, tuple1, arg1);
+  }
+
+  private ForeignKeyViolationException toSym12TernaryForeignKeyViolation(int surr1, int surr2, Sym12TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store12);
+    Obj arg1 = store.surrToValue(surr1);
+    Obj arg2 = store.surrToValue(surr2);
+    return ForeignKeyViolationException.symBinarySymTernary(relvarName, target.relvarName, arg1, arg2);
+  }
+
+  private ForeignKeyViolationException toSym12TernaryForeignKeyViolation(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater target) {
+    Miscellanea._assert(store == target.store12);
+    Obj arg1 = store.surrToValue(surr1);
+    Obj arg2 = store.surrToValue(surr2);
+    Obj arg3 = target.store3.surrToValue(surr3);
+    return ForeignKeyViolationException.symBinarySymTernary(relvarName, target.relvarName, arg1, arg2, arg3);
   }
 }

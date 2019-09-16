@@ -1,5 +1,7 @@
 package net.cell_lang;
 
+import java.io.StringWriter;
+import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -61,6 +63,11 @@ class Procs {
       return SymbObj.get(SymbTable.NothingSymbId);
   }
 
+  public static Obj Now_P(Object env) {
+    long msecs = System.currentTimeMillis();
+    return Builder.createTaggedIntObj(SymbTable.TimeSymbId, 1000000 * msecs);
+  }
+
   private static long startTicks = -1;
   public static Obj Ticks_P(Object env) {
     long ticks = System.currentTimeMillis();
@@ -71,5 +78,23 @@ class Procs {
 
   public static void Exit_P(Obj code, Object env) {
     System.exit((int) code.getLong());
+  }
+
+  public static Obj Error_P(RelAutoBase automaton, RelAutoUpdaterBase updater, Object env) {
+    Exception e = updater.lastException;
+    String msg = "";
+    if (e != null) {
+      if (e instanceof KeyViolationException || e instanceof ForeignKeyViolationException) {
+        msg = e.toString();
+      }
+      else {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        updater.lastException.printStackTrace(printWriter);
+        printWriter.flush();
+        msg = stringWriter.toString();
+      }
+    }
+    return Conversions.stringToObj(msg);
   }
 }

@@ -210,11 +210,11 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
         "  public void execute(String text) {",
         "    Obj msg = Conversions.convertText(text);",
         "    if (!" & native_fn_name(value_unsafe(block.msg_memb_pred), context=:wrapper) & "(msg))",
-        "      throw new RuntimeException(\"Invalid message\");",
+        "      throw new RuntimeException(\"Invalid message type\");",
         "    boolean " & native_method_call("ok", "automaton", update_entry_point_name(block.name), ("msg", "updater", "env"), context=:wrapper),
         "    if (!ok) {",
         "      env = new Generated.Env();",
-        "      throw new RuntimeException(\"Update failed\");",
+        "      throw updater.getLastRuntimeException();",
         "    }",
         "  }"
       );

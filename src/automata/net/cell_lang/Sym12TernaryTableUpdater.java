@@ -1,7 +1,5 @@
 package net.cell_lang;
 
-import java.util.function.IntPredicate;
-
 
 class Sym12TernaryTableUpdater {
   static int[] emptyArray = new int[0];
@@ -17,12 +15,15 @@ class Sym12TernaryTableUpdater {
   int[] insertList12;
   int[] insertList3;
 
+  String relvarName;
+
   Sym12TernaryTable table;
   ValueStoreUpdater store12, store3;
 
   boolean prepared = false;
 
-  public Sym12TernaryTableUpdater(Sym12TernaryTable table, ValueStoreUpdater store12, ValueStoreUpdater store3) {
+  public Sym12TernaryTableUpdater(String relvarName, Sym12TernaryTable table, ValueStoreUpdater store12, ValueStoreUpdater store3) {
+    this.relvarName = relvarName;
     this.table = table;
     this.store12 = store12;
     this.store3 = store3;
@@ -273,6 +274,7 @@ class Sym12TernaryTableUpdater {
 
   public boolean contains3(int surr3) {
     prepareInsert3();
+
     if (Ints.contains(insertList3, surr3))
       return true;
 
@@ -292,156 +294,241 @@ class Sym12TernaryTableUpdater {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkKey_12() {
-    if (insertCount == 0)
-      return true;
+  public int lookupAny12(int surr1, int surr2) {
+    if (surr1 > surr2) {
+      int tmp = surr1;
+      surr1 = surr2;
+      surr2 = tmp;
+    }
 
     prepare();
 
-    int prevArg1 = -1;
-    int prevArg2 = -1;
-    int prevArg3 = -1;
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int arg1 = insertList[3 * i];
-      int arg2 = insertList[3 * i + 1];
-      int arg3 = insertList[3 * i + 2];
-
-      if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 != prevArg3)
-        return false;
-
-      if (!Ints123.contains12(deleteList, deleteCount, arg1, arg2) && table.contains12(arg1, arg2))
-        return false;
-
-      prevArg1 = arg1;
-      prevArg2 = arg2;
-      prevArg3 = arg3;
+    if (Ints123.contains12(insertList, insertCount, surr1, surr2)) {
+      int idxFirst = Ints123.indexFirst12(insertList, insertCount, surr1, surr2);
+      return insertList[3 * idxFirst + 2];
     }
 
-    return true;
-  }
-
-  public boolean checkKey_3() {
-    if (insertCount == 0)
-      return true;
-
-    prepareDelete3();
-
-    int prevArg1 = -1;
-    int prevArg2 = -1;
-    int prevArg3 = -1;
-
-    for (int i=0 ; i < insertCount ; i++) {
-      int arg1 = insertList[3 * i];
-      int arg2 = insertList[3 * i + 1];
-      int arg3 = insertList[3 * i + 2];
-
-      if (arg3 == prevArg3 & (arg1 != prevArg1 | arg2 != prevArg2))
-        return false;
-
-      if (!Ints.contains(deleteList, arg3) && table.contains3(arg3))
-        return false;
-
-      prevArg1 = arg1;
-      prevArg2 = arg2;
-      prevArg3 = arg3;
+    if (table.contains12(surr1, surr2)) {
+      Sym12TernaryTable.Iter12 it = table.getIter12(surr1, surr2);
+      Miscellanea._assert(!it.done());
+      do {
+        if (!Ints123.contains(deleteList, deleteCount, surr1, surr2, it.get1()))
+          return it.get1();
+        it.next();
+      } while (!it.done());
     }
 
-    return true;
+    throw Miscellanea.internalFail();
   }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean checkDeletedKeys_12(BiIntPredicate source) {
+  public void checkKey_12() {
+    if (insertCount != 0) {
+      prepare();
+
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
+
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
+
+        if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 != prevArg3)
+          throw cols12KeyViolationException(arg1, arg2, arg3, prevArg3);
+
+        if (!Ints123.contains12(deleteList, deleteCount, arg1, arg2) && table.contains12(arg1, arg2))
+          throw cols12KeyViolationException(arg1, arg2, arg3);
+
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
+    }
+  }
+
+  public void checkKey_3() {
+    if (insertCount != 0) {
+      prepareDelete3();
+
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
+
+      for (int i=0 ; i < insertCount ; i++) {
+        int arg1 = insertList[3 * i];
+        int arg2 = insertList[3 * i + 1];
+        int arg3 = insertList[3 * i + 2];
+
+        if (arg3 == prevArg3 & (arg1 != prevArg1 | arg2 != prevArg2))
+          throw col3KeyViolationException(arg1, arg2, arg3, prevArg1, prevArg2);
+
+        if (!Ints.contains(deleteList, arg3) && table.contains3(arg3))
+          throw col3KeyViolationException(arg1, arg2, arg3);
+
+        prevArg1 = arg1;
+        prevArg2 = arg2;
+        prevArg3 = arg3;
+      }
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  public interface DeleteChecker {
+    void checkDelete(int surr1, int surr2, int surr3, Sym12TernaryTableUpdater updater);
+  }
+
+  public void checkDeletes(DeleteChecker deleteChecker) {
+    // Needs to be called before iterating through deleteList, otherwise a call to
+    // checkDelete() -> contains12() -> prepare() could reorder it while it's being iterated on
     prepare();
 
-    for (int i=0 ; i < deleteCount ; ) {
+    for (int i=0 ; i < deleteCount ; i++) {
       int offset = 3 * i;
       int surr1 = deleteList[offset];
       int surr2 = deleteList[offset + 1];
-      if (!Ints123.contains12(insertList, insertCount, surr1, surr2) && source.test(surr1, surr2)) {
-        int surr3 = deleteList[3 * i + 2];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i] == surr1 && deleteList[3*i+1] == surr2 ; i++) {
-          int currSurr3 = deleteList[3 * i + 2];
-          if (currSurr3 != surr3) {
-            surr3 = currSurr3;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count12Eq(surr1, surr2, removedCount))
-          return false;
-      }
-      else
-        i++;
+      int surr3 = deleteList[offset + 2];
+      deleteChecker.checkDelete(surr1, surr2, surr3, this);
     }
-    return true;
-  }
-
-  public boolean checkDeletedKeys_3(IntPredicate source) {
-    prepare();
-    prepareInsert3();
-
-    for (int i=0 ; i < deleteCount ; ) {
-      int surr3 = deleteList[3 * i + 2];
-      if (!Ints.contains(insertList3, surr3) && source.test(surr3)) {
-        int surr1 = deleteList[3 * i];
-        int surr2 = deleteList[3 * i + 1];
-        int removedCount = table.contains(surr1, surr2, surr3) ? 1 : 0;
-        for (i++ ; i < deleteCount && deleteList[3*i+2] == surr3 ; i++) {
-          int currSurr1 = deleteList[3 * i];
-          int currSurr2 = deleteList[3 * i + 1];
-          if (currSurr1 != surr1 | currSurr2 != surr2) {
-            surr1 = currSurr1;
-            surr2 = currSurr2;
-            if (table.contains(surr1, surr2, surr3))
-              removedCount++;
-          }
-        }
-        if (table.count3Eq(surr3, removedCount))
-          return false;
-      }
-      else
-        i++;
-    }
-
-    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
-  // tern_rel(a, b, _) -> unary_rel(a), unary_rel(b)
-  public boolean checkForeignKeys_1_2(UnaryTableUpdater target) {
+  // sym_tern_rel(a, b, _) -> unary_rel(a), unary_rel(b)
+  public void checkForeignKeys_1_2(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
+    for (int i=0 ; i < insertCount ; i++) {
       if (!target.contains(insertList[3*i]) | !target.contains(insertList[3*i+1]))
-        return false;
+        throw toUnaryForeignKeyViolation12(insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
+    }
 
     // Checking that no entries were invalidates by a deletion on the target table
-    return target.checkDeletedKeys(this::contains_1_2);
+    target.checkDeletedKeys(deleteChecker12);
   }
 
-  // tern_rel(_, _, c) -> unary_rel(c)
-  public boolean checkForeignKeys_3(UnaryTableUpdater target) {
+  UnaryTableUpdater.DeleteChecker deleteChecker12 =
+    new UnaryTableUpdater.DeleteChecker() {
+      public void check(UnaryTableUpdater target, int surr12) {
+        if (contains_1_2(surr12))
+          throw toUnaryForeignKeyViolation12(surr12, target);
+      }
+    };
+
+  // sym_tern_rel(_, _, c) -> unary_rel(c)
+  public void checkForeignKeys_3(UnaryTableUpdater target) {
     // Checking that every new entry satisfies the foreign key
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i+2]))
-        return false;
+        throw toUnaryForeignKeyViolation3(insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
 
     // Checking that no entries were invalidated by a deletion on the target table
-    return target.checkDeletedKeys(this::contains3);
+    target.checkDeletedKeys(deleteChecker3);
   }
 
-  // tern_rel(a, b, _) -> binary_rel(a, b)
-  public boolean checkForeignKeys_12(SymBinaryTableUpdater target) {
+  UnaryTableUpdater.DeleteChecker deleteChecker3 =
+    new UnaryTableUpdater.DeleteChecker() {
+      public void check(UnaryTableUpdater target, int surr3) {
+        if (contains3(surr3))
+          throw toUnaryForeignKeyViolation3(surr3, target);
+      }
+    };
+
+  // sym_tern_rel(a, b, _) -> sym_binary_rel(a, b)
+  public void checkForeignKeys_12(SymBinaryTableUpdater target) {
     for (int i=0 ; i < insertCount ; i++)
       if (!target.contains(insertList[3*i], insertList[3*i+1]))
-        return false;
-    return target.checkDeletedKeys(this::contains12);
+        throw toSymBinaryForeingKeyViolation(insertList[3*i], insertList[3*i+1], insertList[3*i+2], target);
+    target.checkDeletes(symBinaryTableDeleteChecker);
+  }
+
+  SymBinaryTableUpdater.DeleteChecker symBinaryTableDeleteChecker =
+    new SymBinaryTableUpdater.DeleteChecker() {
+      public void checkDelete(int surr1, int surr2, SymBinaryTableUpdater target) {
+        if (contains12(surr1, surr2) && !target.contains(surr1, surr2))
+          throw toSymBinaryForeingKeyViolation(surr1, surr2, lookupAny12(surr1, surr2), target);
+      }
+    };
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3, int otherArg3) {
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, KeyViolationException.key_12, true);
+  }
+
+  private KeyViolationException cols12KeyViolationException(int arg1, int arg2, int arg3) {
+    int otherArg3 = table.lookup12(arg1, arg2);
+    return keyViolationException(arg1, arg2, arg3, arg1, arg2, otherArg3, KeyViolationException.key_12, false);
+  }
+
+  private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2) {
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, KeyViolationException.key_3, true);
+  }
+
+  private KeyViolationException col3KeyViolationException(int arg1, int arg2, int arg3) {
+    Sym12TernaryTable.Iter3 it = table.getIter3(arg3);
+    int otherArg1 = it.get1();
+    int otherArg2 = it.get2();
+    return keyViolationException(arg1, arg2, arg3, otherArg1, otherArg2, arg3, KeyViolationException.key_3, false);
+  }
+
+  private KeyViolationException keyViolationException(int arg1, int arg2, int arg3, int otherArg1, int otherArg2, int otherArg3, int[] key, boolean betweenNew) {
+    //## BUG: STORES MAY CONTAIN ONLY PART OF THE ACTUAL VALUE (id(5) -> 5)
+    Obj obj1 = store12.surrToValue(arg1);
+    Obj obj2 = store12.surrToValue(arg2);
+    Obj obj3 = store3.surrToValue(arg3);
+
+    Obj otherObj1 = arg1 == otherArg1 ? obj1 : store12.surrToValue(otherArg1);
+    Obj otherObj2 = arg2 == otherArg2 ? obj2 : store12.surrToValue(otherArg2);
+    Obj otherObj3 = arg3 == otherArg3 ? obj3 : store3.surrToValue(otherArg3);
+
+    Obj[] tuple1 = new Obj[] {obj1, obj2, obj3};
+    Obj[] tuple2 = new Obj[] {otherObj1, otherObj2, otherObj3};
+
+    return new KeyViolationException(relvarName, key, tuple1, tuple2, betweenNew);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation12(int arg1Surr, int arg2Surr, int arg3Surr, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store12.surrToValue(arg1Surr), store12.surrToValue(arg2Surr), store3.surrToValue(arg3Surr)};
+    return ForeignKeyViolationException.symTernary12Unary(relvarName, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation12(int arg12Surr, UnaryTableUpdater target) {
+    Sym12TernaryTable.Iter it = table.getIter_1_2(arg12Surr);
+    Obj arg1 = store12.surrToValue(arg12Surr);
+    Obj arg2 = store12.surrToValue(it.get1());
+    Obj arg3 = store3.surrToValue(it.get2());
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.symTernary12Unary(relvarName, target.relvarName, tuple, arg1);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation3(int arg1Surr, int arg2Surr, int arg3Surr, UnaryTableUpdater target) {
+    Obj[] tuple = new Obj[] {store12.surrToValue(arg1Surr), store12.surrToValue(arg2Surr), store3.surrToValue(arg3Surr)};
+    return ForeignKeyViolationException.symTernary3Unary(relvarName, target.relvarName, tuple);
+  }
+
+  private ForeignKeyViolationException toUnaryForeignKeyViolation3(int arg3Surr, UnaryTableUpdater target) {
+    Sym12TernaryTable.Iter3 it = table.getIter3(arg3Surr);
+    Obj arg1 = store12.surrToValue(it.get1());
+    Obj arg2 = store12.surrToValue(it.get2());
+    Obj arg3 = store3.surrToValue(arg3Surr);
+    Obj[] tuple = new Obj[] {arg1, arg2, arg3};
+    return ForeignKeyViolationException.symTernary3Unary(relvarName, target.relvarName, tuple, arg3);
+  }
+
+  private ForeignKeyViolationException toSymBinaryForeingKeyViolation(int surr1, int surr2, int surr3, SymBinaryTableUpdater target) {
+    Miscellanea._assert(store12 == target.store);
+    Obj arg1 = store12.surrToValue(surr1);
+    Obj arg2 = store12.surrToValue(surr2);
+    Obj arg3 = store3.surrToValue(surr3);
+    return ForeignKeyViolationException.symTernarySymBinary(relvarName, target.relvarName, arg1, arg2, arg3);
   }
 }
