@@ -63,6 +63,11 @@ class Procs {
       return SymbObj.get(SymbTable.NothingSymbId);
   }
 
+  public static Obj Now_P(Object env) {
+    long msecs = System.currentTimeMillis();
+    return Builder.createTaggedIntObj(SymbTable.TimeSymbId, 1000000 * msecs);
+  }
+
   private static long startTicks = -1;
   public static Obj Ticks_P(Object env) {
     long ticks = System.currentTimeMillis();
