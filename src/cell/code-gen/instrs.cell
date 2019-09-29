@@ -375,7 +375,7 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
     }
     else {
       msg_print_instr = native_static_call("Miscellanea.printFailReachedMsg", (filename_str, line));
-      return ("if (Miscellanea.exitOnSoftFail) {", "  " & msg_print_instr) &
+      return ("if (Miscellanea.debugMode) {", "  " & msg_print_instr) &
              indent_lines(vars_dump) &
              ("}");
     }

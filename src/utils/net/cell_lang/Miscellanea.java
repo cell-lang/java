@@ -39,17 +39,18 @@ class Miscellanea {
     return null;
   }
 
-  public static boolean exitOnSoftFail = false;
+  public static boolean debugMode = false;
+  public static boolean insideTransaction = false;
 
   public static RuntimeException softFail() {
     printCallStack();
-    if (exitOnSoftFail)
+    if (debugMode & !insideTransaction)
       System.exit(1);
     throw new UnsupportedOperationException();
   }
 
   public static RuntimeException softFail(String msg) {
-    if (exitOnSoftFail)
+    if (debugMode)
       System.err.println(msg);
     return softFail();
   }
