@@ -13,8 +13,6 @@ public class UnitTests {
     // System.out.println("Ints231           OK");
     // Test_Ints312.run();
     // System.out.println("Ints312           OK");
-    // Test_BinaryTable.run();
-    // System.out.println("BinaryTable       OK");
     // Test_TernaryTable.run();
     // System.out.println("TernaryTable      OK");
 
@@ -76,6 +74,16 @@ public class UnitTests {
     // ObjStore objStore = new ObjStore();
     // ObjStoreUpdater objStoreUpdater = new ObjStoreUpdater(objStore);
 
-    Test_IntStore.run();
+    // Test_IntStore.run();
+
+
+    Test_BinaryTable.run();
+    System.out.println("BinaryTable       OK");
+
+    // Test_SurrBinaryTable.run();
+    // System.out.println("SurrBinaryTable   OK");
+
+
+    // Test_BinaryTable_Performance_A.run();
   }
 }

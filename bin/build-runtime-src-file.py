@@ -45,6 +45,7 @@ src_Ints231                       = 'algorithms/net/cell_lang/Ints231.java'
 src_Ints312                       = 'algorithms/net/cell_lang/Ints312.java'
 
 src_Array                         = 'utils/net/cell_lang/Array.java'
+src_AutoProcs                     = 'utils/net/cell_lang/AutoProcs.java'
 src_CharStream                    = 'utils/net/cell_lang/CharStream.java'
 src_Conversions                   = 'utils/net/cell_lang/Conversions.java'
 src_DateTime                      = 'utils/net/cell_lang/DateTime.java'
@@ -68,8 +69,7 @@ src_TokenStream                   = 'utils/net/cell_lang/TokenStream.java'
 src_TokenType                     = 'utils/net/cell_lang/TokenType.java'
 
 src_ArrayIter                     = 'automata/net/cell_lang/ArrayIter.java'
-# src_AssocTable                    = 'automata/net/cell_lang/AssocTable.java'
-# src_AssocTableUpdater             = 'automata/net/cell_lang/AssocTableUpdater.java'
+src_ArraySliceAllocator           = 'automata/net/cell_lang/ArraySliceAllocator.java'
 src_BinaryTable                   = 'automata/net/cell_lang/BinaryTable.java'
 src_BinaryTableUpdater            = 'automata/net/cell_lang/BinaryTableUpdater.java'
 src_ColumnBase                    = 'automata/net/cell_lang/ColumnBase.java'
@@ -100,8 +100,6 @@ src_UnaryTable                    = 'automata/net/cell_lang/UnaryTable.java'
 src_UnaryTableUpdater             = 'automata/net/cell_lang/UnaryTableUpdater.java'
 src_ValueStore                    = 'automata/net/cell_lang/ValueStore.java'
 src_ValueStoreUpdater             = 'automata/net/cell_lang/ValueStoreUpdater.java'
-
-# src_Hacks                         = 'hacks/net/cell_lang/Hacks.java'
 
 ################################################################################
 
@@ -165,7 +163,6 @@ std_sources = [
   src_SurrObjMapper,
   src_SurrSet,
   src_SymbTableFastCache,
-  src_TextWriter,
   src_Tokenizer,
   src_TokenStream,
   src_TokenType
@@ -173,8 +170,8 @@ std_sources = [
 
 table_sources = [
   src_ArrayIter,
-  # src_AssocTable,
-  # src_AssocTableUpdater,
+  src_ArraySliceAllocator,
+  src_AutoProcs,
   src_BinaryTable,
   src_BinaryTableUpdater,
   src_ColumnBase,
@@ -204,7 +201,9 @@ table_sources = [
   src_UnaryTable,
   src_UnaryTableUpdater,
   src_ValueStore,
-  src_ValueStoreUpdater
+  src_ValueStoreUpdater,
+
+  src_TextWriter
 ]
 
 interface_sources = [

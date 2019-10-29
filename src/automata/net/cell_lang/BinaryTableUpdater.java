@@ -60,9 +60,7 @@ class BinaryTableUpdater {
     for (int i=0 ; i < deleteCount ; i++) {
       int arg1 = deleteList[2 * i];
       int arg2 = deleteList[2 * i + 1];
-      if (table.contains(arg1, arg2))
-        table.delete(arg1, arg2);
-      else
+      if (!table.delete(arg1, arg2))
         deleteList[2 * i] = 0xFFFFFFFF;
     }
 
@@ -89,8 +87,7 @@ class BinaryTableUpdater {
     for (int i=0 ; i < insertCount ; i++) {
       int arg1 = insertList[2 * i];
       int arg2 = insertList[2 * i + 1];
-      if (!table.contains(arg1, arg2)) {
-        table.insert(arg1, arg2);
+      if (table.insert(arg1, arg2)) {
         store1.addRef(arg1);
         store2.addRef(arg2);
       }

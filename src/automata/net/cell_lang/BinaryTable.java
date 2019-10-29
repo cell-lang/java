@@ -111,17 +111,18 @@ class BinaryTable {
     return new Iter(restrict2(surr2), true);
   }
 
-  public void insert(int surr1, int surr2) {
-    table1.insert(surr1, surr2);
-    if (table2.count > 0) //## BUG?
-      table2.insert(surr2, surr1);
+  public boolean insert(int surr1, int surr2) {
+    boolean wasNew = table1.insert(surr1, surr2);
+    if (wasNew && table2.count > 0)
+      table2.insertUnique(surr2, surr1);
     check();
+    return wasNew;
   }
 
   // Assuming there's at most one tuple that whose first argument is surr1
   public int update1(int surr1, int surr2) {
     int oldSurr2 = table1.update(surr1, surr2);
-    if (oldSurr2 != -1 && oldSurr2 != surr2 && table2.count > 0) { //## BUG?
+    if (oldSurr2 != -1 && oldSurr2 != surr2 && table2.count > 0) {
       table2.delete(oldSurr2, surr1);
       table2.insert(surr2, surr1);
     }
@@ -135,11 +136,12 @@ class BinaryTable {
     check();
   }
 
-  public void delete(int surr1, int surr2) {
-    table1.delete(surr1, surr2);
-    if (table2.count > 0) //## BUG?
+  public boolean delete(int surr1, int surr2) {
+    boolean wasThere = table1.delete(surr1, surr2);
+    if (wasThere & table2.count > 0)
       table2.delete(surr2, surr1);
     check();
+    return wasThere;
   }
 
   public Obj copy(boolean flipped) {
@@ -175,28 +177,28 @@ class BinaryTable {
     Obj[] objs1 = new Obj[count];
     Obj[] objs2 = new Obj[count];
 
+    int[] buffer = new int[32];
+
     int next = 0;
     for (int iT=0 ; iT < tables.length ; iT++) {
       BinaryTable table = tables[iT];
-      int[] column = table.table1.column;
+      OneWayBinTable oneWayTable = table.table1;
+
       SurrObjMapper mapper1 = table.mapper1;
       SurrObjMapper mapper2 = table.mapper2;
-      for (int iS=0 ; iS < column.length ; iS++) {
-        int code = column[iS];
-        if (code != OverflowTable.EmptyMarker) {
-          Obj val1 = mapper1.surrToObj(iS);
-          if (code >> 29 == 0) {
-            objs1[next] = val1;
-            objs2[next++] = mapper2.surrToObj(code);
-          }
-          else {
-            OverflowTable.Iter it = table.table1.overflowTable.getIter(code);
-            while (!it.done()) {
-              int arg2 = it.get();
-              objs1[next] = val1;
-              objs2[next++] = mapper2.surrToObj(arg2);
-              it.next();
-            }
+
+      int len = oneWayTable.column.length;
+      for (int iS=0 ; iS < len ; iS++) {
+        int count1 = oneWayTable.count(iS);
+        if (count1 != 0) {
+          if (count1 > buffer.length)
+            buffer = new int[Array.capacity(buffer.length, count1)];
+          Obj obj1 = mapper1.surrToObj(iS);
+          int _count1 = oneWayTable.restrict(iS, buffer);
+          Miscellanea._assert(_count1 == count1);
+          for (int i=0 ; i < count1 ; i++) {
+            objs1[next] = obj1;
+            objs2[next++] = mapper2.surrToObj(buffer[i]);
           }
         }
       }

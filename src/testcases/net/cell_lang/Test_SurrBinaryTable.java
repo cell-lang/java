@@ -5,26 +5,27 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 
-class Test_BinaryTable {
+class Test_SurrBinaryTable {
   static int counter = 0;
   static Random random = new Random(0);
 
   public static void run() {
-    for (int i=1 ; i < 50 ; i++) {
-      for (int j=0 ; j < 100 ; j++) {
-        run(i, true);
-      }
-      System.out.printf("%d%n", i);
-    }
+    // for (int i=1 ; i < 50 ; i++) {
+    //   for (int j=0 ; j < 100 ; j++) {
+    //     run(i, false);
+    //   }
+    //   System.out.printf("%d%n", i);
+    // }
 
-    for (int i=1 ; i < 240 ; i++) {
+    // for (int i=1 ; i < 240 ; i++) {
+    for (int i=128 ; i < 240 ; i++) {
       run(i, false);
       System.out.printf("%d%n", i);
     }
   }
 
   public static void run(int range, boolean trace) {
-    BinaryTable table = new BinaryTable(null, null);
+    SurrBinaryTable table = new SurrBinaryTable(null, null);
 
     boolean[][] bitMap = new boolean[range][];
     for (int i=0 ; i < range ; i++)
@@ -49,13 +50,22 @@ class Test_BinaryTable {
       //   System.out.println();
       //   printDiffs(table, bitMap, range);
       //   System.out.println();
+      //   System.out.printf("table.size() = %d\n", table.size());
+      //   System.out.println();
+
+      //   SurrBinaryTable.Iter it = table.getIter();
+      //   while (!it.done()) {
+      //     int arg1 = it.get1();
+      //     int arg2 = it.get2();
+      //     System.out.printf("%2d %2d\n", arg1, arg2);
+      //     it.next();
+      //   }
+
+      //   System.out.println();
+      //   System.out.println();
       // }
 
-      boolean res = table.insert(surr1, surr2);
-      check(res, "Effective delete failed");
-      res = table.insert(surr1, surr2);
-      check(!res, "Fake delete failed");
-
+      table.insert(surr1, surr2);
       bitMap[surr1][surr2] = true;
 
       checkTable(table, bitMap, range);
@@ -83,11 +93,7 @@ class Test_BinaryTable {
       //   System.out.println();
       // }
 
-      boolean res = table.delete(surr1, surr2);
-      check(res, "Effective delete failed");
-      res = table.delete(surr1, surr2);
-      check(!res, "Useless delete failed");
-
+      table.delete(surr1, surr2);
       bitMap[surr1][surr2] = false;
 
       checkTable(table, bitMap, range);
@@ -96,26 +102,18 @@ class Test_BinaryTable {
     }
   }
 
-  static void check(boolean b, String msg) {
-    if (!b) {
-      System.out.println(msg);
-      // Exception e = new Exception();
-      // e.printStackTrace();
-      System.exit(1);
-    }
-  }
-
-  static void checkTable(BinaryTable table, boolean[][] bitMap, int size) {
+  static void checkTable(SurrBinaryTable table, boolean[][] bitMap, int size) {
     table.check();
 
     for (int i=0 ; i < size ; i++)
       for (int j=0 ; j < size ; j++)
         if (table.contains(i, j) != bitMap[i][j]) {
           System.out.println("ERROR (1)!\n");
+          boolean in = table.contains(i, j);
+          System.out.println(in ? "true" : "false");
           printDiffs(table, bitMap, size);
           //throw new Exception();
-          boolean b = table.contains(i, j);
-          System.exit(b ? 1 : 2);
+          System.exit(1);
         }
 
     { int expectedCount = 0;
@@ -125,12 +123,18 @@ class Test_BinaryTable {
             expectedCount++;
 
       int actualCount = 0;
-      BinaryTable.Iter it = table.getIter();
+      SurrBinaryTable.Iter it = table.getIter();
       while (!it.done()) {
         int arg1 = it.get1();
         int arg2 = it.get2();
+        if (arg1 >= bitMap.length) {
+          System.out.printf("arg1 = %d, arg2 = %d, bitMap.length = %d\n", arg1, arg2, bitMap.length);
+        }
+        if (arg2 >= bitMap[arg1].length) {
+          System.out.printf("arg1 = %d, arg2 = %d, bitMap.length = %d, bitMap[arg1].length = %d\n", arg1, arg2, bitMap.length);
+        }
         if (!bitMap[arg1][arg2]) {
-          System.out.println("ERROR (1)!\n");
+          System.out.println("ERROR (1/A)!\n");
           System.exit(1);
         }
         actualCount++;
@@ -138,8 +142,10 @@ class Test_BinaryTable {
       }
 
       if (actualCount != expectedCount) {
-        System.out.println("ERROR (1)!\n");
+        System.out.println("ERROR (1/B)!\n");
+        System.out.printf("table.size() = %d\n", table.size());
         System.out.printf("Actual count = %d, expected = %d\n\n", actualCount, expectedCount);
+
         printDiffs(table, bitMap, size);
 
         it = table.getIter();
@@ -169,7 +175,9 @@ class Test_BinaryTable {
 
       if (table.count1(i) != count) {
         System.out.println("ERROR (5/A)!\n");
-        System.exit(1);
+        System.out.printf("table.count1(i) = %d, count = %d\n", table.count1(i), count);
+        throw new RuntimeException();
+        // System.exit(1);
       }
 
       if (table.contains1(i) != (expValues.length > 0)) {
@@ -185,10 +193,16 @@ class Test_BinaryTable {
       Arrays.sort(actualValues);
       if (!Arrays.equals(actualValues, expValues)) {
         System.out.println("ERROR (3)!\n");
+        for (int j=0 ; j < actualValues.length ; j++)
+          System.out.printf("%3d", actualValues[j]);
+        System.out.println();
+        for (int j=0 ; j < expValues.length ; j++)
+          System.out.printf("%3d", expValues[j]);
+        System.out.println();
         System.exit(1);
       }
 
-      BinaryTable.Iter it = table.getIter1(i);
+      SurrBinaryTable.Iter it = table.getIter1(i);
       count = 0;
       while (!it.done()) {
         list[count++] = it.get1();
@@ -228,7 +242,7 @@ class Test_BinaryTable {
       }
 
       count = 0;
-      BinaryTable.Iter it = table.getIter2(j);
+      SurrBinaryTable.Iter it = table.getIter2(j);
       while (!it.done()) {
         list[count++] = it.get1();
         it.next();
@@ -242,7 +256,7 @@ class Test_BinaryTable {
     }
   }
 
-  static void printDiffs(BinaryTable table, boolean[][] bitMap, int size) {
+  static void printDiffs(SurrBinaryTable table, boolean[][] bitMap, int size) {
     for (int i=0 ; i < size ; i++) {
       for (int j=0 ; j < size ; j++) {
         int actual = table.contains(i, j) ? 1 : 0;
@@ -261,7 +275,7 @@ class Test_BinaryTable {
     for (int i=0 ; i <= 16 ; i++)
       badValues.add(15 * i);
 
-    BinaryTable table = new BinaryTable(null, null);
+    SurrBinaryTable table = new SurrBinaryTable(null, null);
 
     for (int i=0 ; i < badValues.size() ; i++) {
       if (i == badValues.size() - 1)
@@ -300,8 +314,8 @@ class Test_BinaryTable {
   }
 
   static void run3() {
-    BinaryTable table1 = new BinaryTable(null, null);
-    BinaryTable table2 = new BinaryTable(null, null);
+    SurrBinaryTable table1 = new SurrBinaryTable(null, null);
+    SurrBinaryTable table2 = new SurrBinaryTable(null, null);
 
     for (int i=0 ; i < 10000 ; i++) {
       table1.insert(0, i);

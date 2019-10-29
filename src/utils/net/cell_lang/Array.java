@@ -318,6 +318,10 @@ class Array {
     Arrays.fill(array, offset, offset+count, value);
   }
 
+  public static void fill(long[] array, int offset, int count, long value) {
+    Arrays.fill(array, offset, offset+count, value);
+  }
+
   public static void fill(double[] array, int offset, int count, double value) {
     Arrays.fill(array, offset, offset+count, value);
   }

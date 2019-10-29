@@ -126,32 +126,29 @@ class SymBinaryTable {
     Obj[] objs1 = new Obj[size];
     Obj[] objs2 = new Obj[size];
 
+    int[] buffer = new int[32];
+
     int next = 0;
+
     for (int iT=0 ; iT < tables.length ; iT++) {
       SymBinaryTable table = tables[iT];
-      int[] column = table.table.column;
+      OneWayBinTable oneWayTable = table.table;
       SurrObjMapper mapper = table.mapper;
-      for (int iS=0 ; iS < column.length ; iS++) {
-        int code = table.table.column[iS];
-        if (code != OverflowTable.EmptyMarker) {
-          if (code >> 29 == 0) {
-            if (iS <= code) {
-              objs1[next] = mapper.surrToObj(iS);
-              objs2[next++] = mapper.surrToObj(code);
-            }
-          }
-          else {
-            OverflowTable.Iter it = table.table.overflowTable.getIter(code);
-            Obj val1 = null;
-            while (!it.done()) {
-              int arg2 = it.get();
-              if (iS <= arg2) {
-                if (val1 == null)
-                  val1 = mapper.surrToObj(iS);
-                objs1[next] = val1;
-                objs2[next++] = mapper.surrToObj(arg2);
-              }
-              it.next();
+
+      int len = oneWayTable.column.length;
+      for (int iS=0 ; iS < len ; iS++) {
+        int count1 = oneWayTable.count(iS);
+        if (count1 != 0) {
+          if (count1 > buffer.length)
+            buffer = new int[Array.capacity(buffer.length, count1)];
+          Obj obj1 = mapper.surrToObj(iS);
+          int _count1 = oneWayTable.restrict(iS, buffer);
+          Miscellanea._assert(_count1 == count1);
+          for (int i=0 ; i < count1 ; i++) {
+            int surr2 = buffer[i];
+            if (iS <= surr2) {
+              objs1[next] = obj1;
+              objs2[next++] = mapper.surrToObj(surr2);
             }
           }
         }
