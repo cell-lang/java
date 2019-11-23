@@ -242,7 +242,7 @@ abstract class Parser extends TokenStreamProcessor {
 
     Obj[] labelObjs = new Obj[i];
     for (int j=0 ; j < i ; j++)
-      labelObjs[j] = SymbTable.get(labels[j]);
+      labelObjs[j] = SymbObj.get(labels[j]);
 
     //## IT WOULD BE BETTER TO CREATE A RecordObj, BUT THE LABELS WOULD NEED TO BE SORTED FIRST
     return Builder.createMap(labelObjs, values, i);

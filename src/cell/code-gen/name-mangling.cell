@@ -296,6 +296,58 @@ implicit context : NativeContext {
 
   String updater_var_ref_name(ValueStoreId vs) = "updater." & updater_var_decl_name(vs);
 
+  String foreign_key_checker_decl_name(BlockForeignKey key) {
+    suffix = foreign_key_checker_suffix(key.type);
+    origin = native_var_decl_name(key.origin);
+    target = native_var_decl_name(key.target);
+    return "foreignKeyChecker" & suffix & "_" & origin & "_" & target;
+  }
+
+  String foreign_key_checker_ref_name(BlockForeignKey key) =
+    "updater." & foreign_key_checker_decl_name(key);
+
+  String native_foreign_key_checker_type(BlockForeignKey key, Table, Table) =
+    "ForeignKeyChecker" & foreign_key_checker_suffix(key.type);
+
+  String native_foreign_key_checker_type(BlockForeignKey key, Table origin, Column target) {
+    assert key.type == :unary_binary;
+    fail;
+  }
+
+  String native_foreign_key_checker_type(BlockForeignKey key, Column origin, Table target) {
+    assert key.type == binary_unary(0);
+    suffix = match (origin.repr)
+      object  = "OCU",
+      int     = "ICU",
+      float   = "FCU";
+    return "ForeignKeyChecker" & suffix;
+  }
+
+  String native_foreign_key_checker_type(BlockForeignKey key, Column, Column) = undefined;
+
+  String foreign_key_checker_suffix(ForeignKeyType) =
+    unary_unary             = "UU",
+    unary_binary(i?)        = "UB" & printed(i+1),
+    unary_ternary(i?)       = "UT" & printed(i+1),
+
+    binary_unary(i?)        = "BU" & printed(i+1),
+    binary_ternary          = "BT",
+
+    ternary_unary(i?)       = "TU" & printed(i+1),
+    ternary_binary          = "TB",
+
+    unary_sym_binary        = "USB",
+    unary_sym_ternary_12    = "UST12",
+    unary_sym_ternary_3     = "UST3",
+
+    sym_binary_unary        = "SBU",
+    sym_ternary_unary_12    = "ST12U",
+    sym_ternary_unary_3     = "ST3U",
+
+    sym_binary_sym_ternary  = "SBST",
+    sym_ternary_sym_binary  = "STSB";
+
+
   //////////////////////////////////////////////////////////////////////////////
 
   String var_decl(AnyVar v) =

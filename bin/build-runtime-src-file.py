@@ -30,7 +30,6 @@ src_SeqIter                       = 'core/net/cell_lang/SeqIter.java'
 src_SeqObj                        = 'core/net/cell_lang/SeqObj.java'
 src_SetIter                       = 'core/net/cell_lang/SetIter.java'
 src_SymbObj                       = 'core/net/cell_lang/SymbObj.java'
-src_SymbTable                     = 'core/net/cell_lang/SymbTable.java'
 src_TaggedIntObj                  = 'core/net/cell_lang/TaggedIntObj.java'
 src_TaggedObj                     = 'core/net/cell_lang/TaggedObj.java'
 src_TernRelIter                   = 'core/net/cell_lang/TernRelIter.java'
@@ -43,6 +42,7 @@ src_Ints12                        = 'algorithms/net/cell_lang/Ints12.java'
 src_Ints21                        = 'algorithms/net/cell_lang/Ints21.java'
 src_Ints231                       = 'algorithms/net/cell_lang/Ints231.java'
 src_Ints312                       = 'algorithms/net/cell_lang/Ints312.java'
+src_PackedIntPairs                = 'algorithms/net/cell_lang/PackedIntPairs.java'
 
 src_Array                         = 'utils/net/cell_lang/Array.java'
 src_AutoProcs                     = 'utils/net/cell_lang/AutoProcs.java'
@@ -75,6 +75,30 @@ src_BinaryTableUpdater            = 'automata/net/cell_lang/BinaryTableUpdater.j
 src_ColumnBase                    = 'automata/net/cell_lang/ColumnBase.java'
 src_FloatColumn                   = 'automata/net/cell_lang/FloatColumn.java'
 src_FloatColumnUpdater            = 'automata/net/cell_lang/FloatColumnUpdater.java'
+src_ForeignKeyCheckerBT           = 'automata/net/cell_lang/ForeignKeyCheckerBT.java'
+src_ForeignKeyCheckerBU1          = 'automata/net/cell_lang/ForeignKeyCheckerBU1.java'
+src_ForeignKeyCheckerBU2          = 'automata/net/cell_lang/ForeignKeyCheckerBU2.java'
+src_ForeignKeyCheckerFCU          = 'automata/net/cell_lang/ForeignKeyCheckerFCU.java'
+src_ForeignKeyCheckerICU          = 'automata/net/cell_lang/ForeignKeyCheckerICU.java'
+src_ForeignKeyCheckerOCU          = 'automata/net/cell_lang/ForeignKeyCheckerOCU.java'
+src_ForeignKeyCheckerSBST         = 'automata/net/cell_lang/ForeignKeyCheckerSBST.java'
+src_ForeignKeyCheckerSBU          = 'automata/net/cell_lang/ForeignKeyCheckerSBU.java'
+src_ForeignKeyCheckerST12U        = 'automata/net/cell_lang/ForeignKeyCheckerST12U.java'
+src_ForeignKeyCheckerST3U         = 'automata/net/cell_lang/ForeignKeyCheckerST3U.java'
+src_ForeignKeyCheckerSTSB         = 'automata/net/cell_lang/ForeignKeyCheckerSTSB.java'
+src_ForeignKeyCheckerTB           = 'automata/net/cell_lang/ForeignKeyCheckerTB.java'
+src_ForeignKeyCheckerTU1          = 'automata/net/cell_lang/ForeignKeyCheckerTU1.java'
+src_ForeignKeyCheckerTU2          = 'automata/net/cell_lang/ForeignKeyCheckerTU2.java'
+src_ForeignKeyCheckerTU3          = 'automata/net/cell_lang/ForeignKeyCheckerTU3.java'
+src_ForeignKeyCheckerUB1          = 'automata/net/cell_lang/ForeignKeyCheckerUB1.java'
+src_ForeignKeyCheckerUB2          = 'automata/net/cell_lang/ForeignKeyCheckerUB2.java'
+src_ForeignKeyCheckerUSB          = 'automata/net/cell_lang/ForeignKeyCheckerUSB.java'
+src_ForeignKeyCheckerUST12        = 'automata/net/cell_lang/ForeignKeyCheckerUST12.java'
+src_ForeignKeyCheckerUST3         = 'automata/net/cell_lang/ForeignKeyCheckerUST3.java'
+src_ForeignKeyCheckerUT1          = 'automata/net/cell_lang/ForeignKeyCheckerUT1.java'
+src_ForeignKeyCheckerUT2          = 'automata/net/cell_lang/ForeignKeyCheckerUT2.java'
+src_ForeignKeyCheckerUT3          = 'automata/net/cell_lang/ForeignKeyCheckerUT3.java'
+src_ForeignKeyCheckerUU           = 'automata/net/cell_lang/ForeignKeyCheckerUU.java'
 src_ForeignKeyViolationException  = 'automata/net/cell_lang/ForeignKeyViolationException.java'
 src_Index                         = 'automata/net/cell_lang/Index.java'
 src_IntColumn                     = 'automata/net/cell_lang/IntColumn.java'
@@ -132,19 +156,12 @@ std_sources = [
   src_SeqObj,
   src_SetIter,
   src_SymbObj,
-  src_SymbTable,
   src_TaggedIntObj,
   src_TaggedObj,
   src_TernRelIter,
 
   src_AbstractLongSorter,
   src_Algs,
-  src_Ints,
-  src_Ints123,
-  src_Ints12,
-  src_Ints21,
-  src_Ints231,
-  src_Ints312,
 
   src_Array,
   src_CharStream,
@@ -169,6 +186,17 @@ std_sources = [
 ]
 
 table_sources = [
+  # Already included in std_sources
+  # src_AbstractLongSorter,
+  # src_Algs,
+  src_Ints,
+  src_Ints123,
+  src_Ints12,
+  src_Ints21,
+  src_Ints231,
+  src_Ints312,
+  src_PackedIntPairs,
+
   src_ArrayIter,
   src_ArraySliceAllocator,
   src_AutoProcs,
@@ -177,6 +205,30 @@ table_sources = [
   src_ColumnBase,
   src_FloatColumn,
   src_FloatColumnUpdater,
+  src_ForeignKeyCheckerBT,
+  src_ForeignKeyCheckerBU1,
+  src_ForeignKeyCheckerBU2,
+  src_ForeignKeyCheckerFCU,
+  src_ForeignKeyCheckerICU,
+  src_ForeignKeyCheckerOCU,
+  src_ForeignKeyCheckerSBST,
+  src_ForeignKeyCheckerSBU,
+  src_ForeignKeyCheckerST12U,
+  src_ForeignKeyCheckerST3U,
+  src_ForeignKeyCheckerSTSB,
+  src_ForeignKeyCheckerTB,
+  src_ForeignKeyCheckerTU1,
+  src_ForeignKeyCheckerTU2,
+  src_ForeignKeyCheckerTU3,
+  src_ForeignKeyCheckerUB1,
+  src_ForeignKeyCheckerUB2,
+  src_ForeignKeyCheckerUSB,
+  src_ForeignKeyCheckerUST12,
+  src_ForeignKeyCheckerUST3,
+  src_ForeignKeyCheckerUT1,
+  src_ForeignKeyCheckerUT2,
+  src_ForeignKeyCheckerUT3,
+  src_ForeignKeyCheckerUU,
   src_ForeignKeyViolationException,
   src_Index,
   src_IntColumn,

@@ -22,14 +22,14 @@ class ObjPrinter implements ObjVisitor {
 
   public void taggedIntObj(int tag, long value) {
     try {
-      if (tag == SymbTable.DateSymbId & isPrintableDate(value)) {
+      if (tag == SymbObj.DateSymbId & isPrintableDate(value)) {
         int[] yearMonthDay = DateTime.getYearMonthDay((int) value);
         String str = String.format("`%d-%02d-%02d`", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]);
         writer.write(str);
         return;
       }
 
-      if (tag == SymbTable.TimeSymbId) {
+      if (tag == SymbObj.TimeSymbId) {
         int days;
         long dayNsecs;
 
@@ -73,7 +73,7 @@ class ObjPrinter implements ObjVisitor {
         }
       }
 
-      writer.write(SymbTable.idxToStr(tag));
+      writer.write(SymbObj.idxToStr(tag));
       writer.write('(');
       writer.write(Long.toString(value));
       writer.write(')');

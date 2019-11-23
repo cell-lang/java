@@ -23,13 +23,13 @@ class Conversions {
   public static Obj stringToObj(String str) {
     //## THIS ONE IS REAL BAD TOO. IT SHOULD USE THE MINIMUM SIZE ARRAY POSSIBLE!
     int[] cps = Miscellanea.codePoints(str);
-    return Builder.createTaggedObj(SymbTable.StringSymbId, Builder.createSeq(cps));
+    return Builder.createTaggedObj(SymbObj.StringSymbId, Builder.createSeq(cps));
   }
 
   ////////////////////////////////////////////////////////////////////////////
 
   public static Obj dateToObj(LocalDate date) {
-    return Builder.createTaggedIntObj(SymbTable.DateSymbId, date.toEpochDay());
+    return Builder.createTaggedIntObj(SymbObj.DateSymbId, date.toEpochDay());
   }
 
   public static LocalDate objToDate(Obj date) {
@@ -46,12 +46,12 @@ class Conversions {
     if (epochSecond >= -9223372036L) {
       if (epochSecond < 9223372036L | (epochSecond == 9223372036L & nanosecs <= 854775807)) {
         long epochNanoSecs = 1000000000 * epochSecond + nanosecs;
-        return Builder.createTaggedIntObj(SymbTable.TimeSymbId, epochNanoSecs);
+        return Builder.createTaggedIntObj(SymbObj.TimeSymbId, epochNanoSecs);
       }
     }
     else if (epochSecond == -9223372037L & nanosecs >= 145224192) {
       long epochNanoSecs = -9223372036000000000L - (1000000000 - nanosecs);
-      return Builder.createTaggedIntObj(SymbTable.TimeSymbId, epochNanoSecs);
+      return Builder.createTaggedIntObj(SymbObj.TimeSymbId, epochNanoSecs);
     }
     throw new RuntimeException("DateTime is outside the supported range: " + time.toString());
   }

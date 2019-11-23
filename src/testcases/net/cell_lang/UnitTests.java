@@ -77,13 +77,13 @@ public class UnitTests {
     // Test_IntStore.run();
 
 
-    Test_BinaryTable.run();
-    System.out.println("BinaryTable       OK");
+    // Test_BinaryTable.run();
+    // System.out.println("BinaryTable       OK");
 
     // Test_SurrBinaryTable.run();
     // System.out.println("SurrBinaryTable   OK");
 
 
-    // Test_BinaryTable_Performance_A.run();
+    Test_BinaryTable_Performance_A.run();
   }
 }

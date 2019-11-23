@@ -47,6 +47,6 @@ final class TaggedIntObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return 2 + SymbTable.idxToStr(getTagId()).length() + Long.toString(data).length();
+    return 2 + SymbObj.idxToStr(getTagId()).length() + Long.toString(data).length();
   }
 }

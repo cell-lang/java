@@ -38,7 +38,7 @@ abstract class OptTagRecObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public void print(Writer writer, int maxLineLen, boolean newLine, int indentLevel) {
-    String tagStr = SymbTable.idxToStr(getTagId());
+    String tagStr = SymbObj.idxToStr(getTagId());
     try {
       writer.write(tagStr);
     }
@@ -49,7 +49,7 @@ abstract class OptTagRecObj extends Obj {
   }
 
   public int minPrintedSize() {
-    return SymbTable.idxToStr(getTagId()).length() + getInnerObj().minPrintedSize();
+    return SymbObj.idxToStr(getTagId()).length() + getInnerObj().minPrintedSize();
   }
 
   //////////////////////////////////////////////////////////////////////////////

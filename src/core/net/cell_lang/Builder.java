@@ -91,7 +91,7 @@ class Builder {
     if (obj.isInt())
       return createTaggedIntObj(tag, obj.getLong());
 
-    if (tag == SymbTable.StringSymbId)
+    if (tag == SymbObj.StringSymbId)
       obj = obj.packForString();
 
     return new TaggedObj(tag, obj);
@@ -103,7 +103,7 @@ class Builder {
 
   public static TaggedObj createString(char[] chars, int len) {
     if (len == 0)
-      return new TaggedObj(SymbTable.StringSymbId, EmptySeqObj.singleton);
+      return new TaggedObj(SymbObj.StringSymbId, EmptySeqObj.singleton);
 
     int max = 0;
     for (int i=0 ; i < len ; i++) {
@@ -139,7 +139,7 @@ class Builder {
       charArray = IntArrayObjs.create(ints);
     }
 
-    return new TaggedObj(SymbTable.StringSymbId, charArray);
+    return new TaggedObj(SymbObj.StringSymbId, charArray);
   }
 
   //////////////////////////////////////////////////////////////////////////////

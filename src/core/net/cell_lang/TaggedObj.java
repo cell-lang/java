@@ -48,7 +48,7 @@ final class TaggedObj extends Obj {
   //////////////////////////////////////////////////////////////////////////////
 
   public boolean isSyntacticSugaredString() {
-    if (getTagId() != SymbTable.StringSymbId | !obj.isSeq())
+    if (getTagId() != SymbObj.StringSymbId | !obj.isSeq())
       return false;
     int len = obj.getSize();
     for (int i=0 ; i < len ; i++) {
@@ -63,7 +63,7 @@ final class TaggedObj extends Obj {
   }
 
   public String getString() {
-    if (getTagId() != SymbTable.StringSymbId)
+    if (getTagId() != SymbObj.StringSymbId)
       throw new UnsupportedOperationException();
     long[] codes = obj.getLongArray();
     char[] chars = new char[codes.length];
@@ -139,7 +139,7 @@ final class TaggedObj extends Obj {
 
     try {
       if (!isSyntacticSugaredString()) {
-        String tagStr = SymbTable.idxToStr(getTagId());
+        String tagStr = SymbObj.idxToStr(getTagId());
         writer.write(tagStr);
 
         if (obj.isNeRecord() | (obj.isNeSeq() && obj.getSize() > 1)) {
@@ -173,7 +173,7 @@ final class TaggedObj extends Obj {
     if (minPrintedSize == -1) {
       if (!isSyntacticSugaredString()) {
         boolean skipPars = obj.isNeRecord() | obj.isNeSeq();
-        minPrintedSize = SymbTable.idxToStr(getTagId()).length() + obj.minPrintedSize() + (skipPars ? 0 : 2);
+        minPrintedSize = SymbObj.idxToStr(getTagId()).length() + obj.minPrintedSize() + (skipPars ? 0 : 2);
       }
       else
         minPrintedSize = syntacticSugaredStringMinPrintedSize();

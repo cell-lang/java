@@ -15,7 +15,7 @@ class TextWriter {
 
     if (indentFirstLine)
       writer.write(baseWs);
-    writer.write(SymbTable.idxToStr(field_symb_idx));
+    writer.write(SymbObj.idxToStr(field_symb_idx));
     writer.write(": [");
 
     if (count > 0) {
@@ -56,7 +56,7 @@ class TextWriter {
 
     if (indentFirstLine)
       writer.write(baseWs);
-    writer.write(SymbTable.idxToStr(field_symb_idx));
+    writer.write(SymbObj.idxToStr(field_symb_idx));
     writer.write(": [");
 
     if (count > 0) {
@@ -106,7 +106,7 @@ class TextWriter {
 
     if (indentFirstLine)
       writer.write(baseWs);
-    writer.write(SymbTable.idxToStr(field_symb_idx));
+    writer.write(SymbObj.idxToStr(field_symb_idx));
     writer.write(": [");
 
     if (count > 0) {
@@ -212,7 +212,7 @@ class TextWriter {
 
     if (indentFirstLine)
       writer.write(baseWs);
-    writer.write(SymbTable.idxToStr(field_symb_idx));
+    writer.write(SymbObj.idxToStr(field_symb_idx));
     writer.write(": [");
 
     if (count > 0) {
@@ -282,7 +282,7 @@ class TextWriter {
 
     if (indentFirstLine)
       writer.write(baseWs);
-    writer.write(SymbTable.idxToStr(field_symb_idx));
+    writer.write(SymbObj.idxToStr(field_symb_idx));
     writer.write(": [");
 
     if (count > 0) {
@@ -326,7 +326,7 @@ class TextWriter {
 
     if (indentFirstLine)
       writer.write(baseWs);
-    writer.write(SymbTable.idxToStr(field_symb_idx));
+    writer.write(SymbObj.idxToStr(field_symb_idx));
     writer.write(": [");
 
     if (count > 0) {

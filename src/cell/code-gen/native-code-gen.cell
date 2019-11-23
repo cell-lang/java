@@ -516,10 +516,10 @@ String* custom_parser = (
   "    Parser parser = new Parser(tokens);",
   "    Obj obj = parser.parseObj();",
   "    parser.checkEof();",
-  "    return Builder.createTaggedObj(SymbTable.SuccessSymbId, obj);",
+  "    return Builder.createTaggedObj(SymbObj.SuccessSymbId, obj);",
   "  }",
   "  catch (ParsingException e) {",
-  "    return Builder.createTaggedObj(SymbTable.FailureSymbId, Builder.createSeq(new int[] {e.line, e.col}));",
+  "    return Builder.createTaggedObj(SymbObj.FailureSymbId, Builder.createSeq(new int[] {e.line, e.col}));",
   "  }",
   "}"
 );

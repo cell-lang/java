@@ -16,7 +16,7 @@ class Test_BinaryTable_Performance_A {
     Scanner scanner;
 
     try {
-      scanner = new Scanner(new File("insertions.txt"));
+      scanner = new Scanner(new File("data/insertions.txt"));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -40,7 +40,7 @@ class Test_BinaryTable_Performance_A {
 
 
     try {
-      scanner = new Scanner(new File("deletions.txt"));
+      scanner = new Scanner(new File("data/deletions.txt"));
     }
     catch (Exception e) {
       throw new RuntimeException(e);
@@ -102,20 +102,27 @@ class Test_BinaryTable_Performance_A {
 
       long startTime = System.currentTimeMillis();
 
-      update(table, updater, arg1Ins, arg2Ins, arg2Del);
+      // update(table, updater, arg1Ins, arg2Ins, arg2Del);
+      insert(table, updater, arg1Ins, arg2Ins);
+      remove(updater, arg2Del);
 
       long endTime = System.currentTimeMillis();
       times[i] = endTime - startTime;
-      System.out.printf("%d\n", times[i]);
+      System.out.printf("%4d ", times[i]);
     }
 
     int totalTime = 0;
     for (int i=5 ; i < times.length ; i++)
       totalTime += times[i];
-    System.out.printf("\n%d\n", totalTime / (times.length - 5));
+    System.out.printf("- %d\n", totalTime / (times.length - 5));
   }
 
-  static void update(BinaryTable table, BinaryTableUpdater updater, int[] arg1Ins, int[] arg2Ins, int[] arg2Del) {
+  // static void update(BinaryTable table, BinaryTableUpdater updater, int[] arg1Ins, int[] arg2Ins, int[] arg2Del) {
+  //   insert(table, updater, arg1Ins, arg2Ins);
+  //   remove(updater, args2Del);
+  // }
+
+  static void insert(BinaryTable table, BinaryTableUpdater updater, int[] arg1Ins, int[] arg2Ins) {
     int count = arg1Ins.length;
     for (int i=0 ; i < count ; i++) {
       updater.insert(arg1Ins[i], arg2Ins[i]);
@@ -125,21 +132,25 @@ class Test_BinaryTable_Performance_A {
         updater.reset();
       // }
 
-      // if (i == 0) {
-      //   int[] arg1s = table.restrict2(arg2Ins[0]);
-      //   Miscellanea._assert(arg1s.length == 1);
-      //   Miscellanea._assert(arg1s[0] == arg1Ins[0]);
-      // }
+      if (i == 0) {
+        int[] arg1s = table.restrict2(arg2Ins[0]);
+        Miscellanea._assert(arg1s.length == 1);
+        Miscellanea._assert(arg1s[0] == arg1Ins[0]);
+      }
     }
 
     // updater.apply();
     // updater.reset();
+  }
 
-    // count = arg2Del.length;
-    // for (int i=0 ; i < count ; i++) {
-    //   updater.delete2(arg2Del[i]);
-    //   updater.apply();
-    //   updater.reset();
-    // }
+  static void remove(BinaryTableUpdater updater, int[] arg2Del) {
+    int count = arg2Del.length;
+    for (int i=0 ; i < count ; i++) {
+      updater.delete2(arg2Del[i]);
+      updater.apply();
+      updater.store1.applyDelayedReleases();
+      updater.store2.applyDelayedReleases();
+      updater.reset();
+    }
   }
 }

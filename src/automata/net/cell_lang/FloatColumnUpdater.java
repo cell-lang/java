@@ -155,7 +155,7 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private boolean contains1(int surr1) {
+  boolean contains1(int surr1) {
     if (surr1 > maxIdx)
       return !clear && column.contains1(surr1);
 
@@ -178,7 +178,7 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private double lookup(int surr1) {
+  double lookup(int surr1) {
     if (surr1 <= maxIdx & (insertCount != 0 | updateCount != 0)) {
       Miscellanea._assert(dirty);
 
@@ -268,31 +268,6 @@ final class FloatColumnUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  // bin_rel(a, _) -> unary_rel(a);
-  public void checkForeignKeys_1(UnaryTableUpdater target) {
-    // Checking that every new entry satisfies the foreign key
-    for (int i=0 ; i < insertCount ; i++)
-      if (!target.contains(insertIdxs[i]))
-        throw foreignKeyViolation(insertIdxs[i], insertValues[i], target);
-
-    for (int i=0 ; i < updateCount ; i++)
-      if (!target.contains(updateIdxs[i]))
-        throw foreignKeyViolation(updateIdxs[i], updateValues[i], target);
-
-    // Checking that no entries were invalidated by a deletion on the target table
-    target.checkDeletedKeys(deleteChecker);
-  }
-
-  UnaryTableUpdater.DeleteChecker deleteChecker =
-    new UnaryTableUpdater.DeleteChecker() {
-      public void check(UnaryTableUpdater updater, int surr) {
-        if (contains1(surr))
-          throw foreignKeyViolation(surr, updater);
-      }
-    };
-
-  //////////////////////////////////////////////////////////////////////////////
-
   private KeyViolationException col1KeyViolation(int idx, double value, boolean betweenNew) {
     if (betweenNew) {
       for (int i=0 ; i < updateCount ; i++)
@@ -315,18 +290,5 @@ final class FloatColumnUpdater {
     Obj[] tuple1 = new Obj[] {key, new FloatObj(value)};
     Obj[] tuple2 = new Obj[] {key, new FloatObj(otherValue)};
     return new KeyViolationException(relvarName, KeyViolationException.key_1, tuple1, tuple2, betweenNew);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  private ForeignKeyViolationException foreignKeyViolation(int keySurr, double value, UnaryTableUpdater target) {
-    Obj[] tuple = new Obj[] {store.surrToValue(keySurr), new FloatObj(value)};
-    return ForeignKeyViolationException.binaryUnary(relvarName, 1, target.relvarName, tuple);
-  }
-
-  private ForeignKeyViolationException foreignKeyViolation(int keySurr, UnaryTableUpdater target) {
-    Obj key = store.surrToValue(keySurr);
-    Obj[] fromTuple = new Obj[] {key, new FloatObj(lookup(keySurr))};
-    return ForeignKeyViolationException.binaryUnary(relvarName, 1, target.relvarName, fromTuple, key);
   }
 }

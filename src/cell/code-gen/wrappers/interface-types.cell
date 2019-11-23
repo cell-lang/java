@@ -385,9 +385,9 @@ if action_prefix != "return " {
 
   String* optional_value_import_code(InterType inner_type, String expr, String action_prefix) {
     code = match (inner_type)
-      bool    = (action_prefix & "Builder.createTaggedObj(SymbTable.JustSymbId, SymbObj.get(" & expr & ".booleanValue()));"),
-      integer = (action_prefix & "Builder.createTaggedIntObj(SymbTable.JustSymbId, " & expr & ".longValue());"),
-      float   = (action_prefix & "Builder.createTaggedObj(SymbTable.JustSymbId, new FloatObj(" & expr & ".doubleValue()));"),
+      bool    = (action_prefix & "Builder.createTaggedObj(SymbObj.JustSymbId, SymbObj.get(" & expr & ".booleanValue()));"),
+      integer = (action_prefix & "Builder.createTaggedIntObj(SymbObj.JustSymbId, " & expr & ".longValue());"),
+      float   = (action_prefix & "Builder.createTaggedObj(SymbObj.JustSymbId, new FloatObj(" & expr & ".doubleValue()));"),
       _       = import_code_ex(inner_type, expr, action_prefix);
 
     return (
@@ -395,7 +395,7 @@ if action_prefix != "return " {
     ) & indent_lines(code) & (
       "}",
       "else",
-      "  " & action_prefix & "SymbObj.get(SymbTable.NothingSymbId);"
+      "  " & action_prefix & "SymbObj.get(SymbObj.NothingSymbId);"
     );
   }
 }
@@ -493,11 +493,11 @@ implicit prg : CompiledPrg {
 
   String* optional_type_export_code(InterType inner_type, String expr, String action_prefix) {
     code_nothing = (
-      "if (" & expr & ".isSymb(SymbTable.NothingSymbId))",
+      "if (" & expr & ".isSymb(SymbObj.NothingSymbId))",
       "  return null;"
     );
     code_just = match (inner_type)
-      bool    = (action_prefix & "Boolean.valueOf(" & expr & ".getInnerObj().isSymb(SymbTable.TrueSymbId));"),
+      bool    = (action_prefix & "Boolean.valueOf(" & expr & ".getInnerObj().isSymb(SymbObj.TrueSymbId));"),
       integer = (action_prefix & "Long.valueOf(" & expr & ".getInnerLong());"),
       float   = (action_prefix & "Double.valueOf(" & expr & ".getInnerObj().getDouble());"),
       _       = { unique_id = _counter_(:any_value_will_do);

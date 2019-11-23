@@ -26,7 +26,7 @@ class Miscellanea {
       if (ch > Character.MAX_VALUE)
         i++;
     }
-    return Builder.createTaggedObj(SymbTable.StringSymbId, Builder.createSeq(chars, count));
+    return Builder.createTaggedObj(SymbObj.StringSymbId, Builder.createSeq(chars, count));
   }
 
   public static String objToStr(Obj str) {
@@ -289,6 +289,23 @@ class Miscellanea {
       writer.write(',');
     writer.write("\n");
     writer.flush();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static long pack(int low, int high) {
+    long slot = (((long) low) & 0xFFFFFFFFL) | (((long) high) << 32);
+    // Miscellanea._assert(low(slot) == low & high(slot) == high);
+    return slot;
+  }
+
+  public static int low(long slot) {
+    return (int) (slot & 0xFFFFFFFFL);
+  }
+
+  public static int high(long slot) {
+    return (int) (slot >>> 32);
   }
 
   ////////////////////////////////////////////////////////////////////////////

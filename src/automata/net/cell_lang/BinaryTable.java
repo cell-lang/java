@@ -2,38 +2,6 @@ package net.cell_lang;
 
 
 class BinaryTable {
-  public static class Iter {
-    int[] entries;
-    boolean singleCol;
-    int next;
-    int end;
-
-    public Iter(int[] entries, boolean singleCol) {
-      this.entries = entries;
-      this.singleCol = singleCol;
-      next = 0;
-      end = entries.length;
-    }
-
-    public boolean done() {
-      return next >= end;
-    }
-
-    public int get1() {
-      return entries[next];
-    }
-
-    public int get2() {
-      Miscellanea._assert(!singleCol);
-      return entries[next+1];
-    }
-
-    public void next() {
-      next += singleCol ? 1 : 2;
-    }
-  }
-
-
   OneWayBinTable table1 = new OneWayBinTable();
   OneWayBinTable table2 = new OneWayBinTable();
 
@@ -119,17 +87,6 @@ class BinaryTable {
     return wasNew;
   }
 
-  // Assuming there's at most one tuple that whose first argument is surr1
-  public int update1(int surr1, int surr2) {
-    int oldSurr2 = table1.update(surr1, surr2);
-    if (oldSurr2 != -1 && oldSurr2 != surr2 && table2.count > 0) {
-      table2.delete(oldSurr2, surr1);
-      table2.insert(surr2, surr1);
-    }
-    check();
-    return oldSurr2;
-  }
-
   public void clear() {
     table1 = new OneWayBinTable();
     table2 = new OneWayBinTable();
@@ -144,12 +101,25 @@ class BinaryTable {
     return wasThere;
   }
 
-  public Obj copy(boolean flipped) {
-    return copy(new BinaryTable[] {this}, flipped);
+  public void delete1(int surr1, int[] surrs2) {
+    int count = table1.count(surr1);
+    table1.deleteByKey(surr1, surrs2);
+    if (table2.count != 0)
+      for (int i=0 ; i < count ; i++)
+        table2.delete(surrs2[i], surr1);
   }
 
-  public int[] rawCopy() {
-    return table1.copy();
+  public void delete2(int surr2, int[] surrs1) {
+    if (table2.count == 0 & table1.count > 0)
+      table2.initReverse(table1);
+    int count = table2.count(surr2);
+    table2.deleteByKey(surr2, surrs1);
+    for (int i=0 ; i < count ; i++)
+      table1.delete(surrs1[i], surr2);
+  }
+
+  public Obj copy(boolean flipped) {
+    return copy(new BinaryTable[] {this}, flipped);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -206,5 +176,38 @@ class BinaryTable {
     Miscellanea._assert(next == count);
 
     return Builder.createBinRel(flipped ? objs2 : objs1, flipped ? objs1 : objs2); //## THIS COULD BE MADE MORE EFFICIENT
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static class Iter {
+    int[] entries;
+    boolean singleCol;
+    int next;
+    int end;
+
+    public Iter(int[] entries, boolean singleCol) {
+      this.entries = entries;
+      this.singleCol = singleCol;
+      next = 0;
+      end = entries.length;
+    }
+
+    public boolean done() {
+      return next >= end;
+    }
+
+    public int get1() {
+      return entries[next];
+    }
+
+    public int get2() {
+      Miscellanea._assert(!singleCol);
+      return entries[next+1];
+    }
+
+    public void next() {
+      next += singleCol ? 1 : 2;
+    }
   }
 }

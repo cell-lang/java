@@ -14,9 +14,9 @@ class Hacks {
   static public Obj fetch(Obj target) {
     Obj attachment = attachments.get(target);
     if (attachment != null)
-      return Builder.createTaggedObj(SymbTable.JustSymbId, attachment);
+      return Builder.createTaggedObj(SymbObj.JustSymbId, attachment);
     else
-      return SymbObj.get(SymbTable.NothingSymbId);
+      return SymbObj.get(SymbObj.NothingSymbId);
   }
 
   //////////////////////////////////////////////////////////////////////////////

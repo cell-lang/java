@@ -142,7 +142,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     for v @ i <- state_vars {
       code = (code | "writer.write(\"  \");") if not first;
       code = (code |
-        "  writer.write(SymbTable.idxToStr(" & symb_idx_name(bare_id(v)) & "));",
+        "  writer.write(SymbObj.idxToStr(" & symb_idx_name(bare_id(v)) & "));",
         "  writer.write(\": \");",
         "  writer.write(" & native_var_ref_name(v) & ".toString());",
         if i < |state_vars| - 1 or has_rel_vars
@@ -483,8 +483,15 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       : v, t <- isort(block.tables)
     );
 
+    foreign_keys = isort(block.insert_checked_foreign_keys & block.delete_checked_foreign_keys);
+    foreign_key_checkers_decls = (
+      native_foreign_key_checker_type(k, block.tables(k.origin), block.tables(k.target)) & " " &
+      foreign_key_checker_decl_name(k) & ";"
+      : k <- foreign_keys
+    );
+
     memb_decls = linked_updaters_decls & dep_msg_vars_decls & dep_apply_code_vars_decls &
-                 vars_decls & stores_decls & tables_decls;
+                 vars_decls & stores_decls & tables_decls & foreign_key_checkers_decls;
 
     return join((
       ("static class " & native_updater_name(block.name) & " extends RelAutoUpdaterBase {"),
@@ -522,8 +529,17 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       );
     } : v, t <- isort(block.tables));
 
+    foreign_keys = isort(block.insert_checked_foreign_keys & block.delete_checked_foreign_keys);
+    foreign_key_checkers_init_code = ({
+      var = foreign_key_checker_ref_name(k);
+      type = native_foreign_key_checker_type(k, block.tables(k.origin), block.tables(k.target));
+      origin = pending_updates_var_ref_name(k.origin);
+      target = pending_updates_var_ref_name(k.target);
+      return native_new_call(var, type, (origin, target));
+    } : k <- foreign_keys);
+
     body = linked_updaters_init_code & dep_msg_vars_init_code & dep_apply_code_vars_init_code &
-           init_vars_code & value_stores_init_code & tables_init_code;
+           init_vars_code & value_stores_init_code & tables_init_code & foreign_key_checkers_init_code;
 
     class_name = native_updater_name(block.name);
     args = append((native_updater_name(l) & " l" & _print_(i) : l @ i <- block.links), ", ");
@@ -614,7 +630,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     main_method = (sgn) & indent_lines(body_text) & ("}");
     apply_method = match (update_id)
       main_handler    = main_handler_apply_method(block_name),
-      handler_id(i?)  = handler_apply_method(update_id, block_name),
+      handler_id(i?)  = handler_apply_method(update_id),
       update_id()     = ();
 
     return main_method & apply_method;
@@ -666,7 +682,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     }
 
 
-    String* handler_apply_method(<handler_id(Nat)> update_id, DBSymbol block_name) {
+    String* handler_apply_method(<handler_id(Nat)> update_id) {
       memb_vars = [v : v <- updated_memb_vars(update_id, ?)];
       value_stores = [v : v <- updated_value_stores(update_id, ?)];
       dependees = [a : a <- updated_dependees(update_id, ?)];
@@ -677,10 +693,10 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       dependees_code = dependees_apply_code(dependees);
 
       apply_code = updates_apply_code(dependees, memb_vars, value_stores, tables);
-      finish_code = updates_finish_code(deletion_tables);
+      finish_code = updates_finish_code(deletion_tables, block);
       reset_code = updates_reset_code(memb_vars, value_stores, tables, dependees);
 
-      sgn = "public void " & native_apply_method_name(update_id) & "(" & native_updater_name(block_name) & " updater) {";
+      sgn = "public void " & native_apply_method_name(update_id) & "(" & native_updater_name(block.name) & " updater) {";
       body = dependees_code & apply_code & finish_code & reset_code;
       return ("", sgn) & indent_lines(body) & ("}");
     }
@@ -760,9 +776,22 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
   }
 
 
-  String* updates_finish_code([TableVar] deletion_tables) = (
-    native_method_call(pending_updates_var_ref_name(t), "finish", ()) : t <- isort(deletion_tables)
-  );
+  String* updates_finish_code([TableVar] deletion_tables, StaticBlock block) {
+    ## REMEMBER TO REMOVE THE CALLS TO finish() ONCE THE REFACTORING IS COMPLETE
+    tables_code = (
+      native_method_call(pending_updates_var_ref_name(t), "finish", ()) : t <- isort(deletion_tables)
+    );
+    value_stores_with_deletions = [s : v <- deletion_tables, s <- value_stores(block.tables(v))];
+    value_stores_code = (
+      native_method_call(updater_var_ref_name(v), "applyDelayedReleases", ())
+      : v <- isort(value_stores_with_deletions)
+    );
+    return tables_code & value_stores_code;
+
+
+    ValueStoreId+ value_stores(Table table)   = table.value_stores;
+    ValueStoreId+ value_stores(Column column) = (column.value_store);
+  }
 
 
   String* updates_check_code(StaticBlock block, [TableVar] insertion_tables, [TableVar] deletion_tables) {
@@ -788,10 +817,8 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
 
     String check_stmt(BlockForeignKey key) {
-      origin = pending_updates_var_ref_name(key.origin);
-      target = pending_updates_var_ref_name(key.target);
-      method = foreign_key_check_method_name(key.type);
-      return native_method_call_expr(origin, method, (target)) & ";";
+      checker_name = foreign_key_checker_ref_name(key);
+      return native_method_call(checker_name, "check", ());
     }
 
 
@@ -807,27 +834,6 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       3,  [1, 2], "23";
       3,  [0, 2], "13"
     ];
-
-
-    String foreign_key_check_method_name(ForeignKeyType) =
-      unary_unary             = "checkForeignKeys",
-      unary_binary(i?)        = "checkForeignKeys_" & printed(i+1),
-      unary_ternary(i?)       = "checkForeignKeys_" & printed(i+1),
-
-      binary_unary(i?)        = "checkForeignKeys_" & printed(i+1),
-      binary_ternary          = "checkForeignKeys_12",
-
-      ternary_unary(i?)       = "checkForeignKeys_" & printed(i+1),
-      ternary_binary          = "checkForeignKeys_12",
-
-      unary_sym_binary        = "checkForeignKeys",
-      unary_sym_ternary       = "checkForeignKeys_1_2",
-
-      sym_binary_unary        = "checkForeignKeys_1_2",
-      sym_ternary_unary       = "checkForeignKeys_1_2",
-
-      sym_binary_sym_ternary  = "checkForeignKeys_12",
-      sym_ternary_sym_binary  = "checkForeignKeys_12";
 
 
     Nat order((TableVar, NzNat, [+Nat]) key) {
@@ -859,10 +865,13 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
         ternary_binary          = 0,
 
         unary_sym_binary        = 0,
-        unary_sym_ternary       = 0,
-
         sym_binary_unary        = 0,
-        sym_ternary_unary       = 0,
+
+        unary_sym_ternary_12    = 0,
+        unary_sym_ternary_3     = 2,
+
+        sym_ternary_unary_12    = 0,
+        sym_ternary_unary_3     = 2,
 
         sym_binary_sym_ternary  = 0,
         sym_ternary_sym_binary  = 0;

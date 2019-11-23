@@ -24,6 +24,13 @@ class IntCtrs {
       return false;
   }
 
+  public void set(int id, int counter) {
+    if (counter != 0)
+      map.set(id, counter);
+    else
+      map.reset(id);
+  }
+
   public int get(int id) {
     return map.hasKey(id) ? map.get(id) : 0;
   }

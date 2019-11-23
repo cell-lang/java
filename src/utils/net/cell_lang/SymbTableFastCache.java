@@ -28,7 +28,7 @@ final class SymbTableFastCache {
       return encSymbsIdxs1[idx];
 
     byte[] bytes = decode(encWord);
-    int symbIdx = SymbTable.bytesToIdx(bytes);
+    int symbIdx = SymbObj.bytesToIdx(bytes);
 
     if (storedEnc == 0) {
       encSymbs1[idx] = encWord;
@@ -52,7 +52,7 @@ final class SymbTableFastCache {
       return encSymbsIdxs2[idx];
 
     byte[] bytes = decode(encWord1, encWord2);
-    int symbIdx = SymbTable.bytesToIdx(bytes);
+    int symbIdx = SymbObj.bytesToIdx(bytes);
 
     if (storedEnc1 == 0) {
       encSymbs2[2 * idx] = encWord1;
@@ -84,7 +84,7 @@ final class SymbTableFastCache {
       return encSymbsIdxs3[idx];
 
     byte[] bytes = decode(encWord1, encWord2, encWord3);
-    int symbIdx = SymbTable.bytesToIdx(bytes);
+    int symbIdx = SymbObj.bytesToIdx(bytes);
 
     if (storedEnc1 == 0) {
       encSymbs3[3 * idx] = encWord1;
@@ -114,7 +114,7 @@ final class SymbTableFastCache {
       return encSymbsIdxs[idx];
 
     byte[] bytes = decode(encWords, count);
-    int symbIdx = SymbTable.bytesToIdx(bytes);
+    int symbIdx = SymbObj.bytesToIdx(bytes);
 
     if (storedEncs == null) {
       encSymbs[idx] = Array.take(encWords, count);

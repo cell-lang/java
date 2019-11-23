@@ -59,7 +59,7 @@ class OneWayBinTable {
     column[index] = value;
   }
 
-  private void set (int index, int low, int high) {
+  private void set(int index, int low, int high) {
     set(index, slot(low, high));
   }
 
@@ -138,7 +138,7 @@ class OneWayBinTable {
       return -1;
     if (isIndex(slot) | high(slot) != EMPTY_MARKER)
       throw Miscellanea.internalFail();
-    Miscellanea._assert(tag(low(slot)) == INLINE_SLOT);
+    // Miscellanea._assert(tag(low(slot)) == INLINE_SLOT);
     return low(slot);
   }
 
@@ -203,14 +203,14 @@ class OneWayBinTable {
     int high = high(slot);
 
     if (tag(low) == INLINE_SLOT & high == EMPTY_MARKER) {
-      Miscellanea._assert(surr2 != low);
+      // Miscellanea._assert(surr2 != low);
       set(surr1, low, surr2);
       count++;
       return;
     }
 
     long updatedSlot = overflowTable.insertUnique(slot, surr2);
-    Miscellanea._assert(updatedSlot != slot);
+    // Miscellanea._assert(updatedSlot != slot);
 
     set(surr1, updatedSlot);
     count++;
@@ -259,7 +259,7 @@ class OneWayBinTable {
       return true;
     }
 
-    Miscellanea._assert(tag(low(slot)) == INLINE_SLOT);
+    // Miscellanea._assert(tag(low(slot)) == INLINE_SLOT);
 
     int low = low(slot);
     int high = high(slot);
@@ -280,6 +280,36 @@ class OneWayBinTable {
     }
 
     return false;
+  }
+
+  public void deleteByKey(int surr1, int[] surrs2) {
+    if (surr1 >= column.length)
+      return;
+
+    long slot = column[surr1];
+
+    if (isEmpty(slot))
+      return;
+
+    set(surr1, EMPTY_SLOT);
+
+    if (isIndex(slot)) {
+      int slotCount = count(slot);
+      overflowTable.copy(slot, surrs2);
+      overflowTable.delete(slot);
+      count -= slotCount;
+    }
+    else {
+      // Miscellanea._assert(tag(low(slot)) == INLINE_SLOT);
+      surrs2[0] = low(slot);
+      int high = high(slot);
+      if (high != EMPTY_MARKER) {
+        surrs2[1] = high;
+        count -= 2;
+      }
+      else
+        count--;
+    }
   }
 
   public boolean isMap() {
@@ -315,7 +345,7 @@ class OneWayBinTable {
         }
       }
     }
-    Miscellanea._assert(next == 2 * count);
+    // Miscellanea._assert(next == 2 * count);
     return data;
   }
 
@@ -333,7 +363,7 @@ class OneWayBinTable {
           if (slotCount > buffer.length)
             buffer = new int[Array.capacity(buffer.length, slotCount)];
           int _count = restrict(surr1, buffer);
-          Miscellanea._assert(_count == slotCount);
+          // Miscellanea._assert(_count == slotCount);
           for (int i=0 ; i < slotCount ; i++) {
             int surr2 = buffer[i];
             if (surr1 <= surr2) {
@@ -356,14 +386,14 @@ class OneWayBinTable {
         }
       }
     }
-    Miscellanea._assert(next == count + eqCount);
+    // Miscellanea._assert(next == count + eqCount);
     return data;
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   public void initReverse(OneWayBinTable source) {
-    Miscellanea._assert(count == 0);
+    // Miscellanea._assert(count == 0);
 
     int len = source.column.length;
     for (int i=0 ; i < len ; i++) {

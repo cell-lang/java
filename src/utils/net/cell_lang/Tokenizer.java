@@ -354,7 +354,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
       int daysSinceEpoc = DateTime.daysSinceEpoc(year, month, day);
 
       if (tryReading('`'))
-        return Builder.createTaggedIntObj(SymbTable.DateSymbId, daysSinceEpoc);
+        return Builder.createTaggedIntObj(SymbObj.DateSymbId, daysSinceEpoc);
 
       read(' ');
       int hours = 10 * readDigit() + readDigit();
@@ -381,7 +381,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
       check(DateTime.isWithinRange(daysSinceEpoc, dayTimeNs));
 
       long epocTimeNs = DateTime.epocTimeNs(daysSinceEpoc, dayTimeNs);
-      return Builder.createTaggedIntObj(SymbTable.TimeSymbId, epocTimeNs);
+      return Builder.createTaggedIntObj(SymbObj.TimeSymbId, epocTimeNs);
     }
   }
 
@@ -408,7 +408,7 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
       }
       else if (ch == ':') {
         skip(i+1);
-        return SymbTable.bytesToIdx(buffer, i);
+        return SymbObj.bytesToIdx(buffer, i);
       }
       else {
         return -1;

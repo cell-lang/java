@@ -381,13 +381,35 @@ class Array {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
+  public static void sort(int[] array, int size) {
+    Arrays.sort(array, 0, size);
+  }
+
   public static void sort(long[] array) {
     Arrays.sort(array);
+  }
+
+  public static void sort(long[] array, int size) {
+    Arrays.sort(array, 0, size);
   }
 
   public static void sort(long[] array, int start, int end) {
     Arrays.sort(array, start, end);
   }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static boolean sortedArrayContains(int[] array, int size, int value) {
+    return Arrays.binarySearch(array, 0, size, value) >= 0;
+  }
+
+  public static boolean sortedArrayContains(long[] array, int size, long value) {
+    return Arrays.binarySearch(array, 0, size, value) >= 0;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
 
   public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int value) {
     return Arrays.binarySearch(array, value);

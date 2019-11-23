@@ -25,7 +25,7 @@ abstract class Obj implements Comparable<Obj> {
   public final boolean isBool() {
     if (isSymb()) {
       int symbId = getSymbId();
-      return symbId == SymbTable.FalseSymbId | symbId == SymbTable.TrueSymbId;
+      return symbId == SymbObj.FalseSymbId | symbId == SymbObj.TrueSymbId;
     }
     else
       return false;
@@ -116,7 +116,7 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final boolean getBool() {
-    return getSymbId() == SymbTable.TrueSymbId;
+    return getSymbId() == SymbObj.TrueSymbId;
   }
 
   public final long getLong() {
@@ -136,7 +136,7 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   public final SymbObj getTag() {
-    return SymbTable.get(getTagId());
+    return SymbObj.get(getTagId());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -190,7 +190,7 @@ abstract class Obj implements Comparable<Obj> {
   }
 
   protected static long boolObjData(boolean value) {
-    return value ? SymbTable.TrueSymbId : SymbTable.FalseSymbId;
+    return value ? SymbObj.TrueSymbId : SymbObj.FalseSymbId;
   }
 
   protected static long floatObjData(double value) {

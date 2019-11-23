@@ -252,7 +252,7 @@ String obj_data_expr(LowLevelRepr repr, String expr) =
 
 
 String comparison_expr(LowLevelRepr repr, String expr1, String expr2) =
-  bool    = "SymbTable.compBools(" & expr1 & ", " & expr2 & ")",
+  bool    = "SymbObj.compBools(" & expr1 & ", " & expr2 & ")",
   int     = "IntObj.compare(" & expr1 & ", " & expr2 & ")",
   float   = "FloatObj.compare(" & expr1 & ", " & expr2 & ")",
   symbol  |

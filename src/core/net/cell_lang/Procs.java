@@ -11,10 +11,10 @@ class Procs {
     try {
       byte[] content = Files.readAllBytes(Paths.get(fnameStr));
       Obj bytesObj = Builder.createSeqUnsigned(content);
-      return Builder.createTaggedObj(SymbTable.JustSymbId, bytesObj);
+      return Builder.createTaggedObj(SymbObj.JustSymbId, bytesObj);
     }
     catch (Exception e) {
-      return SymbObj.get(SymbTable.NothingSymbId);
+      return SymbObj.get(SymbObj.NothingSymbId);
     }
   }
 
@@ -23,10 +23,10 @@ class Procs {
     byte[] bytes = data.getByteArray();
     try {
       Files.write(Paths.get(fnameStr), bytes);
-      return SymbObj.get(SymbTable.TrueSymbId);
+      return SymbObj.get(SymbObj.TrueSymbId);
     }
     catch (Exception e) {
-      return SymbObj.get(SymbTable.FalseSymbId);
+      return SymbObj.get(SymbObj.FalseSymbId);
     }
   }
 
@@ -35,10 +35,10 @@ class Procs {
     byte[] bytes = data.getByteArray();
     try {
       Files.write(Paths.get(fnameStr), bytes, StandardOpenOption.APPEND);
-      return SymbObj.get(SymbTable.TrueSymbId);
+      return SymbObj.get(SymbObj.TrueSymbId);
     }
     catch (Exception e) {
-      return SymbObj.get(SymbTable.FalseSymbId);
+      return SymbObj.get(SymbObj.FalseSymbId);
     }
   }
 
@@ -56,14 +56,14 @@ class Procs {
       ch = -1;
     }
     if (ch != -1)
-      return Builder.createTaggedObj(SymbTable.JustSymbId, IntObj.get(ch));
+      return Builder.createTaggedObj(SymbObj.JustSymbId, IntObj.get(ch));
     else
-      return SymbObj.get(SymbTable.NothingSymbId);
+      return SymbObj.get(SymbObj.NothingSymbId);
   }
 
   public static Obj Now_P(Object env) {
     long msecs = System.currentTimeMillis();
-    return Builder.createTaggedIntObj(SymbTable.TimeSymbId, 1000000 * msecs);
+    return Builder.createTaggedIntObj(SymbObj.TimeSymbId, 1000000 * msecs);
   }
 
   private static long startTicks = -1;

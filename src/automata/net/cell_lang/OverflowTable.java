@@ -65,6 +65,31 @@ class OverflowTable extends ArraySliceAllocator {
       return deleteFromLinearBlock(handle, value);
   }
 
+  public void delete(long handle) {
+    int low = low(handle);
+    int tag = tag(low);
+    int blockIdx = payload(low);
+
+    // Miscellanea._assert(tag != INLINE_SLOT);
+
+    if (tag == SIZE_2_BLOCK)
+      release2Block(blockIdx);
+    else if (tag == SIZE_4_BLOCK)
+      release4Block(blockIdx);
+    else if (tag == SIZE_8_BLOCK)
+      release8Block(blockIdx);
+    else if (tag == SIZE_16_BLOCK)
+      release16Block(blockIdx);
+    else {
+      // Miscellanea._assert(tag == HASHED_BLOCK);
+      for (int i=0 ; i < 16 ; i++) {
+        long slot = slot(blockIdx + i);
+        if (slot != EMPTY_SLOT && tag(low(slot)) != INLINE_SLOT)
+          delete(slot);
+      }
+    }
+  }
+
   public boolean contains(long handle, int value) {
     int tag = tag(low(handle));
     int blockIdx = payload(low(handle));
@@ -564,10 +589,7 @@ class OverflowTable extends ArraySliceAllocator {
     int lastHigh = high(lastSlot);
 
     // Miscellanea._assert(lastLow != EMPTY_MARKER && tag(lastLow) == INLINE_SLOT);
-    // Miscellanea._assert(
-    //   (lastHigh != EMPTY_MARKER && tag(lastHigh) == INLINE_SLOT) ||
-    //   (lastHigh == EMPTY_MARKER && !isEven(count))
-    // );
+    // Miscellanea._assert((lastHigh != EMPTY_MARKER && tag(lastHigh) == INLINE_SLOT) || (lastHigh == EMPTY_MARKER && !isEven(count)));
 
     // Checking the last slot first
     if (value == lastLow | value == lastHigh) {

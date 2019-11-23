@@ -11,7 +11,7 @@ class RecordObj extends NeBinRelObj {
   public RecordObj(int[] labels, Obj[] values) {
     Miscellanea._assert(labels.length > 0);
     for (int i=1 ; i < labels.length ; i++)
-      Miscellanea._assert(SymbTable.compSymbs(labels[i-1], labels[i]) == 1);
+      Miscellanea._assert(SymbObj.compSymbs(labels[i-1], labels[i]) == 1);
 
     data = binRelObjData(labels.length);
     extraData = neBinRelObjExtraData();
@@ -113,7 +113,7 @@ class RecordObj extends NeBinRelObj {
       int[] otherLabels = otherRecord.labels;
       if (labels != otherLabels)
         for (int i=0 ; i < size ; i++) {
-          int res = SymbTable.compSymbs(labels[i], otherLabels[i]);
+          int res = SymbObj.compSymbs(labels[i], otherLabels[i]);
           if (res != 0)
             return res;
         }
@@ -188,7 +188,7 @@ class RecordObj extends NeBinRelObj {
       col1 = new Obj[len];
       hashcodes1 = new int[len];
       for (int i=0 ; i < len ; i++) {
-        Obj symbObj = SymbTable.get(labels[i]);
+        Obj symbObj = SymbObj.get(labels[i]);
         col1[i] = symbObj;
         hashcodes1[i] = symbObj.hashcode();
       }
