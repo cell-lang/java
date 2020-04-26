@@ -10,6 +10,24 @@ abstract class NeSeqObj extends SeqObj {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  public boolean isNeIntSeq() {
+    int len = getSize();
+    for (int i=0 ; i < len ; i++)
+      if (!getObjAt(i).isInt())
+        return false;
+    return true;
+  }
+
+  public boolean isNeFloatSeq() {
+    int len = getSize();
+    for (int i=0 ; i < len ; i++)
+      if (!getObjAt(i).isFloat())
+        return false;
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   public boolean[] getArray(boolean[] buffer) {
     int len = getSize();
     if (buffer == null)

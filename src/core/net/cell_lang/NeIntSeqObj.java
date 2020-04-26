@@ -2,6 +2,14 @@ package net.cell_lang;
 
 
 abstract class NeIntSeqObj extends NeSeqObj {
+  public boolean isNeIntSeq() {
+    return true;
+  }
+
+  public boolean isNeFloatSeq() {
+    return false;
+  }
+
   public Obj getObjAt(long idx) {
     return IntObj.get(getLongAt(idx));
   }

@@ -8,14 +8,22 @@ import java.io.Writer;
 final class SymbObj extends Obj {
   String string;
   int minPrintedSize;
+  int hashcode;
 
 
-  public SymbObj(int id) {
+  private SymbObj(int id) {
     data = symbObjData(id);
     extraData = symbObjExtraData();
     Miscellanea._assert(getSymbId() == id);
     string = idxToStr(id);
     minPrintedSize = string.length();
+
+    // Calculating the hash code
+    long hcode = 0;
+    int len = string.length();
+    for (int i=0 ; i < len ; i++)
+      hcode = 31 * hcode + string.charAt(i);
+    hashcode = Hashing.hashcode64(hcode);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -26,7 +34,7 @@ final class SymbObj extends Obj {
 
   @Override
   public int hashcode() {
-    return hashcode(getSymbId());
+    return hashcode;
   }
 
   public TypeCode getTypeCode() {
@@ -57,10 +65,6 @@ final class SymbObj extends Obj {
   //## THIS COULD BE OPTIMIZED
   public static SymbObj get(boolean b) {
     return get(b ? TrueSymbId : FalseSymbId);
-  }
-
-  public static int hashcode(int symbId) {
-    return symbId;
   }
 
   //////////////////////////////////////////////////////////////////////////////

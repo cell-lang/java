@@ -3,12 +3,14 @@ package net.cell_lang;
 import java.io.Writer;
 
 
+//## THE RecordObj CLASS HAS BEEN TEMPORARILY DISABLED, DUE TO ISSUES WITH
+//## THE ORDER OF FIELDS, WHICH AFFECTS COMPARISONS, ITERATION AND OTHER MATTERS
+
 class RecordObj extends NeBinRelObj {
   int[] labels;
 
 
-  //## HERE I SHOULD BE PASSING LABEL OBJECTS AS WELL...
-  public RecordObj(int[] labels, Obj[] values) {
+  private RecordObj(int[] labels, Obj[] values) {
     Miscellanea._assert(labels.length > 0);
     for (int i=1 ; i < labels.length ; i++)
       Miscellanea._assert(SymbObj.compSymbs(labels[i-1], labels[i]) == 1);
@@ -145,7 +147,7 @@ class RecordObj extends NeBinRelObj {
     if (hashcode == Integer.MIN_VALUE) {
       long hcode = 0;
       for (int i=0 ; i < labels.length ; i++)
-        hcode += Hashing.hashcode(SymbObj.hashcode(labels[i]), col2[i].hashcode());
+        hcode += Hashing.hashcode(SymbObj.get(labels[i]).hashcode(), col2[i].hashcode());
       hashcode = Hashing.hashcode64(hcode);
       if (hashcode == Integer.MIN_VALUE)
         hashcode++;

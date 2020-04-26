@@ -3,32 +3,6 @@ RUNTIME-FILES=$(shell ls src/core/net/cell_lang/*.java src/automata/net/cell_lan
 
 ################################################################################
 
-codegen.jar: $(SRC-FILES) $(RUNTIME-FILES)
-	java -jar bin/cellc-java.jar projects/codegen.txt
-	javac -d tmp/codegen/ Generated.java
-	mv Generated.java tmp/codegen.java
-	jar cfe codegen.jar net.cell_lang.Generated -C tmp/codegen/ net/
-
-################################################################################
-
-cellc-java: $(SRC-FILES) $(RUNTIME-FILES)
-	cellc projects/compiler-no-runtime.txt
-	../build/bin/ren-fns < generated.cpp > tmp/cellc-java.cpp
-	mv generated.cpp tmp/
-	echo >> tmp/cellc-java.cpp
-	echo >> tmp/cellc-java.cpp
-	cat ../build/src/hacks.cpp >> tmp/cellc-java.cpp
-	g++ -O3 -DNDEBUG tmp/cellc-java.cpp -o cellc-java
-
-cellcd-java: $(SRC-FILES) $(RUNTIME-FILES)
-	cellc projects/compiler-no-runtime.txt
-	../build/bin/ren-fns < generated.cpp > tmp/cellc-java.cpp
-	mv generated.cpp tmp/
-	echo >> tmp/cellc-java.cpp
-	echo >> tmp/cellc-java.cpp
-	cat ../build/src/hacks.cpp >> tmp/cellc-java.cpp
-	g++ -ggdb -DNDEBUG tmp/cellc-java.cpp -o cellcd-java
-
 cellc-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 	mkdir -p tmp/
 	rm -rf tmp/*
@@ -46,7 +20,7 @@ cellcd-java.jar: $(SRC-FILES) $(RUNTIME-FILES)
 	mkdir -p tmp/
 	rm -rf tmp/*
 	mkdir tmp/gen/
-	java -jar bin/cellc-java.jar -d projects/compiler.txt tmp/gen/
+	java -jar bin/cellc-java.jar -d projects/compiler-no-runtime.txt tmp/gen/
 	mv tmp/gen/Generated.java tmp/
 	bin/apply-hacks < tmp/Generated.java > tmp/gen/Generated.java
 	javac -g -d tmp/ tmp/gen/*.java src/hacks/net/cell_lang/Hacks.java
@@ -102,10 +76,6 @@ update-cellc-java.jar:
 ################################################################################
 ################################################################################
 
-inputs/tests.txt: tests.cell
-	cellc-cs.exe -p projects/tests.txt
-	mv dump-opt-code.txt inputs/tests.txt
-
 tests.jar: codegen.exe inputs/tests.txt
 	./codegen.exe inputs/tests.txt
 	javac -g -d tmp/ Generated.java
@@ -121,10 +91,6 @@ run-unit-tests:
 ################################################################################
 
 clean:
-	@rm -f codegen.exe codegen codegen-dbg
-	@make -s soft-clean
-
-soft-clean:
 	@rm -f generated.cpp generated.cs Generated.java Generated-A.java
 	@rm -f *.class
 	@rm -f src/core/net/cell_lang/*.class

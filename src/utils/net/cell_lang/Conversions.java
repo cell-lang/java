@@ -33,11 +33,7 @@ class Conversions {
   }
 
   public static LocalDate objToDate(Obj date) {
-    long epochNanoSecs = date.getInnerLong();
-    long epochDay = epochNanoSecs >= 0 ?
-      epochNanoSecs / 86400000000000L :
-      ((epochNanoSecs + 86399999999999L) / 86400000000000L) - 1;
-    return LocalDate.ofEpochDay(epochDay);
+    return LocalDate.ofEpochDay(date.getInnerLong());
   }
 
   public static Obj dateTimeToObj(LocalDateTime time) {
@@ -61,7 +57,8 @@ class Conversions {
     long epochSecond = epochNanoSecs >= 0 ?
       epochNanoSecs / 1000000000 :
       ((epochNanoSecs + 999999999) / 1000000000) - 1;
-    return LocalDateTime.ofEpochSecond(epochSecond, (int) (epochNanoSecs - epochSecond), ZoneOffset.UTC);
+    int nanosecs = (int) (epochNanoSecs - 1000000000 * epochSecond);
+    return LocalDateTime.ofEpochSecond(epochSecond, nanosecs, ZoneOffset.UTC);
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -104,7 +101,7 @@ class Conversions {
     int len = elts.length;
     double[] doubles = new double[len];
     for (int i=0 ; i < len ; i++)
-      doubles[i] = elts[i].getLong();
+      doubles[i] = elts[i].getDouble();
     return doubles;
   }
 

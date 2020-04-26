@@ -83,75 +83,69 @@ NeType internal_type(AtomicInterType) =
 
 
 implicit prg : CompiledPrg {
-  String input_arg_type(InterType it) {
+  String input_arg_type(InterType it) = input_arg_type(it, false);
+
+  String input_arg_type(InterType it, Bool nullable) {
     if in(it, declared_types) {
       fail if not it :: DeclInterType; ## BAD
       return input_types_names(it, !) if not is_simplifiable(it);
     }
 
     return match (it)
-      bool              = "boolean",
-      integer           = "long",
-      float             = "double",
+      bool              = if nullable then "Boolean" else "boolean",
+      integer           = if nullable then "Long"    else "long",
+      float             = if nullable then "Double"  else "double",
       date              = "java.time.LocalDate",
       time              = "java.time.LocalDateTime",
-      optional(t?)      = input_arg_obj_type(t),
+      optional(t?)      = input_arg_type(t, true),
       symbol()          |
       tuple()           |
       record()          |
       union()           = undefined,
-      named(n?)         = input_arg_type(named_interface_types_defs(it, !)),
+      named(n?)         = input_arg_type(named_interface_types_defs(it, !), nullable),
       seq(t?)           |
-      set(t?)           = input_arg_type(t) & "[]",
-      map(k?, v?)       = "java.util.HashMap<" & input_arg_obj_type(k) & ", " & input_arg_obj_type(v) & ">",
-      tagged(_, t?)     = input_arg_type(t),
+      set(t?)           = input_arg_type(t, false) & "[]",
+      map(k?, v?)       = "java.util.HashMap<" & input_arg_type(k, true) & ", " & input_arg_type(v, true) & ">",
+      tagged(_, t?)     = input_arg_type(t, nullable),
       string            |
       generic           = "String";
   }
 
 
-  String input_arg_obj_type(InterType it) =
-    bool    = "Boolean",
-    integer = "Long",
-    float   = "Double",
-    _       = input_arg_type(it);
+  String return_value_type(InterType it) = return_value_type(it, false, output_types_names);
+
+  String return_value_type(InterType it, Bool nullable) =
+    return_value_type(it, nullable, output_types_names);
+
+  String return_value_type(InterType it, [DeclInterType -> String] types_names) =
+    return_value_type(it, false, types_names);
 
 
-  String return_value_type(InterType it) = return_value_type(it, output_types_names);
-
-
-  String return_value_type(InterType it, [DeclInterType -> String] types_names) {
+  String return_value_type(InterType it, Bool nullable, [DeclInterType -> String] types_names) {
     if in(it, declared_types) {
       fail if not it :: DeclInterType; ## BAD
       return types_names(it, !) if not is_simplifiable(it);
     }
 
     return match (it)
-      bool              = "boolean",
-      integer           = "long",
-      float             = "double",
+      bool              = if nullable then "Boolean" else "boolean",
+      integer           = if nullable then "Long"    else "long",
+      float             = if nullable then "Double"  else "double",
       string            = "String",
       date              = "java.time.LocalDate",
       time              = "java.time.LocalDateTime",
-      optional(t?)      = ret_value_obj_type(t),
+      optional(t?)      = return_value_type(t, true, types_names),
       symbol()          |
       tuple()           |
       record()          |
       union()           = undefined,
-      named()           = return_value_type(named_interface_types_defs(it, !), types_names),
+      named()           = return_value_type(named_interface_types_defs(it, !), nullable, types_names),
       seq(t?)           |
-      set(t?)           = return_value_type(t, types_names) & "[]",
-      map(k?, v?)       = "java.util.HashMap<" & ret_value_obj_type(k) & ", " & ret_value_obj_type(v) & ">",
-      tagged(_, t?)     = return_value_type(t, types_names),
+      set(t?)           = return_value_type(t, false, types_names) & "[]",
+      map(k?, v?)       = "java.util.HashMap<" & return_value_type(k, true, types_names) & ", " & return_value_type(v, true, types_names) & ">",
+      tagged(_, t?)     = return_value_type(t, nullable, types_names),
       generic           = "String";
   }
-
-
-  String ret_value_obj_type(InterType it) =
-    bool    = "Boolean",
-    integer = "Long",
-    float   = "Double",
-    _       = return_value_type(it);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -348,8 +342,8 @@ if action_prefix != "return " {
     value_var = "value_" & unique_id;
     keys_var = "keys_" & unique_id;
     values_var = "values_" & unique_id;
-    in_key_type = input_arg_obj_type(key_type);
-    in_value_type = input_arg_obj_type(value_type);
+    in_key_type = input_arg_type(key_type, true);
+    in_value_type = input_arg_type(value_type, true);
 
     code = (
       "Obj[] " & keys_var & " = new Obj[" & expr & ".size()];",
@@ -384,18 +378,25 @@ if action_prefix != "return " {
 
 
   String* optional_value_import_code(InterType inner_type, String expr, String action_prefix) {
+    unique_id = printed(_counter_(:any_value_will_do));
+    tmp_var = "var_" & unique_id;
+
     code = match (inner_type)
-      bool    = (action_prefix & "Builder.createTaggedObj(SymbObj.JustSymbId, SymbObj.get(" & expr & ".booleanValue()));"),
-      integer = (action_prefix & "Builder.createTaggedIntObj(SymbObj.JustSymbId, " & expr & ".longValue());"),
-      float   = (action_prefix & "Builder.createTaggedObj(SymbObj.JustSymbId, new FloatObj(" & expr & ".doubleValue()));"),
-      _       = import_code_ex(inner_type, expr, action_prefix);
+      bool    = (tmp_var & " = Builder.createTaggedObj(SymbObj.JustSymbId, SymbObj.get(" & expr & ".booleanValue()));"),
+      integer = (tmp_var & " = Builder.createTaggedIntObj(SymbObj.JustSymbId, " & expr & ".longValue());"),
+      float   = (tmp_var & " = Builder.createTaggedObj(SymbObj.JustSymbId, new FloatObj(" & expr & ".doubleValue()));"),
+      _       = ( import_code_ex(inner_type, expr, tmp_var & " = ") |
+                  "  " & tmp_var & " = Builder.createTaggedObj(SymbObj.JustSymbId, " & tmp_var & ");"
+                );
 
     return (
-      "if (" & expr & " != null) {",
+      "Obj " & tmp_var & ";",
+      "if (" & expr & " != null) {"
     ) & indent_lines(code) & (
       "}",
       "else",
-      "  " & action_prefix & "SymbObj.get(SymbObj.NothingSymbId);"
+      "  " & tmp_var & " = SymbObj.get(SymbObj.NothingSymbId);",
+      action_prefix & tmp_var & ";"
     );
   }
 }
@@ -492,10 +493,8 @@ implicit prg : CompiledPrg {
 
 
   String* optional_type_export_code(InterType inner_type, String expr, String action_prefix) {
-    code_nothing = (
-      "if (" & expr & ".isSymb(SymbObj.NothingSymbId))",
-      "  return null;"
-    );
+    code_nothing = (action_prefix & "null;");
+
     code_just = match (inner_type)
       bool    = (action_prefix & "Boolean.valueOf(" & expr & ".getInnerObj().isSymb(SymbObj.TrueSymbId));"),
       integer = (action_prefix & "Long.valueOf(" & expr & ".getInnerLong());"),
@@ -505,7 +504,15 @@ implicit prg : CompiledPrg {
                   instr = "Obj " & var & " = " & expr & ".getInnerObj();";
                   return (instr) & export_code(inner_type, var, action_prefix);
                 };
-    return code_nothing & code_just;
+
+    return (
+      "if (!" & expr & ".isSymb(SymbObj.NothingSymbId)) {",
+    ) & indent_lines(code_just) & (
+      "}",
+      "else {"
+    ) & indent_lines(code_nothing) & (
+      "}"
+    );
   }
 
 
@@ -687,8 +694,8 @@ if action_prefix != "return " {
     out_value_var = "out_value_" & unique_id;
 
     out_type = return_value_type(:map(key_type, value_type));
-    out_key_type = ret_value_obj_type(key_type);
-    out_value_type = ret_value_obj_type(value_type);
+    out_key_type = return_value_type(key_type, true);
+    out_value_type = return_value_type(value_type, true);
 
     code = (
       out_type & " " & map_var & " = new " & out_type & "();",
@@ -1011,10 +1018,10 @@ implicit typedefs : [TypeName -> NeType] {
 
 [NamedInterType] nested_named_types(InterType inter_type) =
   named() = [inter_type],
-  _       = search_nested(inter_type, nested_named_types);
+  _       = search_nested_intertypes(inter_type, nested_named_types);
 
 
-[X] search_nested(InterType inter_type, (InterType -> [X]) nested) =
+[X] search_nested_intertypes(InterType inter_type, (InterType -> [X]) nested) =
   bool            |
   integer         |
   float           |

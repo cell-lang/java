@@ -149,7 +149,7 @@ class TextWriter {
             Obj key = mapper.surrToObj(it.getIdx());
             double value = it.getValue();
             if (flipCols) {
-              writer.write(Double.toString(value));
+              writer.write(FloatObjPrinter.print(value));
               writer.write(", ");
               key.print(writer, Integer.MAX_VALUE, true, 0);
               written++;
@@ -158,7 +158,7 @@ class TextWriter {
             else {
               key.print(writer, Integer.MAX_VALUE, true, 0);
               writer.write(" -> ");
-              writer.write(Double.toString(value));
+              writer.write(FloatObjPrinter.print(value));
               written++;
               writer.write(written < count ? ",\n" : "\n");
             }

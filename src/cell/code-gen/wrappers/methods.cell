@@ -4,8 +4,7 @@
 
 implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
   (String*, String*) method_wrapper(MethodId method_id, <CompiledMethod, OptCompMethod> method,
-    <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name,
-    String method_path, Bool is_gen_memb_tester) {
+    <AutoSymbol, DBSymbol> block_name, String ext_name, String class_name, String method_path) {
     args_inter_types = (interface_type(t) : t <- method.args_types);
     inter_ret_type = interface_type(method.ret_type);
 
@@ -53,9 +52,7 @@ implicit prg : CompiledPrg, typedefs : [TypeName -> NeType] {
 
     code = code & (
       "  if (!" & cond & ")",
-      if is_gen_memb_tester
-        then "    return false;"
-        else "    throw new RuntimeException(\"Invalid argument type\");"
+      "    throw new RuntimeException(\"Invalid argument type\");"
     ) if cond != "";
 
     full_method_name = method_path & user_def_method_name(block_name, method_id);

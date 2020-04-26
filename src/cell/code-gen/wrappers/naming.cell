@@ -23,12 +23,13 @@ implicit prg : CompiledPrg, taken_names : [String] {
 
 
   String default_name(InterType, Bool retry) =
-    bool              = "Bool",
+    bool              = "Boolean",
     integer           = "Long",
     float             = "Double",
     string            = "String",
     date              = "LocalDate",
     time              = "LocalDateTime",
+    optional(t?)      = default_name(t, retry),
     symbol(s?)        = upper_camel_case(s),
     tuple(ts?)        = append((default_name(t, retry) : t <- ts), "_"),
     record(fs?)       = append((upper_camel_case(l) : l <- isort(keys(fs))), "_"),

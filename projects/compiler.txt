@@ -124,7 +124,6 @@
 ../compiler/src/F-code-analysis/errors.cell
 ../compiler/src/F-code-analysis/updates.cell
 
-../compiler/src/G-code-preprocessing/auto-gen-code.cell
 ../compiler/src/G-code-preprocessing/rel-vars-part.cell
 ../compiler/src/G-code-preprocessing/rel-vars-perm.cell
 

@@ -16,8 +16,6 @@ class ObjPrinter implements ObjVisitor {
     this.maxLineLen = maxLineLen;
   }
 
-
-
   //////////////////////////////////////////////////////////////////////////////
 
   public void taggedIntObj(int tag, long value) {

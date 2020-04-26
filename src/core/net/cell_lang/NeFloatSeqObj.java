@@ -2,6 +2,14 @@ package net.cell_lang;
 
 
 abstract class NeFloatSeqObj extends NeSeqObj {
+  public boolean isNeIntSeq() {
+    return false;
+  }
+
+  public boolean isNeFloatSeq() {
+    return true;
+  }
+
   public Obj getObjAt(long idx) {
     return new FloatObj(getDoubleAt(idx));
   }

@@ -148,7 +148,7 @@ implicit prg : CompiledPrg, block : ReactBlock, typedefs : [TypeName -> NeType] 
   (String*, String*) auto_method_wrapper(MethodId method_id, CompiledMethod method) {
     return ((), ()) if method_id.id?;
     name = safe_name(method_id.symbol, method_id.arity);
-    return method_wrapper(method_id, method, block.name, name, auto_class_name, "automaton.", false);
+    return method_wrapper(method_id, method, block.name, name, auto_class_name, "automaton.");
   }
 }
 

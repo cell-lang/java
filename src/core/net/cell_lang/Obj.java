@@ -51,6 +51,14 @@ abstract class Obj implements Comparable<Obj> {
     return extraData == neSeqObjExtraData();
   }
 
+  public boolean isNeIntSeq() {
+    return false;
+  }
+
+  public boolean isNeFloatSeq() {
+    return false;
+  }
+
   public final boolean isEmptyRel() {
     return extraData == emptyRelObjExtraData();
   }

@@ -277,7 +277,7 @@ class NeTreeSetObj extends Obj {
     public int traverse(Obj[] elts, int offset) {
       if (left != null)
         offset = left.traverse(elts, offset);
-      elts[offset] = elt;
+      elts[offset++] = elt;
       if (right != null)
         offset = right.traverse(elts, offset);
       return offset;

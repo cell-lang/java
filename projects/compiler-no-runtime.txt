@@ -3,6 +3,7 @@
 ../compiler/src/stdlib/printing.cell
 ../compiler/src/stdlib/algorithms.cell
 ../compiler/src/stdlib/trie.cell
+../compiler/src/stdlib/time.cell
 ../compiler/src/stdlib/utf-8.cell
 
 
@@ -45,6 +46,7 @@
 ../compiler/src/stage-2/methods.cell
 ../compiler/src/stage-2/accessors.cell
 ../compiler/src/stage-2/searching.cell
+../compiler/src/stage-2/hacks.cell
 
 
 // Stage 2 - relational layer
@@ -122,7 +124,6 @@
 ../compiler/src/F-code-analysis/errors.cell
 ../compiler/src/F-code-analysis/updates.cell
 
-../compiler/src/G-code-preprocessing/auto-gen-code.cell
 ../compiler/src/G-code-preprocessing/rel-vars-part.cell
 ../compiler/src/G-code-preprocessing/rel-vars-perm.cell
 
@@ -168,6 +169,7 @@
 ../java/src/cell/code-gen/wrappers/static.cell
 ../java/src/cell/code-gen/wrappers/types-decls.cell
 ../java/src/cell/code-gen/wrappers/methods.cell
+../java/src/cell/code-gen/wrappers/handlers.cell
 
 
 // Main file

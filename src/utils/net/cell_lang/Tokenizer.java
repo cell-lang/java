@@ -584,6 +584,6 @@ final class Tokenizer extends CharStreamProcessor implements TokenStream {
   }
 
   private static int hexDigitValue(int ch) {
-    return ch - (isDigit(ch) ? '0' : 'a');
+    return ch - (isDigit(ch) ? '0' : 'a' - 10);
   }
 }

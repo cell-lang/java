@@ -20,7 +20,7 @@ final class NeSetObj extends Obj {
   }
 
   public Obj insert(Obj obj) {
-    if (!contains(obj))
+    if (contains(obj))
       return this;
 
     NeTreeSetObj treeSet = new NeTreeSetObj(elts, hashcodes, 0, elts.length);

@@ -5,12 +5,12 @@ import java.io.Writer;
 
 abstract class OptTagRecObj extends Obj {
   int hashcode = Integer.MIN_VALUE;
-  RecordObj innerObj;
+  Obj innerObj;
 
 
   public Obj getInnerObj() {
     if (innerObj == null)
-      innerObj = new RecordObj(getLabels(), getValues());
+      innerObj = Builder.createRecord(getLabels(), getValues());
     return innerObj;
   }
 
@@ -22,7 +22,7 @@ abstract class OptTagRecObj extends Obj {
       int[] labels = getLabels();
       long hcode = 0;
       for (int i=0 ; i < labels.length ; i++)
-        hcode += Hashing.hashcode(SymbObj.hashcode(labels[i]), lookupField(labels[i]).hashcode());
+        hcode += Hashing.hashcode(SymbObj.get(labels[i]).hashcode(), lookupField(labels[i]).hashcode());
       int untaggeHashcode = Hashing.hashcode64(hcode);
       if (untaggeHashcode == Integer.MIN_VALUE)
         untaggeHashcode++;

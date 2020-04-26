@@ -23,6 +23,13 @@ class Builder {
       return EmptyRelObj.singleton;
   }
 
+  public static Obj createRecord(int[] labels, Obj[] values) {
+    Obj[] labelObjs = new Obj[labels.length];
+    for (int i=0 ; i < labels.length ; i++)
+      labelObjs[i] = SymbObj.get(labels[i]);
+    return createMap(labelObjs, values);
+  }
+
   public static Obj createMap(ArrayList<Obj> keys, ArrayList<Obj> vals) {
     Miscellanea._assert(keys.size() == vals.size());
     return createMap(keys.toArray(new Obj[keys.size()]), vals.toArray(new Obj[vals.size()]));

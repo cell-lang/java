@@ -1,5 +1,5 @@
 implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat -> Nat]]], debug_mode : Bool {
-  [String -> String*] generated_code(Bool include_runtime, [DBSymbol -> [MethodId]] gen_memb_testers_ids) {
+  [String -> String*] generated_code(Bool include_runtime) {
     symbs = program_symbols;
     assert |symbs| <= 64 * 1024; ## IMPLEMENT PROPERLY
 
@@ -71,9 +71,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
     let prg = prg, typedefs = prg.typedefs {
       react_auto_wrappers = (react_auto_wrapper(b) : b <- ord_react_blocks);
-      rel_auto_wrappers = (
-        static_auto_wrapper(b, lookup(gen_memb_testers_ids, b.name, [])) : b <- ord_static_blocks
-      );
+      rel_auto_wrappers = (static_auto_wrapper(b) : b <- ord_static_blocks);
       inter_types_decls = interface_types_decls;
       inter_types_docs = interface_types_docs;
 
@@ -122,10 +120,11 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
         "import java.io.StringWriter;",
         "import java.io.Writer;",
         "import java.io.BufferedWriter;",
+        "import java.io.FileWriter;",
         "import java.io.Reader;",
         "import java.io.StringReader;",
+        "import java.io.FileReader;",
         "import java.nio.file.Files;",
-        // "import java.nio.file.Path;",
         "import java.nio.file.Paths;",
         "import java.nio.file.StandardOpenOption;",
         "",

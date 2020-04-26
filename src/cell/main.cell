@@ -1,13 +1,14 @@
 Int Main(String* args) {
   argc = |args|;
 
+  version = "0.5.4";
+
   if argc < 2 {
     Print(
-      "Cell to Java compiler version 0.5.2\n"   &
+      "Cell to Java compiler version " & version & "\n" &
       "Usage: java -jar cellc-java.jar <options> <project file> <output directory>\n" &
-      "Available options:\n"                                                          &
-      "  -d     debug mode\n"                                                         &
-      "  -g     generate accessors for relational automata\n"                         &
+      "Available options:\n" &
+      "  -d     debug mode\n" &
       "  -ia    ignore assertions\n"
     );
     return 1;
@@ -66,7 +67,6 @@ Int Main(String* args) {
         "Invalid option: " & o & "\n"                           &
         "Available options:\n"                                  &
         "  -d     debug mode\n"                                 &
-        "  -g     generate accessors for relational automata\n" &
         "  -ia    ignore assertions\n"
       );
       return 1;
@@ -74,9 +74,8 @@ Int Main(String* args) {
   }
 
   Print(
-    "Cell to Java compiler version 0.5.2\n"   &
-    "Warning: this is a beta version\n"       &
-    // "Use -q option to suppress this output\n" &
+    "Cell to Java compiler version " & version & "\n" &
+    "Warning: this is a beta version\n" &
     "Compiling project " & fname & "\n"
   );
 
@@ -224,13 +223,52 @@ type CmdLineOpts = (
     unused_var = GetChar();
 
   is_bad = false;
-  let program = prg {
-    let typedefs = schema_and_typedefs {
-      if cmd_line_opts.run_typechecking {
-        errs = typechecking_errors;
-        if errs == [] {
+  let program = prg, typedefs = prg.typedefs {
+    if cmd_line_opts.run_typechecking {
+      errs = typechecking_errors;
+      if errs == [] {
+        if cmd_line_opts.developer_mode
+          Print("The program typechecks\n");
+        else
+          Print(".");
+
+        if cmd_line_opts.wait_for_key
+          unused_var = GetChar();
+      }
+      else {
+        Print("\n\nError: the program does not typecheck\n\n");
+        // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
+        bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
+        ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
+        msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
+        for m <- msgs {
+          for l <- m
+            Print(l & "\n");
+          Print("\n");
+        }
+        Print("Number of functions with typechecking errors: " & printed(|errs|) & "\n");
+        is_bad = true;
+      }
+    }
+
+    t5 = _ticks_(:any_value_will_do);
+
+    perms = [];
+
+    if not is_bad {
+      options = options(
+        debug_mode:                 cmd_line_opts.debug_mode,
+        ignore_assertions:          cmd_line_opts.ignore_assertions,
+        max_opt_fields_in_opt_rec:  16
+      );
+
+      if prg.data_bases != [] {
+        res = transform_analyze_and_compile(prg, options, cmd_line_opts.generate_accessors);
+        if succeeded(res) {
+          cmp_prg, perms = get_result(res);
+          code = just(cmp_prg);
           if cmd_line_opts.developer_mode
-            Print("The program typechecks\n");
+            Print("Code analysis OK\n");
           else
             Print(".");
 
@@ -238,70 +276,29 @@ type CmdLineOpts = (
             unused_var = GetChar();
         }
         else {
-          Print("\n\nError: the program does not typecheck\n\n");
-          // msgs = rand_sort([create_error_msgs(fd, es) : es @ fd <- errs]);
+          errs = get_error(res);
           bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
           ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
           msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
+          Print("\n");
           for m <- msgs {
             for l <- m
               Print(l & "\n");
             Print("\n");
           }
-          Print("Number of functions with typechecking errors: " & printed(|errs|) & "\n");
           is_bad = true;
-        }
-      }
-
-      t5 = _ticks_(:any_value_will_do);
-
-      memb_test_accessors_ids = [];
-      perms = [];
-
-      if not is_bad {
-        options = options(
-          debug_mode:                 cmd_line_opts.debug_mode,
-          ignore_assertions:          cmd_line_opts.ignore_assertions,
-          max_opt_fields_in_opt_rec:  16
-        );
-
-        if prg.data_bases != [] {
-          res = transform_analyze_and_compile(prg, options, cmd_line_opts.generate_accessors);
-          if succeeded(res) {
-            cmp_prg, memb_test_accessors_ids, perms = get_result(res);
-            code = just(cmp_prg);
-            if cmd_line_opts.developer_mode
-              Print("Code analysis OK\n");
-            else
-              Print(".");
-
-            if cmd_line_opts.wait_for_key
-              unused_var = GetChar();
-          }
-          else {
-            errs = get_error(res);
-            bad_decls = sort_set(keys(errs), source_file($a) < source_file($b));
-            ord_errs_by_decl = ((d, nonempty(sort_set(errs(d), source_line($a) < source_line($b)))) : d <- bad_decls);
-            msgs = (format_error_msgs(d, (create_error_msg(e) : e <- es)) : d, es <- ord_errs_by_decl);
-            Print("\n");
-            for m <- msgs {
-              for l <- m
-                Print(l & "\n");
-              Print("\n");
-            }
-            is_bad = true;
-            code = nothing;
-          }
-        }
-        else {
-          code = just(compiled_program([], options=options));
+          code = nothing;
         }
       }
       else {
-        code = nothing;
+        code = just(compiled_program([], options=options));
       }
     }
+    else {
+      code = nothing;
+    }
   }
+
   return [] if is_bad;
   code = value_unsafe(code);
 
@@ -332,8 +329,7 @@ type CmdLineOpts = (
   if cmd_line_opts.print_intermediate
     ok = FileWrite("dump-opt-code-3.txt", _untag_(_print_(opt_code_3)));
 
-  let program = prg
-    res = optimize_array_init(opt_code_3, typedefs = schema_and_typedefs);
+  res = optimize_array_init(opt_code_3, typedefs = prg.typedefs);
   if failed(res) {
     fn_ids, method_ids = error(res);
 
@@ -404,7 +400,7 @@ type CmdLineOpts = (
     ok = FileWrite("dump-opt-code.txt", _untag_(_print_(opt_code)));
 
   let prg = opt_code, rel_vars_perm_map = perms, debug_mode = cmd_line_opts.debug_mode
-    files = generated_code(cmd_line_opts.include_runtime, memb_test_accessors_ids);
+    files = generated_code(cmd_line_opts.include_runtime);
 
   t8 = _ticks_(:any_value_will_do);
   if cmd_line_opts.developer_mode
@@ -442,7 +438,6 @@ type CmdLineOpts = (
 
 Result[
   ( CompiledPrg,
-    [DBSymbol -> [MethodId]],
     [DBSymbol -> [RelVar -> [+Nat -> Nat]]]
   ),
   [+<Update, Handler> -> [+AnalysisError]]
@@ -451,32 +446,19 @@ transform_analyze_and_compile(Program prg, CompOptions options, Bool generate_ac
   curr_prg = prg;
 
   // Partitioning relvars
-  let program = curr_prg
-    curr_prg = post_rel_vars_part_prg(typedefs = schema_and_typedefs);
+  curr_prg = post_rel_vars_part_prg(program = curr_prg, typedefs = curr_prg.typedefs);
 
   // Analysing the program. Has to be done after partitioning
-  let program = curr_prg
-    errs = analysis_errors(typedefs = schema_and_typedefs);
+  errs = analysis_errors(program = curr_prg, typedefs = curr_prg.typedefs);
   return failure(errs) if errs != [];
 
-  // Generating accessors
-  if generate_accessors {
-    typedefs = schema_and_typedefs(program=curr_prg);
-    curr_prg, memb_test_accessors_ids = prg_plus_auto_gen_code(program=curr_prg, typedefs=typedefs);
-  }
-  else {
-    memb_test_accessors_ids = [];
-  }
-
   // Permutating relvars
-  let program = curr_prg
-    curr_prg, perms = post_rel_vars_perm_program(typedefs = schema_and_typedefs);
+  curr_prg, perms = post_rel_vars_perm_program(program = curr_prg, typedefs = curr_prg.typedefs);
 
   // Compiling the program
-  let program = curr_prg
-    code = compiled_program(perms, typedefs = schema_and_typedefs, options = options);
+  code = compiled_program(perms, program = curr_prg, typedefs = curr_prg.typedefs, options = options);
 
-  return success((code, memb_test_accessors_ids, perms));
+  return success((code, perms));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -133,7 +133,7 @@ class Miscellanea {
   static Random random = new Random(0);
 
   public static long randNat(long max) {
-    return random.nextInt((int) max);
+    return random.nextInt(max > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) max);
   }
 
   static int nextUniqueNat = 0;
@@ -148,12 +148,8 @@ class Miscellanea {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  public static long mantissa(double x) {
-    throw implFail("_mantissa_() has not been implemented yet");
-  }
-
-  public static long decimalExponent(double x) {
-    throw implFail("_dec_expr_() has not been implemented yet");
+  public static long round(double x) {
+    return (long) x;
   }
 
   ////////////////////////////////////////////////////////////////////////////
