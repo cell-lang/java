@@ -53,15 +53,29 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
   }
 
 
-  String* native_ctor_code(DBSymbol name, DBSymbol* links, [TableVar -> <Table, Column>] tables, Instr* init_code) {
+  String* native_ctor_code(DBSymbol name, DBSymbol* links, [TableVar -> AnyTable] tables, Instr* init_code) {
     links_init_code = ("this.linkedAuto" & printed(i) & " = linkedAuto" & printed(i) & ";" : i < |links|);
+
+    tables_in_init_order = sort_by_key(
+      [(v, t) : v t <- tables],
+      match ($)
+        (_, slave_tern_table()) = 1,
+        _                       = 0
+    );
+
     tables_init_code = ({
       value_stores = match (t)
-        table()   = if t.symmetric then drop(t.value_stores, 1) else t.value_stores,
-        column()  = (t.value_store);
+        table()             = if t.symmetric then drop(t.value_stores, 1) else t.value_stores,
+        master_bin_table()  = if t.symmetric then undefined else t.value_stores,
+        slave_tern_table()  = if t.symmetric then undefined else t.value_stores,
+        column()            = (t.value_store),
+        slave_column()      = ();
       arg_list = append(("this::" & native_surr_obj_mapper_name(vs) : vs <- value_stores), ", ");
+      arg_list = match (t)
+        slave_tern_table()  = native_var_ref_name(t.master) & ", " & arg_list,
+        _                   = arg_list;
       return native_var_ref_name(v) & " = new " & native_table_type(t) & "(" & arg_list & ");";
-    } : v, t <- isort(tables));
+    } : v, t <- tables_in_init_order);
     vars_decl = gen_vars_decls(init_code, []);
     vars_decl = vars_decl & ("") if vars_decl != ();
     body = vars_decl & links_init_code & tables_init_code & native_code(init_code, nothing);
@@ -155,15 +169,19 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     tables_by_relvar = isort(group_by(keys(block.tables), logical_rel_var(original_rel_var($))));
     for rv, tvs @ i <- tables_by_relvar {
       symb = symb_idx_name(bare_id(rv));
-      tables = append((native_var_ref_name(tv) : tv <- isort(tvs)), ", ");
+      ord_table_vars = isort(tvs);
+      tables = append((native_var_ref_name(tv) : tv <- ord_table_vars), ", ");
       tables_type = only([native_table_base_type(block.tables(tv)) : tv <- tvs]);
       indent_first_line = _print_(not first);
       write_separator = _print_(i < |tables_by_relvar| - 1);
       perm = rel_vars_perm_map(block.name)(rv);
       symmetric = only([
         match (block.tables(tv))
-          column()    = false,
-          table() t?  = t.symmetric
+          column()              |
+          slave_column()        = false,
+          table() t?            |
+          master_bin_table() t? |
+          slave_tern_table() t? = t.symmetric
         : tv <- tvs
       ]);
       perm_args = if symmetric
@@ -173,8 +191,28 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
           2   = if perm == [0 -> 1, 1 -> 0] then ", true" else ", false",
           3   = append((", " & _print_(perm(j)) : j < 3));
 
+      are_slave_columns = only([
+        match (block.tables(tv))
+          slave_column()  = true,
+          _               = false
+        : tv <- tvs
+      ]);
+
+      if are_slave_columns {
+        masters = (
+          match (block.tables(v))
+            slave_column() c? = c.master,
+            _                 = undefined
+          : v <- ord_table_vars
+        );
+        masters_array = ", new MasterBinaryTable[] {" & append((native_var_ref_name(v) : v <- masters), ", ") & "}";
+      }
+      else
+        masters_array = "";
+
       instr = "  TextWriter.write(writer, " & symb & ", new " & tables_type & "[] {" & tables &
-              "}" & perm_args & ", 2, " & indent_first_line & ", " & write_separator & ");";
+              "}" & masters_array & perm_args & ", 2, " & indent_first_line & ", " & write_separator & ");";
+
       code = (code | instr);
       first = false;
     }
@@ -449,8 +487,8 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     ];
 
 
-    True  needs_keys_check(Table)  = true;
-    False needs_keys_check(Column) = false;
+    True  needs_keys_check(<Table, MasterBinTable, SlaveTernTable>) = true;
+    False needs_keys_check(<Column, SlaveColumn>) = false; //## NOT SURE ABOUT THIS ONE
   }
 
 
@@ -518,16 +556,25 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       : vs, t <- isort(block.value_stores)
     );
 
+    ord_tables = ((v, block.tables(v)) : v <- sort_by_key(keys(block.tables), arity(block.tables($))));
     tables_init_code = ({
       value_stores = match (t)
-        table()   = if t.symmetric then drop(t.value_stores, 1) else t.value_stores,
-        column()  = (t.value_store);
+        table()            = if t.symmetric then drop(t.value_stores, 1) else t.value_stores,
+        master_bin_table() = if t.symmetric then undefined else t.value_stores,
+        slave_tern_table() = if t.symmetric then undefined else t.value_stores,
+        column()           = (t.value_store),
+        slave_column()     = t.value_stores;
+
+      other_args = match (t)
+        slave_column()  = (pending_updates_var_ref_name(t.master)),
+        _               = ();
+
       return native_new_call(
         pending_updates_var_ref_name(v),
         pending_updates_var_type(t),
-        ("\"" & user_repr(original_rel_var(v)) & "\"", v) & (updater_var_ref_name(vs) : vs <- value_stores)
+        ("\"" & user_repr(original_rel_var(v)) & "\"", v) & other_args & (updater_var_ref_name(vs) : vs <- value_stores)
       );
-    } : v, t <- isort(block.tables));
+    } : v, t <- ord_tables);
 
     foreign_keys = isort(block.insert_checked_foreign_keys & block.delete_checked_foreign_keys);
     foreign_key_checkers_init_code = ({
@@ -673,7 +720,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       code = (code |
         "",
         "    default:",
-        "      throw Miscellanea._hardFail();",
+        "      throw Miscellanea.hardFail();",
         "  }",
         "}"
       );
@@ -688,13 +735,14 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
       dependees = [a : a <- updated_dependees(update_id, ?)];
       insertion_tables = [t : t <- table_vars_with_insertions(update_id, ?)];
       deletion_tables = [t : t <- table_vars_with_deletions(update_id, ?)];
-      tables = insertion_tables & deletion_tables;
+      table_vars = insertion_tables & deletion_tables;
+      tables = [t -> block.tables(t) : t <- table_vars];
 
       dependees_code = dependees_apply_code(dependees);
 
       apply_code = updates_apply_code(dependees, memb_vars, value_stores, tables);
       finish_code = updates_finish_code(deletion_tables, block);
-      reset_code = updates_reset_code(memb_vars, value_stores, tables, dependees);
+      reset_code = updates_reset_code(memb_vars, value_stores, table_vars, dependees);
 
       sgn = "public void " & native_apply_method_name(update_id) & "(" & native_updater_name(block.name) & " updater) {";
       body = dependees_code & apply_code & finish_code & reset_code;
@@ -757,7 +805,7 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
   }
 
 
-  String* updates_apply_code([LinkedDBVar] dependees, [MembVar] memb_vars, [ValueStoreId] value_stores, [TableVar] tables) {
+  String* updates_apply_code([LinkedDBVar] dependees, [MembVar] memb_vars, [ValueStoreId] value_stores, [TableVar -> AnyTable] tables) {
     memb_vars_code = join((var_apply_code(bare_id(v)) : v <- isort(memb_vars)));
 
     value_stores_code = (
@@ -766,9 +814,11 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
     );
     value_stores_code = ("") & value_stores_code if value_stores != [];
 
+    ord_tables = sort_by_key(keys(tables), arity(tables($)));
+
     tables_code = (
       native_method_call(pending_updates_var_ref_name(t), "apply", ())
-      : t <- isort(tables)
+      : t <- ord_tables
     );
     tables_code = ("") & tables_code if tables != [];
 
@@ -777,20 +827,17 @@ implicit prg : CompiledPrg, rel_vars_perm_map : [DBSymbol -> [RelVar -> [+Nat ->
 
 
   String* updates_finish_code([TableVar] deletion_tables, StaticBlock block) {
-    ## REMEMBER TO REMOVE THE CALLS TO finish() ONCE THE REFACTORING IS COMPLETE
-    tables_code = (
-      native_method_call(pending_updates_var_ref_name(t), "finish", ()) : t <- isort(deletion_tables)
-    );
     value_stores_with_deletions = [s : v <- deletion_tables, s <- value_stores(block.tables(v))];
-    value_stores_code = (
+    code = (
       native_method_call(updater_var_ref_name(v), "applyDelayedReleases", ())
       : v <- isort(value_stores_with_deletions)
     );
-    return tables_code & value_stores_code;
+    return code;
 
 
-    ValueStoreId+ value_stores(Table table)   = table.value_stores;
-    ValueStoreId+ value_stores(Column column) = (column.value_store);
+    ValueStoreId* value_stores(<Table, MasterBinTable, SlaveTernTable> table) = table.value_stores;
+    ValueStoreId* value_stores(Column column) = (column.value_store);
+    ValueStoreId* value_stores(SlaveColumn column) = ();
   }
 
 

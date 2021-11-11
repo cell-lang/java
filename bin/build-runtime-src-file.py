@@ -44,6 +44,10 @@ src_Ints231                       = 'algorithms/net/cell_lang/Ints231.java'
 src_Ints312                       = 'algorithms/net/cell_lang/Ints312.java'
 src_PackedIntPairs                = 'algorithms/net/cell_lang/PackedIntPairs.java'
 
+src_LongWithDoubleSorter          = 'algorithms/net/cell_lang/LongWithDoubleSorter.java'
+src_LongWithLongSorter            = 'algorithms/net/cell_lang/LongWithLongSorter.java'
+src_LongWithObjSorter             = 'algorithms/net/cell_lang/LongWithObjSorter.java'
+
 src_Array                         = 'utils/net/cell_lang/Array.java'
 src_AutoProcs                     = 'utils/net/cell_lang/AutoProcs.java'
 src_CharStream                    = 'utils/net/cell_lang/CharStream.java'
@@ -125,6 +129,23 @@ src_UnaryTableUpdater             = 'automata/net/cell_lang/UnaryTableUpdater.ja
 src_ValueStore                    = 'automata/net/cell_lang/ValueStore.java'
 src_ValueStoreUpdater             = 'automata/net/cell_lang/ValueStoreUpdater.java'
 
+src_ForeignKeyCheckerBmU1         = 'automata/net/cell_lang/ForeignKeyCheckerBmU1.java'
+src_ForeignKeyCheckerBmU2         = 'automata/net/cell_lang/ForeignKeyCheckerBmU2.java'
+src_ForeignKeyCheckerSFCB         = 'automata/net/cell_lang/ForeignKeyCheckerSFCB.java'
+src_ForeignKeyCheckerSICB         = 'automata/net/cell_lang/ForeignKeyCheckerSICB.java'
+src_ForeignKeyCheckerSOCB         = 'automata/net/cell_lang/ForeignKeyCheckerSOCB.java'
+src_ForeignKeyCheckerTsBm         = 'automata/net/cell_lang/ForeignKeyCheckerTsBm.java'
+src_ForeignKeyCheckerTsU3         = 'automata/net/cell_lang/ForeignKeyCheckerTsU3.java'
+src_LoadedOneWayBinTable          = 'automata/net/cell_lang/LoadedOneWayBinTable.java'
+src_LoadedOverflowTable           = 'automata/net/cell_lang/LoadedOverflowTable.java'
+src_MasterBinaryTable             = 'automata/net/cell_lang/MasterBinaryTable.java'
+src_MasterBinaryTableUpdater      = 'automata/net/cell_lang/MasterBinaryTableUpdater.java'
+src_SlaveFloatColumnUpdater       = 'automata/net/cell_lang/SlaveFloatColumnUpdater.java'
+src_SlaveIntColumnUpdater         = 'automata/net/cell_lang/SlaveIntColumnUpdater.java'
+src_SlaveObjColumnUpdater         = 'automata/net/cell_lang/SlaveObjColumnUpdater.java'
+src_SlaveTernaryTable             = 'automata/net/cell_lang/SlaveTernaryTable.java'
+src_SlaveTernaryTableUpdater      = 'automata/net/cell_lang/SlaveTernaryTableUpdater.java'
+
 ################################################################################
 
 std_sources = [
@@ -162,6 +183,10 @@ std_sources = [
 
   src_AbstractLongSorter,
   src_Algs,
+  ## DO THESE THREE FILES BELONG HERE? CAN I MOVE THEM IN table_sources?
+  src_LongWithDoubleSorter,
+  src_LongWithLongSorter,
+  src_LongWithObjSorter,
 
   src_Array,
   src_CharStream,
@@ -196,6 +221,11 @@ table_sources = [
   src_Ints231,
   src_Ints312,
   src_PackedIntPairs,
+
+  # Already included in std_sources
+  # src_LongWithDoubleSorter,
+  # src_LongWithLongSorter,
+  # src_LongWithObjSorter,
 
   src_ArrayIter,
   src_ArraySliceAllocator,
@@ -254,6 +284,23 @@ table_sources = [
   src_UnaryTableUpdater,
   src_ValueStore,
   src_ValueStoreUpdater,
+
+  src_ForeignKeyCheckerBmU1,
+  src_ForeignKeyCheckerBmU2,
+  src_ForeignKeyCheckerSFCB,
+  src_ForeignKeyCheckerSICB,
+  src_ForeignKeyCheckerSOCB,
+  src_ForeignKeyCheckerTsBm,
+  src_ForeignKeyCheckerTsU3,
+  src_LoadedOneWayBinTable,
+  src_LoadedOverflowTable,
+  src_MasterBinaryTable,
+  src_MasterBinaryTableUpdater,
+  src_SlaveFloatColumnUpdater,
+  src_SlaveIntColumnUpdater,
+  src_SlaveObjColumnUpdater,
+  src_SlaveTernaryTable,
+  src_SlaveTernaryTableUpdater,
 
   src_TextWriter
 ]

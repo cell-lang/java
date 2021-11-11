@@ -11,21 +11,21 @@ implicit context : NativeContext {
 
 
   String native_expr(ObjNatOp expr) =
-    at()                = native_expr(expr.seq)    & ".getObjAt(" & native_expr(expr.idx) & ")",
-    array_at()          = "Array.at(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")",
-    lookup()            = native_expr(expr.rel)    & ".lookup(" & native_expr(expr.key) & ")",
-    lookup_field()      = native_lookup_field_expr(expr.record, expr.field, expr.repr),
-    get_tag(e?)         = native_expr(e)           & ".getTag()",
-    get_inner_obj(e?)   = native_expr(e)           & ".getInnerObj()",
-    get_curr_obj(v?)    = native_var_ref_name(v)   & ".get()",
-    bool_obj(e?)        = "SymbObj.get(" & native_expr(e, true) & " ? " & symb_idx_name(true) & " : " & symb_idx_name(false) & ")",
-    int_obj(e?)         = "IntObj.get("  & native_expr(e) & ")",
-    float_obj(e?)       = "new FloatObj(" & native_expr(e) & ")",
-    get_curr_arg()      = native_get_curr_arg_expr(expr.var, expr.arg),
-    surr_to_value()     = native_var_ref_name(expr.store) & ".surrToValue(" & native_expr(expr.surrogate) & ")",
-    column_lookup()     = native_column_lookup_expr(expr.var, expr.key, expr.repr),
-    get_value()         = native_var_ref_name(expr.var) & ".getValue()",
-    rand_elem(e?)       = native_expr(e)           & ".randElem()";
+    at()                  = native_expr(expr.seq)    & ".getObjAt(" & native_expr(expr.idx) & ")",
+    array_at()            = "Array.at(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")",
+    lookup()              = native_expr(expr.rel)    & ".lookup(" & native_expr(expr.key) & ")",
+    lookup_field()        = native_lookup_field_expr(expr.record, expr.field, expr.repr),
+    get_tag(e?)           = native_expr(e)           & ".getTag()",
+    get_inner_obj(e?)     = native_expr(e)           & ".getInnerObj()",
+    get_curr_obj(v?)      = native_var_ref_name(v)   & ".get()",
+    bool_obj(e?)          = "SymbObj.get(" & native_expr(e, true) & " ? " & symb_idx_name(true) & " : " & symb_idx_name(false) & ")",
+    int_obj(e?)           = "IntObj.get("  & native_expr(e) & ")",
+    float_obj(e?)         = "new FloatObj(" & native_expr(e) & ")",
+    get_curr_arg()        = native_get_curr_arg_expr(expr.var, expr.arg),
+    surr_to_value()       = native_var_ref_name(expr.store) & ".surrToValue(" & native_expr(expr.surrogate) & ")",
+    column_lookup()       = native_column_lookup_expr(expr.var, expr.key, expr.repr),
+    get_value()           = native_var_ref_name(expr.var) & ".getValue()",
+    rand_elem(e?)         = native_expr(e)           & ".randElem()";
 
 
   String native_column_lookup_expr(AnyTableVar var, Int32Var key, ColumnRepr repr) {
@@ -183,33 +183,35 @@ implicit context : NativeContext {
 
     int_obj(upcast_int32(e?)), int_obj(<*..*> n?) = native_nary_op(" == ", (e, n), parenthesized),
 
-    int_obj(e1?),       int_obj(e2?)      = native_nary_op(" == ", (e1, e2), parenthesized),
-    int_obj(e1?),       column_lookup()   = if expr2.repr == :int
-                                              then native_column_lookup_eq(expr2.var, expr2.key, e1)
-                                              else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
-    column_lookup(),    int_obj(e2?)      = if expr1.repr == :int
-                                              then native_column_lookup_eq(expr1.var, expr1.key, e2)
-                                              else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
-    int_obj(e1?),       _                 = native_expr(expr2) & ".isInt(" & native_expr(e1) & ")",
-    _,                  int_obj(e2?)      = native_expr(expr1) & ".isInt(" & native_expr(e2) & ")",
+    int_obj(e1?),           int_obj(e2?)          = native_nary_op(" == ", (e1, e2), parenthesized),
 
-    lookup_field(),     object(true)      = if expr1.repr == just(:bool) and expr1.record :: OptTagRecExpr
-                                              then native_expr(expr1.record) & "." & opt_rec_field_name(untag(expr1.field))
-                                              else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
+    int_obj(e1?),           column_lookup()       = if expr2.repr == :int
+                                                      then native_column_lookup_eq(expr2.var, expr2.key, e1)
+                                                      else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
+    column_lookup(),        int_obj(e2?)          = if expr1.repr == :int
+                                                      then native_column_lookup_eq(expr1.var, expr1.key, e2)
+                                                      else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
 
-    get_tag(e?),        object(s?)        = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
-    object(s?),         get_tag(e?)       = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
+    int_obj(e1?),           _                     = native_expr(expr2) & ".isInt(" & native_expr(e1) & ")",
+    _,                      int_obj(e2?)          = native_expr(expr1) & ".isInt(" & native_expr(e2) & ")",
 
-    object(s?),         _                 = native_expr(expr2) & ".isSymb(" & symb_idx_name(s) & ")",
-    _,                  object(s?)        = native_expr(expr1) & ".isSymb(" & symb_idx_name(s) & ")",
+    lookup_field(),         object(true)          = if expr1.repr == just(:bool) and expr1.record :: OptTagRecExpr
+                                                      then native_expr(expr1.record) & "." & opt_rec_field_name(untag(expr1.field))
+                                                      else native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")",
 
-    empty_seq,          _                 = native_expr(expr2) & ".isEmptySeq()",
-    _,                  empty_seq         = native_expr(expr1) & ".isEmptySeq()",
+    get_tag(e?),            object(s?)            = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
+    object(s?),             get_tag(e?)           = parenthesize(native_expr(e) & ".getTagId() == " & symb_idx_name(s), parenthesized),
 
-    empty_rel,          _                 = native_expr(expr2) & ".isEmptyRel()",
-    _,                  empty_rel         = native_expr(expr1) & ".isEmptyRel()",
+    object(s?),             _                     = native_expr(expr2) & ".isSymb(" & symb_idx_name(s) & ")",
+    _,                      object(s?)            = native_expr(expr1) & ".isSymb(" & symb_idx_name(s) & ")",
 
-    _,                  _                 = native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")";
+    empty_seq,              _                     = native_expr(expr2) & ".isEmptySeq()",
+    _,                      empty_seq             = native_expr(expr1) & ".isEmptySeq()",
+
+    empty_rel,              _                     = native_expr(expr2) & ".isEmptyRel()",
+    _,                      empty_rel             = native_expr(expr1) & ".isEmptyRel()",
+
+    _,                      _                     = native_expr(expr1) & ".isEq(" & native_expr(expr2) & ")";
 
 
   String native_column_lookup_eq(AnyTableVar var, Int32Expr key, IntExpr value) =
@@ -267,16 +269,16 @@ implicit context : NativeContext {
 
   String native_get_int_val_expr(ObjExpr expr, Bool parenthesized) {
     return match (expr)
-      at()                = native_expr(expr.seq) & ".getLongAt(" & native_expr(expr.idx) & ")",
-      lookup_field()      = if expr.repr == just(:int) and expr.record :: OptTagRecExpr
-                              then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
-                              else native_expr(expr) & ".getLong()",
-      get_inner_obj(e?)   = native_expr(e) & ".getInnerLong()",
-      array_at()          = native_get_int_val_array_at_expr(expr.array, expr.size, expr.idx),
-      column_lookup()     = if expr.repr == :int
-                              then native_var_ref_name(expr.var) & ".lookup(" & native_expr(expr.key) & ")"
-                              else native_expr(expr) & ".getLong()",
-      _                   = native_expr(expr) & ".getLong()";
+      at()                  = native_expr(expr.seq) & ".getLongAt(" & native_expr(expr.idx) & ")",
+      lookup_field()        = if expr.repr == just(:int) and expr.record :: OptTagRecExpr
+                                then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
+                                else native_expr(expr) & ".getLong()",
+      get_inner_obj(e?)     = native_expr(e) & ".getInnerLong()",
+      array_at()            = native_get_int_val_array_at_expr(expr.array, expr.size, expr.idx),
+      column_lookup()       = if expr.repr == :int
+                                then native_var_ref_name(expr.var) & ".lookup(" & native_expr(expr.key) & ")"
+                                else native_expr(expr) & ".getLong()",
+      _                     = native_expr(expr) & ".getLong()";
 
 
     String native_get_int_val_array_at_expr(ArrayVar array, Int32Var size, IntExpr idx) {
@@ -298,18 +300,30 @@ implicit context : NativeContext {
 
   String native_expr(Int32Var var, Bool parenthesized) = native_var_ref_name(var);
 
-  String native_expr(Int32NatOp expr, Bool parenthesized) =
-    bool_to_bit(e?)       = "(" & native_expr(e, false) & " ? 1 : 0)",
-    get_size(e?)          = native_expr(e) & ".getSize()",
-    get_count()           = native_get_count_expr(expr.table, expr.args, expr.symmetric),
-    table_lookup()        = native_table_lookup_expr(expr.table, expr.args, expr.symmetric),
-    cast_int32(e?)        = "Miscellanea.castLongToInt(" & native_expr(e, false) & ")",
-    add32(e1?, e2?)       = native_nary_op(" + ", (e1, e2), parenthesized),
-    value_to_surr()       = native_method_call_expr(expr.store, "valueToSurr", (expr.value)),
-    get_unknown_arg()     = if expr.iter.arity == 1
-                              then native_var_ref_name(expr.iter) & ".get()"
-                              else native_var_ref_name(expr.iter) & ".get" & printed(expr.arg+1) & "()",
-    get_col_index()       = native_var_ref_name(expr.iter) & ".getIdx()";
+  String native_expr(Int32NatOp expr, Bool parenthesized) {
+    return match (expr)
+      bool_to_bit(e?)         = "(" & native_expr(e, false) & " ? 1 : 0)",
+      get_size(e?)            = native_expr(e) & ".getSize()",
+      get_count()             = native_get_count_expr(expr.table, expr.args, expr.symmetric),
+      table_lookup()          = native_table_lookup_expr(expr.table, expr.args, expr.symmetric),
+      cast_int32(e?)          = "Miscellanea.castLongToInt(" & native_expr(e, false) & ")",
+      add32(e1?, e2?)         = native_nary_op(" + ", (e1, e2), parenthesized),
+      value_to_surr()         = native_method_call_expr(expr.store, "valueToSurr", (expr.value)),
+      get_unknown_arg()       = native_get_unknown_arg_expr(expr.iter, expr.arg),
+      get_arg_by_assoc_surr() = native_var_ref_name(expr.table) & ".arg" & _print_(expr.arg + 1) & "(" & native_expr(expr.surr, false) & ")",
+      get_assoc_surr()        = native_var_ref_name(expr.table) & ".surrogate(" & append((native_expr(v, false) : v <- expr.args), ", ") & ")";
+
+
+    String native_get_unknown_arg_expr(TableItVar iter, <0..2> arg) =
+      if arity(iter) == 1
+        then native_var_ref_name(iter) & ".get()"
+        else native_var_ref_name(iter) & ".get" & printed(arg+1) & "()";
+
+    String native_get_unknown_arg_expr(<ColumnItVar, SlaveColumnItVar> iter, <0..2> arg) {
+      assert arg == 0;
+      return native_var_ref_name(iter) & ".getIdx()";
+    }
+  }
 
 
   // table_lookup(table: AnyTableVar, args: Maybe[Int32Var]+, symmetric: Bool),
@@ -388,17 +402,17 @@ implicit context : NativeContext {
 
 
   String native_float_value_expr(ObjExpr expr, Bool parenthesized) =
-    at()            = native_expr(expr.seq) & ".getDoubleAt(" & native_expr(expr.idx) & ")",
-    lookup_field()  = if expr.repr == just(:float) and expr.record :: OptTagRecExpr
-                        then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
-                        else native_expr(expr) & ".getDouble()",
-    array_at()      = if expr.array.repr == :float
-                        then "Array.floatAt(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")"
-                        else native_expr(expr) & ".getDouble()",
-    column_lookup() = if expr.repr == :float
-                        then native_var_ref_name(expr.var) & ".lookup(" & native_expr(expr.key) & ")"
-                        else native_expr(expr) & ".getDouble()",
-    _               = native_expr(expr) & ".getDouble()";
+    at()                  = native_expr(expr.seq) & ".getDoubleAt(" & native_expr(expr.idx) & ")",
+    lookup_field()        = if expr.repr == just(:float) and expr.record :: OptTagRecExpr
+                              then native_expr(expr.record) & "." & opt_rec_field_name(untag(expr.field))
+                              else native_expr(expr) & ".getDouble()",
+    array_at()            = if expr.array.repr == :float
+                              then "Array.floatAt(" & native_var_ref_name(expr.array) & ", " & native_var_ref_name(expr.size) & ", " & native_expr(expr.idx) & ")"
+                              else native_expr(expr) & ".getDouble()",
+    column_lookup()       = if expr.repr == :float
+                              then native_var_ref_name(expr.var) & ".lookup(" & native_expr(expr.key) & ")"
+                              else native_expr(expr) & ".getDouble()",
+    _                     = native_expr(expr) & ".getDouble()";
 
 
   String native_expr(FloatLit literal, Bool parenthesized) {

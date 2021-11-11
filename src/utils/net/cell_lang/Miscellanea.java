@@ -68,14 +68,7 @@ class Miscellanea {
     return softFail();
   }
 
-  //## REMOVE ONCE THE NEW CODE GENERATOR IS READY
-  public static Obj hardFail() {
-    printCallStack();
-    System.exit(1);
-    return null;
-  }
-
-  public static RuntimeException _hardFail() {
+  public static RuntimeException hardFail() {
     printCallStack();
     System.exit(1);
     return null;

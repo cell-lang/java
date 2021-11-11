@@ -54,7 +54,10 @@ final class IntColumn extends ColumnBase {
   public IntColumn(SurrObjMapper mapper) {
     super(mapper);
     Array.fill(column, NULL);
-    this.mapper = mapper;
+  }
+
+  public IntColumn() {
+    this(null);
   }
 
   public boolean contains1(int idx) {

@@ -1,7 +1,7 @@
 package net.cell_lang;
 
 
-class BinaryTableUpdater {
+class MasterBinaryTableUpdater {
   private boolean hasDeletes = false;
   private boolean clear = false;
 
@@ -28,7 +28,7 @@ class BinaryTableUpdater {
 
 
   String relvarName;
-  BinaryTable table;
+  MasterBinaryTable table;
   ValueStoreUpdater store1;
   ValueStoreUpdater store2;
 
@@ -48,7 +48,7 @@ class BinaryTableUpdater {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  public BinaryTableUpdater(String relvarName, BinaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2) {
+  public MasterBinaryTableUpdater(String relvarName, MasterBinaryTable table, ValueStoreUpdater store1, ValueStoreUpdater store2) {
     this.relvarName = relvarName;
     this.table = table;
     this.store1 = store1;
@@ -90,7 +90,7 @@ class BinaryTableUpdater {
   public void apply() {
     if (hasDeletes) {
       if (clear) {
-        //## IF THE RIGHT-TO-LEFT SEARCH DATA STRUCTURES HAVE BEEN BUILD
+        //## IF THE RIGHT-TO-LEFT SEARCH DATA STRUCTURES HAVE BEEN BUILT
         //## THERE'S A MUCH FASTER WAY TO IMPLEMENT THIS
         int left = table.size();
         for (int arg1=0 ; left > 0 ; arg1++) {
@@ -159,8 +159,18 @@ class BinaryTableUpdater {
         store1.addRef(arg1);
         store2.addRef(arg2);
       }
+      // int code = table.insertEx(arg1, arg2);
+      // if (code >= 0) {
+      //   store1.addRef(arg1);
+      //   store2.addRef(arg2);
+      //   lastSurr12 = code;
+      // }
+      // else
+      //   lastSurr12 = -(code + 1);
     }
   }
+
+  // public int lastSurr12 = -1;
 
   //////////////////////////////////////////////////////////////////////////////
 

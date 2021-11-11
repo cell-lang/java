@@ -104,10 +104,6 @@ final class FloatColumnUpdater {
     }
   }
 
-  public void finish() {
-
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   public void reset() {

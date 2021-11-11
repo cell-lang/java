@@ -97,10 +97,6 @@ final class ObjColumnUpdater {
     }
   }
 
-  public void finish() {
-
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   public void reset() {

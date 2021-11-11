@@ -83,7 +83,9 @@ public class UnitTests {
     // Test_SurrBinaryTable.run();
     // System.out.println("SurrBinaryTable   OK");
 
+    Test_MasterBinaryTable.run();
+    System.out.println("SurrBinaryTable   OK");
 
-    Test_BinaryTable_Performance_A.run();
+    // Test_BinaryTable_Performance_A.run();
   }
 }

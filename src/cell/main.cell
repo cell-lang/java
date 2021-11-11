@@ -1,7 +1,7 @@
 Int Main(String* args) {
   argc = |args|;
 
-  version = "0.5.4";
+  version = "0.6";
 
   if argc < 2 {
     Print(
@@ -454,6 +454,9 @@ transform_analyze_and_compile(Program prg, CompOptions options, Bool generate_ac
 
   // Permutating relvars
   curr_prg, perms = post_rel_vars_perm_program(program = curr_prg, typedefs = curr_prg.typedefs);
+
+  // Simplifying expressions
+  curr_prg = post_exprs_simpl_prog(program = curr_prg, typedefs = curr_prg.typedefs);
 
   // Compiling the program
   code = compiled_program(perms, program = curr_prg, typedefs = curr_prg.typedefs, options = options);

@@ -33,6 +33,13 @@ class Array {
     return Math.max(32, currCapacity + currCapacity / 2);
   }
 
+  public static int capacity(int curr, int min, int base) {
+    int capacity = base;
+    while (capacity < min)
+      capacity *= 2;
+    return capacity;
+  }
+
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
@@ -417,6 +424,20 @@ class Array {
 
   public static int anyIndexOrEncodeInsertionPointIntoSortedArray(int[] array, int start, int end, int value) {
     return Arrays.binarySearch(array, start, end, value);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  public static int indexFirst(long[] array, int size, long value) {
+    int code = Arrays.binarySearch(array, 0, size, value);
+    if (code >= 0) {
+      while (code > 0 && array[code - 1] == value)
+        code--;
+      return code;
+    }
+    else
+      return -1;
   }
 
   ////////////////////////////////////////////////////////////////////////////

@@ -97,10 +97,6 @@ final class IntColumnUpdater {
     }
   }
 
-  public void finish() {
-
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   public void reset() {

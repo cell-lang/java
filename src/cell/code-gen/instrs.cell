@@ -27,7 +27,7 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
     reset_memb_var()      = (native_var_ref_name(instr.var) & " = " & native_const(instr.new_state) & ";"),
     clear_loc_var(v?)     = (native_var_ref_name(v) & " = NullObj.singleton;"),
     nullify_var(v?)       = (native_var_ref_name(v) & " = null;"),
-    terminate()           = { type_str = if instr.hard_fail then "_hard" else "soft";
+    terminate()           = { type_str = if instr.hard_fail then "hard" else "soft";
                               return ("throw Miscellanea." & type_str & "Fail();");
                             },
     add_ref(v?)           = undefined,
@@ -190,7 +190,7 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
       ("case " & printed(i) & ":",) & indent_lines((native_code(c, block_id) | "break;", ""))
       : c @ i <- cases
     );
-    default_code = ("default:", "  throw Miscellanea._hardFail();");
+    default_code = ("default:", "  throw Miscellanea.hardFail();");
     switch_body = join(cases_code) & default_code;
     return ("switch ((int) (" & native_expr(value) & ")) {",) & indent_lines(switch_body) & ("}");
   }
@@ -294,7 +294,7 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
   }
 
 
-  String *native_load_state_code(AnyWriteVar var, AnyTypeExpr arg, LocDBVar auto_var, DBSymbol auto_type) {
+  String* native_load_state_code(AnyWriteVar var, AnyTypeExpr arg, LocDBVar auto_var, DBSymbol auto_type) {
     auto_type_name = native_name(auto_type);
     updater_name = updater_var_ref_name(auto_var);
 

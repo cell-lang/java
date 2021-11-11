@@ -58,6 +58,10 @@ final class FloatColumn extends ColumnBase {
 
   private final static double NULL = Double.longBitsToDouble(NULL_BIT_MASK);
 
+  static {
+    Miscellanea._assert(Double.isNaN(NULL));
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   double[] column = new double[INIT_SIZE];
@@ -66,9 +70,11 @@ final class FloatColumn extends ColumnBase {
 
   public FloatColumn(SurrObjMapper mapper) {
     super(mapper);
-    Miscellanea._assert(Double.isNaN(NULL));
     Array.fill(column, NULL);
-    this.mapper = mapper;
+  }
+
+  public FloatColumn() {
+    this(null);
   }
 
   public int size() {

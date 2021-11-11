@@ -7,7 +7,6 @@ class UnaryTableUpdater {
   static int[] emptyArray = new int[0];
 
   boolean clear = false;
-  long[] bitmapCopy = null;
 
   int deleteCount = 0;
   int[] deleteList = emptyArray;
@@ -50,15 +49,25 @@ class UnaryTableUpdater {
         if (surr > max)
           max = surr;
       }
-      bitmapCopy = table.clear(max + 1);
+
+      long[] bitmapCopy = table.clear(max + 1);
+
+      int len = bitmapCopy.length;
+      for (int i=0 ; i < len ; i++) {
+        long mask = bitmapCopy[i];
+        int base = 64 * i;
+        for (int j=0 ; j < 64 ; j++)
+          if (((mask >>> j) & 1) != 0)
+            store.markForDelayedRelease(base + j);
+      }
     }
     else {
       for (int i=0 ; i < deleteCount ; i++) {
         int surr = deleteList[i];
-        if (table.contains(surr))
+        if (table.contains(surr)) {
           table.delete(surr);
-        else
-          deleteList[i] = 0xFFFFFFFF;
+          store.markForDelayedRelease(surr);
+        }
       }
     }
 
@@ -71,29 +80,8 @@ class UnaryTableUpdater {
     }
   }
 
-  public void finish() {
-    if (clear) {
-      int len = bitmapCopy.length;
-      for (int i=0 ; i < len ; i++) {
-        long mask = bitmapCopy[i];
-        int base = 64 * i;
-        for (int j=0 ; j < 64 ; j++)
-          if (((mask >>> j) & 1) != 0)
-            store.release(base + j);
-      }
-    }
-    else {
-      for (int i=0 ; i < deleteCount ; i++) {
-        int surr = deleteList[i];
-        if (surr != 0xFFFFFFFF)
-          store.release(surr);
-      }
-    }
-  }
-
   public void reset() {
     clear = false;
-    bitmapCopy = null;
 
     deleteCount = 0;
     insertCount = 0;

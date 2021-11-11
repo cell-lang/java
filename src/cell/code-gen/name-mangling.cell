@@ -106,6 +106,14 @@ implicit context : NativeContext {
     return prefix & "ColIt" & printed(var.id);
   }
 
+  String native_var_name(SlaveColumnItVar var) {
+    prefix = match (var.repr)
+      object  = "obj",
+      int     = "int",
+      float   = "float";
+    return prefix & "SlaveColIt" & printed(var.id);
+  }
+
   String native_var_name(AnyClsVar v) =
     cls_var(<+> a?)     = _print_(a) & "_C",
     cls_var(<*..*> n?)  = "cls_" & printed(n),
@@ -310,9 +318,26 @@ implicit context : NativeContext {
   String native_foreign_key_checker_type(BlockForeignKey key, Table, Table) =
     "ForeignKeyChecker" & foreign_key_checker_suffix(key.type);
 
-  String native_foreign_key_checker_type(BlockForeignKey key, Table origin, Column target) {
-    assert key.type == :unary_binary;
-    fail;
+  String native_foreign_key_checker_type(BlockForeignKey key, MasterBinTable, SlaveTernTable) =
+    "ForeignKeyCheckerBmTs";
+
+  String native_foreign_key_checker_type(BlockForeignKey key, SlaveTernTable, MasterBinTable) =
+    "ForeignKeyCheckerTsBm";
+
+  String native_foreign_key_checker_type(BlockForeignKey key, MasterBinTable, Table) {
+    suffix = match (key.type)
+      binary_unary(i?)  = "BmU" & printed(i+1),
+      _                 = undefined;
+
+    return "ForeignKeyChecker" & suffix;
+  }
+
+  String native_foreign_key_checker_type(BlockForeignKey key, SlaveTernTable, Table) {
+    suffix = match (key.type)
+      ternary_unary(i?) = {assert i == 2; return "TsU" & printed(i+1);},
+      _                 = undefined;
+
+    return "ForeignKeyChecker" & suffix;
   }
 
   String native_foreign_key_checker_type(BlockForeignKey key, Column origin, Table target) {
@@ -324,7 +349,24 @@ implicit context : NativeContext {
     return "ForeignKeyChecker" & suffix;
   }
 
-  String native_foreign_key_checker_type(BlockForeignKey key, Column, Column) = undefined;
+  String native_foreign_key_checker_type(BlockForeignKey key, SlaveColumn origin, MasterBinTable target) {
+    assert key.type == :ternary_binary;
+    suffix = match (origin.repr)
+      object  = "SOCB",
+      int     = "SICB",
+      float   = "SFCB";
+    return "ForeignKeyChecker" & suffix;
+  }
+
+
+  String native_foreign_key_checker_type(BlockForeignKey, Table,          <MasterBinTable, SlaveTernTable>)   = undefined;
+  String native_foreign_key_checker_type(BlockForeignKey, MasterBinTable, MasterBinTable)                     = undefined;
+  String native_foreign_key_checker_type(BlockForeignKey, SlaveTernTable, SlaveTernTable)                     = undefined;
+  String native_foreign_key_checker_type(BlockForeignKey, Column,         <MasterBinTable, SlaveTernTable>)   = undefined;
+  String native_foreign_key_checker_type(BlockForeignKey, AnyTable,       Column)                             = undefined;
+  String native_foreign_key_checker_type(BlockForeignKey, SlaveColumn,    <Table, SlaveTernTable>)            = undefined;
+  String native_foreign_key_checker_type(BlockForeignKey, AnyTable,       SlaveColumn)                        = undefined;
+
 
   String foreign_key_checker_suffix(ForeignKeyType) =
     unary_unary             = "UU",
@@ -378,9 +420,11 @@ implicit context : NativeContext {
   String native_var_type(StreamVar v)    = "java.util.ArrayList<Obj>";
 
   String native_var_type(VecVar v)       = undefined;
-  String native_var_type(TableItVar v)   = table_it_var_type(v);
-  String native_var_type(ColumnItVar v)  = column_it_var_type(v);
   String native_var_type(ArrayVar v)     = native_elt_type(v) & "[]";
+
+  String native_var_type(TableItVar v)        = table_it_var_type(v);
+  String native_var_type(ColumnItVar v)       = column_it_var_type(v);
+  String native_var_type(SlaveColumnItVar v)  = slave_column_it_var_type(v);
 
 
   String native_elt_type(ArrayVar var) = native_type(var.repr);
@@ -502,15 +546,26 @@ String native_table_type(Table table) =
     3,  false   = "TernaryTable",
     3,  true    = "Sym12TernaryTable";
 
+String native_table_type(MasterBinTable) = "MasterBinaryTable";
+
+String native_table_type(SlaveTernTable) = "SlaveTernaryTable";
+
 String native_table_type(Column column) =
   match (column.repr)
     object    = "ObjColumn",
     int       = "IntColumn",
     float     = "FloatColumn";
 
+String native_table_type(SlaveColumn column) =
+  match (column.repr)
+    object    = "ObjColumn",
+    int       = "IntColumn",
+    float     = "FloatColumn";
 
-String native_table_base_type(Table table)    = native_table_type(table);
-String native_table_base_type(Column column)  = "ColumnBase";
+
+String native_table_base_type(<Table, MasterBinTable, SlaveTernTable> table) = native_table_type(table);
+String native_table_base_type(Column column) = "ColumnBase";
+String native_table_base_type(SlaveColumn column) = "ColumnBase";
 
 
 String table_it_var_type(TableItVar var) =
@@ -527,6 +582,12 @@ String column_it_var_type(ColumnItVar var) =
     int       = "IntColumn.Iter",
     float     = "FloatColumn.Iter";
 
+String slave_column_it_var_type(SlaveColumnItVar var) =
+  match (var.repr)
+    object    = "ObjColumn.Iter",
+    int       = "IntColumn.Iter",
+    float     = "FloatColumn.Iter";
+
 String pending_updates_var_type(Table table) =
   match (arity(table), table.symmetric)
     1,  false   = "UnaryTableUpdater",
@@ -535,11 +596,21 @@ String pending_updates_var_type(Table table) =
     3,  false   = "TernaryTableUpdater",
     3,  true    = "Sym12TernaryTableUpdater";
 
+String pending_updates_var_type(MasterBinTable) = "MasterBinaryTableUpdater";
+
+String pending_updates_var_type(SlaveTernTable) = "SlaveTernaryTableUpdater";
+
 String pending_updates_var_type(Column column) =
   match (column.repr)
     object    = "ObjColumnUpdater",
     int       = "IntColumnUpdater",
     float     = "FloatColumnUpdater";
+
+String pending_updates_var_type(SlaveColumn column) =
+  match (column.repr)
+    object    = "SlaveObjColumnUpdater",
+    int       = "SlaveIntColumnUpdater",
+    float     = "SlaveFloatColumnUpdater";
 
 
 String native_name(ValueStoreType) =
@@ -592,7 +663,6 @@ String updater_creation_proc_name   (DBSymbol db_type) = "newUpdater";
 String updater_reset_proc_name      (DBSymbol db_type) = "resetUpdater";
 String updates_copy_proc_name       (DBSymbol db_type) = "copy";
 String updates_apply_proc_name      (DBSymbol db_type) = "apply";
-String updates_finish_proc_name     (DBSymbol db_type) = "finish";
 String updates_check_proc_name      (DBSymbol db_type) = "check";
 String full_check_proc_name         (DBSymbol db_type) = "fullCheck";
 String update_entry_point_name      (DBSymbol db_type) = "updateEntryPoint";

@@ -23,66 +23,76 @@ class BinaryTable {
     return table1.count;
   }
 
-  public boolean contains(int surr1, int surr2) {
-    return table1.contains(surr1, surr2);
+  public boolean contains(int arg1, int arg2) {
+    return table1.contains(arg1, arg2);
   }
 
-  public boolean contains1(int surr1) {
-    return table1.containsKey(surr1);
+  public boolean contains1(int arg1) {
+    return table1.containsKey(arg1);
   }
 
-  public boolean contains2(int surr2) {
+  public boolean contains2(int arg2) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(table1);
-    return table2.containsKey(surr2);
+    return table2.containsKey(arg2);
   }
 
-  public int count1(int surr1) {
-    return table1.count(surr1);
+  public int count1(int arg1) {
+    return table1.count(arg1);
   }
 
-  public int count2(int surr2) {
+  public int count2(int arg2) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(table1);
-    return table2.count(surr2);
+    return table2.count(arg2);
   }
 
-  public int[] restrict1(int surr) {
-    return table1.restrict(surr);
+  public int[] restrict1(int arg) {
+    return table1.restrict(arg);
   }
 
-  public int[] restrict2(int surr) {
+  public int restrict1(int arg1, int[] args2) {
+    return table1.restrict(arg1, args2);
+  }
+
+  public int[] restrict2(int arg) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(table1);
-    return table2.restrict(surr);
+    return table2.restrict(arg);
   }
 
-  public int lookup1(int surr) {
-    return table1.lookup(surr);
-  }
-
-  public int lookup2(int surr) {
+  public int restrict2(int arg2, int[] args1) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(table1);
-    return table2.lookup(surr);
+    return table2.restrict(arg2, args1);
+  }
+
+  public int lookup1(int arg) {
+    return table1.lookup(arg);
+  }
+
+  public int lookup2(int arg) {
+    if (table2.count == 0 & table1.count > 0)
+      table2.initReverse(table1);
+    return table2.lookup(arg);
   }
 
   public Iter getIter() {
     return new Iter(table1.copy(), false);
   }
 
-  public Iter getIter1(int surr1) {
-    return new Iter(restrict1(surr1), true);
+  public Iter getIter1(int arg1) {
+    return new Iter(restrict1(arg1), true);
   }
 
-  public Iter getIter2(int surr2) {
-    return new Iter(restrict2(surr2), true);
+  public Iter getIter2(int arg2) {
+    return new Iter(restrict2(arg2), true);
   }
 
-  public boolean insert(int surr1, int surr2) {
-    boolean wasNew = table1.insert(surr1, surr2);
+  public boolean insert(int arg1, int arg2) {
+    boolean wasNew = table1.insert(arg1, arg2);
     if (wasNew && table2.count > 0)
-      table2.insertUnique(surr2, surr1);
+      table2.insertUnique(arg2, arg1);
     check();
     return wasNew;
   }
@@ -93,29 +103,29 @@ class BinaryTable {
     check();
   }
 
-  public boolean delete(int surr1, int surr2) {
-    boolean wasThere = table1.delete(surr1, surr2);
+  public boolean delete(int arg1, int arg2) {
+    boolean wasThere = table1.delete(arg1, arg2);
     if (wasThere & table2.count > 0)
-      table2.delete(surr2, surr1);
+      table2.delete(arg2, arg1);
     check();
     return wasThere;
   }
 
-  public void delete1(int surr1, int[] surrs2) {
-    int count = table1.count(surr1);
-    table1.deleteByKey(surr1, surrs2);
+  public void delete1(int arg1, int[] args2) {
+    int count = table1.count(arg1);
+    table1.deleteByKey(arg1, args2);
     if (table2.count != 0)
       for (int i=0 ; i < count ; i++)
-        table2.delete(surrs2[i], surr1);
+        table2.delete(args2[i], arg1);
   }
 
-  public void delete2(int surr2, int[] surrs1) {
+  public void delete2(int arg2, int[] args1) {
     if (table2.count == 0 & table1.count > 0)
       table2.initReverse(table1);
-    int count = table2.count(surr2);
-    table2.deleteByKey(surr2, surrs1);
+    int count = table2.count(arg2);
+    table2.deleteByKey(arg2, args1);
     for (int i=0 ; i < count ; i++)
-      table1.delete(surrs1[i], surr2);
+      table1.delete(args1[i], arg2);
   }
 
   public Obj copy(boolean flipped) {

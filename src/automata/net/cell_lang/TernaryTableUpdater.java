@@ -137,8 +137,15 @@ class TernaryTableUpdater {
     if (currOrd == Ord.ORD_NONE) {
       // deleteList has not been reordered, so it still matches deleteIdxs
       for (int i=0 ; i < deleteCount ; i++)
-        if (!table.deleteAt(deleteIdxs[i]))
-          deleteList[3*i] = -1;
+        if (table.deleteAt(deleteIdxs[i])) {
+          int offset = 3 * i;
+          int arg1 = deleteList[offset];
+          int arg2 = deleteList[offset+1];
+          int arg3 = deleteList[offset+2];
+          store1.markForDelayedRelease(arg1);
+          store2.markForDelayedRelease(arg2);
+          store3.markForDelayedRelease(arg3);
+        }
     }
     else if (deleteCount != 0) {
       // deleteList was reorder, so the correspondence with deleteIdxs has been lost
@@ -151,22 +158,24 @@ class TernaryTableUpdater {
         if (!table.deleteAt(deleteIdxs[i]))
           DEBUG_count_1++;
 
-      int prevArg1 = deleteList[0];
-      int prevArg2 = deleteList[1];
-      int prevArg3 = deleteList[2];
-      for (int i=1 ; i < deleteCount ; i++) {
+      int prevArg1 = -1;
+      int prevArg2 = -1;
+      int prevArg3 = -1;
+      for (int i=0 ; i < deleteCount ; i++) {
         int offset = 3 * i;
         int arg1 = deleteList[offset];
         int arg2 = deleteList[offset + 1];
         int arg3 = deleteList[offset + 2];
-        if (arg1 == prevArg1 & arg2 == prevArg2 & arg3 == prevArg3) {
-          deleteList[offset] = -1;
-          DEBUG_count_2++;
-        }
-        else {
+        if (arg1 != prevArg1 | arg2 != prevArg2 | arg3 != prevArg3) {
+          store1.markForDelayedRelease(arg1);
+          store2.markForDelayedRelease(arg2);
+          store3.markForDelayedRelease(arg3);
           prevArg1 = arg1;
           prevArg2 = arg2;
           prevArg3 = arg3;
+        }
+        else {
+          DEBUG_count_2++;
         }
       }
 
@@ -183,20 +192,6 @@ class TernaryTableUpdater {
         store1.addRef(arg1);
         store2.addRef(arg2);
         store3.addRef(arg3);
-      }
-    }
-  }
-
-  public void finish() {
-    for (int i=0 ; i < deleteCount ; i++) {
-      int offset = 3 * i;
-      int arg1 = deleteList[offset];
-      if (arg1 != -1) {
-        int arg2 = deleteList[offset+1];
-        int arg3 = deleteList[offset+2];
-        store1.release(arg1);
-        store2.release(arg2);
-        store3.release(arg3);
       }
     }
   }

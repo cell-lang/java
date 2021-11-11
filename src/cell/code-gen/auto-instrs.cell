@@ -6,18 +6,42 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
     read_pending_var(v?)      = native_var_ref_name(var) & " = " & native_var_ref_name(v) & ";";
 
 
-  String native_copy_rel_code(WriteObjVar res_var, [+TableVar -> <Table, Column>] tables, [+Nat -> Nat] applied_perm) {
+  String native_copy_rel_code(WriteObjVar res_var, [+TableVar -> AnyTable] tables, [+Nat -> Nat] applied_perm) {
     is_column = only([
       match (t)
-        table()   = false,
-        column()  = true
+        column()  = true,
+        _         = false
+      : _ t <- tables
+    ]);
+
+    is_slave_column = only([
+      match (t)
+        slave_column()  = true,
+        _               = false
+      : _ t <- tables
+    ]);
+
+    is_master_bin_table = only([
+      match (t)
+        master_bin_table()  = true,
+        _                   = false
+      : _ t <- tables
+    ]);
+
+    is_slave_tern_table = only([
+      match (t)
+        slave_tern_table()  = true,
+        _                   = false
       : _ t <- tables
     ]);
 
     symmetric = only([
       match (t)
-        table()   = t.symmetric,
-        column()  = false
+        table()            |
+        master_bin_table() |
+        slave_tern_table() = t.symmetric,
+        column()           |
+        slave_column()     = false
       : _ t <- tables
     ]);
     assert not symmetric or (applied_perm == [0 -> 0, 1 -> 1] or applied_perm == [0 -> 0, 1 -> 1, 2 -> 2]);
@@ -40,6 +64,15 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
     if is_column {
       class_name = "ColumnBase";
     }
+    else if is_slave_column {
+      class_name = "ColumnBase";
+    }
+    else if is_master_bin_table {
+      class_name = "MasterBinaryTable";
+    }
+    else if is_slave_tern_table {
+      class_name = "SlaveTernaryTable";
+    }
     else {
       class_name = match (arity)
         1 = "UnaryTable",
@@ -47,9 +80,22 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
         3 = if symmetric then "Sym12TernaryTable" else "TernaryTable";
     }
 
-    tables_names = (native_var_ref_name(v) : v <- isort(table_vars));
-    table_array_new = "new " & class_name & "[] {" & append(tables_names, ", ") & "}";
-    return native_static_call(res_var, class_name & ".copy", (table_array_new) & perm_args);
+    ord_table_vars = isort(table_vars);
+    tables_names = (native_var_ref_name(v) : v <- ord_table_vars);
+    tables_array_new = "new " & class_name & "[] {" & append(tables_names, ", ") & "}";
+    if is_slave_column {
+      masters_names = (
+        match (tables(v))
+          slave_column() c? = native_var_ref_name(c.master),
+          _                 = undefined
+        : v <- ord_table_vars
+      );
+      masters_array_new = "new MasterBinaryTable[] {" & append(masters_names, ", ") & "}";
+      tables_args = (tables_array_new, masters_array_new);
+    }
+    else
+      tables_args = (tables_array_new);
+    return native_static_call(res_var, class_name & ".copy", tables_args & perm_args);
   }
 
 
@@ -89,14 +135,16 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
     get_column_iter()     = (native_method_call(instr.it_var, instr.column, "getIter", ())),
 
     queue_deletes()       = (native_queue_deletes_code(instr.table_var, instr.args, instr.symmetric)),
-    lookup_or_queue_insert_value()  = (native_method_call(instr.res_var, updater_var_ref_name(instr.store), "lookupOrInsertValue", (instr.value))),
+    lookup_or_queue_insert_value() = (native_method_call(instr.res_var, updater_var_ref_name(instr.store), "lookupOrInsertValue", (instr.value))),
     queue_insert_tuple()  = (native_queue_insert_tuple_code(instr.table_var, instr.tuple)),
 
-    column_insert_deferred()  = native_column_insert_deferred_code(instr.table_var, instr.key_surr, instr.value, instr.forced),
+    column_insert_deferred() = native_column_insert_deferred_code(instr.table_var, instr.key_surr, instr.value, instr.forced),
+    ternary_slave_column_insert_deferred() = native_ternary_slave_column_insert_deferred_code(instr.table_var, instr.surrs, instr.value, instr.forced),
 
     immediate_insert_or_add_ref() = native_immediate_insert_or_add_ref(instr.res_var, instr.store, instr.value),
-    immediate_insert_tuple()      = native_immediate_insert_tuple(instr.table_var, instr.tuple),
+    immediate_insert_tuple() = native_immediate_insert_tuple(instr.table_var, instr.tuple),
     column_insert_immediate() = native_column_insert_immediate_code(instr.table_var, instr.key_surr, instr.value);
+
 
 
   String* native_column_insert_immediate_code(TableVar table_var, Int32Var key_surr, AnyTypeExpr value) {
@@ -108,6 +156,13 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
     updater = pending_updates_var_ref_name(table_var);
     method_name = if forced then "update" else "insert";
     return (native_method_call(updater, method_name, (key_surr, value)));
+  }
+
+
+  String* native_ternary_slave_column_insert_deferred_code(TableVar table_var, (Int32Var, Int32Var) surrs, AnyTypeExpr value, Bool forced) {
+    updater = pending_updates_var_ref_name(table_var);
+    method_name = if forced then "update" else "insert";
+    return (native_method_call(updater, method_name, (surrs | value)));
   }
 
 
@@ -201,10 +256,14 @@ implicit prg : CompiledPrg, context : NativeContext, debug_mode : Bool {
   }
 
 
-  String native_get_table_iter_code(TableItVar it_var, AnyTableVar table_var, Maybe[Int32Var]+ args) {
-    fn_names = if it_var.symmetric then sym_fn_names_by_args else fn_names_by_args;
+  String native_get_table_iter_code(<TableItVar, SlaveColumnItVar> it_var, AnyTableVar table_var, Maybe[Int32Var]+ args) {
+    fn_names = fn_names_by_args(it_var);
     fn_name = fn_names((a != nothing : a <- args));
     return native_method_call(it_var, table_var, fn_name, (native_expr(value(a)) : a <- args, a != nothing));
+
+
+    [Bool+ -> String] fn_names_by_args(TableItVar it_var) = if it_var.symmetric then sym_fn_names_by_args else fn_names_by_args;
+    [Bool+ -> String] fn_names_by_args(SlaveColumnItVar)  = fn_names_by_args;
 
     [Bool+ -> String] fn_names_by_args = [
       (false)                 -> "getIter",

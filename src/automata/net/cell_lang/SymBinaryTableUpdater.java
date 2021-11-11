@@ -61,34 +61,22 @@ class SymBinaryTableUpdater {
 
   public void apply() {
     for (int i=0 ; i < deleteCount ; i++) {
-      int field1 = deleteList[2 * i];
-      int field2 = deleteList[2 * i + 1];
-      if (table.contains(field1, field2))
-        table.delete(field1, field2);
-      else
-        deleteList[2 * i] = 0xFFFFFFFF;
+      int arg1 = deleteList[2 * i];
+      int arg2 = deleteList[2 * i + 1];
+      if (table.contains(arg1, arg2)) {
+        table.delete(arg1, arg2);
+        store.markForDelayedRelease(arg1);
+        store.markForDelayedRelease(arg2);
+      }
     }
 
     for (int i=0 ; i < insertCount ; i++) {
-      int field1 = insertList[2 * i];
-      int field2 = insertList[2 * i + 1];
-      if (!table.contains(field1, field2)) {
-        table.insert(field1, field2);
-        store.addRef(field1);
-        store.addRef(field2);
-      }
-    }
-  }
-
-  public void finish() {
-    for (int i=0 ; i < deleteCount ; i++) {
-      int field1 = deleteList[2 * i];
-      if (field1 != 0xFFFFFFFF) {
-        int field2 = deleteList[2 * i + 1];
-        // Miscellanea._assert(table.store.surrToObjValue(field1) != null);
-        // Miscellanea._assert(table.store.surrToObjValue(field2) != null);
-        store.release(field1);
-        store.release(field2);
+      int arg1 = insertList[2 * i];
+      int arg2 = insertList[2 * i + 1];
+      if (!table.contains(arg1, arg2)) {
+        table.insert(arg1, arg2);
+        store.addRef(arg1);
+        store.addRef(arg2);
       }
     }
   }

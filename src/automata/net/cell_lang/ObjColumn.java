@@ -58,9 +58,12 @@ final class ObjColumn extends ColumnBase {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  public ObjColumn() {
+    super(null);
+  }
+
   public ObjColumn(SurrObjMapper mapper) {
     super(mapper);
-    this.mapper = mapper;
   }
 
   public boolean contains1(int idx) {

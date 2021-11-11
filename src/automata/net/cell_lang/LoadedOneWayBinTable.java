@@ -8,29 +8,33 @@ package net.cell_lang;
 //   - Empty:           32 zeros - ArraySliceAllocator.EMPTY_MARKER == 0xFFFFFFFF
 //     This type of slot can only be stored in a block, but cannot be passed in or out
 
-class OneWayBinTable {
+class LoadedOneWayBinTable {
   private final static int MIN_CAPACITY = 16;
 
-  private final static int INLINE_SLOT = OverflowTable.INLINE_SLOT;
-  private final static int EMPTY_MARKER = OverflowTable.EMPTY_MARKER;
-  private final static long EMPTY_SLOT = OverflowTable.EMPTY_SLOT;
+  private final static int INLINE_SLOT = LoadedOverflowTable.INLINE_SLOT;
+  private final static int EMPTY_MARKER = LoadedOverflowTable.EMPTY_MARKER;
+  private final static long EMPTY_SLOT = LoadedOverflowTable.EMPTY_SLOT;
 
   public long[] column = Array.emptyLongArray;
-  public OverflowTable overflowTable = new OverflowTable();
+  public LoadedOverflowTable overflowTable = new LoadedOverflowTable();
   public int count = 0;
 
   //////////////////////////////////////////////////////////////////////////////
 
+  private int[] _data = new int[1]; // Used as an output argument inside delete(..)
+
+  //////////////////////////////////////////////////////////////////////////////
+
   private static int low(long slot) {
-    return OverflowTable.low(slot);
+    return LoadedOverflowTable.low(slot);
   }
 
   private static int high(long slot) {
-    return OverflowTable.high(slot);
+    return LoadedOverflowTable.high(slot);
   }
 
   private static int tag(int word) {
-    return OverflowTable.tag(word);
+    return LoadedOverflowTable.tag(word);
   }
 
   private static boolean isEmpty(long slot) {
@@ -38,19 +42,19 @@ class OneWayBinTable {
   }
 
   private static boolean isIndex(long slot) {
-    return slot != EMPTY_SLOT && tag(low(slot)) != OverflowTable.INLINE_SLOT;
+    return slot != EMPTY_SLOT && tag(low(slot)) != LoadedOverflowTable.INLINE_SLOT;
   }
 
   private static int count(long slot) {
-    return OverflowTable.count(slot);
+    return LoadedOverflowTable.count(slot);
   }
 
   // private static int value(long slot) {
-  //   return OverflowTable.value(slot);
+  //   return LoadedOverflowTable.value(slot);
   // }
 
   private static long slot(int low, int high) {
-    return OverflowTable.combine(low, high);
+    return LoadedOverflowTable.combine(low, high);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -66,25 +70,24 @@ class OneWayBinTable {
   //////////////////////////////////////////////////////////////////////////////
 
   public boolean contains(int surr1, int surr2) {
-    if (surr1 >= column.length)
-      return false;
-
-    long slot = column[surr1];
-
-    if (isEmpty(slot))
-      return false;
-
-    if (isIndex(slot))
-      return overflowTable.contains(slot, surr2);
-
-    if (low(slot) == surr2)
-      return true;
-
-    return high(slot) == surr2;
+    return payload(surr1, surr2) != 0xFFFFFFFF;
   }
 
   public boolean containsKey(int surr1) {
     return surr1 < column.length && !isEmpty(column[surr1]);
+  }
+
+  public int payload(int surr1, int surr2) {
+    if (surr1 < column.length) {
+      long slot = column[surr1];
+      if (!isEmpty(slot)) {
+        if (isIndex(slot))
+          return overflowTable.lookup(slot, surr2);
+        else if (low(slot) == surr2)
+          return high(slot);
+      }
+    }
+    return 0xFFFFFFFF;
   }
 
   public int[] restrict(int surr) {
@@ -98,14 +101,12 @@ class OneWayBinTable {
 
     if (isIndex(slot)) {
       int count = count(slot);
-      int[] surrs = new int[count];
-      overflowTable.copy(slot, surrs);
-      return surrs;
+      int[] surrs_idxs = new int[count];
+      overflowTable.copy(slot, surrs_idxs, null);
+      return surrs_idxs;
     }
 
-    int low = low(slot);
-    int high = high(slot);
-    return high == EMPTY_MARKER ? new int[] {low} : new int[] {low, high};
+    return new int[] {low(slot)};
   }
 
   public int restrict(int surr, int[] output) {
@@ -118,16 +119,12 @@ class OneWayBinTable {
       return 0;
 
     if (isIndex(slot)) {
-      overflowTable.copy(slot, output);
+      overflowTable.copy(slot, output, null);
       return count(slot);
     }
 
     output[0] = low(slot);
-    int high = high(slot);
-    if (high == EMPTY_MARKER)
-      return 1;
-    output[1] = high;
-    return 2;
+    return 1;
   }
 
   public int lookup(int surr) {
@@ -136,7 +133,7 @@ class OneWayBinTable {
     long slot = column[surr];
     if (isEmpty(slot))
       return -1;
-    if (isIndex(slot) | high(slot) != EMPTY_MARKER)
+    if (isIndex(slot))
       throw Miscellanea.internalFail();
     // Miscellanea._assert(tag(low(slot)) == INLINE_SLOT);
     return low(slot);
@@ -150,10 +147,12 @@ class OneWayBinTable {
       return 0;
     if (isIndex(slot))
       return count(slot);
-    return high(slot) == EMPTY_MARKER ? 1 : 2;
+    return 1;
   }
 
-  public boolean insert(int surr1, int surr2) {
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void insertUnique(int surr1, int surr2, int data) {
     int size = column.length;
     if (surr1 >= size)
       resize(surr1);
@@ -161,128 +160,53 @@ class OneWayBinTable {
     long slot = column[surr1];
 
     if (isEmpty(slot)) {
-      set(surr1, surr2, EMPTY_MARKER);
-      count++;
-      return true;
-    }
-
-    int low = low(slot);
-    int high = high(slot);
-
-    if (tag(low) == INLINE_SLOT & high == EMPTY_MARKER) {
-      if (surr2 == low)
-        return false;
-      set(surr1, low, surr2);
-      count++;
-      return true;
-    }
-
-    long updatedSlot = overflowTable.insert(slot, surr2);
-    if (updatedSlot == slot)
-      return false;
-
-    set(surr1, updatedSlot);
-    count++;
-    return true;
-  }
-
-  public void insertUnique(int surr1, int surr2) {
-    int size = column.length;
-    if (surr1 >= size)
-      resize(surr1);
-
-    long slot = column[surr1];
-
-    if (isEmpty(slot)) {
-      set(surr1, surr2, EMPTY_MARKER);
+      set(surr1, surr2, data);
       count++;
       return;
     }
 
-    int low = low(slot);
-    int high = high(slot);
+    // Miscellanea._assert(low(slot) != surr2);
 
-    if (tag(low) == INLINE_SLOT & high == EMPTY_MARKER) {
-      // Miscellanea._assert(surr2 != low);
-      set(surr1, low, surr2);
-      count++;
-      return;
-    }
-
-    long updatedSlot = overflowTable.insertUnique(slot, surr2);
+    long updatedSlot = overflowTable.insertUnique(slot, surr2, data);
     // Miscellanea._assert(updatedSlot != slot);
 
     set(surr1, updatedSlot);
     count++;
   }
 
-  // Assuming there's at most one entry whose first argument is surr1
-  public int update(int surr1, int surr2) {
+  public int delete(int surr1, int surr2) {
     if (surr1 >= column.length)
-      resize(surr1);
-
-    long slot = column[surr1];
-
-    if (isEmpty(slot)) {
-      set(surr1, surr2, EMPTY_MARKER);
-      count++;
-      return -1;
-    }
-
-    int low = low(slot);
-    int high = high(slot);
-
-    if (tag(low) == INLINE_SLOT & high == EMPTY_MARKER) {
-      set(surr1, surr2, EMPTY_MARKER);
-      return low;
-    }
-
-    throw Miscellanea.internalFail();
-  }
-
-  public boolean delete(int surr1, int surr2) {
-    if (surr1 >= column.length)
-      return false;
+      return 0xFFFFFFFF;
 
     long slot = column[surr1];
 
     if (isEmpty(slot))
-      return false;
+      return 0xFFFFFFFF;
 
     if (isIndex(slot)) {
-      long updatedSlot = overflowTable.delete(slot, surr2);
-      if (updatedSlot == slot)
-        return false;
-
-      set(surr1, updatedSlot);
-      count--;
-      return true;
+      long updatedSlot = overflowTable.delete(slot, surr2, _data);
+      if (updatedSlot != slot) {
+        set(surr1, updatedSlot);
+        count--;
+        return _data[0];
+      }
+      else
+        return 0xFFFFFFFF;
     }
 
     // Miscellanea._assert(tag(low(slot)) == INLINE_SLOT);
 
-    int low = low(slot);
-    int high = high(slot);
-
-    if (surr2 == low) {
-      if (high == EMPTY_MARKER)
-        set(surr1, EMPTY_SLOT);
-      else
-        set(surr1, high, EMPTY_MARKER);
+    if (low(slot) == surr2) {
+      int data = high(slot);
+      set(surr1, EMPTY_SLOT);
       count--;
-      return true;
+      return data;
     }
-
-    if (surr2 == high) {
-      set(surr1, low, EMPTY_MARKER);
-      count--;
-      return true;
-    }
-
-    return false;
+    else
+      return 0xFFFFFFFF;
   }
 
-  public void deleteByKey(int surr1, int[] surrs2) {
+  public void deleteByKey(int surr1, int[] surrs2, int[] data) {
     if (surr1 >= column.length)
       return;
 
@@ -295,29 +219,22 @@ class OneWayBinTable {
 
     if (isIndex(slot)) {
       int slotCount = count(slot);
-      overflowTable.copy(slot, surrs2);
+      overflowTable.copy(slot, surrs2, data);
       overflowTable.delete(slot);
       count -= slotCount;
     }
     else {
       // Miscellanea._assert(tag(low(slot)) == INLINE_SLOT);
       surrs2[0] = low(slot);
-      int high = high(slot);
-      if (high != EMPTY_MARKER) {
-        surrs2[1] = high;
-        count -= 2;
-      }
-      else
-        count--;
+      data[0] = high(slot);
+      count--;
     }
   }
 
   public boolean isMap() {
-    for (int i=0 ; i < column.length ; i++) {
-      long slot = column[i];
-      if (!isEmpty(slot) & (tag(low(slot)) != INLINE_SLOT | high(slot) != EMPTY_MARKER))
+    for (int i=0 ; i < column.length ; i++)
+      if (isIndex(column[i]))
         return false;
-    }
     return true;
   }
 
@@ -331,17 +248,12 @@ class OneWayBinTable {
           int slotCount = count(slot);
           for (int j=0 ; j < slotCount ; j++)
             data[next+2*j] = i;
-          overflowTable.copy(slot, data, next + 1, 2);
+          overflowTable.copy(slot, data, null, next + 1, 2);
           next += 2 * slotCount;
         }
         else {
           data[next++] = i;
           data[next++] = low(slot);
-          int high = high(slot);
-          if (high != EMPTY_MARKER) {
-            data[next++] = i;
-            data[next++] = high;
-          }
         }
       }
     }
@@ -374,44 +286,15 @@ class OneWayBinTable {
         }
         else {
           int low = low(slot);
-          int high = high(slot);
           if (surr1 <= low) {
             data[next++] = surr1;
             data[next++] = low(slot);
-          }
-          if (high != EMPTY_MARKER & surr1 <= high) {
-            data[next++] = surr1;
-            data[next++] = high;
           }
         }
       }
     }
     // Miscellanea._assert(next == count + eqCount);
     return data;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  public void initReverse(OneWayBinTable source) {
-    // Miscellanea._assert(count == 0);
-
-    int len = source.column.length;
-    for (int i=0 ; i < len ; i++) {
-      int[] surrs = source.restrict(i);
-      for (int j=0 ; j < surrs.length ; j++)
-        insert(surrs[j], i);
-    }
-  }
-
-  public void initReverse(LoadedOneWayBinTable source) {
-    // Miscellanea._assert(count == 0);
-
-    int len = source.column.length;
-    for (int i=0 ; i < len ; i++) {
-      int[] surrs = source.restrict(i);
-      for (int j=0 ; j < surrs.length ; j++)
-        insert(surrs[j], i);
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -426,20 +309,4 @@ class OneWayBinTable {
     Array.fill(newColumn, size, newSize - size, EMPTY_SLOT);
     column = newColumn;
   }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-
-  // public void check() {
-  //   overflowTable.check(column, count);
-  // }
-
-  // public void dump() {
-  //   System.out.println("count = " + Integer.toString(count));
-  //   System.out.print("column = [");
-  //   for (int i=0 ; i < column.length ; i++)
-  //     System.out.printf("%s%X", i > 0 ? " " : "", column[i]);
-  //   System.out.println("]");
-  //   overflowTable.dump();
-  // }
 }

@@ -116,10 +116,12 @@ class Sym12TernaryTableUpdater {
       int arg1 = deleteList[3 * i];
       int arg2 = deleteList[3 * i + 1];
       int arg3 = deleteList[3 * i + 2];
-      if (table.contains(arg1, arg2, arg3))
+      if (table.contains(arg1, arg2, arg3)) {
         table.delete(arg1, arg2, arg3);
-      else
-        deleteList[3 * i] = 0xFFFFFFFF;
+        store12.markForDelayedRelease(arg1);
+        store12.markForDelayedRelease(arg2);
+        store3.markForDelayedRelease(arg3);
+      }
     }
 
     for (int i=0 ; i < insertCount ; i++) {
@@ -132,19 +134,6 @@ class Sym12TernaryTableUpdater {
         store12.addRef(arg1);
         store12.addRef(arg2);
         store3.addRef(arg3);
-      }
-    }
-  }
-
-  public void finish() {
-    for (int i=0 ; i < deleteCount ; i++) {
-      int arg1 = deleteList[3 * i];
-      if (arg1 != 0xFFFFFFFF) {
-        int arg2 = deleteList[3 * i + 1];
-        int arg3 = deleteList[3 * i + 2];
-        store12.release(arg1);
-        store12.release(arg2);
-        store3.release(arg3);
       }
     }
   }
